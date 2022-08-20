@@ -51,6 +51,10 @@
     "adm-zip": "^0.5.9",
     "aws-sdk": "^2.1096.0",
     "axios": "^0.25.0",
-    "commander": "^8.3.0"
+    "cli-table": "^0.3.11",
+    "commander": "^8.3.0",
+    "configparser": "^0.3.9",
+    "json2csv": "^5.0.7",
+    "xlsx": "^0.18.5"
   }
 }

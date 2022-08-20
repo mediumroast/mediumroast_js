@@ -2,7 +2,7 @@
 import mrRest from './scaffold.js'
 
 class Auth {
-    constructor(restServer, user, secret, apiKey) {
+    constructor(restServer, apiKey, user, secret) {
         this.apiKey = apiKey
         this.user = user
         this.secret = secret
@@ -70,29 +70,29 @@ class baseObjects {
     }
 }
 
-export class Users extends baseObjects {
+class Users extends baseObjects {
     constructor (credential) {
         super(credential, 'users')
     }
 }
 
-export class Studies extends baseObjects {
+class Studies extends baseObjects {
     constructor (credential) {
         super(credential, 'studies')
     }
 }
 
-export class Companies extends baseObjects {
+class Companies extends baseObjects {
     constructor (credential) {
         super(credential, 'companies')
     }
 }
 
-export class Interactions extends baseObjects {
+class Interactions extends baseObjects {
     constructor (credential) {
         super(credential, 'interactions')
     }
 }
 
 // Export classes for consumers
-export { Users, Studies, Companies, Interactions }
+export { Auth, Users, Studies, Companies, Interactions }

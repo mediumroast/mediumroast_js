@@ -24,13 +24,16 @@ class mrRest {
     */
     async getObj(endpoint) {
         const myURL = this.restServer + endpoint
-        // TODO confirm API Key and Accept
-        const myHeaders = {
-            'Accept': 'application/json',
-            'Authorization': this.apiKey
-        }
         try {
-            const resp = await axios.get(myURL)
+            const resp = await axios.get(
+                myURL,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': this.apiKey
+                    }
+                }
+            )
             return (true, resp.data)
         } catch (err) {
             console.error(err)
