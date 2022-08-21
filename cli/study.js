@@ -1,51 +1,53 @@
 #!/usr/bin/env node
 
 // Import required modules
-import {Studies} from '../src/api/highLevel.js'
-import program from 'commander'
+import { Auth, Studies } from '../src/api/mrServer.js'
+import { CLI } from '../src/helpers.js'
 
-// Parse the cli options
-function parseCLIArgs() {
-   // Define commandline options
-   program
-      .version('0.7.5')
-      .description('A CLI for mediumroast.io Study objects, without options: list all Studies.')
-   program
-      .option('-g --get_guids', 'List all Studies by Name')
-      .option('-n --get_names', 'List all Studies by GUID')
-      .option('-m --get_map', 'List all Studies by {Name:GUID}')
-      .option('--get_substudies', 'List all Studies and their substudies')
-      .option('--get_by_name <name>', 'Get an individual Study by name')
-      .option('--get_by_guid <GUID>', 'Get an individual Study by GUID')
-      .requiredOption('-s --server <server>', 'Specify the server URL', 'http://mr-01:3000')
-      .requiredOption('-t --server_type <type>', 'Specify the server type as [json || mr_server]','json')
-      .requiredOption('-c --config_file <file>', 'Path to the configuration file','~/.mr_config')
-   program.parse(process.argv)
-   const options = program.opts()
-   return options
-}
+// Globals
+const objectType = 'Studies'
 
-// The business end of the cli
-const byNameResource = '?studyName='
-const opts = parseCLIArgs()
-const serverType = opts.server_type // TODO eventually augment with the CLI config file
-const mrServer = opts.server // TODO eventually augment with the CLI config file
-const control = new Studies(mrServer, serverType)
+// Construct the CLI object
+const myCLI = new CLI (
+   '2.0',
+   'study',
+   'Command line interface for mediumroast.io Study objects.',
+   objectType
+)
+
+// Create the environmental settings
+const myArgs = myCLI.parseCLIArgs()
+const myConfig = myCLI.getConfig(myArgs.conf_file)
+const myEnv = myCLI.getEnv(myArgs, myConfig)
+
+// Generate the credential & construct the API Controller
+const myAuth = new Auth(
+   myEnv.restServer,
+   myEnv.apiKey,
+   myEnv.user,
+   myEnv.secret
+)
+const myCredential = myAuth.login()
+const apiController = new Studies(myCredential)
+
+// Predefine the results variable
 let results = null
-if (opts.get_guids) {
-   results = await control.getAllGUIDs()
-} else if (opts.get_names) {
-   results = await control.getAllNames()
-} else if (opts.get_map) {
-   results = await control.getNamesAndGUIDs()
-} else if (opts.get_by_guid) {
-   results = await control.getByGUID(opts.get_by_guid)
-} else if (opts.get_by_name) {
-   results = await control.getByName(opts.get_by_name, byNameResource)
-} else if (opts.get_substudies) {
-   results = await control.getAllSubstudies()
+
+// Process the cli options
+if (myArgs.get_by_id) {
+   results = await apiController.getById(myArgs.get_by_id)
+} else if (myArgs.get_by_name) {
+   results = await apiController.getByName(myArgs.get_by_name)
+} else if (myArgs.get_by_x) {
+   // TODO this requires a JSON input, need to investigate
+   results = await apiController.getByX(myArgs.get_by_x)
+} else if (myArgs.create) {
+   results = await apiController.create(myArgs.create)
+} else if (myArgs.delete) {
+   results = await apiController.delete(myArgs.delete)
 } else {
-   results = await control.getAll()
+   results = await apiController.getAll()
 }
 
-console.log(results)
+// Emit the output
+myCLI.outputCLI(myArgs.output, results, myEnv, objectType)
