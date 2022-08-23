@@ -24,19 +24,19 @@ class mrRest {
     */
     async getObj(endpoint) {
         const myURL = this.restServer + endpoint
+        const myHeaders = {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': this.apiKey
+            }
+        }
+
         try {
-            const resp = await axios.get(
-                myURL,
-                {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': this.apiKey
-                    }
-                }
-            )
+            const resp = await axios.get(myURL, myHeaders)
             return (true, resp.data)
         } catch (err) {
-            console.error(err)
+            // console.error(err)
             return (false, err)
         }
     }
@@ -47,18 +47,18 @@ class mrRest {
     If the request succeeds a boolean status of true, and the JSON is returned.
     Otherwise, if the request fails a boolean status of false, and status message is returned.
     */
-    async putObj(endpoint, obj) {
+    async postObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
-        // TODO confirm API Key
         const myHeaders = {
-            'Accept': 'application/json',
-            'Authorization': this.apiKey
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': this.apiKey
+            }
         }
         try {
-            const resp = await axios.put(url = myURL, data = obj, {headers: myHeaders})
+            const resp = await axios.post(myURL, obj, myHeaders)
             return (true, resp.data)
         } catch (err) {
-            console.error(err)
             return (false, err)
         }
     }

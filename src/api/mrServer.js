@@ -36,22 +36,26 @@ class baseObjects {
         return this.rest.getObj(fullEndpoint)
     }
 
-    async getByName(name, endpoint='getbyx') {
+    async getByName(name, endpoint='findbyx') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {'getByX': 'name', 'xEquals': name}
-        return this.rest.getObj(fullEndpoint, my_obj)
+        const my_obj = {getByX: 'name', xEquals: name}
+        return this.rest.postObj(fullEndpoint, my_obj)
     }
 
-    async getById(id, endpoint='getbyx') {
+    // TODO change to findById
+    // NOTE this needs to change in the backend implementation too
+    async findById(id, endpoint='findbyx') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {'getByX': 'id', 'xEquals': id}
-        return this.rest.getObj(fullEndpoint, my_obj)
+        const my_obj = {findByX: "id", xEquals: id}
+        return this.rest.postObj(fullEndpoint, my_obj)
     }
 
-    async getByX(attribute, value, endpoint='getbyx') {
+    // TODO change to findByX
+    // NOTE this needs to change in the backend implementation too
+    async findByX(attribute, value, endpoint='findbyx') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {'getByX': attribute, 'xEquals': value} 
-        return this.rest.getObj(fullEndpoint, my_obj)
+        const my_obj = {getByX: attribute, xEquals: value} 
+        return this.rest.postObj(fullEndpoint, my_obj)
     }
 
     async createObj(obj, endpoint='register') {
