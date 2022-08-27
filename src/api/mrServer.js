@@ -1,3 +1,11 @@
+/**
+ * A class for authenticating and talking to the mediumroast.io backend 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrServer.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import required modules
 import mrRest from './scaffold.js'
 
@@ -36,9 +44,9 @@ class baseObjects {
         return this.rest.getObj(fullEndpoint)
     }
 
-    async getByName(name, endpoint='findbyx') {
+    async findByName(name, endpoint='findbyx') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {getByX: 'name', xEquals: name}
+        const my_obj = {findByX: 'name', xEquals: name}
         return this.rest.postObj(fullEndpoint, my_obj)
     }
 
@@ -54,7 +62,7 @@ class baseObjects {
     // NOTE this needs to change in the backend implementation too
     async findByX(attribute, value, endpoint='findbyx') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {getByX: attribute, xEquals: value} 
+        const my_obj = {findByX: attribute, xEquals: value} 
         return this.rest.postObj(fullEndpoint, my_obj)
     }
 

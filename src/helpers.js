@@ -1,3 +1,11 @@
+/**
+ * A class used to build CLIs for accessing and reporting on mediumroast.io objects
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file helpers.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import required modules
 import * as fs from 'fs'
 import program from 'commander'
@@ -58,16 +66,16 @@ class CLI {
 
             // Operational command line switches
             .option(
-                '--get_by_name <name>',
-                'Get an individual Interaction by name'
+                '--find_by_name <name>',
+                'Find an individual Interaction by name'
             )
             .option(
-                '--get_by_id <ID>',
-                'Get an individual Interaction by ID'
+                '--find_by_id <ID>',
+                'Find an individual Interaction by ID'
             )
             .option(
-                '--get_by_x <JSON>',
-                'Get object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
+                '--find_by_x <JSON>',
+                'Find object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
             )
             .option(
                 '--create <file.json>',
@@ -119,6 +127,27 @@ class CLI {
         return env
     }
 
+
+    /**
+     * An output router enabling users to pick their output format of choice for a CLI
+     * @param  {String} outputType Type of output to produce/route to: table, json, csv, xls
+     * @param  {Object} results Data objects to be output
+     * @param  {Object} env Environmental variables from the CLI
+     * @param  {String} objType The object type: Interactions, Studies or Companies
+     */
+    outputCLI(outputType, results, env, objType) {
+        // Emit the output as per the cli options
+        if (outputType === 'table') {
+            this.outputTable(results)
+        } else if (outputType === 'json') {
+            console.dir(results)
+        } else if (outputType === 'csv') {
+            this.outputCSV(results, env)
+        } else if (outputType === 'xls') {
+            this.outputXLS(results, env, objType)
+        }
+    }
+
     outputTable(objects) {
         let table = new Table({
             head: ['Id', 'Name', 'Description'],
@@ -152,6 +181,8 @@ class CLI {
         XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
         XLSX.writeFile(myWorkbook, myFile)
     }
+
+    
 
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {
@@ -217,18 +248,7 @@ class CLI {
         }
     }
 
-    outputCLI(outputType, results, env, objType) {
-        // Emit the output as per the cli options
-        if (outputType === 'table') {
-            this.outputTable(results)
-        } else if (outputType === 'json') {
-            console.dir(results)
-        } else if (outputType === 'csv') {
-            this.outputCSV(results, env)
-        } else if (outputType === 'xls') {
-            this.outputXLS(results, env, objType)
-        }
-    }
+    
 }
 
 export { CLI }

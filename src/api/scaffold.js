@@ -1,13 +1,21 @@
+/**
+ * A class that safely wraps RESTful calls to the backend server
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file scaffold.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import required modules
 import axios from "axios"
 
-/*
-Simple and safe wrappers around axios to make RESTful API calls simpler.
-
-The credential object, passed when this object is created, should include all relevant items
-needed to authenticate a client.  This can include appropriate JWT tokens, user identifiers,
-passwords, etc.  At a minimum the restServer and an apiKey are needed to connect.
-*/
+/**
+ * Simple and safe wrappers around axios to make RESTful API calls simpler.
+ * The credential object, passed when this object is created, should include all relevant items
+ * needed to authenticate a client.  This can include appropriate JWT tokens, user identifiers,
+ * passwords, etc.  At a minimum the restServer and an apiKey are needed to connect.
+ * @class
+ */
 class mrRest {
     constructor(credential) {
         this.user = credential.user
@@ -16,12 +24,11 @@ class mrRest {
         this.restServer = credential.restServer
     }
 
-    /*
-    Get an object using endpoint only.
-
-    If the request succeeds a boolean status of true, and the JSON is returned.
-    Otherwise, if the request fails a boolean status of false, and status message is returned.
-    */
+    /**
+     * Get an object using endpoint only.
+     * @param  {String} endpoint The full URL to the RESTful target
+     * @param  {Returns} result A tuple starting with a boolean success/failure and resulting data
+     */
     async getObj(endpoint) {
         const myURL = this.restServer + endpoint
         const myHeaders = {
@@ -41,12 +48,12 @@ class mrRest {
         }
     }
 
-    /*
-    Put an object using endpoint and a Javascript object.
-
-    If the request succeeds a boolean status of true, and the JSON is returned.
-    Otherwise, if the request fails a boolean status of false, and status message is returned.
-    */
+    /**
+     * Post an object using endpoint and a Javascript object.
+     * @param  {String} endpoint The full URL to the RESTful target
+     * @param  {Object} obj Data objects for input
+     * @param  {Returns} result A tuple starting with a boolean success/failure and resulting data
+     */
     async postObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
         const myHeaders = {
@@ -63,21 +70,22 @@ class mrRest {
         }
     }
 
-    /*
-    Patch an object using endpoint and a Javascript object.
-
-    If the request succeeds a boolean status of true, and the JSON is returned.
-    Otherwise, if the request fails a boolean status of false, and status message is returned.
-    */
-    async patchObj(endpoint, obj, head = {'Accept': 'application/json'}) {
+    /**
+     * Patch an object using endpoint and a Javascript object.
+     * @param  {String} endpoint The full URL to the RESTful target
+     * @param  {Object} obj Data objects for input
+     * @param  {Returns} result A tuple starting with a boolean success/failure and resulting data
+     */
+    async patchObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
-        // TODO confirm API Key
         const myHeaders = {
-            'Accept': 'application/json',
-            'Authorization': this.apiKey
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': this.apiKey
+            }
         }
         try {
-            const resp = await axios.patch(url = myURL, data = obj, {headers: myHeaders})
+            const resp = await axios.patch(url = myURL, data = obj, myHeaders)
             return (true, resp.data)
         } catch (err) {
             console.error(err)
@@ -85,21 +93,22 @@ class mrRest {
         }
     }
 
-    /*
-    Delete an object using endpoint and a Javascript object.
-
-    If the request succeeds a boolean status of true, and the JSON is returned.
-    Otherwise, if the request fails a boolean status of false, and status message is returned.
-    */
-    async deleteObj(endpoint, obj, head = {'Accept': 'application/json'}) {
+    /**
+     * Delete an object using endpoint and a Javascript object.
+     * @param  {String} endpoint The full URL to the RESTful target
+     * @param  {Object} obj Data objects for input
+     * @param  {Returns} result A tuple starting with a boolean success/failure and resulting data
+     */
+    async deleteObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
-        // TODO confirm API Key
         const myHeaders = {
-            'Accept': 'application/json',
-            'Authorization': this.apiKey
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': this.apiKey
+            }
         }
         try {
-            const resp = await axios.delete(url = myURL, data = obj, {headers: myHeaders})
+            const resp = await axios.delete(url = myURL, data = obj, myHeaders)
             return (true, resp.data)
         } catch (err) {
             console.error(err)
