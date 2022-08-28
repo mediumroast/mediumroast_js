@@ -27,7 +27,8 @@
         "status":2,
         "abstract":"I wish I wasn't so harry.",
         "linked_studies": {"foo": "bar"},
-        "linked_companies": {"foo": "bar"}
+        "linked_companies": {"foo": "bar"},
+        "topics": {"a": "topic"}
     },
     {
         "creator_id":1,
@@ -53,10 +54,11 @@
         "country":"N/A",
         "region":"N/A",
         "phone":"N/A",
-        "interaction_type": 1,
+        "interaction_type": "Foo",
         "status":2,
         "abstract":"I wish I wasn't so harry.",
         "linked_studies": {"foo": "bar"},
-        "linked_companies": {"foo": "bar"}
+        "linked_companies": {"foo": "bar"},
+        "topics": {"a": "topic"}
     }
 ]
