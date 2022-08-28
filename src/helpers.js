@@ -187,9 +187,9 @@ class CLI {
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {
             if (err) {
-                return false, 'Did not save file [' + fileName + '] because: ' + err
+                return [false, 'Did not save file [' + fileName + '] because: ' + err]
             } else {
-                return true, 'Saved file [' + fileName + ']'
+                return [true, 'Saved file [' + fileName + ']', null]
             }
         })
     }
@@ -197,9 +197,9 @@ class CLI {
     readTextFile(fileName) {
         try {
             const fileData = fs.readFileSync(fileName, 'utf8')
-            return true, 'Read file [' + fileName + ']', fileData
+            return [true, 'Read file [' + fileName + ']', fileData]
         } catch (err) {
-            return false, 'Unable to read file [' + fileName + '] because: ' + err
+            return [false, 'Unable to read file [' + fileName + '] because: ' + err, null]
         }
     }
 
@@ -208,10 +208,10 @@ class CLI {
         try {
             if (!fs.existsSync(name)) {
                 fs.mkdirSync(name)
-                return true, 'Created directory [' + name + ']'
+                return [true, 'Created directory [' + name + ']', null]
             }
         } catch (err) {
-            return false, 'Did not create directory [' + name + '] because: ' + err
+            return [false, 'Did not create directory [' + name + '] because: ' + err, null]
         }
     }
 
@@ -219,9 +219,9 @@ class CLI {
     rmDir(dirName) {
         try {
             fs.rmdirSync(dirName, {recursive: true})
-            return true, 'Removed directory [' + dirName + '] and all contents'
+            return [true, 'Removed directory [' + dirName + '] and all contents', null]
         } catch (err) {
-            return false, 'Did not remove directory [' + dirName + '] because: ' + err
+            return [false, 'Did not remove directory [' + dirName + '] because: ' + err, null]
         }
     }
 

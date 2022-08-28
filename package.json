@@ -55,6 +55,7 @@
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "json2csv": "^5.0.7",
+    "node-fetch": "^3.2.10",
     "xlsx": "^0.18.5"
   }
 }

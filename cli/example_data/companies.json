@@ -19,7 +19,9 @@
         "longitude": -117.095620,
         "latitude": 32.899690,
         "logo_url": "Unknown",
-        "icon": "Unknown"
+        "icon": "Unknown",
+        "linked_studies": {"foo": "bar"},
+        "linked_interactions": {"foo": "bar"}
     },
     {
         "name": "Teradata, Inc.",
@@ -41,7 +43,9 @@
         "longitude": -117.092370,
         "latitude": 33.022330,
         "logo_url": "Unknown",
-        "icon": "Unknown"
+        "icon": "Unknown",
+        "linked_studies": {"foo": "bar"},
+        "linked_interactions": {"foo": "bar"}
     },
     {
         "name": "Hitachi, Ltd.",
@@ -63,7 +67,9 @@
         "longitude": 139.749375,
         "latitude": 35.670993,
         "logo_url": "Unknown",
-        "icon": "Unknown"
+        "icon": "Unknown",
+        "linked_studies": {"foo": "bar"},
+        "linked_interactions": {"foo": "bar"}
     },
     {
         "name": "International Business Machine, Corp.",
@@ -85,6 +91,8 @@
         "longitude": -73.720320,
         "latitude": 41.108230,
         "logo_url": "Unknown",
-        "icon": "Unknown"
+        "icon": "Unknown",
+        "linked_studies": {"foo": "bar"},
+        "linked_interactions": {"foo": "bar"}
     }
 ]

@@ -39,25 +39,42 @@ const myCredential = myAuth.login()
 const apiController = new Companies(myCredential)
 
 // Predefine the results variable
-let results = null
+let [success, stat, results] = [null, null, null]
 
 // Process the cli options
 if (myArgs.find_by_id) {
-   results = await apiController.findById(myArgs.find_by_id)
+   [success, stat, results] = await apiController.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
-   results = await apiController.findByName(myArgs.find_by_name)
+   [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
    const myCLIObj = JSON.parse(myArgs.find_by_x)
    const toFind = Object.entries(myCLIObj)[0]
-   results = await apiController.findByX(toFind[0], toFind[1])
+   [success, stat, results] = await apiController.findByX(toFind[0], toFind[1])
 } else if (myArgs.create) {
-   results = await apiController.createObj(myArgs.create)
+   const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
+   if (success) {
+      const jsonData = JSON.parse(rawData)
+      const toRegister = jsonData.map(async element => {
+         const [success, stat, resp] = await apiController.createObj(element)
+         if (await stat.status_code == 200) {
+            console.log(`SUCCESS: Created new [${objectType}] object in the mediumroast.io backend.`)
+         } else {
+            console.error('ERROR (%d): ' + stat.status_msg, stat.status_code)
+         }
+      })
+      const registered = await Promise.all(toRegister)
+      console.log(`SUCCESS: Loaded [${jsonData.length}] objects from file [${myArgs.create}].`)
+      process.exit(0)
+   } else {
+      console.error("ERROR (%d): " + msg, -1)
+      process.exit(-1)
+   }
 } else if (myArgs.delete) {
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
 } else {
-   results = await apiController.getAll()
+   [success, stat, results] = await apiController.getAll()
 }
 
 // Emit the output
