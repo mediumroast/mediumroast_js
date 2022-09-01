@@ -111,7 +111,7 @@ class CLI {
             "user": null,
             "secret": null,
             "workDir": null,
-            "outputDir": null
+            "outputDir": null,
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -122,7 +122,7 @@ class CLI {
 
         // Set up additional parameters from config file
         env.workDir = config.get('DEFAULT', 'working_dir')
-        env.outputDir = config.get('document_settings', 'output_dir')
+        env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
 
         return env
     }
@@ -248,6 +248,19 @@ class CLI {
         }
     }
 
+    // Download the objects
+    async downloadInteractions (interactions, directory, apiController) {
+    for (const interaction in interactions) {
+        const objWithPath = interactions[interaction].url.split('://').pop()
+        const myObj = objWithPath.split('/').pop()
+        const myParams = {Bucket: s3Source, Key: myObj}
+        const myFile = fs.createWriteStream(directory + myObj)
+        apiController.getObject(myParams).
+            on('httpData', function(chunk) { myFile.write(chunk) }).
+            on('httpDone', function() { myFile.end() }).
+            send()
+    }
+}
     
 }
 

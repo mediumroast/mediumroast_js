@@ -3,19 +3,19 @@ import docx from 'docx'
 import Utilities from './common.js'
 
 
-class References {
+class Section {
     constructor(interactions, objectName, objectType, protocol, characterLimit = 1000) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
         //      the CLI is a likely place to do this for now.  Suspect for the web_ui
         //      we will need some server side logic to make this happen.
-        
+
         this.interactions = interactions
         this.characterLimit = characterLimit
         this.introduction = 'The mediumroast.io system has automatically generated this section.' +
             ' It includes key metadata from each interaction associated to the object ' + objectName +
-            '.  If this report document is produced as a package, instead of standalone, then the' + 
+            '.  If this report document is produced as a package, instead of standalone, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.objectName = objectName
@@ -24,7 +24,7 @@ class References {
         this.fontSize = 10 // We need to pass this in from the config file
         this.protocol = protocol
         this.protoDoc = this.createRefs()
-        this.util = new Utilities
+        this.util = new Utilities()
     }
 
     // Create the entire section as a proto document to be fed to a format like docx, ..., html.
@@ -76,14 +76,14 @@ class References {
     }
 
     // Create a paragraph
-    makeParagraph (paragraph, size, bold) {
+    makeParagraph(paragraph, size, bold) {
         return new docx.Paragraph({
             children: [
                 new docx.TextRun({
                     text: paragraph,
                     font: this.font,
                     size: size ? size : 20,
-                    bold: bold ? bold : false, 
+                    bold: bold ? bold : false,
                 })
             ]
         })
@@ -124,24 +124,24 @@ class References {
     makeDocx() {
         const excerptAnchor = this.util.makeInternalHyperLink('Summary Excerpts', 'summary_excerpts')
         let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
-         
+
         for (const myReference in this.protoDoc.references) {
             // String(this.protoDoc.references[myReference].guid)
-            finaldoc.push(this.util.makeBookmark2(myReference, String(this.protoDoc.references[myReference].guid).substring(0,40)))
+            finaldoc.push(this.util.makeBookmark2(myReference, String(this.protoDoc.references[myReference].guid).substring(0, 40)))
             finaldoc.push(this.makeParagraph(
                 this.protoDoc.references[myReference].abstract,
                 1.5 * this.fontSize))
             const permaLink = this.makeURL(
-                'Document link', 
+                'Document link',
                 this.protoDoc.references[myReference].url)
 
             finaldoc.push(
                 new docx.Paragraph({
-                    children:[
+                    children: [
                         this.makeTextrun('[ '),
                         permaLink,
-                        this.makeTextrun(' | Date: ' + this.protoDoc.references[myReference].date + ' | '), 
-                        this.makeTextrun('Time: ' + this.protoDoc.references[myReference].time + ' | '), 
+                        this.makeTextrun(' | Date: ' + this.protoDoc.references[myReference].date + ' | '),
+                        this.makeTextrun('Time: ' + this.protoDoc.references[myReference].time + ' | '),
                         this.makeTextrun('Type: ' + this.protoDoc.references[myReference].type + ' | '),
                         excerptAnchor,
                         this.makeTextrun(' ]'),
@@ -158,4 +158,86 @@ class References {
     }
 }
 
-export default References
+class Standalone {
+    constructor(interaction, creator, authorCompany) {
+        this.creator = creator
+        this.authorCompany = authorCompany
+        this.title = interaction.name + ' Interaction Report'
+        this.interaction = interaction
+        this.description = 'An Interaction report summarizing ' + interaction.name + ' and including relevant company data.'
+        this.introduction = 'The mediumroast.io system automatically generated this document.' +
+            ' It includes key metadata for this Interaction object and relevant metadata from the associated company.' + 
+            '  If this report document is produced as a package, instead of standalone, then the' +
+            ' hyperlinks are active and will link to documents on the local folder after the' +
+            ' package is opened.'
+        this.abstract = interaction.abstract
+        this.util = new Utilities()
+        this.regions = {
+            AMER: 'Americas',
+            EMEA: 'Europe, Middle East and Africa',
+            APAC: 'Asia Pacific, Japan and China'
+        }
+    }
+
+
+    makeIntro () {
+        const myIntro = [
+            this.util.makeHeading1('Introduction'),
+            this.util.makeParagraph(this.introduction)
+        ]
+        // console.log(myIntro)
+        return myIntro
+    }
+
+    metadataTable () {
+        // Name (when package links to physical file)
+        // Description
+        // Creation Date
+        // Location (Use Lat Long pair hyper link)
+        // Associated Company (Hyper link)
+        const myTable = new docx.Table({
+            columnWidths: [20, 80],
+            rows: [
+                this.util.basicRow('Interaction Name', this.interaction.name),
+                this.util.basicRow('Description', this.interaction.description),
+                this.util.basicRow('Creation Date', this.interaction.creation_date),
+                this.util.basicRow('Region', this.regions[this.interaction.region]),
+                this.util.basicRow('Type', this.interaction.interaction_type),
+                this.util.basicRow('Abstract', this.interaction.abstract),
+            ],
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+        // console.log(myTable)
+        return myTable
+    }
+
+    abstract () {
+        // Abstract (might need outside of the table)
+        null
+    }
+
+    makeDocx() {
+        // Set up the default options for the document
+        const myDocument = [].concat(this.makeIntro(),[this.util.makeHeading1('Interaction Detail'), this.metadataTable()])
+        // console.log(myDocument)
+
+        return new docx.Document ({
+            creator: this.creator,
+            company: this.authorCompany,
+            title: this.title,
+            description: this.description,
+            styles: {default: this.util.styling.default},
+            numbering: this.util.styling.numbering,
+            sections: [{
+                properties: {},
+                children: myDocument,
+            }],
+        })
+
+    }
+}
+
+export { Section, Standalone }

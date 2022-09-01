@@ -7,9 +7,10 @@ import docx from 'docx'
 class Utilities {
     constructor (font, fontSize, textFontSize, textFontColor) {
         this.font = font ? font : 'Avenir Next'
-        this.size = fontSize ? fontSize : 10
-        this.textFontSize = textFontSize
-        this.textFontColor = textFontColor
+        this.size = fontSize ? fontSize : 11
+        this.textFontSize = textFontSize ? textFontSize : 22
+        this.textFontColor = textFontColor ? textFontColor : '#41a6ce'
+        this.fontFactor = 1
         this.styling = this.initStyles()
     }
 
@@ -266,20 +267,6 @@ class Utilities {
         })
     }
 
-    makeBookmark2(text, ident) {
-        return new docx.Paragraph({
-            heading: docx.HeadingLevel.HEADING_2,
-            children: [
-                new docx.Bookmark({
-                    id: String(ident),
-                    children: [
-                        new docx.TextRun({text: text})
-                    ]
-                })
-            ]
-        })
-    }
-
     // Create a text of heading style 2
     makeHeading3(text) {
         return new docx.Paragraph({
@@ -303,6 +290,21 @@ class Utilities {
         })
     }
 
+    // Create a bookmark needed to create an internal hyperlink
+    makeBookmark2(text, ident) {
+        return new docx.Paragraph({
+            heading: docx.HeadingLevel.HEADING_2,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
     // Create an external hyperlink
     makeExternalHyperLink(text, link) {
         return new docx.ExternalHyperlink({
@@ -315,6 +317,29 @@ class Utilities {
                 })
             ],
             link: link
+        })
+    }
+
+    // Basic row to produce a name/value pair
+    basicRow (name, data) {
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 20,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [this.makeParagraph(name, this.fontFactor * this.fontSize, true)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 80,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [this.makeParagraph(data, this.fontFactor * this.fontSize)]
+                })
+            ]
         })
     }
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env node --trace-atomics-wait
+#!/usr/bin/env node
 
 /**
  * A CLI utility used for accessing and reporting on mediumroast.io interaction objects
@@ -11,6 +11,15 @@
 // Import required modules
 import { Auth, Interactions } from '../src/api/mrServer.js'
 import { CLI } from '../src/helpers.js'
+import { Standalone } from '../src/report/interactions.js'
+import docx from 'docx'
+import * as fs from 'fs'
+
+async function writeReport (docObj, fileName) {
+   await docx.Packer.toBuffer(docObj).then((buffer) => {
+       fs.writeFileSync(fileName, buffer)
+   })
+}
 
 // Globals
 const objectType = 'Interactions'
@@ -41,8 +50,24 @@ const apiController = new Interactions(myCredential)
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
 
+
+
+
 // Process the cli options
-if (myArgs.find_by_id) {
+if (myArgs.report) {
+
+   [success, stat, results] = await apiController.findById(myArgs.report)
+   
+   // Set up the document controller
+   const docController = new Standalone (results[0], 'foo', 'bar')
+   const myDoc = docController.makeDocx()
+
+   const myFile = results[0].name.replace(/ /g,"_") + '.docx'
+   await writeReport(myDoc, myEnv.outputDir + '/' + myFile)
+
+   process.exit(0)
+
+} else if (myArgs.find_by_id) {
    [success, stat, results] = await apiController.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
    [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
