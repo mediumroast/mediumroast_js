@@ -1,10 +1,12 @@
 // Import required modules
 import docx from 'docx'
-import Utilities from './common.js'
 import boxPlot from 'box-plot'
 
+import Utilities from './common.js'
+import {CompanySection} from './companies.js'
 
-class Section {
+
+class InteractionSection {
     constructor(interactions, objectName, objectType, protocol, characterLimit = 1000) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
@@ -159,7 +161,7 @@ class Section {
     }
 }
 
-class Standalone {
+class InteractionStandalone {
     constructor(interaction, company, creator, authorCompany) {
         this.creator = creator
         this.authorCompany = authorCompany
@@ -239,6 +241,9 @@ class Standalone {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
 
+        // Construct the company section
+        const companySection = new CompanySection(this.company)
+
         // Set up the default options for the document
         const myDocument = [].concat(
             this.makeIntro(),
@@ -249,8 +254,8 @@ class Standalone {
                 this.util.topicTable(this.topics),
                 this.util.makeHeading1('Abstract'),
                 this.util.makeParagraph(this.abstract),
-                this.util.pageBreak(),
-                this.util.makeHeading1('Company Detail')
+                this.util.makeHeading1('Company Detail'),
+                companySection.makeFirmographics()
             ])
     
         // Construct the document
@@ -272,4 +277,4 @@ class Standalone {
     }
 }
 
-export { Section, Standalone }
+export { InteractionSection, InteractionStandalone }

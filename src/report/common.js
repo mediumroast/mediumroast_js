@@ -358,7 +358,7 @@ class Utilities {
                     text: name,
                     style: 'Hyperlink',
                     font: this.font,
-                    size: this.fontFactor * this.fontSize
+                    size: this.fontSize
                 })
             ],
             link: link

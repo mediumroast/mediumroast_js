@@ -11,7 +11,7 @@
 // Import required modules
 import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
 import { CLI } from '../src/helpers.js'
-import { Standalone } from '../src/report/interactions.js'
+import { InteractionStandalone } from '../src/report/interactions.js'
 
 // Globals
 const objectType = 'Interactions'
@@ -54,7 +54,7 @@ if (myArgs.report) {
    const companyName = Object.keys(int_results[0].linked_companies)[0]
    const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
    // Set up the document controller
-   const docController = new Standalone (int_results[0], comp_results[0], 'mediumroast.io barrista robot', 'Mediumroast, Inc.')
+   const docController = new InteractionStandalone(int_results[0], comp_results[0], 'mediumroast.io barrista robot', 'Mediumroast, Inc.')
    // Create the document
    const [report_success,report_stat, report_result] = await docController.makeDocx()
    if (report_success) {
