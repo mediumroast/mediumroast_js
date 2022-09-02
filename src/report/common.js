@@ -2,6 +2,7 @@
 import docx from 'docx'
 import * as fs from 'fs'
 
+
 // TODO Move common functions like paragraphs and texts into this module.
 //      These need to be set up either for both HTML and DOCX
 

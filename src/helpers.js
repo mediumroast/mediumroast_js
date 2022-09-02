@@ -93,6 +93,10 @@ class CLI {
                 '--report <ID>',
                 'Create an MS word document for an object by specifying the object\'s id'
             )
+            .option(
+                '--package',
+                'An additional switch used with --report to generate a ZIP package that includes the interaction'
+            )
 
         program.parse(process.argv)
         return program.opts()
@@ -112,6 +116,10 @@ class CLI {
             "secret": null,
             "workDir": null,
             "outputDir": null,
+            "s3Server": null,
+            "s3User": null,
+            "s3APIKey": null,
+            "s3Region": null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -123,7 +131,12 @@ class CLI {
         // Set up additional parameters from config file
         env.workDir = config.get('DEFAULT', 'working_dir')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
+        env.s3Server = config.get('s3_settings', 'server')
+        env.s3User = config.get('s3_settings', 'user')
+        env.s3Region = config.get('s3_settings', 'region')
+        env.s3APIKey = config.get('s3_settings', 'api_key')
 
+        // Return the environmental settings needed for the CLI to operate
         return env
     }
 

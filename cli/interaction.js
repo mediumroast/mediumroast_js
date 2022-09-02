@@ -12,6 +12,8 @@
 import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
 import { CLI } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
+import AWS from 'aws-sdk'
+import { utils } from 'xlsx'
 
 // Globals
 const objectType = 'Interactions'
@@ -43,9 +45,6 @@ const companyController = new Companies(myCredential)
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
 
-
-
-
 // Process the cli options
 if (myArgs.report) {
    // Retrive the interaction by Id
@@ -53,10 +52,56 @@ if (myArgs.report) {
    // Retrive the company by Name
    const companyName = Object.keys(int_results[0].linked_companies)[0]
    const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
+   
    // Set up the document controller
-   const docController = new InteractionStandalone(int_results[0], comp_results[0], 'mediumroast.io barrista robot', 'Mediumroast, Inc.')
+   const docController = new InteractionStandalone(
+      int_results[0], // Interaction to report on
+      comp_results[0], // The company associated to the interaction
+      'mediumroast.io barrista robot', // The author
+      'Mediumroast, Inc.' // The authoring company/org
+   )
+
+   // Define location and name, depending upon the package switch
+   let fileName = process.env.HOME + '/Documents/' + this.int_results[0].name.replace(/ /g,"_") + '.docx'
+   if(myArgs.package) {
+      // Set the root name to be used for file and directory names
+      const baseName = this.int_results[0].name.replace(/ /g,"_")
+      // Set the directory name
+      const baseDir = myEnv.workDir + '/' + baseName
+      // Create the working directory
+      const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir)
+      // If the directory creations was successful download the interaction
+      if(dir_success) {
+         fileName = baseDir + '/' + baseName + '_report.docx'
+         /* 
+         TODO the below only assumes we're storing data in S3, this is intentionally naive.
+             In the future we will need to be led by the URL string to determine where and what
+             to download from.  Today we only support S3, but this could be Sharepoint, 
+             a local file system, OneDrive, GDrive, etc.  There might be an initial less naive
+             implementation that looks at OneDrive, GDrive, DropBox, etc. as local file system
+             access points, but the tradeoff would be that caffeine would need to run on a
+             system with file system access to these objects.
+         */
+         const s3Ctl = new AWS.S3({
+            accessKeyId: myEnv.s3User ,
+            secretAccessKey: myEnv.s3APIKey,
+            endpoint: myEnv.s3Server ,
+            s3ForcePathStyle: true, // needed with minio?
+            signatureVersion: 'v4',
+            region: myEnv.s3Region // S3 won't work without the region setting
+        })
+        await myCLI.downloadInteractions(int_results, baseDir, s3Ctl)
+      // Else error out and exit
+      } else {
+         console.error('ERROR (%d): ' + dir_msg, -1)
+         process.exit(-1)
+      }
+
+   }
    // Create the document
-   const [report_success,report_stat, report_result] = await docController.makeDocx()
+   // TODO need switch for package
+   // TODO need to set fileName
+   const [report_success, report_stat, report_result] = await docController.makeDocx()
    if (report_success) {
       console.log(report_stat)
       process.exit(0)
