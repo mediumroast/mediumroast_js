@@ -1,5 +1,6 @@
 // Import modules
 import docx from 'docx'
+import * as fs from 'fs'
 
 // TODO Move common functions like paragraphs and texts into this module.
 //      These need to be set up either for both HTML and DOCX
@@ -12,6 +13,11 @@ class Utilities {
         this.textFontColor = textFontColor ? textFontColor : '#41a6ce'
         this.fontFactor = 1
         this.styling = this.initStyles()
+        this.regions = {
+            AMER: 'Americas',
+            EMEA: 'Europe, Middle East and Africa',
+            APAC: 'Asia Pacific and Japan'
+        }
     }
 
     // Initialize the common styles for the doc
@@ -28,8 +34,8 @@ class Utilities {
                         },
                         paragraph: {
                             spacing: {
-                                before: 50,
-                                after: 100,
+                                before: 160,
+                                after: 80,
                             },
                         },
                     },
@@ -320,7 +326,7 @@ class Utilities {
         })
     }
 
-    // Basic row to produce a name/value pair
+    // Basic table row to produce a name/value pair
     basicRow (name, data) {
         // return the row
         return new docx.TableRow({
@@ -342,6 +348,105 @@ class Utilities {
             ]
         })
     }
+
+    // Create the rows with URLs/links
+    urlRow(category, name, link) {
+        // define the link to the target URL
+        const myUrl = new docx.ExternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: name,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: this.fontFactor * this.fontSize
+                })
+            ],
+            link: link
+        })
+
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 20,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [this.makeParagraph(category, this.fontFactor * this.fontSize, true)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 80,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [new docx.Paragraph({children:[myUrl]})]
+                })
+            ]
+        })
+    }
+
+    basicTopicRow (theme, score, rank, bold) {
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 60,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(theme, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 20,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(score, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 20,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(rank, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+            ]
+        })
+    }
+
+    // Create a table for topics
+    topicTable(topics) {
+        let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
+        for (const topic in topics) {
+            myRows.push(this.basicTopicRow(topic, topics[topic].score.toFixed(2), topics[topic].rank))
+        }
+        // define the table with the summary theme information
+        const myTable = new docx.Table({
+            columnWidths: [60, 20, 20],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return myTable
+    }
+
+    // Write the report to storage
+    async writeReport (docObj, fileName) {
+        try {
+            await docx.Packer.toBuffer(docObj).then((buffer) => {
+                fs.writeFileSync(fileName, buffer)
+            })
+            return [true, 'SUCCESS: Created file [' + fileName + '] for object.', null]
+        } catch(err) {
+            return [false, 'ERROR: Failed to create report for object.', null]
+        }
+     }
 }
 
 export default Utilities

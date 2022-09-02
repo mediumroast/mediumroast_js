@@ -9,17 +9,9 @@
  */
 
 // Import required modules
-import { Auth, Interactions } from '../src/api/mrServer.js'
+import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
 import { CLI } from '../src/helpers.js'
 import { Standalone } from '../src/report/interactions.js'
-import docx from 'docx'
-import * as fs from 'fs'
-
-async function writeReport (docObj, fileName) {
-   await docx.Packer.toBuffer(docObj).then((buffer) => {
-       fs.writeFileSync(fileName, buffer)
-   })
-}
 
 // Globals
 const objectType = 'Interactions'
@@ -46,6 +38,7 @@ const myAuth = new Auth(
 )
 const myCredential = myAuth.login()
 const apiController = new Interactions(myCredential)
+const companyController = new Companies(myCredential)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
@@ -55,27 +48,35 @@ let [success, stat, results] = [null, null, null]
 
 // Process the cli options
 if (myArgs.report) {
-
-   [success, stat, results] = await apiController.findById(myArgs.report)
-   
+   // Retrive the interaction by Id
+   const [int_success, int_stat, int_results] = await apiController.findById(myArgs.report)
+   // Retrive the company by Name
+   const companyName = Object.keys(int_results[0].linked_companies)[0]
+   const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
    // Set up the document controller
-   const docController = new Standalone (results[0], 'foo', 'bar')
-   const myDoc = docController.makeDocx()
-
-   const myFile = results[0].name.replace(/ /g,"_") + '.docx'
-   await writeReport(myDoc, myEnv.outputDir + '/' + myFile)
-
-   process.exit(0)
-
+   const docController = new Standalone (int_results[0], comp_results[0], 'mediumroast.io barrista robot', 'Mediumroast, Inc.')
+   // Create the document
+   const [report_success,report_stat, report_result] = await docController.makeDocx()
+   if (report_success) {
+      console.log(report_stat)
+      process.exit(0)
+   } else {
+      console.error(report_stat, -1)
+      process.exit(-1)
+   }
 } else if (myArgs.find_by_id) {
+   // Retrive the interaction by Id
    [success, stat, results] = await apiController.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
+   // Retrive the interaction by Name
    [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
+   // Retrive the interaction by attribute as specified by X
    const myCLIObj = JSON.parse(myArgs.find_by_x)
    const toFind = Object.entries(myCLIObj)[0]
    [success, stat, results] = await apiController.findByX(toFind[0], toFind[1])
 } else if (myArgs.create) {
+   // Create objects as defined in a JSON file, see example_data/*.json for examples
    const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
    if (success) {
       const jsonData = JSON.parse(rawData)
@@ -95,10 +96,12 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
+   // Delete an object
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
 } else {
+   // Get all objects
    [success, stat, results] = await apiController.getAll()
 }
 

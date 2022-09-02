@@ -1,6 +1,7 @@
 // Import required modules
 import docx from 'docx'
 import Utilities from './common.js'
+import boxPlot from 'box-plot'
 
 
 class Section {
@@ -159,11 +160,12 @@ class Section {
 }
 
 class Standalone {
-    constructor(interaction, creator, authorCompany) {
+    constructor(interaction, company, creator, authorCompany) {
         this.creator = creator
         this.authorCompany = authorCompany
         this.title = interaction.name + ' Interaction Report'
         this.interaction = interaction
+        this.company = company
         this.description = 'An Interaction report summarizing ' + interaction.name + ' and including relevant company data.'
         this.introduction = 'The mediumroast.io system automatically generated this document.' +
             ' It includes key metadata for this Interaction object and relevant metadata from the associated company.' + 
@@ -172,20 +174,40 @@ class Standalone {
             ' package is opened.'
         this.abstract = interaction.abstract
         this.util = new Utilities()
-        this.regions = {
-            AMER: 'Americas',
-            EMEA: 'Europe, Middle East and Africa',
-            APAC: 'Asia Pacific, Japan and China'
-        }
+        this.topics = this.rankTags(this.interaction.topics)
     }
 
+    rankTags (tags) {
+        const ranges = boxPlot(Object.values(this.interaction.topics))
+        let finalTags = {}
+        for (const tag in tags) {
+            // Rank the tag score using the ranges derived from box plots
+            // if > Q3 then the ranking is high
+            // if in between Q2 and Q3 then the ranking is medium
+            // if < Q3 then the ranking is low
+            let rank = null
+            if (tags[tag] > ranges.upperQuartile) {
+                rank = 'High'
+            } else if (tags[tag] < ranges.lowerQuartile) {
+                rank = 'Low'
+            } else if (ranges.lowerQuartile <= tags[tag] <= ranges.upperQuartile) {
+                rank = 'Medium'
+            }
+    
+            finalTags[tag] = {
+                score: tags[tag], // Math.round(tags[tag]),
+                rank: rank
+            }
+            
+        }
+        return finalTags
+    }
 
     makeIntro () {
         const myIntro = [
             this.util.makeHeading1('Introduction'),
             this.util.makeParagraph(this.introduction)
         ]
-        // console.log(myIntro)
         return myIntro
     }
 
@@ -201,30 +223,38 @@ class Standalone {
                 this.util.basicRow('Interaction Name', this.interaction.name),
                 this.util.basicRow('Description', this.interaction.description),
                 this.util.basicRow('Creation Date', this.interaction.creation_date),
-                this.util.basicRow('Region', this.regions[this.interaction.region]),
+                this.util.basicRow('Region', this.util.regions[this.interaction.region]),
                 this.util.basicRow('Type', this.interaction.interaction_type),
-                this.util.basicRow('Abstract', this.interaction.abstract),
             ],
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
             }
         })
-        // console.log(myTable)
         return myTable
     }
 
-    abstract () {
-        // Abstract (might need outside of the table)
-        null
-    }
 
-    makeDocx() {
+    async makeDocx(fileName) {
+        // If fileName isn't specified create a default
+        fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
+
         // Set up the default options for the document
-        const myDocument = [].concat(this.makeIntro(),[this.util.makeHeading1('Interaction Detail'), this.metadataTable()])
-        // console.log(myDocument)
-
-        return new docx.Document ({
+        const myDocument = [].concat(
+            this.makeIntro(),
+            [
+                this.util.makeHeading1('Interaction Detail'), 
+                this.metadataTable(),
+                this.util.makeHeading1('Topics'),
+                this.util.topicTable(this.topics),
+                this.util.makeHeading1('Abstract'),
+                this.util.makeParagraph(this.abstract),
+                this.util.pageBreak(),
+                this.util.makeHeading1('Company Detail')
+            ])
+    
+        // Construct the document
+        const myDoc = new docx.Document ({
             creator: this.creator,
             company: this.authorCompany,
             title: this.title,
@@ -237,6 +267,8 @@ class Standalone {
             }],
         })
 
+        // Persist the document to storage
+        return await this.util.writeReport(myDoc, fileName)
     }
 }
 
