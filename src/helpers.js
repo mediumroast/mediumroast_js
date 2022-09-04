@@ -14,6 +14,8 @@ import Table from 'cli-table'
 import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
 import zip from 'adm-zip'
+import AWS from 'aws-sdk'
+
 
 class CLI {
     constructor(version, name, description, objectType) {
@@ -119,7 +121,8 @@ class CLI {
             "s3Server": null,
             "s3User": null,
             "s3APIKey": null,
-            "s3Region": null
+            "s3Region": null,
+            "s3Source": null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -135,6 +138,7 @@ class CLI {
         env.s3User = config.get('s3_settings', 'user')
         env.s3Region = config.get('s3_settings', 'region')
         env.s3APIKey = config.get('s3_settings', 'api_key')
+        env.s3Source = config.get('s3_settings', 'source')
 
         // Return the environmental settings needed for the CLI to operate
         return env
@@ -220,8 +224,10 @@ class CLI {
     safeMakedir(name) {
         try {
             if (!fs.existsSync(name)) {
-                fs.mkdirSync(name)
+                fs.mkdirSync(name, { recursive: true })
                 return [true, 'Created directory [' + name + ']', null]
+            } else {
+                return [true, 'Directory [' + name + '] exists did not create.', null]
             }
         } catch (err) {
             return [false, 'Did not create directory [' + name + '] because: ' + err, null]
@@ -262,18 +268,24 @@ class CLI {
     }
 
     // Download the objects
-    async downloadInteractions (interactions, directory, apiController) {
-    for (const interaction in interactions) {
-        const objWithPath = interactions[interaction].url.split('://').pop()
-        const myObj = objWithPath.split('/').pop()
-        const myParams = {Bucket: s3Source, Key: myObj}
-        const myFile = fs.createWriteStream(directory + myObj)
-        apiController.getObject(myParams).
-            on('httpData', function(chunk) { myFile.write(chunk) }).
-            on('httpDone', function() { myFile.end() }).
-            send()
+    async s3DownloadObjs (interactions, env, targetDirectory) {
+        const s3Ctl = new AWS.S3({
+            accessKeyId: env.s3User ,
+            secretAccessKey: env.s3APIKey,
+            endpoint: env.s3Server ,
+            s3ForcePathStyle: true, // needed with minio?
+            signatureVersion: 'v4',
+            region: env.s3Region // S3 won't work without the region setting
+        })
+        for (const interaction in interactions) {
+            const objWithPath = interactions[interaction].url.split('://').pop()
+            const myObj = objWithPath.split('/').pop()
+            const myParams = {Bucket: env.s3Source, Key: myObj}
+            const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
+            const s3Get = await s3Ctl.getObject(myParams).promise()
+            myFile.write(s3Get.Body)
+        }
     }
-}
     
 }
 

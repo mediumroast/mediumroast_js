@@ -12,8 +12,6 @@
 import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
 import { CLI } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
-import AWS from 'aws-sdk'
-import { utils } from 'xlsx'
 
 // Globals
 const objectType = 'Interactions'
@@ -62,14 +60,15 @@ if (myArgs.report) {
    )
 
    // Define location and name, depending upon the package switch
-   let fileName = process.env.HOME + '/Documents/' + this.int_results[0].name.replace(/ /g,"_") + '.docx'
+   let fileName = process.env.HOME + '/Documents/' + int_results[0].name.replace(/ /g,"_") + '.docx'
    if(myArgs.package) {
       // Set the root name to be used for file and directory names
-      const baseName = this.int_results[0].name.replace(/ /g,"_")
+      const baseName = int_results[0].name.replace(/ /g,"_")
       // Set the directory name
       const baseDir = myEnv.workDir + '/' + baseName
       // Create the working directory
-      const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir)
+      const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir + '/interactions')
+      
       // If the directory creations was successful download the interaction
       if(dir_success) {
          fileName = baseDir + '/' + baseName + '_report.docx'
@@ -82,15 +81,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         const s3Ctl = new AWS.S3({
-            accessKeyId: myEnv.s3User ,
-            secretAccessKey: myEnv.s3APIKey,
-            endpoint: myEnv.s3Server ,
-            s3ForcePathStyle: true, // needed with minio?
-            signatureVersion: 'v4',
-            region: myEnv.s3Region // S3 won't work without the region setting
-        })
-        await myCLI.downloadInteractions(int_results, baseDir, s3Ctl)
+         await myCLI.s3DownloadObjs(int_results, myEnv, baseDir + '/interactions')
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -101,7 +92,7 @@ if (myArgs.report) {
    // Create the document
    // TODO need switch for package
    // TODO need to set fileName
-   const [report_success, report_stat, report_result] = await docController.makeDocx()
+   const [report_success, report_stat, report_result] = await docController.makeDocx(fileName, myArgs.package)
    if (report_success) {
       console.log(report_stat)
       process.exit(0)

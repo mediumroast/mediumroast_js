@@ -213,16 +213,26 @@ class InteractionStandalone {
         return myIntro
     }
 
-    metadataTable () {
+    metadataTable (isPackage) {
         // Name (when package links to physical file)
         // Description
         // Creation Date
         // Location (Use Lat Long pair hyper link)
         // Associated Company (Hyper link)
+
+        // Switch the name row if depending upon if this is a package or not
+        const objWithPath = this.interaction.url.split('://').pop()
+        const myObj = objWithPath.split('/').pop()
+        let nameRow = null
+        isPackage ?
+            nameRow = this.util.urlRow('Interaction Name', this.interaction.name, './interactions/' + myObj) :
+            nameRow = this.util.basicRow('Interaction Name', this.interaction.name)
+        
+
         const myTable = new docx.Table({
             columnWidths: [20, 80],
             rows: [
-                this.util.basicRow('Interaction Name', this.interaction.name),
+                nameRow,
                 this.util.basicRow('Description', this.interaction.description),
                 this.util.basicRow('Creation Date', this.interaction.creation_date),
                 this.util.basicRow('Region', this.util.regions[this.interaction.region]),
@@ -237,7 +247,7 @@ class InteractionStandalone {
     }
 
 
-    async makeDocx(fileName) {
+    async makeDocx(fileName, isPackage) {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
 
@@ -249,7 +259,7 @@ class InteractionStandalone {
             this.makeIntro(),
             [
                 this.util.makeHeading1('Interaction Detail'), 
-                this.metadataTable(),
+                this.metadataTable(isPackage),
                 this.util.makeHeading1('Topics'),
                 this.util.topicTable(this.topics),
                 this.util.makeHeading1('Abstract'),
