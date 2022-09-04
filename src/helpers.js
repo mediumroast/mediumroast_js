@@ -250,9 +250,9 @@ class CLI {
             const zipPackage = new zip()
             zipPackage.addLocalFolder(sourceDirectory)
             zipPackage.writeZip(outputFile)
-            console.log(`Created ${outputFile} successfully`)
+            return [true, `Created ${outputFile} successfully`, null]
         } catch (e) {
-            console.log(`Something went wrong. ${e}`)
+            return [false, `Something went wrong. ${e}`, null]
         }
     }
 

@@ -50,6 +50,12 @@ if (myArgs.report) {
    // Retrive the company by Name
    const companyName = Object.keys(int_results[0].linked_companies)[0]
    const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
+   // Set the root name to be used for file and directory names in case of packaging
+   const baseName = int_results[0].name.replace(/ /g,"_")
+   // Set the directory name for the package
+   const baseDir = myEnv.workDir + '/' + baseName
+   // Define location and name of the report output, depending upon the package switch this will change
+   let fileName = process.env.HOME + '/Documents/' + int_results[0].name.replace(/ /g,"_") + '.docx'
    
    // Set up the document controller
    const docController = new InteractionStandalone(
@@ -59,13 +65,8 @@ if (myArgs.report) {
       'Mediumroast, Inc.' // The authoring company/org
    )
 
-   // Define location and name, depending upon the package switch
-   let fileName = process.env.HOME + '/Documents/' + int_results[0].name.replace(/ /g,"_") + '.docx'
+   
    if(myArgs.package) {
-      // Set the root name to be used for file and directory names
-      const baseName = int_results[0].name.replace(/ /g,"_")
-      // Set the directory name
-      const baseDir = myEnv.workDir + '/' + baseName
       // Create the working directory
       const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir + '/interactions')
       
@@ -90,9 +91,26 @@ if (myArgs.report) {
 
    }
    // Create the document
-   // TODO need switch for package
-   // TODO need to set fileName
    const [report_success, report_stat, report_result] = await docController.makeDocx(fileName, myArgs.package)
+
+   // Create the package and cleanup as needed
+   if (myArgs.package) {
+      const [package_success, package_stat, package_result] = await myCLI.createZIPArchive(
+         myEnv.outputDir + '/' + baseName + '.zip',
+         baseDir
+      )
+      if (package_success) {
+         console.log(package_stat)
+         myCLI.rmDir(baseDir)
+         process.exit(0)
+      } else {
+         console.error(package_stat, -1)
+         process.exit(-1)
+      }
+
+   }
+
+   // This is the fallback case if we were just creating the report
    if (report_success) {
       console.log(report_stat)
       process.exit(0)
@@ -100,6 +118,7 @@ if (myArgs.report) {
       console.error(report_stat, -1)
       process.exit(-1)
    }
+   
 } else if (myArgs.find_by_id) {
    // Retrive the interaction by Id
    [success, stat, results] = await apiController.findById(myArgs.find_by_id)
