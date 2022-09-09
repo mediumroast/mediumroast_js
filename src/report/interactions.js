@@ -3,7 +3,7 @@ import docx from 'docx'
 import boxPlot from 'box-plot'
 
 import Utilities from './common.js'
-import {CompanySection} from './companies.js'
+import { CompanySection } from './companies.js'
 
 
 class InteractionSection {
@@ -176,9 +176,12 @@ class InteractionStandalone {
             ' package is opened.'
         this.abstract = interaction.abstract
         this.util = new Utilities()
+        // TODO test rankTags in commons
         this.topics = this.rankTags(this.interaction.topics)
+        // this.topics = this.util.rankTags(this.interaction.topics)
     }
 
+    
     rankTags (tags) {
         const ranges = boxPlot(Object.values(this.interaction.topics))
         let finalTags = {}
@@ -213,6 +216,7 @@ class InteractionStandalone {
         return myIntro
     }
 
+    // TODO move this to the section class above
     metadataTable (isPackage) {
         // Name (when package links to physical file)
         // Description

@@ -183,16 +183,17 @@ class CLI {
 
     outputCSV(objects, env) {
         const fileName = 'Mr_' + this.objectType + '.csv'
-        const myFile = process.env.HOME + '/' + env['outputDir'] + '/' + fileName
-        const parser = new Parser()
-        const csv = parser.parse(objects)
-        success, message = this.saveTextFile(myFile, csv)
+        const myFile = env['outputDir'] + '/' + fileName
+        // const parser = new Parser()
+        const csv = Parser.parse(objects)
+        console.log(csv)
+        this.saveTextFile(myFile, csv)
     }
 
     // TODO add error checking via try catch
     outputXLS(objects, env) {
         const fileName = 'Mr_' + this.objectType + '.xlsx'
-        const myFile = process.env.HOME + '/' + env['outputDir'] + '/' + fileName
+        const myFile = env['outputDir'] + '/' + fileName
         const mySheet = XLSX.utils.json_to_sheet(objects)
         const myWorkbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)

@@ -1,10 +1,11 @@
 // Import modules
 import docx from 'docx'
 import * as fs from 'fs'
+import boxPlot from 'box-plot'
 
 
-// TODO Move common functions like paragraphs and texts into this module.
-//      These need to be set up either for both HTML and DOCX
+// TODO Change class names to: GenericHelpers, DOCXHelpers and HTMLHelpers
+//  rankTags belongs to GenericHelpers
 
 class Utilities {
     constructor (font, fontSize, textFontSize, textFontColor) {
@@ -418,6 +419,47 @@ class Utilities {
         })
     }
 
+    
+
+    // Write the report to storage
+    async writeReport (docObj, fileName) {
+        try {
+            await docx.Packer.toBuffer(docObj).then((buffer) => {
+                fs.writeFileSync(fileName, buffer)
+            })
+            return [true, 'SUCCESS: Created file [' + fileName + '] for object.', null]
+        } catch(err) {
+            return [false, 'ERROR: Failed to create report for object.', null]
+        }
+     }
+
+     // Rank supplied topics and return an object that can be rendered
+     rankTags (tags) {
+        const ranges = boxPlot(Object.values(tags))
+        let finalTags = {}
+        for (const tag in tags) {
+            // Rank the tag score using the ranges derived from box plots
+            // if > Q3 then the ranking is high
+            // if in between Q2 and Q3 then the ranking is medium
+            // if < Q3 then the ranking is low
+            let rank = null
+            if (tags[tag] > ranges.upperQuartile) {
+                rank = 'High'
+            } else if (tags[tag] < ranges.lowerQuartile) {
+                rank = 'Low'
+            } else if (ranges.lowerQuartile <= tags[tag] <= ranges.upperQuartile) {
+                rank = 'Medium'
+            }
+    
+            finalTags[tag] = {
+                score: tags[tag], // Math.round(tags[tag]),
+                rank: rank
+            }
+            
+        }
+        return finalTags
+    }
+
     // Create a table for topics
     topicTable(topics) {
         let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
@@ -436,18 +478,6 @@ class Utilities {
 
         return myTable
     }
-
-    // Write the report to storage
-    async writeReport (docObj, fileName) {
-        try {
-            await docx.Packer.toBuffer(docObj).then((buffer) => {
-                fs.writeFileSync(fileName, buffer)
-            })
-            return [true, 'SUCCESS: Created file [' + fileName + '] for object.', null]
-        } catch(err) {
-            return [false, 'ERROR: Failed to create report for object.', null]
-        }
-     }
 }
 
 export default Utilities
