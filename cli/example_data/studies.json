@@ -1,0 +1,46 @@
+[
+    {
+        "public": false,
+        "name": "Caffeine Customer Insights",
+        "description": "Machine generated version of Customer Inights to begin checking for what Caffeine can reveal to the company.",
+        "document": {
+            "Introduction": "The mediumroast.io will automatically generate key themes, text summaries, and detect relevant snippets from the interactions associated to a study.It is then up to you to read, digest, and find meaningful points from these interaction data and document them here.  In that spirit this paragraph should berewritten based upon your research into these data.",
+            "Opportunity": {
+                "text": "Opportunies document the real outcomes from your research into the interactions associated to the study.  It is recommended that you write a quick summary related to core things you have found.",
+                "1": "Transparency - Product or service plans that are completely transparent, to all stakeholders and constitutents, are easy to follow and clear in direction.  Further inherent transparency enables all involved parties to build community and rally behind your target audience.  The mediumroast.io enables the construction of transparent plans.",
+                "2": "Evidence Based - Too often product, engineering and marketing teams believe in their own vision instead of the vision of their users.  This misalignment between internal and external visions is evident when plans, for products and services, lack attributable evidence.  That is because it is impossible to show where key elements, leading to the vision, originated from.  Easily constructing evidence based plans is a key value of the mediumroast.io.",
+                "3": "Community - When different groups have differing opinions on what the future holds for the product or service, the potential for community is dashed.  Using both Transparency and Evidence Based plans the mediumroast.io can be the kernel needed to build up a community that is passionate about user and market needs instead of internal opinion."
+            },
+            "Action": {
+                "text": "To improve completeness of this study the following actions and next steps are documented with appropriate statuses.",
+                "1": "Augment your study with relevant information, add interactions and companies, and more generally have fun.|Status: In progress",
+                "2": "Activate your mediumroast.io organization and create your first study.|Status: Done"
+            }
+        },
+        "groups": "users:studyadmin",
+        "linked_companies": {
+            "HDS": "b61e57adaaa834f2a560be1b8d1b62c0ebbfd68cb3d33917185bc1792063a677",
+            "Aha": "6dbfa33b06706033931b0154210fbcb5fafb995315eccfbd8bc5b12d5e5569f7",
+            "VMware": "d9069370a7dc4fff8ef20bf01915df2568bb26dee54c54f209664c089843f0e3",
+            "Hitachi": "567922c545773872eaab4b5e3466e0a60756d98148849662be330ff336b56659",
+            "Google": "392dfcd311a276b9aca48dfa52b5985aa5546c3157c3288452bbc00f2af8048a",
+            "Microsoft": "6ffc56686598cbac08864b9218f43e203b22f258d00ab7dc3e4a1aa29819f982",
+            "Amazon": "df6cb4f48281f2612c6ca5e9d89f85a684c39e3aa25ab648ba91db60368dfe8d",
+            "Providence Health and Services": "ca78cf0b874c9139b0316c1803408553202069186297a8bec7bfea862168032b",
+            "eBay": "ed128e1b2763deba9a49583d91a1dafd979f2453fed920339fe98e7d30e66aa7",
+            "JP Morgan Chase": "70340e90b851a6f1e4dd725cfa22b533d0e3eecd457a1e23fe51be56d9a75d76"
+        },
+        "linked_interactions": {
+            "Interaction 1": "b61e57adaaa834f2a560be1b8d1b62c0ebbfd68cb3d33917185bc1792063a677",
+            "Interaction 2": "6dbfa33b06706033931b0154210fbcb5fafb995315eccfbd8bc5b12d5e5569f7",
+            "Interaction 3": "d9069370a7dc4fff8ef20bf01915df2568bb26dee54c54f209664c089843f0e3",
+            "Interaction 4": "567922c545773872eaab4b5e3466e0a60756d98148849662be330ff336b56659",
+            "Interaction 5": "392dfcd311a276b9aca48dfa52b5985aa5546c3157c3288452bbc00f2af8048a",
+            "Interaction 6": "6ffc56686598cbac08864b9218f43e203b22f258d00ab7dc3e4a1aa29819f982",
+            "Interaction 7": "df6cb4f48281f2612c6ca5e9d89f85a684c39e3aa25ab648ba91db60368dfe8d",
+            "Interaction 8": "ca78cf0b874c9139b0316c1803408553202069186297a8bec7bfea862168032b",
+            "Interaction 9": "ed128e1b2763deba9a49583d91a1dafd979f2453fed920339fe98e7d30e66aa7",
+            "Interaction 10": "70340e90b851a6f1e4dd725cfa22b533d0e3eecd457a1e23fe51be56d9a75d76"
+        }
+    }
+]
