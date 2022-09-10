@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+/**
+ * A CLI utility to backup and restore data from the mediumroast.io
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mr_backup.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import required modules
 import { Auth, Companies, Interactions, Studies, Users } from '../src/api/mrServer.js'
 import CLI from '../src/helpers.js'

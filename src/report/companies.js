@@ -1,3 +1,11 @@
+/**
+ * Two classes to create sections and documents for company objects in mediumroast.io
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file companies.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import required modules
 import docx from 'docx'
 import boxPlot from 'box-plot'
