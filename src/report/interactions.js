@@ -159,12 +159,17 @@ class InteractionSection {
 
     // Generate the descriptions for interactions
     makeDescriptions () {
+        // TODO create bookmark with the right kind of heading
         const noInteractions = this.interactions.length
         let myRows = [this.util.descriptionRow('Id', 'Description', true)]
         
+        // TODO ids should be hyperlinks to the actual interaction which is interaction_<id>
         for (const interaction in this.interactions) {
             myRows.push(this.util.descriptionRow(
-                this.interactions[interaction].id, this.interactions[interaction].description
+                this.util.makeInternalHyperLink(
+                    this.interactions[interaction].id, 'interaction_' + String(this.interactions[interaction].id)
+                ), 
+                this.interactions[interaction].description
                 )
             )
         }
@@ -183,7 +188,7 @@ class InteractionSection {
             this.util.makeParagraph(
                 'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
                 this.objectName + ' ' + this.objectType + ' object.  Additional detail is in ' +
-                'the Interactions Summary section of this document.'
+                'the References section of this document.'
             ),
             myTable
         ]
@@ -193,8 +198,8 @@ class InteractionSection {
     makeReferences(isPackage, independent=false) {
         // Link this back to the descriptions section
         const descriptionsLink = this.util.makeInternalHyperLink(
-            'Interaction Descriptions', 
-            'interaction_descriptions'
+            'Back to Interaction Summaries', 
+            'interaction_summaries'
         )
 
         // Create the array for the references with the introduction
@@ -212,9 +217,9 @@ class InteractionSection {
             // Create the link to the underlying interaction document
             const objWithPath = this.interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
-            let interactionLink = this.util.urlRow(
-                'Interaction Name', 
-                this.interactions[interaction].name, './interactions/' + myObj
+            let interactionLink = this.util.makeExternalHyperLink(
+                'Interaction Document', 
+                './interactions/' + myObj
             )
             
             // Depending upon if this is a package or not create the metadata strip with/without document link
@@ -222,16 +227,19 @@ class InteractionSection {
             if(isPackage) { 
                 // Package version of the strip
                 metadataStrip = new docx.Paragraph({
+                    spacing: {
+                        before: 100,
+                    },
                     children: [
-                        this.util.makeTextrun('[ ', 0),
+                        this.util.makeTextrun('[ '),
                         interactionLink,
                         this.util.makeTextrun(
                             ' | Creation Date: ' + 
                             this.interactions[interaction].creation_date + 
-                            ' | ', 0
+                            ' | '
                         ),
                         descriptionsLink,
-                        this.util.makeTextrun(' ]', 0),
+                        this.util.makeTextrun(' ]'),
                     ]
                 })
             } else {
@@ -260,7 +268,7 @@ class InteractionSection {
             // Push all of the content into the references array
             references.push(
                 // Create the bookmark for the interaction
-                this.util.makeBookmark(
+                this.util.makeHeadingBookmark2(
                     this.interactions[interaction].name, 
                     String(
                         'interaction_' +

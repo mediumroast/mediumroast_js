@@ -220,9 +220,11 @@ class CompanyStandalone {
             ' package is opened.'
         this.util = new Utilities()
         this.topics = this.util.rankTags(this.company.topics)
-        this.comparison = company.comparison
+        this.comparison = company.comparison,
+        this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
 
+    // TODO Move to common.js
     makeIntro () {
         const myIntro = [
             this.util.makeHeading1('Introduction'),
@@ -257,8 +259,13 @@ class CompanyStandalone {
             ],
             companySection.makeComparison(this.comparison),
             [   this.util.makeHeading1('Topics'),
+                this.util.makeParagraph(
+                    'The following topics were automatically generated from all ' +
+                    this.noInteractions + ' interactions associated to this company.'
+                ),
+                this.util.makeHeading2('Topics Table'),
                 this.util.topicTable(this.topics),
-                this.util.makeHeading1('Interaction Summaries')
+                this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptions(),
             [   this.util.pageBreak(),

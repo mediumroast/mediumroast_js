@@ -1,11 +1,19 @@
+/**
+ * A set of common utilities for creating HTML and DOCX reports for mediumroast.io objects
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file common.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ */
+
 // Import modules
 import docx from 'docx'
 import * as fs from 'fs'
 import boxPlot from 'box-plot'
 
 
-// TODO Change class names to: GenericHelpers, DOCXHelpers and HTMLHelpers
-//  rankTags belongs to GenericHelpers
+// TODO Change class names to: GenericUtilities, DOCXUtilities and HTMLUtilities
+// TODO rankTags belongs to GenericUtilities
 
 class Utilities {
     constructor (font, fontSize, textFontSize, textFontColor) {
@@ -22,7 +30,7 @@ class Utilities {
         }
     }
 
-    // Initialize the common styles for the doc
+    // Initialize the common styles for the docx
     initStyles () {
         const hangingSpace = 0.18
         return {
@@ -251,14 +259,23 @@ class Utilities {
         })
     }
 
-    // Create a text run
-    makeTextrun(text, spaceAfter) {
-        return new docx.TextRun({
-            text: text,
-            font: this.font,
-            size: 16,
-            // break: spaceAfter ? spaceAfter : 1
-        })
+    // Create a text run with or without space after
+    makeTextrun(text, spaceAfter=false) {
+        const myFontSize = 16
+        if (spaceAfter) {
+            return new docx.TextRun({
+                text: text,
+                font: this.font,
+                size: myFontSize,
+                break: 1
+            })
+        } else {
+            return new docx.TextRun({
+                text: text,
+                font: this.font,
+                size: myFontSize
+            })
+        }
     }
 
     // Create a page break
@@ -294,6 +311,21 @@ class Utilities {
         })
     }
 
+    // Create an external hyperlink
+    makeExternalHyperLink(text, link) {
+        return new docx.ExternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: text,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: 16
+                })
+            ],
+            link: link
+        })
+    }
+
     // Create an internal hyperlink
     makeInternalHyperLink(text, link) {
         return new docx.InternalHyperlink({
@@ -302,7 +334,7 @@ class Utilities {
                     text: text,
                     style: 'Hyperlink',
                     font: this.font,
-                    size: 1.5 * this.size,
+                    size: 16,
                 }),
             ],
             anchor: link,
@@ -310,7 +342,37 @@ class Utilities {
     }
 
     // Create a bookmark needed to create an internal hyperlink
+    // TODO at some point test this
     makeBookmark(text, ident) {
+        return new docx.Paragraph({
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
+    // Create a bookmark needed to create an internal hyperlink
+    makeHeadingBookmark1(text, ident) {
+        return new docx.Paragraph({
+            heading: docx.HeadingLevel.HEADING_1,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
+    // Create a bookmark needed to create an internal hyperlink
+    makeHeadingBookmark2(text, ident) {
         return new docx.Paragraph({
             heading: docx.HeadingLevel.HEADING_2,
             children: [
@@ -324,20 +386,7 @@ class Utilities {
         })
     }
 
-    // Create an external hyperlink
-    makeExternalHyperLink(text, link) {
-        return new docx.ExternalHyperlink({
-            children: [
-                new docx.TextRun({
-                    text: text,
-                    style: 'Hyperlink',
-                    font: this.font,
-                    size: 1.5 * this.fontSize
-                })
-            ],
-            link: link
-        })
-    }
+    
 
     // Basic table row to produce a name/value pair
     basicRow (name, data) {
