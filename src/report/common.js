@@ -256,8 +256,8 @@ class Utilities {
         return new docx.TextRun({
             text: text,
             font: this.font,
-            size: 1.5 * this.size,
-            break: spaceAfter ? spaceAfter : 1
+            size: 16,
+            // break: spaceAfter ? spaceAfter : 1
         })
     }
 
@@ -422,6 +422,7 @@ class Utilities {
     }
 
     basicTopicRow (theme, score, rank, bold) {
+        const myFontSize = 16
         // return the row
         return new docx.TableRow({
             children: [
@@ -431,7 +432,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(theme, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(theme, myFontSize, bold ? true : false)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -439,7 +440,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(score, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(score, myFontSize, bold ? true : false)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -447,7 +448,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(rank, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(rank, myFontSize, bold ? true : false)]
                 }),
             ]
         })
@@ -455,6 +456,7 @@ class Utilities {
 
     // Build a comparisons row
     basicComparisonRow (company, role, score, rank, bold) {
+        const myFontSize = 16
         // return the row
         return new docx.TableRow({
             children: [
@@ -464,7 +466,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(company, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(company, myFontSize, bold ? true : false)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -472,7 +474,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(role, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(role, myFontSize, bold ? true : false)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -480,7 +482,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(score, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(score, myFontSize, bold ? true : false)]
                 }),
                 new docx.TableCell({
                     width: {
@@ -488,7 +490,7 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(rank, this.fontFactor * this.fontSize, bold ? true : false)]
+                    children: [this.makeParagraph(rank, myFontSize, bold ? true : false)]
                 }),
             ]
         })

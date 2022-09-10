@@ -260,10 +260,11 @@ class CompanyStandalone {
                 this.util.topicTable(this.topics),
                 this.util.makeHeading1('Interaction Summaries')
             ],
-            ...interactionSection.makeDescriptions()
-                // this.util.pageBreak(),
-                // this.util.makeHeading1('References')
-                //interactionSection.makeReferences(isPackage),
+            ...interactionSection.makeDescriptions(),
+            [   this.util.pageBreak(),
+                this.util.makeHeading1('References')
+            ],
+            ...interactionSection.makeReferences(isPackage)
             )
     
         // Construct the document

@@ -88,7 +88,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         await myCLI.s3DownloadObjs(int_results, myEnv, baseDir + '/interactions')
+         await myCLI.s3DownloadObjs(interactions, myEnv, baseDir + '/interactions')
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
