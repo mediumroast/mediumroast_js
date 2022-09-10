@@ -167,7 +167,7 @@ class Utilities {
                                 {
                                     level: 0,
                                     format: docx.LevelFormat.BULLET,
-                                    text: "\u1F60",
+                                    text: "-",
                                     alignment: docx.AlignmentType.LEFT,
                                     style: {
                                         paragraph: {
@@ -223,6 +223,17 @@ class Utilities {
                         }
                     ]}
             }
+    }
+
+    // Create a bullet for a bit of prose
+    makeBullet(text, level=0) {
+        return new docx.Paragraph({
+            text: text,
+            numbering: {
+                reference: 'bullet-styles',
+                level: level
+            }
+        })
     }
 
     // For a section of prose create a paragraph
@@ -299,7 +310,7 @@ class Utilities {
     }
 
     // Create a bookmark needed to create an internal hyperlink
-    makeBookmark2(text, ident) {
+    makeBookmark(text, ident) {
         return new docx.Paragraph({
             heading: docx.HeadingLevel.HEADING_2,
             children: [
@@ -346,6 +357,29 @@ class Utilities {
                         type: docx.WidthType.PERCENTAGE
                     },
                     children: [this.makeParagraph(data, this.fontFactor * this.fontSize)]
+                })
+            ]
+        })
+    }
+
+    // Create rows for object ids and object descriptions
+    descriptionRow(id, description, bold=false) {
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 10,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [this.makeParagraph(id, 16, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 90,
+                        type: docx.WidthType.PERCENTAGE
+                    },
+                    children: [this.makeParagraph(description, 16, bold ? true : false)]
                 })
             ]
         })
@@ -410,6 +444,47 @@ class Utilities {
                 new docx.TableCell({
                     width: {
                         size: 20,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(rank, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+            ]
+        })
+    }
+
+    // Build a comparisons row
+    basicComparisonRow (company, role, score, rank, bold) {
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 25,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(company, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 25,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(role, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 25,
+                        type: docx.WidthType.PERCENTAGE,
+                        font: this.font,
+                    },
+                    children: [this.makeParagraph(score, this.fontFactor * this.fontSize, bold ? true : false)]
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 25,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },

@@ -125,60 +125,62 @@ class CompanySection {
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
-        for (const comparison in comparisons) {
+        for (const compare in comparisons) {
             // Rank the tag score using the ranges derived from box plots
             // if > Q3 then the ranking is High
             // if in between Q2 and Q3 then the ranking is Medium
             // if < Q3 then the ranking is Low
             let rank = null
-            if (comparisons[comparison].similarity > ranges.upperQuartile) {
-                rank = 'High'
-            } else if (comparisons[comparison].similarity < ranges.lowerQuartile) {
-                rank = 'Low'
-            } else if (ranges.lowerQuartile <= comparisons[comparison].similarity <= ranges.upperQuartile) {
-                rank = 'Medium'
+            if (comparisons[compare].similarity >= ranges.upperQuartile) {
+                rank = 'Closest'
+            } else if (comparisons[compare].similarity <= ranges.lowerQuartile) {
+                rank = 'Furthest'
+            // NOTE: this should work, but for some reason it isn't, head scratcher
+            // } else if (ranges.lowerQuartile < comparisons[compare].similarity < ranges.upperQuartile) {
+            } else {
+                rank = 'Nearby'
             }
 
             // Populate the rank picker to determine the top score
-            rankPicker[comparisons[comparison].similarity] = comparison
+            rankPicker[comparisons[compare].similarity] = compare
             
             // Build the final comparison object
-            finalComparisons[comparison] = {
+            finalComparisons[compare] = {
                 // Normalize to two decimal places and turn into %
-                score: String(Math.round(finalComparisons[comparison].similarity) * 100) + '%', 
+                score: String(comparisons[compare].similarity.toFixed(2) * 100) + '%', 
                 rank: rank,
-                role: finalComparisons[comparison].role,
-                name: finalComparisons[comparison].name
+                role: comparisons[compare].role,
+                name: comparisons[compare].name
             }
             
         }
-        return finalComparisons, rankPicker
+        return [finalComparisons, rankPicker]
     }
 
-    makeComparison() {
+    makeComparison(comparisons) {
         // Transform the comparisons into something that is usable for display
-        const [comparisons, picks] = this.rankComparisons(this.company.comparisons)
+        const [myComparison, picks] = this.rankComparisons(comparisons)
 
         // Choose the company object with the top score
-        const topChoice = picks[Math.max(Object.keys(picks))]
-        const topCompany = comparisons[topChoice]
-        const topCompanyName = comparisons[topCompany].name
-        const topCompanyRole = comparisons[topCompany].role
+        const topChoice = picks[Object.keys(picks).sort().reverse()[0]]
+        const topCompany = myComparison[(topChoice)]
+        const topCompanyName = topCompany.name
+        const topCompanyRole = topCompany.role
 
-        let myRows = [this.basicTopicRow('Company', 'Role', 'Score', 'Rank', true)]
-        for (const comparison in comparisons) {
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Score', 'Rank', true)]
+        for (const comparison in myComparison) {
             myRows.push(
-                this.basicTopicRow(
-                    comparisons[comparison].name,
-                    comparisons[comparison].role,
-                    comparisons[comparison].similarity,
-                    comparisons[comparison].rank,
+                this.util.basicComparisonRow(
+                    myComparison[comparison].name,
+                    myComparison[comparison].role,
+                    myComparison[comparison].score,
+                    myComparison[comparison].rank,
                 )
             )
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [60, 20, 20],
+            columnWidths: [25, 25, 25, 25],
             rows: myRows,
             width: {
                 size: 100,
@@ -187,10 +189,10 @@ class CompanySection {
         })
 
         return [
-            this.makeParagraph(
+            this.util.makeParagraph(
                 'The mediumroast.io has compared the content for all companies in the system to ' +
                 this.company.name + '\'s content and discovered that the closest company is ' +
-                topCompanyName + ' acting in the role of a ' + topCompanyRole + '.' +
+                topCompanyName + ' acting in the role of a ' + topCompanyRole + '. ' +
                 'Additional detail for other companies ' + this.company.name + ' was compared to are ' +
                 'in the table below.'
             ),
@@ -204,6 +206,7 @@ class CompanySection {
 
 class CompanyStandalone {
     constructor(company, interactions, creator, authorCompany) {
+        this.objectType = 'Company'
         this.creator = creator
         this.authorCompany = authorCompany
         this.title = company.name + ' Company Report'
@@ -217,6 +220,7 @@ class CompanyStandalone {
             ' package is opened.'
         this.util = new Utilities()
         this.topics = this.util.rankTags(this.company.topics)
+        this.comparison = company.comparison
     }
 
     makeIntro () {
@@ -234,6 +238,11 @@ class CompanyStandalone {
 
         // Construct the company section
         const companySection = new CompanySection(this.company)
+        const interactionSection = new InteractionSection(
+            this.interactions, 
+            this.company.name,
+            this.objectType
+        )
 
         // Construct the interactions section
         // const interactionsSection = new InteractionSection(this.interactions)
@@ -246,15 +255,16 @@ class CompanyStandalone {
                 companySection.makeFirmographics(),
                 this.util.makeHeading1('Comparison')
             ],
-                companySection.makeComparison(),
+            companySection.makeComparison(this.comparison),
             [   this.util.makeHeading1('Topics'),
                 this.util.topicTable(this.topics),
-                // this.util.makeHeading1('Interaction Summaries'),
-                //interactionSection.makeSummaries(),
+                this.util.makeHeading1('Interaction Summaries')
+            ],
+            ...interactionSection.makeDescriptions()
                 // this.util.pageBreak(),
                 // this.util.makeHeading1('References')
                 //interactionSection.makeReferences(isPackage),
-            ])
+            )
     
         // Construct the document
         const myDoc = new docx.Document ({

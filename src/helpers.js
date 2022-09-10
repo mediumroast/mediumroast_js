@@ -200,7 +200,6 @@ class CLI {
         XLSX.writeFile(myWorkbook, myFile)
     }
 
-    
 
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {

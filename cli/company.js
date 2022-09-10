@@ -49,18 +49,24 @@ if (myArgs.report) {
    const [comp_success, comp_stat, comp_results] = await apiController.findById(myArgs.report)
    // Retrive the company by Name
    const interactionNames = Object.keys(comp_results[0].linked_interactions)
-   // const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
+   let interactions = []
+   for (const interactionName in interactionNames) {
+      const [mySuccess, myStat, myInteraction] = await interactionController.findByName(
+         interactionNames[interactionName]
+      )
+      interactions.push(myInteraction[0])
+   }
    // Set the root name to be used for file and directory names in case of packaging
    const baseName = comp_results[0].name.replace(/ /g,"_")
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
-   let fileName = process.env.HOME + '/Documents/' + int_results[0].name.replace(/ /g,"_") + '.docx'
+   let fileName = process.env.HOME + '/Documents/' + comp_results[0].name.replace(/ /g,"_") + '.docx'
    
    // Set up the document controller
    const docController = new CompanyStandalone(
       comp_results[0], // Company to report on
-      comp_results[0], // The interactions associated to the company
+      interactions, // The interactions associated to the company
       'mediumroast.io barrista robot', // The author
       'Mediumroast, Inc.' // The authoring company/org
    )

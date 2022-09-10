@@ -7,7 +7,7 @@ import { CompanySection } from './companies.js'
 
 
 class InteractionSection {
-    constructor(interactions, objectName, objectType, protocol, characterLimit = 1000) {
+    constructor(interactions, objectName, objectType, characterLimit = 1000) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
@@ -16,17 +16,19 @@ class InteractionSection {
 
         this.interactions = interactions
         this.characterLimit = characterLimit
-        this.introduction = 'The mediumroast.io system has automatically generated this section.' +
-            ' It includes key metadata from each interaction associated to the object ' + objectName +
-            '.  If this report document is produced as a package, instead of standalone, then the' +
-            ' hyperlinks are active and will link to documents on the local folder after the' +
-            ' package is opened.'
+        // TODO anything that is commented out can likely be removed
+        // this.introduction = 'The mediumroast.io system has automatically generated this section.' +
+        //     ' It includes key metadata from each interaction associated to the object ' + objectName +
+        //     '.  If this report document is produced as a package, instead of standalone, then the' +
+        //     ' hyperlinks are active and will link to documents on the local folder after the' +
+        //     ' package is opened.'
         this.objectName = objectName
         this.objectType = objectType
-        this.font = 'Avenir Next' // We need to pass this in from the config file
-        this.fontSize = 10 // We need to pass this in from the config file
-        this.protocol = protocol
-        this.protoDoc = this.createRefs()
+        // TODO anything that is commented out can likely be removed
+        // this.font = 'Avenir Next' // We need to pass this in from the config file
+        // this.fontSize = 10 // We need to pass this in from the config file
+        // this.protocol = protocol
+        // this.protoDoc = this.createRefs()
         this.util = new Utilities()
     }
 
@@ -155,10 +157,39 @@ class InteractionSection {
         return finaldoc
     }
 
-    // Return the proto document as a html formatted section
-    makeHtml() {
-        return false
+    // Generate the descriptions for interactions
+    makeDescriptions () {
+        const noInteractions = this.interactions.length
+        let myRows = [this.util.descriptionRow('Id', 'Description', true)]
+        
+        for (const interaction in this.interactions) {
+            myRows.push(this.util.descriptionRow(
+                this.interactions[interaction].id, this.interactions[interaction].description
+                )
+            )
+        }
+
+        // define the table with the summary theme information
+        const myTable = new docx.Table({
+            columnWidths: [10, 90],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return [
+            this.util.makeParagraph(
+                'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
+                this.objectName + ' ' + this.objectType + ' object.  Additional detail is in ' +
+                'the Interactions Summary section of this document.'
+            ),
+            myTable
+        ]
     }
+
+
 }
 
 class InteractionStandalone {
@@ -176,12 +207,12 @@ class InteractionStandalone {
             ' package is opened.'
         this.abstract = interaction.abstract
         this.util = new Utilities()
-        // TODO test rankTags in commons
+        // TODO test rankTags in common.js
         this.topics = this.rankTags(this.interaction.topics)
         // this.topics = this.util.rankTags(this.interaction.topics)
     }
 
-    
+    // TODO remove this and rely on the one in utils
     rankTags (tags) {
         const ranges = boxPlot(Object.values(this.interaction.topics))
         let finalTags = {}
