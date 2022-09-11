@@ -91,7 +91,7 @@ if (myArgs.report) {
 
    }
    // Create the document
-   const [report_success, report_stat, report_result] = await docController.makeDocx(fileName, myArgs.package)
+   const [report_success, report_stat, report_result] = await docController.makeDOCX(fileName, myArgs.package)
 
    // Create the package and cleanup as needed
    if (myArgs.package) {

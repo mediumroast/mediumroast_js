@@ -4,17 +4,31 @@
  * @file interactions.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 1.0.0
  */
 
 // Import required modules
 import docx from 'docx'
-import boxPlot from 'box-plot'
 import Utilities from './common.js'
 import { CompanySection } from './companies.js'
 
-
+/**
+ * A high level class to create  sections for an Interaction report using either 
+ * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+ * implementation is for the DOCX format.  These sections are designed to be consumed
+ * by a wrapping document which could be for any one of the mediumroast objects.
+ * 
+ * To operate this class the constructor should be passed an array of interaction
+ * objects, the name of the object that is using this class, and the type of object
+ * that is calling this class.
+ * 
+ * From there two methods can be called: 
+ *     1. makeDescriptionsDOCX()
+ *     2. makeReferencesDOCX()
+ * @class
+ */
 class InteractionSection {
-    constructor(interactions, objectName, objectType, characterLimit = 1000) {
+    constructor(interactions, objectName, objectType) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
@@ -22,25 +36,31 @@ class InteractionSection {
         //      we will need some server side logic to make this happen.
 
         this.interactions = interactions
-        this.characterLimit = characterLimit
         this.objectName = objectName
         this.objectType = objectType
         this.fontSize = 10 // We need to pass this in from the config file
         this.util = new Utilities()
     }
 
-    // Generate the descriptions for interactions
-    makeDescriptions () {
-        // TODO create bookmark with the right kind of heading
+    /**
+     * Generate the descriptions for interactions in the DOCX format
+     * @param  {Returns} result An array containing a section description and a table of interaction descriptions
+     */
+    makeDescriptionsDOCX () {
+        // Set the number of interactions for use later
         const noInteractions = this.interactions.length
+
+        // Create the header row for the descriptions
         let myRows = [this.util.descriptionRow('Id', 'Description', true)]
         
-        // TODO ids should be hyperlinks to the actual interaction which is interaction_<id>
+        // Loop over the interactions and pull out the interaction ids and descriptions
         for (const interaction in this.interactions) {
             myRows.push(this.util.descriptionRow(
+                // Create the internal hyperlink for the interaction reference
                 this.util.makeInternalHyperLink(
                     this.interactions[interaction].id, 'interaction_' + String(this.interactions[interaction].id)
                 ), 
+                // Pull in the description
                 this.interactions[interaction].description
                 )
             )
@@ -56,6 +76,7 @@ class InteractionSection {
             }
         })
 
+        // Return the results as an array
         return [
             this.util.makeParagraph(
                 'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
@@ -66,15 +87,19 @@ class InteractionSection {
         ]
     }
 
-    // Create the references for calling programs
-    makeReferences(isPackage, independent=false) {
+    /**
+     * Create the references for calling programs in the DOCX format
+     * @param  {Boolean} isPackage When set to true links are set up for connecting to interaction documents
+     * @param  {Returns} result An array containing a section description and a table of interaction references
+     */
+    makeReferencesDOCX(isPackage) {
         // Link this back to the descriptions section
         const descriptionsLink = this.util.makeInternalHyperLink(
             'Back to Interaction Summaries', 
             'interaction_summaries'
         )
 
-        // Create the array for the references with the introduction
+        // Create the array for the references starting with the introduction
         let references = [
             this.util.makeParagraph(
                 'The mediumroast.io system has automatically generated this section.' +
@@ -85,7 +110,9 @@ class InteractionSection {
             )
         ]
 
+        // Loop over all interactions
         for (const interaction in this.interactions) {
+            
             // Create the link to the underlying interaction document
             const objWithPath = this.interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
@@ -97,7 +124,7 @@ class InteractionSection {
             // Depending upon if this is a package or not create the metadata strip with/without document link
             let metadataStrip = null
             if(isPackage) { 
-                // Package version of the strip
+                // isPackage version of the strip
                 metadataStrip = new docx.Paragraph({
                     spacing: {
                         before: 100,
@@ -115,7 +142,7 @@ class InteractionSection {
                     ]
                 })
             } else {
-                // Non package version of the strip
+                // Non isPackage version of the strip
                 metadataStrip = new docx.Paragraph({
                     spacing: {
                         before: 100,
@@ -161,10 +188,20 @@ class InteractionSection {
         // Return the built up references
         return references
     }
-
-
 }
 
+/**
+ * A high level class to create a complete document for an Interaction report using either 
+ * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+ * implementation is for the DOCX format. 
+ * 
+ * To operate this class the constructor should be passed a single interaction
+ * object, the associated company, document creator and authoring company.
+ * 
+ * From there one method can be called: 
+ *     1. makeDOCX()
+ * @class
+ */
 class InteractionStandalone {
     constructor(interaction, company, creator, authorCompany) {
         this.creator = creator
@@ -180,48 +217,10 @@ class InteractionStandalone {
             ' package is opened.'
         this.abstract = interaction.abstract
         this.util = new Utilities()
-        // TODO test rankTags in common.js
-        this.topics = this.rankTags(this.interaction.topics)
-        // this.topics = this.util.rankTags(this.interaction.topics)
+        this.topics = this.util.rankTags(this.interaction.topics)
     }
 
-    // TODO remove this and rely on the one in utils
-    rankTags (tags) {
-        const ranges = boxPlot(Object.values(this.interaction.topics))
-        let finalTags = {}
-        for (const tag in tags) {
-            // Rank the tag score using the ranges derived from box plots
-            // if > Q3 then the ranking is high
-            // if in between Q2 and Q3 then the ranking is medium
-            // if < Q3 then the ranking is low
-            let rank = null
-            if (tags[tag] > ranges.upperQuartile) {
-                rank = 'High'
-            } else if (tags[tag] < ranges.lowerQuartile) {
-                rank = 'Low'
-            } else if (ranges.lowerQuartile <= tags[tag] <= ranges.upperQuartile) {
-                rank = 'Medium'
-            }
-    
-            finalTags[tag] = {
-                score: tags[tag], // Math.round(tags[tag]),
-                rank: rank
-            }
-            
-        }
-        return finalTags
-    }
-
-    // TODO consider moving this to common
-    makeIntro () {
-        const myIntro = [
-            this.util.makeHeading1('Introduction'),
-            this.util.makeParagraph(this.introduction)
-        ]
-        return myIntro
-    }
-
-    metadataTable (isPackage) {
+    metadataTableDOCX (isPackage) {
         // Switch the name row if depending upon if this is a package or not
         const objWithPath = this.interaction.url.split('://').pop()
         const myObj = objWithPath.split('/').pop()
@@ -230,7 +229,6 @@ class InteractionStandalone {
             nameRow = this.util.urlRow('Interaction Name', this.interaction.name, './interactions/' + myObj) :
             nameRow = this.util.basicRow('Interaction Name', this.interaction.name)
         
-
         const myTable = new docx.Table({
             columnWidths: [20, 80],
             rows: [
@@ -248,8 +246,12 @@ class InteractionStandalone {
         return myTable
     }
 
-    // Create the document
-    async makeDocx(fileName, isPackage) {
+    /**
+     * Create the DOCX document for a single interaction which includes a company section
+     * @param  {String} fileName Full path to the file name, if no file name is supplied a default is assumed
+     * @param  {Boolean} isPackage When set to true links are set up for connecting to interaction documents
+     */
+    async makeDOCX(fileName, isPackage) {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
 
@@ -258,10 +260,10 @@ class InteractionStandalone {
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.makeIntro(),
+            this.util.makeIntro(this.introduction),
             [
                 this.util.makeHeading1('Interaction Detail'), 
-                this.metadataTable(isPackage),
+                this.metadataTableDOCX(isPackage),
                 this.util.makeHeading1('Topics'),
                 this.util.topicTable(this.topics),
                 this.util.makeHeading1('Abstract'),

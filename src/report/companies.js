@@ -275,11 +275,11 @@ class CompanyStandalone {
                 this.util.topicTable(this.topics),
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
-            ...interactionSection.makeDescriptions(),
+            ...interactionSection.makeDescriptionsDOCX(),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
-            ...interactionSection.makeReferences(isPackage)
+            ...interactionSection.makeReferencesDOCX(isPackage)
             )
     
         // Construct the document

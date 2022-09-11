@@ -4,6 +4,7 @@
  * @file scaffold.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 1.0.0
  */
 
 // Import required modules

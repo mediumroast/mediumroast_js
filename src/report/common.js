@@ -604,6 +604,14 @@ class Utilities {
 
         return myTable
     }
+
+    // Create an introductory section
+    makeIntro (introText) {
+        return [
+            this.makeHeading1('Introduction'),
+            this.makeParagraph(introText)
+        ]
+    }
 }
 
 export default Utilities
