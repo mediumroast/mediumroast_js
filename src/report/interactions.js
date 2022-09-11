@@ -28,6 +28,13 @@ import { CompanySection } from './companies.js'
  * @class
  */
 class InteractionSection {
+    /**
+     * @constructor
+     * Construct the InteractionSection object 
+     * @param {Array} interactions - a complete array of interactions ranging from 1:N
+     * @param {String} objectName - the name of the object calling this class
+     * @param {String} objectType - the type of object calling this class
+     */
     constructor(interactions, objectName, objectType) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
@@ -43,8 +50,9 @@ class InteractionSection {
     }
 
     /**
-     * Generate the descriptions for interactions in the DOCX format
-     * @param  {Returns} result An array containing a section description and a table of interaction descriptions
+     * @function makeDescriptionsDOCX 
+     * Make the descriptions for interactions in the DOCX format
+     * @returns {Array} An array containing a section description and a table of interaction descriptions
      */
     makeDescriptionsDOCX () {
         // Set the number of interactions for use later
@@ -88,9 +96,10 @@ class InteractionSection {
     }
 
     /**
+     * @function makeReferencesDOCX
      * Create the references for calling programs in the DOCX format
-     * @param  {Boolean} isPackage When set to true links are set up for connecting to interaction documents
-     * @param  {Returns} result An array containing a section description and a table of interaction references
+     * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} An array containing a section description and a table of interaction references
      */
     makeReferencesDOCX(isPackage) {
         // Link this back to the descriptions section
@@ -203,6 +212,15 @@ class InteractionSection {
  * @class
  */
 class InteractionStandalone {
+    /**
+     * @constructor
+     * The constructor should be passed a single interaction
+     * object, the associated company, document creator and authoring company.
+     * @param {Object} interaction - The interaction in question to process
+     * @param {Object} company - The company associated to the interaction
+     * @param {String} creator - A string defining the creator for this document
+     * @param {String} authorCompany - A string containing the company who authored the document
+     */
     constructor(interaction, company, creator, authorCompany) {
         this.creator = creator
         this.authorCompany = authorCompany
@@ -247,9 +265,12 @@ class InteractionStandalone {
     }
 
     /**
+     * @async
+     * @function makeDOCX
      * Create the DOCX document for a single interaction which includes a company section
-     * @param  {String} fileName Full path to the file name, if no file name is supplied a default is assumed
-     * @param  {Boolean} isPackage When set to true links are set up for connecting to interaction documents
+     * @param  {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} The result of the writeReport function that is an Array
      */
     async makeDOCX(fileName, isPackage) {
         // If fileName isn't specified create a default
@@ -269,7 +290,7 @@ class InteractionStandalone {
                 this.util.makeHeading1('Abstract'),
                 this.util.makeParagraph(this.abstract),
                 this.util.makeHeading1('Company Detail'),
-                companySection.makeFirmographics()
+                companySection.makeFirmographicsDOCX()
             ])
     
         // Construct the document

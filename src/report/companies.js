@@ -4,6 +4,7 @@
  * @file companies.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 1.0.0
  */
 
 // Import required modules
@@ -12,7 +13,25 @@ import boxPlot from 'box-plot'
 import Utilities from './common.js'
 import { InteractionSection } from './interactions.js'
 
+/**
+ * A high level class to create sections for a Company report using either 
+ * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+ * implementation is for the DOCX format.  These sections are designed to be consumed
+ * by a wrapping document which could be for any one of the mediumroast objects.
+ * 
+ * To operate this class the constructor should be passed a single company object.
+ * 
+ * From there two methods can be called: 
+ *     1. makeFirmographicsDOCX()
+ *     2. makeComparisonsDOCX()
+ * @class
+ */
 class CompanySection {
+    /**
+     * @constructor
+     * To operate this class the constructor should be passed a single company object.
+     * @param {Object} company - The company object to generate the section(s) for
+     */
     constructor(company) {
         this.company = company
         this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
@@ -87,7 +106,12 @@ class CompanySection {
         }
     }
 
-    makeFirmographics() {
+    /**
+     * @function makeFirmographicsDOCX
+     * Create a table containing key information for the company in question
+     * @returns {Object} A docx table is return to the caller
+     */
+    makeFirmographicsDOCX() {
         const noInteractions = String(Object.keys(this.company.linked_interactions).length)
         const noStudies = String(Object.keys(this.company.linked_studies).length)
         const myTable = new docx.Table({
@@ -165,7 +189,13 @@ class CompanySection {
         return [finalComparisons, rankPicker]
     }
 
-    makeComparison(comparisons) {
+    /**
+     * @function makeComparisonDOCX
+     * Generate the comparisons section for the document from the company in question
+     * @param {Object} comparisons - the object containing the comparisons for the company in question
+     * @returns {Array} An array containing an introduction to this section and the table with the comparisons
+     */
+    makeComparisonDOCX(comparisons) {
         // Transform the comparisons into something that is usable for display
         const [myComparison, picks] = this.rankComparisons(comparisons)
 
@@ -212,6 +242,18 @@ class CompanySection {
     }
 }
 
+/**
+ * A high level class to create a complete document for a Company report using either 
+ * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+ * implementation is for the DOCX format. 
+ * 
+ * To operate this class the constructor should be passed a single company
+ * object, the associated array of interactions, document creator and authoring company.
+ * 
+ * From there one method can be called: 
+ *     1. makeDOCX()
+ * @class
+ */
 class CompanyStandalone {
     constructor(company, interactions, creator, authorCompany) {
         this.objectType = 'Company'
@@ -232,17 +274,14 @@ class CompanyStandalone {
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
 
-    // TODO Move to common.js
-    makeIntro () {
-        const myIntro = [
-            this.util.makeHeading1('Introduction'),
-            this.util.makeParagraph(this.introduction)
-        ]
-        return myIntro
-    }
-
-
-    async makeDocx(fileName, isPackage) {
+    /**
+     * @async
+     * @function makeDocx
+     * @param {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} The result of the writeReport function that is an Array
+     */
+    async makeDOCX(fileName, isPackage) {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.company.name.replace(/ /g,"_") + '.docx'
 
@@ -259,13 +298,13 @@ class CompanyStandalone {
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.makeIntro(),
+            this.util.makeIntro(this.introduction),
             [
                 this.util.makeHeading1('Company Detail'), 
-                companySection.makeFirmographics(),
+                companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparison(this.comparison),
+            companySection.makeComparisonDOCX(this.comparison),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +
