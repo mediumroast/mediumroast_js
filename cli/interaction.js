@@ -6,23 +6,26 @@
  * @file interactions.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 2.0.0
  */
 
 // Import required modules
 import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
-import { CLI } from '../src/helpers.js'
+import { CLIUtilities } from '../src/cli.js'
+import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
 
 // Globals
 const objectType = 'Interactions'
 
 // Construct the CLI object
-const myCLI = new CLI(
+const myCLI = new CLIUtilities(
    '2.0',
    'interaction',
    'Command line interface for mediumroast.io Interaction objects.',
    objectType
 )
+const utils = new Utilities(objectType)
 
 // Create the environmental settings
 const myArgs = myCLI.parseCLIArgs()
@@ -68,7 +71,7 @@ if (myArgs.report) {
    
    if(myArgs.package) {
       // Create the working directory
-      const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir + '/interactions')
+      const [dir_success, dir_msg, dir_res] = utils.safeMakedir(baseDir + '/interactions')
       
       // If the directory creations was successful download the interaction
       if(dir_success) {
@@ -82,7 +85,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         await myCLI.s3DownloadObjs(int_results, myEnv, baseDir + '/interactions')
+         await utils.s3DownloadObjs(int_results, myEnv, baseDir + '/interactions')
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -95,13 +98,13 @@ if (myArgs.report) {
 
    // Create the package and cleanup as needed
    if (myArgs.package) {
-      const [package_success, package_stat, package_result] = await myCLI.createZIPArchive(
+      const [package_success, package_stat, package_result] = await utils.createZIPArchive(
          myEnv.outputDir + '/' + baseName + '.zip',
          baseDir
       )
       if (package_success) {
          console.log(package_stat)
-         myCLI.rmDir(baseDir)
+         utils.rmDir(baseDir)
          process.exit(0)
       } else {
          console.error(package_stat, -1)

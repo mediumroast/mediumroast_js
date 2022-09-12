@@ -6,23 +6,28 @@
  * @file company.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 2.0.0
  */
 
 // Import required modules
 import { Auth, Companies, Interactions } from '../src/api/mrServer.js'
-import { CLI } from '../src/helpers.js'
+import { Utilities } from '../src/helpers.js'
+import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
 
 // Globals
 const objectType = 'Companies'
 
 // Construct the CLI object
-const myCLI = new CLI (
+const myCLI = new CLIUtilities (
    '2.0',
    'company',
    'Command line interface for mediumroast.io Company objects.',
    objectType
 )
+
+// Construct the Utilities object
+const utils = new Utilities(objectType)
 
 // Create the environmental settings
 const myArgs = myCLI.parseCLIArgs()
@@ -74,7 +79,7 @@ if (myArgs.report) {
    
    if(myArgs.package) {
       // Create the working directory
-      const [dir_success, dir_msg, dir_res] = myCLI.safeMakedir(baseDir + '/interactions')
+      const [dir_success, dir_msg, dir_res] = utils.safeMakedir(baseDir + '/interactions')
       
       // If the directory creations was successful download the interaction
       if(dir_success) {
@@ -88,7 +93,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         await myCLI.s3DownloadObjs(interactions, myEnv, baseDir + '/interactions')
+         await utils.s3DownloadObjs(interactions, myEnv, baseDir + '/interactions')
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)

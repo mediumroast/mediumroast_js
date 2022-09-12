@@ -11,6 +11,7 @@
 import docx from 'docx'
 import boxPlot from 'box-plot'
 import Utilities from './common.js'
+import { CLIUtilities } from '../cli.js'
 import { InteractionSection } from './interactions.js'
 
 /**
