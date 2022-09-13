@@ -18,6 +18,11 @@ import axios from "axios"
  * @class
  */
 class mrRest {
+    /**
+     * @constructor
+     * Construct the object to interact with the mediumroast.io application
+     * @param {Object} credential - contains key items needed to interact with the mediumroast.io application
+     */
     constructor(credential) {
         this.user = credential.user
         this.secret = credential.secret
@@ -26,9 +31,10 @@ class mrRest {
     }
 
     /**
+     * @function getObj
      * Get an object using endpoint only.
-     * @param  {String} endpoint The full URL to the RESTful target
-     * @param  {Returns} result An array starting with a boolean success/failure and resulting data
+     * @param  {String} endpoint - The full URL to the RESTful target
+     * @returns  {Array} An array starting with a boolean success/failure and resulting data
      */
     async getObj(endpoint) {
         const myURL = this.restServer + endpoint
@@ -50,10 +56,11 @@ class mrRest {
     }
 
     /**
+     * @function postObj
      * Post an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
-     * @param  {Returns} result An array starting with a boolean success/failure and resulting data
+     * @returns  {Array} An array starting with a boolean success/failure and resulting data
      */
     async postObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
@@ -72,10 +79,11 @@ class mrRest {
     }
 
     /**
+     * @function patchObj
      * Patch an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
-     * @param  {Returns} result An array starting with a boolean success/failure and resulting data
+     * @returns  {Array} An array starting with a boolean success/failure and resulting data
      * @todo This may not be needed for the final implementation, verify with the backend
      */
     async patchObj(endpoint, obj) {
@@ -96,10 +104,12 @@ class mrRest {
     }
 
     /**
+     * @function deleteObj
      * Delete an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
-     * @param  {Returns} result An array starting with a boolean success/failure and resulting data
+     * @returns  {Array} An array starting with a boolean success/failure and resulting data
+     * @todo this isn't yet implemented in the backend verification is needed
      */
     async deleteObj(endpoint, obj) {
         const myURL = this.restServer + endpoint

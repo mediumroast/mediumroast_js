@@ -6,7 +6,12 @@
  * @file study.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @verstion 2.0.0
  */
+
+// TODO: This needs to be reimplemented using the right structure as the other CLIs
+console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
+process.exit(0)
 
 // Import required modules
 import { Auth, Studies } from '../src/api/mrServer.js'

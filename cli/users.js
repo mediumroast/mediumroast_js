@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// TODO: This needs to be reimplemented using the right structure as the other CLIs
+console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
+process.exit(0)
+
 // Import required modules
 import {Users} from '../src/api/highLevel.js'
 import program from 'commander'
