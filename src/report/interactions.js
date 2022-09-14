@@ -9,28 +9,18 @@
 
 // Import required modules
 import docx from 'docx'
-import Utilities from './common.js'
+import DOCXUtilities from './common.js'
 import { CompanySection } from './companies.js'
 
-/**
- * A high level class to create  sections for an Interaction report using either 
- * Microsoft DOCX format or eventually HTML format.  Right now the only available 
- * implementation is for the DOCX format.  These sections are designed to be consumed
- * by a wrapping document which could be for any one of the mediumroast objects.
- * 
- * To operate this class the constructor should be passed an array of interaction
- * objects, the name of the object that is using this class, and the type of object
- * that is calling this class.
- * 
- * From there two methods can be called: 
- *     1. makeDescriptionsDOCX()
- *     2. makeReferencesDOCX()
- * @class
- */
+
 class InteractionSection {
     /**
+     * A high level class to create  sections for an Interaction report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format.  These sections are designed to be consumed
+     * by a wrapping document which could be for any one of the mediumroast objects.
      * @constructor
-     * Construct the InteractionSection object 
+     * @classdesc Construct the InteractionSection object 
      * @param {Array} interactions - a complete array of interactions ranging from 1:N
      * @param {String} objectName - the name of the object calling this class
      * @param {String} objectType - the type of object calling this class
@@ -46,12 +36,12 @@ class InteractionSection {
         this.objectName = objectName
         this.objectType = objectType
         this.fontSize = 10 // We need to pass this in from the config file
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
     }
 
     /**
      * @function makeDescriptionsDOCX 
-     * Make the descriptions for interactions in the DOCX format
+     * @description Make the descriptions for interactions in the DOCX format
      * @returns {Array} An array containing a section description and a table of interaction descriptions
      */
     makeDescriptionsDOCX () {
@@ -97,7 +87,7 @@ class InteractionSection {
 
     /**
      * @function makeReferencesDOCX
-     * Create the references for calling programs in the DOCX format
+     * @description Create the references for calling programs in the DOCX format
      * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} An array containing a section description and a table of interaction references
      */
@@ -199,23 +189,13 @@ class InteractionSection {
     }
 }
 
-/**
- * A high level class to create a complete document for an Interaction report using either 
- * Microsoft DOCX format or eventually HTML format.  Right now the only available 
- * implementation is for the DOCX format. 
- * 
- * To operate this class the constructor should be passed a single interaction
- * object, the associated company, document creator and authoring company.
- * 
- * From there one method can be called: 
- *     1. makeDOCX()
- * @class
- */
 class InteractionStandalone {
     /**
+     * A high level class to create a complete document for an Interaction report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format. 
      * @constructor
-     * The constructor should be passed a single interaction
-     * object, the associated company, document creator and authoring company.
+     * @classdesc Create a full and standlaone report document for an interaction
      * @param {Object} interaction - The interaction in question to process
      * @param {Object} company - The company associated to the interaction
      * @param {String} creator - A string defining the creator for this document
@@ -267,7 +247,7 @@ class InteractionStandalone {
     /**
      * @async
      * @function makeDOCX
-     * Create the DOCX document for a single interaction which includes a company section
+     * @description Create the DOCX document for a single interaction which includes a company section
      * @param  {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
      * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} The result of the writeReport function that is an Array

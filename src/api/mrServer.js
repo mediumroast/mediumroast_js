@@ -10,21 +10,18 @@
 // Import required modules
 import mrRest from './scaffold.js'
 
-/**
- * An implementation for authenticating into the mediumroast.io application. The present
- * development is very simple and largely a placeholder.  After the object is constructed
- * the user would issue a login to generate the credential for usage in the API to talk to the 
- * mediumroast.io application and gather create, read, deleted and update various objects.
- * @class
- */
 class Auth {
     /**
+     * The present development is very simple and largely a placeholder.  After the object is constructed
+     * the user would issue a login to generate the credential for usage in the API to talk to the 
+     * mediumroast.io application and gather create, read, deleted and update various objects.
      * @constructor
-     * Stores key information in memory to login to the mediumroast.io application
+     * @classdesc An implementation for authenticating into the mediumroast.io application. 
      * @param {String} restServer - the full URL and TCP/IP port for the mediumroast.io application
      * @param {String} apiKey - the API key for the mediumroast.io application
      * @param {String} user - your username for the mediumroast.io application
      * @param {String} secret - your secret for the mediumroast.io application
+     * @todo Evolve as the backend improves authentication and authorization
      */
     constructor(restServer, apiKey, user, secret) {
         this.apiKey = apiKey
@@ -35,7 +32,7 @@ class Auth {
 
     /**
      * @function login
-     * Initiate a login to the mediumroast.io application
+     * @description Initiate a login to the mediumroast.io application
      * @returns {Object} the credential object needed to perform API calls to mediumroast.io
      */
     login() {
@@ -49,27 +46,25 @@ class Auth {
 
     /**
      * @function logout
-     * While not yet implemented meant to enable a logout of a session for the mediumroast.io
+     * @description While not yet implemented meant to enable a logout of a session for the mediumroast.io
      * @returns {Boolean} true for logout at this time
      */
     logout() {
         return true
     }
 }
-/**
- * This class contains all of the core operations which make it easier to interact with
- * the mediumroast.io application.  Access to the RESTful endpoints is wrapped in a series
- * of Javascript functions to enable SDK users to not have to manage the details.
- * 
- * Discrete objects are subclasses of this baseObjects class and are defined below. These
- * subclasses specify additional information like the objType, etc. and as needed can
- * implement their own additional functions as needed.
- * @class
- */
+
 class baseObjects {
     /**
+     * This class contains all of the core operations which make it easier to interact with
+     * the mediumroast.io application.  Access to the RESTful endpoints is wrapped in a series
+     * of Javascript functions to enable SDK users to not have to manage the details.
+     * 
+     * Discrete objects are subclasses of this baseObjects class and are defined below. These
+     * subclasses specify additional information like the objType, etc. and as needed can
+     * implement their own additional functions as needed.
      * @constructor
-     * Store and setup key variables needed to operate the SDK
+     * @classdesc Store and setup key variables needed to operate the SDK
      * @param {Object} credential - the credential object returned from Auth.login()
      * @param {String} objType - the type of object for the API session which could be users, studies, interactions or companies
      * @param {String} apiVersion - the version of the API
@@ -84,7 +79,7 @@ class baseObjects {
     /**
      * @async
      * @function getAll
-     * Get all objects from the mediumroast.io application
+     * @description Get all objects from the mediumroast.io application
      * @param {String} endpoint - defaults to getall and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
      */
@@ -96,7 +91,7 @@ class baseObjects {
     /**
      * @async
      * @function findByName
-     * Find all objects by name from the mediumroast.io application
+     * @description Find all objects by name from the mediumroast.io application
      * @param {String} name - the name of the object to find
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
@@ -110,7 +105,7 @@ class baseObjects {
     /**
      * @async
      * @function findById
-     * Find all objects by id from the mediumroast.io application
+     * @description Find all objects by id from the mediumroast.io application
      * @param {String} id - the id of the object to find
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
@@ -124,7 +119,7 @@ class baseObjects {
     /**
      * @async
      * @function findByX
-     * Find all objects by attribute and value pair from the mediumroast.io application
+     * @description Find all objects by attribute and value pair from the mediumroast.io application
      * @param {String} attribute - the attribute used to find objects
      * @param {String} value - the value for the defined attribute
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
@@ -139,7 +134,7 @@ class baseObjects {
     /**
      * @async
      * @function createObj
-     * Create objects in the mediumroast.io application
+     * @description Create objects in the mediumroast.io application
      * @param {Object} obj - the object to create in the backend
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
@@ -152,7 +147,7 @@ class baseObjects {
     /**
      * @async
      * @function updateObj
-     * Update an object in the mediumroast.io application
+     * @description Update an object in the mediumroast.io application
      * @param {Object} obj - the object to update in the backend which includes the id and, the attribute and value to be updated
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
@@ -165,7 +160,7 @@ class baseObjects {
     /**
      * @async
      * @function deleteObj
-     * Delete an object in the mediumroast.io application
+     * @description Delete an object in the mediumroast.io application
      * @param {String} id - the object to be deleted in the mediumroast.io application
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
@@ -177,15 +172,11 @@ class baseObjects {
     }
 }
 
-// YOU ARE HERE THE CLASS DEFINITIONS NEED TO BE UPDATED
-/**
-* A subclass of baseObjects to manage mediumroast.io application User objects.
- * @class
- */
+
 class Users extends baseObjects {
     /**
      * @constructor
-     * Construct the user objects
+     * @classdesc A subclass of baseObjects that construct the user objects
      * @param {Object} credential - the credential object returned from Auth.login()
      */
     constructor (credential) {
@@ -193,14 +184,10 @@ class Users extends baseObjects {
     }
 }
 
-/**
- * A subclass of baseObjects to manage mediumroast.io application Study objects.
- * @class
- */
 class Studies extends baseObjects {
     /**
      * @constructor
-     * Construct the study objects
+     * @classdesc A subclass of baseObjects that construct the study objects
      * @param {Object} credential - the credential object returned from Auth.login()
      */
     constructor (credential) {
@@ -208,14 +195,10 @@ class Studies extends baseObjects {
     }
 }
 
-/**
- * A subclass of baseObjects to manage mediumroast.io application Company objects.
- * @class
- */
 class Companies extends baseObjects {
     /**
      * @constructor
-     * Construct the company objects
+     * @classdesc A subclass of baseObjects that construct the company objects
      * @param {Object} credential - the credential object returned from Auth.login()
      */
     constructor (credential) {
@@ -223,14 +206,11 @@ class Companies extends baseObjects {
     }
 }
 
-/**
- * A subclass of baseObjects to manage mediumroast.io application Interaction objects.
- * @class
- */
+
 class Interactions extends baseObjects {
     /**
      * @constructor
-     * Construct the interaction objects
+     * @classdesc A subclass of baseObjects that construct the interaction objects
      * @param {Object} credential - the credential object returned from Auth.login()
      */
     constructor (credential) {

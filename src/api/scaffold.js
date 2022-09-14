@@ -11,16 +11,17 @@
 import axios from "axios"
 
 /**
- * Simple and safe wrappers around axios to make RESTful API to mediuroast.io.
- * The credential object, passed when this object is created, should include all relevant items
- * needed to authenticate a client.  This can include appropriate JWT tokens, user identifiers,
- * passwords, etc.  At a minimum the restServer and an apiKey are needed to connect.
+ 
  * @class
  */
 class mrRest {
     /**
+     * Simple and safe wrappers around axios to make RESTful API to mediuroast.io.
+     * The credential object, passed when this object is created, should include all relevant items
+     * needed to authenticate a client.  This can include appropriate JWT tokens, user identifiers,
+     * passwords, etc.  At a minimum the restServer and an apiKey are needed to connect.
      * @constructor
-     * Construct the object to interact with the mediumroast.io application
+     * @classdesc Construct the object to interact with the mediumroast.io application
      * @param {Object} credential - contains key items needed to interact with the mediumroast.io application
      */
     constructor(credential) {
@@ -32,7 +33,7 @@ class mrRest {
 
     /**
      * @function getObj
-     * Get an object using endpoint only.
+     * @description Get an object using endpoint only.
      * @param  {String} endpoint - The full URL to the RESTful target
      * @returns  {Array} An array starting with a boolean success/failure and resulting data
      */
@@ -57,7 +58,7 @@ class mrRest {
 
     /**
      * @function postObj
-     * Post an object using endpoint and a Javascript object.
+     * @description Post an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
      * @returns  {Array} An array starting with a boolean success/failure and resulting data
@@ -80,7 +81,7 @@ class mrRest {
 
     /**
      * @function patchObj
-     * Patch an object using endpoint and a Javascript object.
+     * @description Patch an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
      * @returns  {Array} An array starting with a boolean success/failure and resulting data
@@ -105,7 +106,7 @@ class mrRest {
 
     /**
      * @function deleteObj
-     * Delete an object using endpoint and a Javascript object.
+     * @description Delete an object using endpoint and a Javascript object.
      * @param  {String} endpoint The full URL to the RESTful target
      * @param  {Object} obj Data objects for input
      * @returns  {Array} An array starting with a boolean success/failure and resulting data

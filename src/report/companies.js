@@ -10,27 +10,17 @@
 // Import required modules
 import docx from 'docx'
 import boxPlot from 'box-plot'
-import Utilities from './common.js'
-import { CLIUtilities } from '../cli.js'
+import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
 
-/**
- * A high level class to create sections for a Company report using either 
- * Microsoft DOCX format or eventually HTML format.  Right now the only available 
- * implementation is for the DOCX format.  These sections are designed to be consumed
- * by a wrapping document which could be for any one of the mediumroast objects.
- * 
- * To operate this class the constructor should be passed a single company object.
- * 
- * From there two methods can be called: 
- *     1. makeFirmographicsDOCX()
- *     2. makeComparisonsDOCX()
- * @class
- */
 class CompanySection {
     /**
+     * A high level class to create sections for a Company report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format.  These sections are designed to be consumed
+     * by a wrapping document which could be for any one of the mediumroast objects.
      * @constructor
-     * To operate this class the constructor should be passed a single company object.
+     * @classdesc To operate this class the constructor should be passed a single company object.
      * @param {Object} company - The company object to generate the section(s) for
      */
     constructor(company) {
@@ -38,7 +28,7 @@ class CompanySection {
         this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
             this.companyType = 'Private' :
             this.companyType = 'Public'
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
     }
 
     // Create a URL on Google maps to search for the address
@@ -109,7 +99,7 @@ class CompanySection {
 
     /**
      * @function makeFirmographicsDOCX
-     * Create a table containing key information for the company in question
+     * @description Create a table containing key information for the company in question
      * @returns {Object} A docx table is return to the caller
      */
     makeFirmographicsDOCX() {
@@ -192,7 +182,7 @@ class CompanySection {
 
     /**
      * @function makeComparisonDOCX
-     * Generate the comparisons section for the document from the company in question
+     * @description Generate the comparisons section for the document from the company in question
      * @param {Object} comparisons - the object containing the comparisons for the company in question
      * @returns {Array} An array containing an introduction to this section and the table with the comparisons
      */
@@ -243,19 +233,19 @@ class CompanySection {
     }
 }
 
-/**
- * A high level class to create a complete document for a Company report using either 
- * Microsoft DOCX format or eventually HTML format.  Right now the only available 
- * implementation is for the DOCX format. 
- * 
- * To operate this class the constructor should be passed a single company
- * object, the associated array of interactions, document creator and authoring company.
- * 
- * From there one method can be called: 
- *     1. makeDOCX()
- * @class
- */
+
 class CompanyStandalone {
+    /**
+     * A high level class to create a complete document for a Company report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format. 
+     * @constructor
+     * @classdesc Create a full and standlaone report document for a company
+     * @param {*} company 
+     * @param {*} interactions 
+     * @param {*} creator 
+     * @param {*} authorCompany 
+     */
     constructor(company, interactions, creator, authorCompany) {
         this.objectType = 'Company'
         this.creator = creator
@@ -278,6 +268,7 @@ class CompanyStandalone {
     /**
      * @async
      * @function makeDocx
+     * @description Generate and save a DOCX report for a Company object
      * @param {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
      * @param {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} The result of the writeReport function that is an Array

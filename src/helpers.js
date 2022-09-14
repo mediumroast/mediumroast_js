@@ -12,15 +12,13 @@ import * as fs from 'fs'
 import zip from 'adm-zip'
 import AWS from 'aws-sdk'
 
-/**
- * A class to enable consistent functionality for basic operations like writing files,
- * downloading from S3, reading files, creating ZIP archives, etc.
- * @class
- */
+
 class Utilities {
     /**
+     * A class to enable consistent functionality for basic operations like writing files,
+     * downloading from S3, reading files, creating ZIP archives, etc.
      * @constructor
-     * Largely reserved for future use a basic constructor to create the object
+     * @classdesc Largely reserved for future use a basic constructor to create the object
      * @param {String} objectType - The type of object constructing this object
      */
     constructor(objectType) {
@@ -29,9 +27,10 @@ class Utilities {
 
     /**
      * @function saveTextFile
-     * Save textual data to a file
+     * @description Save textual data to a file
      * @param {String} fileName - full path to the file and the file name to save to
      * @param {String} content - the string content to save to a file which could be JSON, XML, TXT, etc.
+     * @returns {Array} containing the status of the save operation, status message and null/error
      */
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {
@@ -45,7 +44,7 @@ class Utilities {
 
     /**
      * @function readTextFile
-     * Safely read a text file of any kind
+     * @description Safely read a text file of any kind
      * @param {String} fileName - name of the file to read
      * @returns {Array} containing the status of the read operation, status message and data read
      */
@@ -60,9 +59,9 @@ class Utilities {
 
     /**
      * @function safeMakedir
-     * Resursively and safely create a directory
+     * @description Resursively and safely create a directory
      * @param {String} dirName - full path to the directory to create
-     * @returns {Array} containing the status of the create operation, status message and null
+     * @returns {Array} containing the status of the mkdir operation, status message and null
      */
     safeMakedir(dirName) {
         try {
@@ -79,9 +78,9 @@ class Utilities {
 
     /**
      * @function rmDir
-     * Recursively remove a directory
+     * @description Recursively remove a directory
      * @param {String} dirName - full path to the parent directory to revmove
-     * @returns {Array} containing the status of the create operation, status message and null
+     * @returns {Array} containing the status of the rmdir operation, status message and null
      */
     rmDir(dirName) {
         try {
@@ -95,10 +94,10 @@ class Utilities {
     // create a ZIP package
     /**
      * @function createZIPArchive
-     * Create a ZIP package from a source directory
+     * @description Create a ZIP package from a source directory
      * @param {String} outputFile - the name, including the full path name, of the target ZIP package
      * @param {Sting} sourceDirectory - the full path to directory where the ZIP package will be stored
-     * @returns 
+     * @returns {Array} containing the status of the create operation, status message and null 
      */
     async createZIPArchive(outputFile, sourceDirectory) {
         try {
@@ -113,7 +112,7 @@ class Utilities {
 
     /**
      * @function extractZIPArchive
-     * Extract objects from a ZIP package into a target directory
+     * @description Extract objects from a ZIP package into a target directory
      * @param {String} inputFile - the ZIP file name, including the full path, to be extracted 
      * @param {String} targetDirectory - the location for the ZIP package to be extracted to
      */
@@ -129,10 +128,11 @@ class Utilities {
 
     /**
      * @function s3DownloadObjs
-     * From an S3 bucket download the document associated to each interaction
+     * @description From an S3 bucket download the document associated to each interaction
      * @param {Array} interactions - an array of interaction objects
      * @param {Object} env - the environmental settings to use for accessing the S3 endpoint
      * @param {String} targetDirectory - the target location for downloading the objects to
+     * @todo As the implementation grows this function will likely need be put into a separate class
      */
     async s3DownloadObjs (interactions, env, targetDirectory) {
         const s3Ctl = new AWS.S3({

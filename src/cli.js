@@ -15,16 +15,14 @@ import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
 import { Utilities } from './helpers.js'
 
-/**
- * A class to create consistent CLI operations for mediumroast.io objects like
- * interactions, studies, companies and users.  The functions within help with environmental
- * settings, command line switches and output formatting.
- * @class
- */
+
 class CLIUtilities {
     /**
+     * A class to create consistent CLI operations for mediumroast.io objects like
+     * interactions, studies, companies and users.  The functions within help with environmental
+     * settings, command line switches and output formatting.
      * @constructor
-     * Construct a CLI object with key parameters
+     * @classdesc Construct a CLI object with key parameters
      * @param {String} version - the version for the CLI
      * @param {String} name - name for the CLI
      * @param {String} description - a description for the CLI
@@ -40,7 +38,7 @@ class CLIUtilities {
 
     /**
      * @function parseCLIArgs
-     * Consistently parse the CLI for options and switches
+     * @description Consistently parse the CLI for options and switches
      * @returns {Object} - an object containing all CLI options and switches
      */
     parseCLIArgs() {
@@ -123,7 +121,7 @@ class CLIUtilities {
 
     /**
      * @function getConfig
-     * Using the confFile argument read, parse and return the contents of a configuration file
+     * @description Using the confFile argument read, parse and return the contents of a configuration file
      * @param {String} confFile - a fully qualified path to the configuration file
      * @returns {Object} The object containing the parsed configuration file results
      */
@@ -136,7 +134,7 @@ class CLIUtilities {
 
     /**
      * @function getEnv
-     * With the CLI arguments as the priority create an environmentals object to be used in the CLI
+     * @description With the CLI arguments as the priority create an environmentals object to be used in the CLI
      * @param {Object} cliArgs - should contain the results of parseCLIArgs() above
      * @param {Object} config - should contain the results of getConfig() above
      * @returns {Object} after merging cliArgs and config an Object containing the final environmental settings 
@@ -178,7 +176,7 @@ class CLIUtilities {
 
     /**
      * @function outputCLI
-     * An output router enabling users to pick their output format of choice for a CLI
+     * @description An output router enabling users to pick their output format of choice for a CLI
      * @param  {String} outputType Type of output to produce/route to: table, json, csv, xls
      * @param  {Object} results Data objects to be output
      * @param  {Object} env Environmental variables from the CLI
