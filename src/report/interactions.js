@@ -1,13 +1,31 @@
+/**
+ * Two classes to create sections and documents for interaction objects in mediumroast.io
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file interactions.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
 // Import required modules
 import docx from 'docx'
-import boxPlot from 'box-plot'
-
-import Utilities from './common.js'
+import DOCXUtilities from './common.js'
 import { CompanySection } from './companies.js'
 
 
 class InteractionSection {
-    constructor(interactions, objectName, objectType, characterLimit = 1000) {
+    /**
+     * A high level class to create  sections for an Interaction report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format.  These sections are designed to be consumed
+     * by a wrapping document which could be for any one of the mediumroast objects.
+     * @constructor
+     * @classdesc Construct the InteractionSection object 
+     * @param {Array} interactions - a complete array of interactions ranging from 1:N
+     * @param {String} objectName - the name of the object calling this class
+     * @param {String} objectType - the type of object calling this class
+     */
+    constructor(interactions, objectName, objectType) {
 
         // NOTE creation of a ZIP package is something we likely need some workspace for
         //      since the documents should be downloaded and then archived.  Therefore,
@@ -15,160 +33,32 @@ class InteractionSection {
         //      we will need some server side logic to make this happen.
 
         this.interactions = interactions
-        this.characterLimit = characterLimit
-        // TODO anything that is commented out can likely be removed
-        // this.introduction = 'The mediumroast.io system has automatically generated this section.' +
-        //     ' It includes key metadata from each interaction associated to the object ' + objectName +
-        //     '.  If this report document is produced as a package, instead of standalone, then the' +
-        //     ' hyperlinks are active and will link to documents on the local folder after the' +
-        //     ' package is opened.'
         this.objectName = objectName
         this.objectType = objectType
-        // TODO anything that is commented out can likely be removed
-        // this.font = 'Avenir Next' // We need to pass this in from the config file
         this.fontSize = 10 // We need to pass this in from the config file
-        // this.protocol = protocol
-        // this.protoDoc = this.createRefs()
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
     }
 
-    // Create the entire section as a proto document to be fed to a format like docx, ..., html.
-    // createRefs() {
-    //     let protoDoc = {
-    //         intro: this.introduction,
-    //         references: {}
-    //     }
-    //     for (const item in this.interactions) {
-    //         protoDoc.references[this.interactions[item].interactionName] = this.createRef(this.interactions[item])
-    //     }
-    //     return protoDoc
-    // }
-
-    // // Create an individual reference from an interaction
-    // createRef(interaction, dateKey = 'date', timeKey = 'time', httpType = 'http') {
-    //     // NOTE need to think about the URL and how to properly unpack it
-    //     //      example, swap to from X to http and then preserve it as a 
-    //     //      part of the protoDoc
-
-    //     // Decode the date
-    //     const myDate = interaction[dateKey]
-    //     const [year, month, day] = [myDate.substring(0, 4), myDate.substring(4, 6), myDate.substring(6, 8)]
-
-    //     // Decode the time
-    //     const myTime = interaction[timeKey]
-    //     const [hour, min] = [myTime.substr(0, 2), myTime.substr(2, 4)]
-
-    //     // Detect the repository type and replace it with http
-    //     // NOTE This is setup to create a local package with source links in a local working directory
-    //     const repoType = interaction.url.split('://')[0]
-    //     let myURL = interaction.url.split('://').pop()
-    //     myURL = this.protocol + myURL.split('/').pop()
-
-    //     // Create the reference
-    //     let reference = {
-    //         type: interaction.interactionType, // TODO There is a bug here in the ingestion
-    //         abstract: interaction.abstract.substr(0, this.characterLimit) + '...',
-    //         date: year + '-' + month + '-' + day,
-    //         time: hour + ':' + min,
-    //         url: myURL,
-    //         repo: repoType,
-    //         guid: interaction.GUID
-    //     }
-    //     // Set the object type and name
-    //     reference[this.objectType] = this.objectName
-
-    //     return reference
-    // }
-
-    // // Create a paragraph
-    // makeParagraph(paragraph, size, bold) {
-    //     return new docx.Paragraph({
-    //         children: [
-    //             new docx.TextRun({
-    //                 text: paragraph,
-    //                 font: this.font,
-    //                 size: size ? size : 20,
-    //                 bold: bold ? bold : false,
-    //             })
-    //         ]
-    //     })
-    // }
-
-    // // Create a title of heading style 2
-    // makeTitle(title, ident) {
-    //     return new docx.Paragraph({
-    //         text: text,
-    //         heading: docx.HeadingLevel.HEADING_2
-    //     })
-    // }
-
-    // // Create a text run
-    // makeTextrun(text) {
-    //     return new docx.TextRun({
-    //         text: text,
-    //         font: this.font,
-    //         size: 1.5 * this.fontSize,
-    //     })
-    // }
-
-    // makeURL(name, link) {
-    //     return new docx.ExternalHyperlink({
-    //         children: [
-    //             new docx.TextRun({
-    //                 text: name,
-    //                 style: 'Hyperlink',
-    //                 font: this.font,
-    //                 size: 1.5 * this.fontSize
-    //             })
-    //         ],
-    //         link: link
-    //     })
-    // }
-
-    // // Return the proto document as a docx formatted section
-    // makeDocx() {
-    //     const excerptAnchor = this.util.makeInternalHyperLink('Summary Excerpts', 'summary_excerpts')
-    //     let finaldoc = [this.makeParagraph(this.protoDoc.intro)]
-
-    //     for (const myReference in this.protoDoc.references) {
-    //         // String(this.protoDoc.references[myReference].guid)
-    //         finaldoc.push(this.util.makeBookmark2(myReference, String(this.protoDoc.references[myReference].guid).substring(0, 40)))
-    //         finaldoc.push(this.makeParagraph(
-    //             this.protoDoc.references[myReference].abstract,
-    //             1.5 * this.fontSize))
-    //         const permaLink = this.makeURL(
-    //             'Document link',
-    //             this.protoDoc.references[myReference].url)
-
-    //         finaldoc.push(
-    //             new docx.Paragraph({
-    //                 children: [
-    //                     this.makeTextrun('[ '),
-    //                     permaLink,
-    //                     this.makeTextrun(' | Date: ' + this.protoDoc.references[myReference].date + ' | '),
-    //                     this.makeTextrun('Time: ' + this.protoDoc.references[myReference].time + ' | '),
-    //                     this.makeTextrun('Type: ' + this.protoDoc.references[myReference].type + ' | '),
-    //                     excerptAnchor,
-    //                     this.makeTextrun(' ]'),
-    //                 ]
-    //             })
-    //         )
-    //     }
-    //     return finaldoc
-    // }
-
-    // Generate the descriptions for interactions
-    makeDescriptions () {
-        // TODO create bookmark with the right kind of heading
+    /**
+     * @function makeDescriptionsDOCX 
+     * @description Make the descriptions for interactions in the DOCX format
+     * @returns {Array} An array containing a section description and a table of interaction descriptions
+     */
+    makeDescriptionsDOCX () {
+        // Set the number of interactions for use later
         const noInteractions = this.interactions.length
+
+        // Create the header row for the descriptions
         let myRows = [this.util.descriptionRow('Id', 'Description', true)]
         
-        // TODO ids should be hyperlinks to the actual interaction which is interaction_<id>
+        // Loop over the interactions and pull out the interaction ids and descriptions
         for (const interaction in this.interactions) {
             myRows.push(this.util.descriptionRow(
+                // Create the internal hyperlink for the interaction reference
                 this.util.makeInternalHyperLink(
                     this.interactions[interaction].id, 'interaction_' + String(this.interactions[interaction].id)
                 ), 
+                // Pull in the description
                 this.interactions[interaction].description
                 )
             )
@@ -184,6 +74,7 @@ class InteractionSection {
             }
         })
 
+        // Return the results as an array
         return [
             this.util.makeParagraph(
                 'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
@@ -194,15 +85,20 @@ class InteractionSection {
         ]
     }
 
-    // Create the references for calling programs
-    makeReferences(isPackage, independent=false) {
+    /**
+     * @function makeReferencesDOCX
+     * @description Create the references for calling programs in the DOCX format
+     * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} An array containing a section description and a table of interaction references
+     */
+    makeReferencesDOCX(isPackage) {
         // Link this back to the descriptions section
         const descriptionsLink = this.util.makeInternalHyperLink(
             'Back to Interaction Summaries', 
             'interaction_summaries'
         )
 
-        // Create the array for the references with the introduction
+        // Create the array for the references starting with the introduction
         let references = [
             this.util.makeParagraph(
                 'The mediumroast.io system has automatically generated this section.' +
@@ -213,7 +109,9 @@ class InteractionSection {
             )
         ]
 
+        // Loop over all interactions
         for (const interaction in this.interactions) {
+            
             // Create the link to the underlying interaction document
             const objWithPath = this.interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
@@ -225,7 +123,7 @@ class InteractionSection {
             // Depending upon if this is a package or not create the metadata strip with/without document link
             let metadataStrip = null
             if(isPackage) { 
-                // Package version of the strip
+                // isPackage version of the strip
                 metadataStrip = new docx.Paragraph({
                     spacing: {
                         before: 100,
@@ -243,7 +141,7 @@ class InteractionSection {
                     ]
                 })
             } else {
-                // Non package version of the strip
+                // Non isPackage version of the strip
                 metadataStrip = new docx.Paragraph({
                     spacing: {
                         before: 100,
@@ -289,11 +187,20 @@ class InteractionSection {
         // Return the built up references
         return references
     }
-
-
 }
 
 class InteractionStandalone {
+    /**
+     * A high level class to create a complete document for an Interaction report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format. 
+     * @constructor
+     * @classdesc Create a full and standlaone report document for an interaction
+     * @param {Object} interaction - The interaction in question to process
+     * @param {Object} company - The company associated to the interaction
+     * @param {String} creator - A string defining the creator for this document
+     * @param {String} authorCompany - A string containing the company who authored the document
+     */
     constructor(interaction, company, creator, authorCompany) {
         this.creator = creator
         this.authorCompany = authorCompany
@@ -307,49 +214,11 @@ class InteractionStandalone {
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.abstract = interaction.abstract
-        this.util = new Utilities()
-        // TODO test rankTags in common.js
-        this.topics = this.rankTags(this.interaction.topics)
-        // this.topics = this.util.rankTags(this.interaction.topics)
+        this.util = new DOCXUtilities()
+        this.topics = this.util.rankTags(this.interaction.topics)
     }
 
-    // TODO remove this and rely on the one in utils
-    rankTags (tags) {
-        const ranges = boxPlot(Object.values(this.interaction.topics))
-        let finalTags = {}
-        for (const tag in tags) {
-            // Rank the tag score using the ranges derived from box plots
-            // if > Q3 then the ranking is high
-            // if in between Q2 and Q3 then the ranking is medium
-            // if < Q3 then the ranking is low
-            let rank = null
-            if (tags[tag] > ranges.upperQuartile) {
-                rank = 'High'
-            } else if (tags[tag] < ranges.lowerQuartile) {
-                rank = 'Low'
-            } else if (ranges.lowerQuartile <= tags[tag] <= ranges.upperQuartile) {
-                rank = 'Medium'
-            }
-    
-            finalTags[tag] = {
-                score: tags[tag], // Math.round(tags[tag]),
-                rank: rank
-            }
-            
-        }
-        return finalTags
-    }
-
-    // TODO consider moving this to common
-    makeIntro () {
-        const myIntro = [
-            this.util.makeHeading1('Introduction'),
-            this.util.makeParagraph(this.introduction)
-        ]
-        return myIntro
-    }
-
-    metadataTable (isPackage) {
+    metadataTableDOCX (isPackage) {
         // Switch the name row if depending upon if this is a package or not
         const objWithPath = this.interaction.url.split('://').pop()
         const myObj = objWithPath.split('/').pop()
@@ -358,7 +227,6 @@ class InteractionStandalone {
             nameRow = this.util.urlRow('Interaction Name', this.interaction.name, './interactions/' + myObj) :
             nameRow = this.util.basicRow('Interaction Name', this.interaction.name)
         
-
         const myTable = new docx.Table({
             columnWidths: [20, 80],
             rows: [
@@ -376,8 +244,15 @@ class InteractionStandalone {
         return myTable
     }
 
-    // Create the document
-    async makeDocx(fileName, isPackage) {
+    /**
+     * @async
+     * @function makeDOCX
+     * @description Create the DOCX document for a single interaction which includes a company section
+     * @param  {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} The result of the writeReport function that is an Array
+     */
+    async makeDOCX(fileName, isPackage) {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
 
@@ -386,16 +261,16 @@ class InteractionStandalone {
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.makeIntro(),
+            this.util.makeIntro(this.introduction),
             [
                 this.util.makeHeading1('Interaction Detail'), 
-                this.metadataTable(isPackage),
+                this.metadataTableDOCX(isPackage),
                 this.util.makeHeading1('Topics'),
                 this.util.topicTable(this.topics),
                 this.util.makeHeading1('Abstract'),
                 this.util.makeParagraph(this.abstract),
                 this.util.makeHeading1('Company Detail'),
-                companySection.makeFirmographics()
+                companySection.makeFirmographicsDOCX()
             ])
     
         // Construct the document

@@ -1,16 +1,34 @@
+/**
+ * Two classes to create sections and documents for company objects in mediumroast.io
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file companies.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
 // Import required modules
 import docx from 'docx'
 import boxPlot from 'box-plot'
-import Utilities from './common.js'
+import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
 
 class CompanySection {
+    /**
+     * A high level class to create sections for a Company report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format.  These sections are designed to be consumed
+     * by a wrapping document which could be for any one of the mediumroast objects.
+     * @constructor
+     * @classdesc To operate this class the constructor should be passed a single company object.
+     * @param {Object} company - The company object to generate the section(s) for
+     */
     constructor(company) {
         this.company = company
         this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
             this.companyType = 'Private' :
             this.companyType = 'Public'
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
     }
 
     // Create a URL on Google maps to search for the address
@@ -79,7 +97,12 @@ class CompanySection {
         }
     }
 
-    makeFirmographics() {
+    /**
+     * @function makeFirmographicsDOCX
+     * @description Create a table containing key information for the company in question
+     * @returns {Object} A docx table is return to the caller
+     */
+    makeFirmographicsDOCX() {
         const noInteractions = String(Object.keys(this.company.linked_interactions).length)
         const noStudies = String(Object.keys(this.company.linked_studies).length)
         const myTable = new docx.Table({
@@ -157,7 +180,13 @@ class CompanySection {
         return [finalComparisons, rankPicker]
     }
 
-    makeComparison(comparisons) {
+    /**
+     * @function makeComparisonDOCX
+     * @description Generate the comparisons section for the document from the company in question
+     * @param {Object} comparisons - the object containing the comparisons for the company in question
+     * @returns {Array} An array containing an introduction to this section and the table with the comparisons
+     */
+    makeComparisonDOCX(comparisons) {
         // Transform the comparisons into something that is usable for display
         const [myComparison, picks] = this.rankComparisons(comparisons)
 
@@ -204,7 +233,19 @@ class CompanySection {
     }
 }
 
+
 class CompanyStandalone {
+    /**
+     * A high level class to create a complete document for a Company report using either 
+     * Microsoft DOCX format or eventually HTML format.  Right now the only available 
+     * implementation is for the DOCX format. 
+     * @constructor
+     * @classdesc Create a full and standlaone report document for a company
+     * @param {Object} company - the company object to be reported on
+     * @param {Array} interactions - the interactions associated to the company
+     * @param {String} creator - the author of the report
+     * @param {*} authorCompany - the company of the report author
+     */
     constructor(company, interactions, creator, authorCompany) {
         this.objectType = 'Company'
         this.creator = creator
@@ -218,23 +259,21 @@ class CompanyStandalone {
             '  If this report document is produced as a package, instead of standalone, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
         this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
 
-    // TODO Move to common.js
-    makeIntro () {
-        const myIntro = [
-            this.util.makeHeading1('Introduction'),
-            this.util.makeParagraph(this.introduction)
-        ]
-        return myIntro
-    }
-
-
-    async makeDocx(fileName, isPackage) {
+    /**
+     * @async
+     * @function makeDocx
+     * @description Generate and save a DOCX report for a Company object
+     * @param {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
+     * @returns {Array} The result of the writeReport function that is an Array
+     */
+    async makeDOCX(fileName, isPackage) {
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.company.name.replace(/ /g,"_") + '.docx'
 
@@ -251,13 +290,13 @@ class CompanyStandalone {
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.makeIntro(),
+            this.util.makeIntro(this.introduction),
             [
                 this.util.makeHeading1('Company Detail'), 
-                companySection.makeFirmographics(),
+                companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparison(this.comparison),
+            companySection.makeComparisonDOCX(this.comparison),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +
@@ -267,11 +306,11 @@ class CompanyStandalone {
                 this.util.topicTable(this.topics),
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
-            ...interactionSection.makeDescriptions(),
+            ...interactionSection.makeDescriptionsDOCX(),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
-            ...interactionSection.makeReferences(isPackage)
+            ...interactionSection.makeReferencesDOCX(isPackage)
             )
     
         // Construct the document

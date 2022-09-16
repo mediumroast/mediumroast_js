@@ -15,7 +15,22 @@ import boxPlot from 'box-plot'
 // TODO Change class names to: GenericUtilities, DOCXUtilities and HTMLUtilities
 // TODO rankTags belongs to GenericUtilities
 
-class Utilities {
+class DOCXUtilities {
+    /**
+     * To make machine authoring of a Microsoft DOCX file consistent and easier this class has been 
+     * developed.  Key functions are available that better describe the intent of the operation
+     * by name which makes it simpler author a document instead of sweating the details.
+     * Further through trial and error the idiosyncrasies of the imported docx module
+     * have been worked out so that the developer doesn't have to accidently find out and struggle
+     * with document generation. 
+     * @constructor
+     * @classdesc Core utilities for generating elements in a Microsoft word DOCX file
+     * @param {String} font 
+     * @param {Float} fontSize 
+     * @param {Float} textFontSize 
+     * @param {String} textFontColor
+     * @todo when we get to HTML report generation for the front end we will rename this class and create a new one for HTML
+     */
     constructor (font, fontSize, textFontSize, textFontColor) {
         this.font = font ? font : 'Avenir Next'
         this.size = fontSize ? fontSize : 11
@@ -233,7 +248,13 @@ class Utilities {
             }
     }
 
-    // Create a bullet for a bit of prose
+    /**
+     * @function makeBullet
+     * @description Create a bullet for a bit of prose
+     * @param {String} text - text/prose for the bullet
+     * @param {Integer} level - the level of nesting for the bullet
+     * @returns {Object} new docx paragraph object as a bullet
+     */
     makeBullet(text, level=0) {
         return new docx.Paragraph({
             text: text,
@@ -244,7 +265,15 @@ class Utilities {
         })
     }
 
-    // For a section of prose create a paragraph
+    /**
+     * @function makeParagraph
+     * @description For a section of prose create a paragraph
+     * @param {String} paragraph - text/prose for the paragraph
+     * @param {Integer} size - font size for the paragrah
+     * @param {Boolean} bold - a boolean value for determining if the text should be bolded
+     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
+     * @returns {Object} a docx paragraph object 
+     */
     makeParagraph (paragraph, size, bold, spaceAfter) {
         return new docx.Paragraph({
             children: [
@@ -259,7 +288,14 @@ class Utilities {
         })
     }
 
-    // Create a text run with or without space after
+    // 
+    /**
+     * @function makeTextrun
+     * @description Create a text run with or without space after
+     * @param {String} text - text/prose for the textrun
+     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
+     * @returns {Object} a docx textrun object
+     */
     makeTextrun(text, spaceAfter=false) {
         const myFontSize = 16
         if (spaceAfter) {
@@ -278,7 +314,11 @@ class Utilities {
         }
     }
 
-    // Create a page break
+    /**
+     * @function pageBreak
+     * @description Create a page break
+     * @returns {Object} a docx paragraph object with a PageBreak
+     */
     pageBreak() {
         return new docx.Paragraph({
             children: [
@@ -287,7 +327,12 @@ class Utilities {
         })
     }
 
-    // Create a text of heading style 1
+    /**
+     * @function makeHeading1
+     * @description Create a text of heading style 1
+     * @param {String} text - text/prose for the function
+     * @returns {Object} a new paragraph as a heading
+     */
     makeHeading1(text) {
         return new docx.Paragraph({
             text: text,
@@ -295,7 +340,12 @@ class Utilities {
         })
     }
 
-    // Create a text of heading style 2
+    /**
+     * @function makeHeading2
+     * @description Create a text of heading style 2
+     * @param {String} text - text/prose for the function
+     * @returns {Object} a new paragraph as a heading
+     */
     makeHeading2(text) {
         return new docx.Paragraph({
             text: text,
@@ -303,7 +353,13 @@ class Utilities {
         })
     }
 
-    // Create a text of heading style 2
+
+    /**
+     * @function makeHeading3
+     * @description Create a text of heading style 3
+     * @param {String} text - text/prose for the function
+     * @returns {Object} a new paragraph as a heading
+     */
     makeHeading3(text) {
         return new docx.Paragraph({
             text: text,
@@ -311,7 +367,13 @@ class Utilities {
         })
     }
 
-    // Create an external hyperlink
+    /**
+     * @function makeExternalHyperLink
+     * @description Create an external hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} link - the URL for the hyperlink
+     * @returns {Object} a new docx ExternalHyperlink object
+     */
     makeExternalHyperLink(text, link) {
         return new docx.ExternalHyperlink({
             children: [
@@ -326,7 +388,13 @@ class Utilities {
         })
     }
 
-    // Create an internal hyperlink
+    /**
+     * @function makeInternalHyperLink
+     * @description Create an external hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} link - the URL for the hyperlink within the document
+     * @returns {Object} a new docx InternalHyperlink object
+     */
     makeInternalHyperLink(text, link) {
         return new docx.InternalHyperlink({
             children: [
@@ -341,8 +409,14 @@ class Utilities {
         })
     }
 
-    // Create a bookmark needed to create an internal hyperlink
-    // TODO at some point test this
+    /**
+     * @function makeBookmark
+     * @description Create a target within a document to link to with an internal hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark
+     * @todo test and revise this function as it may need to be a textrun which can be embedded in something else
+     */
     makeBookmark(text, ident) {
         return new docx.Paragraph({
             children: [
@@ -356,7 +430,14 @@ class Utilities {
         })
     }
 
-    // Create a bookmark needed to create an internal hyperlink
+    /**
+     * @function makeHeadingBookmark1
+     * @description Create a target within a document to link to with an internal hyperlink of heading 1
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark at the heading level 1
+     * @todo could we generalize this function and make the heading level a parameter in the future?
+     */
     makeHeadingBookmark1(text, ident) {
         return new docx.Paragraph({
             heading: docx.HeadingLevel.HEADING_1,
@@ -371,7 +452,13 @@ class Utilities {
         })
     }
 
-    // Create a bookmark needed to create an internal hyperlink
+    /**
+     * @function makeHeadingBookmark2
+     * @description Create a target within a document to link to with an internal hyperlink of heading 2
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark at the heading level 2
+     */
     makeHeadingBookmark2(text, ident) {
         return new docx.Paragraph({
             heading: docx.HeadingLevel.HEADING_2,
@@ -388,7 +475,13 @@ class Utilities {
 
     
 
-    // Basic table row to produce a name/value pair
+    /**
+     * @function basicRow
+     * @description Basic table row to produce a name/value pair table with 2 columns
+     * @param {String} name - text/prose for the cell
+     * @param {String} data - text/prose for the cell
+     * @returns {Object} a new docx TableRow object
+     */
     basicRow (name, data) {
         // return the row
         return new docx.TableRow({
@@ -411,7 +504,13 @@ class Utilities {
         })
     }
 
-    // Create rows for object ids and object descriptions
+    /**
+     * @function descriptionRow
+     * @description Description table row to produce a name/value pair table with 2 columns
+     * @param {String} id - text/prose for the cell
+     * @param {String} description - text/prose for the cell
+     * @returns {Object} a new docx TableRow object
+     */
     descriptionRow(id, description, bold=false) {
         // return the row
         return new docx.TableRow({
@@ -434,7 +533,14 @@ class Utilities {
         })
     }
 
-    // Create the rows with URLs/links
+    /**
+     * @function urlRow
+     * @description Hyperlink table row to produce a name/value pair table with 2 columns and an external hyperlink
+     * @param {String} category - text/prose for the first column
+     * @param {String} name - text/prose for the hyperlink in the second column
+     * @param {String} link - the URL for the hyperlink
+     * @returns {Object} a new docx TableRow object with an external hyperlink
+     */
     urlRow(category, name, link) {
         // define the link to the target URL
         const myUrl = new docx.ExternalHyperlink({
@@ -470,6 +576,15 @@ class Utilities {
         })
     }
 
+    /**
+     * @function basicTopicRow
+     * @description Create a 3 column row for displaying topics which are the results of term extraction
+     * @param {String} theme - text/prose for the theme in col 1
+     * @param {Float} score - the numerical score for the term in col 2
+     * @param {String} rank - a textual description of the relative priority for the term in col 3
+     * @param {Boolean} bold - whether or not to make the text/prose bold typically used for header row
+     * @returns {Object} a new 3 column docx TableRow object
+     */
     basicTopicRow (theme, score, rank, bold) {
         const myFontSize = 16
         // return the row
@@ -503,7 +618,16 @@ class Utilities {
         })
     }
 
-    // Build a comparisons row
+    /**
+     * @function basicComparisonRow
+     * @description Create a 4 column row for displaying comparisons which are the results of similarity comparisons
+     * @param {String} company - text/prose for the company in col 1
+     * @param {String} role - the role of the company in col 2
+     * @param {Float} score - the numerical score for the term in col 3
+     * @param {String} rank - a textual description of the relative priority for the company in col 4
+     * @param {Boolean} bold - whether or not to make the text/prose bold typically used for header row
+     * @returns {Object} a new 4 column docx TableRow object
+     */
     basicComparisonRow (company, role, score, rank, bold) {
         const myFontSize = 16
         // return the row
@@ -547,7 +671,14 @@ class Utilities {
 
     
 
-    // Write the report to storage
+    /**
+     * @async
+     * @function writeReport
+     * @description safely write a DOCX report to a desired location
+     * @param {Object} docObj - a complete and error free document object that is ready to be saved
+     * @param {String} fileName - the file name for the DOCX object
+     * @returns {Array} an array containing if the save operation succeeded, the message, and null
+     */
     async writeReport (docObj, fileName) {
         try {
             await docx.Packer.toBuffer(docObj).then((buffer) => {
@@ -559,7 +690,12 @@ class Utilities {
         }
      }
 
-     // Rank supplied topics and return an object that can be rendered
+     /**
+      * @function rankTags
+      * @description Rank supplied topics and return an object that can be rendered
+      * @param {Object} tags - the tags from the source object to be ranked
+      * @returns {Object} the final tags which now have ranking and are suitable for a basicTopicRow
+      */
      rankTags (tags) {
         const ranges = boxPlot(Object.values(tags))
         let finalTags = {}
@@ -586,7 +722,12 @@ class Utilities {
         return finalTags
     }
 
-    // Create a table for topics
+    /**
+     * @function topicTable
+     * @description A higher level function that calls basicTopicRow to create a complete table
+     * @param {Object} topics - the result of rankTags
+     * @returns {Object} a complete docx table that includes topics
+     */
     topicTable(topics) {
         let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
         for (const topic in topics) {
@@ -604,6 +745,20 @@ class Utilities {
 
         return myTable
     }
+
+    // Create an introductory section
+    /**
+     * @function makeIntro
+     * @description Creates a complete document with a heading of level 1
+     * @param {String} introText - text/prose for the introduction
+     * @returns {Object} a complete introduction with heading level 1 and a paragraph
+     */
+    makeIntro (introText) {
+        return [
+            this.makeHeading1('Introduction'),
+            this.makeParagraph(introText)
+        ]
+    }
 }
 
-export default Utilities
+export default DOCXUtilities

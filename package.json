@@ -1,7 +1,7 @@
 {
   "name": "mediumroast_js",
   "version": "0.3.0",
-  "description": "A Javascript SDK to interaction with the mediumroast.io application, end user command line interfaces and a a series of CLIs for building company, study and interaction reports.",
+  "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
   "main": "src/api/mrServer",
   "typings": "dist/index",
   "scripts": {
@@ -14,7 +14,7 @@
     "company": "cli/company.js",
     "interaction": "cli/interaction.js",
     "users": "cli/users.js",
-    "doc_company": "cli/doc_company.js"
+    "mr_backup": "cli/mr_backup.js"
   },
   "type": "module",
   "keywords": [

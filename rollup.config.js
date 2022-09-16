@@ -7,7 +7,7 @@ export default [
   {
     input: "src/index.js", // your entry point
     output: {
-      name: "mediumroast", // package name
+      name: "mediumroast_js", // package name
       file: pkg.browser,
       format: "umd",
     },
