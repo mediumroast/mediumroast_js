@@ -253,7 +253,7 @@ class DOCXUtilities {
      * @description Create a bullet for a bit of prose
      * @param {String} text - text/prose for the bullet
      * @param {Integer} level - the level of nesting for the bullet
-     * @returns 
+     * @returns {Object} new docx paragraph object as a bullet
      */
     makeBullet(text, level=0) {
         return new docx.Paragraph({

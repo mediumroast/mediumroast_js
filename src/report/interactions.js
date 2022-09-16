@@ -214,7 +214,7 @@ class InteractionStandalone {
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.abstract = interaction.abstract
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
         this.topics = this.util.rankTags(this.interaction.topics)
     }
 

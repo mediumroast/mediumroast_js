@@ -10,10 +10,7 @@
 // Import required modules
 import axios from "axios"
 
-/**
- 
- * @class
- */
+
 class mrRest {
     /**
      * Simple and safe wrappers around axios to make RESTful API to mediuroast.io.

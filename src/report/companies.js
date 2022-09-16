@@ -241,10 +241,10 @@ class CompanyStandalone {
      * implementation is for the DOCX format. 
      * @constructor
      * @classdesc Create a full and standlaone report document for a company
-     * @param {*} company 
-     * @param {*} interactions 
-     * @param {*} creator 
-     * @param {*} authorCompany 
+     * @param {Object} company - the company object to be reported on
+     * @param {Array} interactions - the interactions associated to the company
+     * @param {String} creator - the author of the report
+     * @param {*} authorCompany - the company of the report author
      */
     constructor(company, interactions, creator, authorCompany) {
         this.objectType = 'Company'
@@ -259,7 +259,7 @@ class CompanyStandalone {
             '  If this report document is produced as a package, instead of standalone, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
-        this.util = new Utilities()
+        this.util = new DOCXUtilities()
         this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
