@@ -106,7 +106,7 @@ if (myArgs.report) {
 
    // Create the package and cleanup as needed
    if (myArgs.package) {
-      const [package_success, package_stat, package_result] = await myCLI.createZIPArchive(
+      const [package_success, package_stat, package_result] = await utils.createZIPArchive(
          myEnv.outputDir + '/' + baseName + '.zip',
          baseDir
       )
