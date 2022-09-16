@@ -112,7 +112,7 @@ if (myArgs.report) {
       )
       if (package_success) {
          console.log(package_stat)
-         myCLI.rmDir(baseDir)
+         utils.rmDir(baseDir)
          process.exit(0)
       } else {
          console.error(package_stat, -1)
