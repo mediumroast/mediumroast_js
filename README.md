@@ -6,7 +6,7 @@ This is the Node.js Javascript SDK, Software Development Kit, for the mediumroas
 4. Helper CLI utilities to setup your mediumroast.io environment and backup objects.
 5. Example data to use with the CLIs to add objects to the mediumroast.io.
 
-We actually use this SDK for our own developments directly.  We do this to ensure that our developers have a first class experience for the mediumroast.io with an always up to date version of the SDK.
+We actually use this SDK for our own developments, and we do this to ensure that our developers have a first class experience for the mediumroast.io with an always up to date version of the SDK.
 
 # Installation and Configuration Steps via NPM
 As soon as the SDK is published on the NPM repository we will update this section with installation steps.
@@ -44,20 +44,11 @@ The following packages need to be installed before the the SDK will operate corr
 - xlsx
 You can install all dependencies at once with: `npm i adm-zip, asw-sdk axios box-plot cli-table commander configparser docx json2csv node-fetch xlsx`.
 
-# Issues
-If you detect a problem in the code please open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve. 
+# Command Line Interface (CLI) for the mediumroast.io
+Inclued within this SDK is a CLI for users who are more inclined to use that tool for interacting with the system.  These tools will be added and updated to over time as the system evolves.  More information on the CLI is available in the [CLI User's Guide](./cli/CLI.md).
 
-# The mediumroast.io CLI (Command Line Interface)
-There are two types of CLIs:
-1. Core CLI set for the major mediumroast.io objects which are Interactions, Studies and Companies
-2. Administrative CLIs for users, CLI setup and object backup/restore
-Each type is described in the sections below including some examples, help, and as relevant example output.
-## Administrative CLIs
-### CLI setup
-### User Management
-### Backup and Restore
-## CLI set for major objects
-This CLI set all operate in a similar manner so instead of documenting each one in turn, we will use the CLI for company objects to illustrate the CLI basics and example use cases.
+# Issues
+If you detect a problem in the code please open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve.
 
 
 
