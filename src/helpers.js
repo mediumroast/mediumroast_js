@@ -35,11 +35,10 @@ class Utilities {
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {
             if (err) {
-                return [false, 'Did not save file [' + fileName + '] because: ' + err]
-            } else {
-                return [true, 'Saved file [' + fileName + ']', null]
+                return [false, 'Did not save file [' + fileName + '] because: ' + err, null]
             }
         })
+        return [true, 'Saved file [' + fileName + ']', null]
     }
 
     /**
@@ -84,14 +83,13 @@ class Utilities {
      */
     rmDir(dirName) {
         try {
-            fs.rmdirSync(dirName, {recursive: true})
+            fs.rmSync(dirName, {recursive: true})
             return [true, 'Removed directory [' + dirName + '] and all contents', null]
         } catch (err) {
             return [false, 'Did not remove directory [' + dirName + '] because: ' + err, null]
         }
     }
 
-    // create a ZIP package
     /**
      * @function createZIPArchive
      * @description Create a ZIP package from a source directory

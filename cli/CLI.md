@@ -4,16 +4,65 @@ In general we believe that there should be many ways to access your data in the 
 2. Administrative CLIs for users, CLI setup and object backup/restore
 Each type is explained in the sections below including the basics and how-tos.
 ## Administrative CLIs
-To enable system management, setup of the environment for the CLIs, and backup/restore of key objects within the mediumroast.io sveral CLI tools have been created.
+To enable system management, setup of the environment for the CLIs, and backup/restore of key objects within the mediumroast.io several CLI tools have been created.
 ### CLI environment setup
 ### User management
+
 ### Backup and restore
+This utility enables a user with permissions to create full backup and perform a full restore of all core mediumroast.io objects. 
+
+#### Usage information
+Command: `mr_backup.js --help`
+```
+Usage: mr_backup [options]
+
+A mediumroast.io CLI utility to backup and restore objects.
+
+Options:
+  -V, --version                               output the version number
+  -c --conf_file <file>                       Path to the configuration file (default: "/Users/mihay42/.mediumroast/config.ini")
+  --rest_server <server>                      The URL of the target mediumroast.io server (default: "http://cherokee.from-ca.com:46767")
+  --api_key <key>                             The API key needed to talk to the mediumroast.io server
+  --user <user name>                          Your user name for the mediumroast.io server
+  --secret <user secret or password>          Your user secret or password for the mediumroast.io server
+  --output_dir <output location>              Select output location to to store the backup (default: "/Users/mihay42/.mediumroast/backups")
+  -w --work_dir <working directory location>  Select output location to to store the backup (default: "/Users/mihay42/.mediumroast/tmp")
+  --verbose                                   Specify whether or not to print out details of the backup process
+  --operation <operation to perform>          Specify which process to perform from: backup or restore (default: "backup")
+  --object_type <object type to restore>      Specify which type of object(s) to backup/restore (default: "all")
+  --backup_file <backup file name>            Define the backup file to create or restore from, blank means the system will define
+  -h, --help                                  display help for command
+```
+
+#### Backups
+By default the backup files are stored in *HOME/.mediumroast/backups/* in a ZIP format, with a file name automatically generated.
+
+##### Backup with the verbse switch on
+Backup command: `mr_backup.js --operation=backup --verbose`
+```
+SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/companies.json] for all companies.
+SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/interactions.json] for all interactions.
+SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/studies.json] for all studies.
+SUCCESS: created backup package [/Users/mediumroast/.mediumroast/backups/mr_backup_full_1663471426.zip].
+SUCCESS: cleaned up the temporary backup directory [/Users/mediumroast/.mediumroast/tmp/mr_backup/].
+```
+Resulting backup package with a fully qualified path: `/Users/mediumroast/.mediumroast/backups/mr_backup_full_1663471426.zip`.
+
+#### Restores
+The restore operation will prompt you to pick from the set of available backup packages to restore from. The current implementation assumes an empty mediumroast.io backend application without objects. If you attempt to restore to a backend with existing objects the system will exit and not start a restore.
+
+#### Future updates under consideration:
+- Enable fine grained restores of objects meaning you can pick from one of the three object types (companies, studies and/or interactions) to restore.
+- When the backend implements deletes consider a replacement operation whereby all objects are deleted prior to restore.
+- Enable fine grained backups whereby the user can select which object type to backup.
+
 ## CLI for mediumroast.io objects
 This CLI set to create, read, update, report on and delete mediumroast.io core objects.  The names for each of the CLI tools are listed below.
 - Companies: company.js
 - Interactions: interaction.js
 - Studies: study.js
 Since all of the CLIs operate similarly, only one tool is documented to guide users in the usage of these tools.
+
 ### Company Command Line Interface (CLI)
 Key capabilities of this tool:
 - Report on either all company objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
@@ -21,9 +70,10 @@ Key capabilities of this tool:
 - Create one or more company objects from a specified json file.
 - Delete a company object by specifying the company's id (Note: this is not yet implemented).
 - Create a Microsoft DOCX formatted report for a specific company object as specified by the company's *id*.
+
 #### Print usage information to the console
 Command: `company.js --help`
-Example output:
+##### Example output:
 ```
 Usage: company [options]
 
@@ -47,9 +97,10 @@ Options:
   --package                                     An additional switch used with --report to generate a ZIP package that includes the interaction
   -h, --help                                    display help for command
 ```
+
 #### List all companies and output in table output
-Accessed via: `./company.js`
-Example output:
+Command: `company.js`
+##### Example output:
 ```
 ┌─────┬────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
 │ Id  │ Name                                   │ Description                                                                 │
@@ -65,8 +116,8 @@ Example output:
 ```
 
 #### List a single company by the object id and output in JSON
-Accessed via: `./company.js --find_by_id=1 --output=json`
-Example output:
+Command: `./company.js --find_by_id=1 --output=json`
+##### Example output:
 ```
 [
   {
@@ -124,4 +175,10 @@ Example output:
 ]
 ```
 #### List all companies and output in CSV format
+Command: `company.js --output=csv`
+
+Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Companies.csv*.
+
+##### Screenshot of the resulting CSV file in Apple Numbers
+*UPDATE ME*
 

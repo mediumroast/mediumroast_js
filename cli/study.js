@@ -15,18 +15,22 @@ process.exit(0)
 
 // Import required modules
 import { Auth, Studies } from '../src/api/mrServer.js'
-import { CLI } from '../src/helpers.js'
+import { Utilities } from '../src/helpers.js'
+import { CLIUtilities } from '../src/cli.js'
 
 // Globals
 const objectType = 'Studies'
 
 // Construct the CLI object
-const myCLI = new CLI (
+const myCLI = new CLIUtilities (
    '2.0',
    'study',
    'Command line interface for mediumroast.io Study objects.',
    objectType
 )
+
+// Construct the utilities object
+const utils = new Utilities(objectType)
 
 // Create the environmental settings
 const myArgs = myCLI.parseCLIArgs()
