@@ -131,6 +131,7 @@ function getEnv(cliArgs, config) {
 }
 
 function restoreObjects (fileName, apiController) {
+    // perform check to see if objs exist by counting array results using aptController.getAll()
     let [success, msg, rawData] = utils.readTextFile(fileName)
         if (success) {
             const jsonData = JSON.parse(rawData)
@@ -211,6 +212,7 @@ if (myEnv.operation == 'backup') {
     }
 
 } else if (myEnv.operation == 'restore') {
+    // Add a user prompt to pick pkgs, file system metadata can help the selection
     // Extract ZIP package
     utils.extractZIPArchive(myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_restore')
     // Restores
@@ -220,9 +222,9 @@ if (myEnv.operation == 'backup') {
     const [doUsers, doCompanies, doInteractions, doStudies] = [true, true, true, true] // This is temporary
 
     // User objects
-    if (doUsers) {
-        restoreObjects(myEnv.workDir + '/mr_restore/users.json')
-    }
+    // if (doUsers) {
+    //     restoreObjects(myEnv.workDir + '/mr_restore/users.json')
+    // }
 
     // Company objects
     if (doCompanies) {
