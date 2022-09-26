@@ -50,6 +50,7 @@
   ],
   "dependencies": {
     "adm-zip": "^0.5.9",
+    "asciiart-logo": "^0.2.7",
     "aws-sdk": "^2.1096.0",
     "axios": "^0.25.0",
     "box-plot": "^1.0.0",
@@ -57,8 +58,10 @@
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "docx": "^7.4.1",
+    "inquirer": "^9.1.2",
     "json2csv": "^5.0.7",
     "node-fetch": "^3.2.10",
+    "prompt-sync": "^4.2.0",
     "xlsx": "^0.18.5"
   }
 }
