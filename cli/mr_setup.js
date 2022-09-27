@@ -20,6 +20,7 @@ import logo from 'asciiart-logo'
 function getEnv () {
     return {
         DEFAULT: {
+            // TODO Create choices for the rest_server so the user doesn't have to figure this out
             rest_server: "http://cherokee.from-ca.com:46767",
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
@@ -46,7 +47,7 @@ function getEnv () {
 }
 
 // If not suppressed print the splash screen to the console
-function splashScreen () {
+function splashScreen (simple=false) {
     const logoConfig = {
         name: "mediumroast.io CLI Setup",
         // font: 'Speed',
@@ -71,6 +72,7 @@ function splashScreen () {
 }
 
 // Check to see if we are going to need to perform a setup operation or not.
+// TODO if the config file exists we should warn the user
 async function checkSetup() {
     await inquirer
         .prompt([
@@ -94,6 +96,7 @@ async function checkSetup() {
 
 // Prompt user to change any settings or keep the default
 async function doSettings(env) {
+    // TODO if either password or user for now we can suppress and immediately set it
     let myAnswers = {}
     for (const setting in env) {
         await inquirer
@@ -131,6 +134,7 @@ async function checkSection(env, sectionType) {
         .then(async (answer) => {
                 if (!answer.run) {
                     console.log('\t-> Ok you don\'t want to change the ' +  sectionType + ' settings, exiting.')
+                    // TODO we should not exit, but instead we should auto populate and move along
                     process.exit(0)
                 } else {
                     myAnswers = await doSettings(env[sectionType])
@@ -170,15 +174,32 @@ myConfig.s3_settings = await checkSection(myEnv, 's3_settings')
 // Determine if we should setup the s3_settings, and if so process them
 myConfig.document_settings = await checkSection(myEnv, 'document_settings')
 
-// Check for and create the directory HOME/.mediumroast
+// Check for and create the directory process.env.HOME/.mediumroast
 const utils = new Utilities(null)
-utils.safeMakedir(process.HOME + '/.mediumroast')
-const fileName = 'config.ini'
+utils.safeMakedir(process.env.HOME + '/.mediumroast')
+const fileName = process.env.HOME + '/.mediumroast/config.ini'
 
-// TODO establish the config file parser
-// TODO write the config file
-// TODO if successful print the output to the screen that the file was saved
+// Write the config file
+const configurator = new ConfigParser()
+for(const section in myConfig){
+    configurator.addSection(section)
+    for(const setting in myConfig[section]){
+        configurator.set(section, setting, myConfig[section][setting])
+    }
+}
+// This won't return anything so we'll need to see if we can find another way to determine success/failure
+configurator.write(fileName)
 
+// Read in the config file and check to see if things are ok by confirming the rest_server value matches
+configurator.read(fileName)
+const newRestServer = configurator.get('DEFAULT', 'rest_server')
+let success = false
+if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
 
-console.log(myConfig)
+const line = '-'.repeat(process.stdout.columns)
+    console.log(line)
+
+success ? 
+    console.log('SUCCESS: Verified configuration file [' + fileName + '] was written.') :
+    console.log('ERROR: Unable to verify configuration file [' + fileName + '] was written.')
 

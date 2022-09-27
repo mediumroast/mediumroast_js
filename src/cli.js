@@ -58,7 +58,7 @@ class CLIUtilities {
             .option(
                 '-r --rest_server <server>',
                 'The URL of the target mediumroast.io server',
-                'http://cherokee.from-ca.com:46767'
+                'http://cherokee.from-ca.com:26767'
             )
             .option(
                 '-a --api_key <key>',
