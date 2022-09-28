@@ -57,6 +57,20 @@ class Utilities {
     }
 
     /**
+     * @function checkFilesystemObject
+     * @description Check to see if a file system object exists or not
+     * @param {String} name - full path to the file system object to check
+     * @returns {Array} containing the status of the check operation, status message and null
+     */
+     checkFilesystemObject(name) {
+        if (fs.existsSync(name)) {
+            return [true, 'The file system object [' + name + '] was detected.', null]
+        } else {
+            return [false, 'The file system object [' + name + '] was not detected.', null]
+        }
+     }
+
+    /**
      * @function safeMakedir
      * @description Resursively and safely create a directory
      * @param {String} dirName - full path to the directory to create

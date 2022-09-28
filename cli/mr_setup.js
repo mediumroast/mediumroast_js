@@ -15,6 +15,25 @@ import ConfigParser from 'configparser'
 import program from 'commander'
 import inquirer from 'inquirer'
 import logo from 'asciiart-logo'
+import chalk from 'chalk'
+
+function parseCLIArgs() {
+    // Define commandline options
+    program
+        .name("mr_setup")
+        .version('1.0.0')
+        .description('A utility for setting up the mediumroast.io CLI.')
+
+    program
+        // System command line switches
+        .requiredOption(
+            '-n --no_splash',
+            'Whether or not to include the splash screen at startup.'
+        )   
+
+    program.parse(process.argv)
+    return program.opts()
+}
 
 // Define the key environmental variables to create the appropriate settings
 function getEnv () {
@@ -73,32 +92,45 @@ function splashScreen (simple=false) {
 
 // Check to see if we are going to need to perform a setup operation or not.
 // TODO if the config file exists we should warn the user
-async function checkSetup() {
-    await inquirer
-        .prompt([
-            {
-                name: "run_setup",
-                type: "confirm",
-                message: "Hi, would you like setup your CLI environment for the mediumroast.io."
-            }
-        ])
-        // If we don't want to perform the setup then exit
-        .then((answer) => {
-                if (!answer.run_setup) {
-                    console.log('\t-> Ok you don\'t want to setup the CLI, exiting.')
-                    process.exit(0)
+async function checkSetup(fileName) {
+    const utils = new Utilities('setup')
+    const [exists, message, result] = utils.checkFilesystemObject(fileName)
+    if(exists) {
+        await inquirer
+            .prompt([
+                {
+                    name: "run_setup",
+                    type: "confirm",
+                    message: "Hi, I've detected an existing configuration for mediumroast.io. Should I proceed?"
                 }
-            }
-        )
-        // At this point we've decided to proceed
-        return true
+            ])
+            // If we don't want to perform the setup then exit
+            .then((answer) => {
+                    if (!answer.run_setup) {
+                        console.log(chalk.red.bold('\t-> Ok exiting the CLI setup.'))
+                        process.exit(0)
+                    }
+                }
+            )
+    } else {
+        console.log(chalk.blueBright.bold('Starting the configuration process for the mediumroast.io CLI.'))
+    }
+
+    // We will always return true, because if the user decides to not proceed checkSetup exits
+    return true
 }
 
 // Prompt user to change any settings or keep the default
-async function doSettings(env) {
+async function doSettings(env, isDefault=false) {
     // TODO if either password or user for now we can suppress and immediately set it
     let myAnswers = {}
     for (const setting in env) {
+        // Skip user and secret if this is the DEFAULT section
+        // TODO eventually replace this with a proper user and password setting
+        if(isDefault && (setting === 'user' || setting === 'secret')) {
+            myAnswers[setting] = env[setting]
+            continue
+        }
         await inquirer
             .prompt([
                 {
@@ -130,21 +162,36 @@ async function checkSection(env, sectionType) {
                 message: "Setup section " +  sectionType + " for the CLI?"
             }
         ])
-        // If we don't want to perform the setup then exit
+        // If we don't want to perform the setup then move along and return the defaults
         .then(async (answer) => {
                 if (!answer.run) {
-                    console.log('\t-> Ok you don\'t want to change the ' +  sectionType + ' settings, exiting.')
-                    // TODO we should not exit, but instead we should auto populate and move along
-                    process.exit(0)
+                    console.log(
+                        chalk.blue.bold(
+                            '\t-> Ok you don\'t want to change the ' +  
+                            sectionType + ' settings. Populating defaults.'
+                        )
+                    )
+                    myAnswers = env[sectionType]
                 } else {
-                    myAnswers = await doSettings(env[sectionType])
+                    sectionType === 'DEFAULT' ? 
+                        myAnswers = await doSettings(env[sectionType], true):
+                        myAnswers = await doSettings(env[sectionType], false)
+                    
                 }
             }
         )
         // At this point we've decided to proceed
         return myAnswers
+        
 }
 
+// Parse the commandline arguements
+const myArgs = parseCLIArgs()
+
+// Unless we suppress this print out the splash screen.
+if (!myArgs.no_splash) {
+    splashScreen()
+}
 
 // Define the basic structure of the new object to store to the config file
 let myConfig = {
@@ -153,17 +200,16 @@ let myConfig = {
     document_settings: null
 }
 
-// Unless we suppress this print out the splash screen.
-// TODO add command line switch to suppress
-if (true) {
-    splashScreen()
-}
-
 // Get the key settings to create the configuration file
 let myEnv = getEnv()
 
+// Check for and create the directory process.env.HOME/.mediumroast
+const utils = new Utilities(null)
+utils.safeMakedir(process.env.HOME + '/.mediumroast')
+const fileName = process.env.HOME + '/.mediumroast/config.ini'
+
 // Are we going to proceed or not?
-const doSetup = await checkSetup()
+const doSetup = await checkSetup(fileName)
 
 // Determine if we should setup the defaults, and if so process them
 myConfig.DEFAULT = await checkSection(myEnv, 'DEFAULT')
@@ -173,11 +219,6 @@ myConfig.s3_settings = await checkSection(myEnv, 's3_settings')
 
 // Determine if we should setup the s3_settings, and if so process them
 myConfig.document_settings = await checkSection(myEnv, 'document_settings')
-
-// Check for and create the directory process.env.HOME/.mediumroast
-const utils = new Utilities(null)
-utils.safeMakedir(process.env.HOME + '/.mediumroast')
-const fileName = process.env.HOME + '/.mediumroast/config.ini'
 
 // Write the config file
 const configurator = new ConfigParser()
@@ -200,6 +241,5 @@ const line = '-'.repeat(process.stdout.columns)
     console.log(line)
 
 success ? 
-    console.log('SUCCESS: Verified configuration file [' + fileName + '] was written.') :
-    console.log('ERROR: Unable to verify configuration file [' + fileName + '] was written.')
-
+    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + fileName + '] was written.')) :
+    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + fileName + '] was written.'))
