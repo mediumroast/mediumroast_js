@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
   "main": "src/api/mrServer.js",
   "typings": "dist/index",

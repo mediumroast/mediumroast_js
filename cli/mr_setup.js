@@ -190,7 +190,7 @@ async function checkSection(env, sectionType) {
 const myArgs = parseCLIArgs()
 
 // Unless we suppress this print out the splash screen.
-if (!myArgs.splash === 'yes') {
+if (myArgs.splash === 'yes') {
     splashScreen()
 }
 
