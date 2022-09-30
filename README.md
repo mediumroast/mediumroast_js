@@ -9,7 +9,16 @@ This is the Node.js Javascript SDK, Software Development Kit, for the mediumroas
 We actually use this SDK for our own developments, and we do this to ensure that our developers have a first class experience for the mediumroast.io with an always up to date version of the SDK.
 
 # Installation and Configuration Steps via NPM
-As soon as the SDK is published on the NPM repository we will update this section with installation steps.
+This package is available for installation from NPM as *mediumroast_js* and can be installed and removed via the `npm` command. Several approaches to installation are documented below.
+
+## Installation for Linux, UNIX and MacOS
+Assuming you have installed both *node.js* and *npm* the following installation processes are possible.
+1. Global installation for all users: `sudo npm i -g mediumroast_js`
+2. Local installation for a developer or single user: `npm i mediumroast_js`
+We recommend the global installation because the CLI utilities will be installed in `/usr/local/bin` and available for all users on the system to access.
+
+## Installation for WinOS
+Coming soon.
 
 # Installation and Configuration Steps for Developers
 The following steps are important if you are developing or extending the Node.js Javascript SDK.  If you're not a developer then the current state of the package is not for you.  Please wait until we exit the alpha for the mediumroast.io. 
@@ -42,7 +51,8 @@ The following packages need to be installed before the the SDK will operate corr
 - json2csv
 - node-fetch
 - xlsx
-You can install all dependencies at once with: `npm i adm-zip, asw-sdk axios box-plot cli-table commander configparser docx json2csv node-fetch xlsx`.
+- inquirer
+You can install all dependencies at once with: `npm i adm-zip, asw-sdk axios box-plot cli-table commander configparser docx json2csv node-fetch xlsx inquirer`.
 
 # Command Line Interface (CLI) for the mediumroast.io
 Inclued within this SDK is a CLI for users who are more inclined to use that tool for interacting with the system.  These tools will be added and updated to over time as the system evolves.  More information on the CLI is available in the [CLI User's Guide](./cli/CLI.md).

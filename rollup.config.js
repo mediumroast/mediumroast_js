@@ -5,7 +5,7 @@ import pkg from "./package.json";
 
 export default [
   {
-    input: "src/index.js", // your entry point
+    input: "src/api/mrServer.js", // your entry point
     output: {
       name: "mediumroast_js", // package name
       file: pkg.browser,

@@ -6,13 +6,15 @@ Each type is explained in the sections below including the basics and how-tos.
 ## Administrative CLIs
 To enable system management, setup of the environment for the CLIs, and backup/restore of key objects within the mediumroast.io several CLI tools have been created.
 ### CLI environment setup
-### User management
+To help users quickly get on board there is a setup utility that generates a configuration in *HOME/.mediumroast/config.ini*. Users are free to modify or create the file by hand. 
+#### Configure your environment to run the CLI
+Command: `mr_setup --no_splash`
 
 ### Backup and restore
 This utility enables a user with permissions to create full backup and perform a full restore of all core mediumroast.io objects. 
 
 #### Usage information
-Command: `mr_backup.js --help`
+Command: `mr_backup --help`
 ```
 Usage: mr_backup [options]
 
@@ -38,7 +40,7 @@ Options:
 By default the backup files are stored in *HOME/.mediumroast/backups/* in a ZIP format, with a file name automatically generated.
 
 ##### Backup with the verbse switch on
-Backup command: `mr_backup.js --operation=backup --verbose`
+Backup command: `mr_backup --operation=backup --verbose`
 ```
 SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/companies.json] for all companies.
 SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/interactions.json] for all interactions.
@@ -72,7 +74,7 @@ Key capabilities of this tool:
 - Create a Microsoft DOCX formatted report for a specific company object as specified by the company's *id*.
 
 #### Print usage information to the console
-Command: `company.js --help`
+Command: `company --help`
 ##### Example output:
 ```
 Usage: company [options]
@@ -82,7 +84,7 @@ Command line interface for mediumroast.io Company objects.
 Options:
   -V, --version                                 output the version number
   -c --conf_file <file>                         Path to the configuration file (default: "/Users/mihay42/.mediumroast/config.ini")
-  -r --rest_server <server>                     The URL of the target mediumroast.io server (default: "http://cherokee.from-ca.com:46767")
+  -r --rest_server <server>                     The URL of the target mediumroast.io server (default: "http://cherokee.from-ca.com:16767")
   -a --api_key <key>                            The API key needed to talk to the mediumroast.io server
   -u --user <user name>                         Your user name for the mediumroast.io server
   -s --secret <user secret or password>         Your user secret or password for the mediumroast.io server
@@ -99,7 +101,7 @@ Options:
 ```
 
 #### List all companies and output in table output
-Command: `company.js`
+Command: `company`
 ##### Example output:
 ```
 ┌─────┬────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
@@ -116,7 +118,7 @@ Command: `company.js`
 ```
 
 #### List a single company by the object id and output in JSON
-Command: `./company.js --find_by_id=1 --output=json`
+Command: `company --find_by_id=1 --output=json`
 ##### Example output:
 ```
 [
@@ -175,10 +177,26 @@ Command: `./company.js --find_by_id=1 --output=json`
 ]
 ```
 #### List all companies and output in CSV format
-Command: `company.js --output=csv`
+Command: `company --output=csv`
 
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Companies.csv*.
 
 ##### Screenshot of the resulting CSV file in Apple Numbers
+*UPDATE ME*
+
+#### Create a Microsoft Document report for a company
+Command: `company --report=1`
+
+Notice: This command saves the file to your environment's *HOME/Documents* directory called *<company_name>.docx*.
+
+##### Screenshot of the resulting docx file in Microsoft Word
+*UPDATE ME*
+
+#### Create a report for a company including a Microsoft document and source interactions in a ZIP package
+Command: `company --report=1 --package`
+
+Notice: This command saves the file to your environment's *HOME/Documents* directory called *<company_name>.zip*.
+
+##### Screenshot of the resulting zip file in MacOS finder
 *UPDATE ME*
 
