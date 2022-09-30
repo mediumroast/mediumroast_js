@@ -56,9 +56,8 @@ class CLIUtilities {
                 process.env.HOME + '/.mediumroast/config.ini'
             )
             .option(
-                '-r --rest_server <server>',
-                'The URL of the target mediumroast.io server',
-                'http://cherokee.from-ca.com:16767'
+                '-r --rest_server <http://server:port>',
+                'The URL of the target mediumroast.io server'
             )
             .option(
                 '-a --api_key <key>',
