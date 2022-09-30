@@ -6,22 +6,31 @@
  * @file study.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @verstion 2.0.0
  */
+
+// TODO: This needs to be reimplemented using the right structure as the other CLIs
+console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
+process.exit(0)
 
 // Import required modules
 import { Auth, Studies } from '../src/api/mrServer.js'
-import { CLI } from '../src/helpers.js'
+import { Utilities } from '../src/helpers.js'
+import { CLIUtilities } from '../src/cli.js'
 
 // Globals
 const objectType = 'Studies'
 
 // Construct the CLI object
-const myCLI = new CLI (
+const myCLI = new CLIUtilities (
    '2.0',
    'study',
    'Command line interface for mediumroast.io Study objects.',
    objectType
 )
+
+// Construct the utilities object
+const utils = new Utilities(objectType)
 
 // Create the environmental settings
 const myArgs = myCLI.parseCLIArgs()

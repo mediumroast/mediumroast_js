@@ -1,7 +1,7 @@
 {
   "name": "mediumroast_js",
   "version": "0.3.0",
-  "description": "A Javascript SDK to interaction with the mediumroast.io application, end user command line interfaces and a a series of CLIs for building company, study and interaction reports.",
+  "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
   "main": "src/api/mrServer",
   "typings": "dist/index",
   "scripts": {
@@ -14,7 +14,7 @@
     "company": "cli/company.js",
     "interaction": "cli/interaction.js",
     "users": "cli/users.js",
-    "doc_company": "cli/doc_company.js"
+    "mr_backup": "cli/mr_backup.js"
   },
   "type": "module",
   "keywords": [
@@ -36,6 +36,7 @@
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.1.3",
     "axios": "^0.25.0",
+    "better-docs": "^2.7.2",
     "chalk": "^5.0.0",
     "rollup": "^2.66.1",
     "rollup-plugin-babel": "^4.4.0",
@@ -49,6 +50,7 @@
   ],
   "dependencies": {
     "adm-zip": "^0.5.9",
+    "asciiart-logo": "^0.2.7",
     "aws-sdk": "^2.1096.0",
     "axios": "^0.25.0",
     "box-plot": "^1.0.0",
@@ -56,8 +58,10 @@
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "docx": "^7.4.1",
+    "inquirer": "^9.1.2",
     "json2csv": "^5.0.7",
     "node-fetch": "^3.2.10",
+    "prompt-sync": "^4.2.0",
     "xlsx": "^0.18.5"
   }
 }

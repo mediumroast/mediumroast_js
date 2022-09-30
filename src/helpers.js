@@ -4,213 +4,49 @@
  * @file helpers.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
+ * @version 2.0.0
  */
 
 // Import required modules
 import * as fs from 'fs'
-import program from 'commander'
-import ConfigParser from 'configparser'
-import Table from 'cli-table'
-import Parser from 'json2csv'
-import * as XLSX from 'xlsx'
 import zip from 'adm-zip'
 import AWS from 'aws-sdk'
 
 
-class CLI {
-    constructor(version, name, description, objectType) {
-        this.version = version
-        this.name = name
-        this.description = description
-        this.objectType = objectType
+class Utilities {
+    /**
+     * A class to enable consistent functionality for basic operations like writing files,
+     * downloading from S3, reading files, creating ZIP archives, etc.
+     * @constructor
+     * @classdesc Largely reserved for future use a basic constructor to create the object
+     * @param {String} objectType - The type of object constructing this object
+     */
+    constructor(objectType) {
+        this.objectType = objectType ? objectType : null
     }
-
-    // Parse the cli options
-    parseCLIArgs() {
-        // Define commandline options
-        program
-            .name(this.name)
-            .version(this.version)
-            .description(this.description)
-
-        program
-            // System command line switches
-            .requiredOption(
-                '-c --conf_file <file>',
-                'Path to the configuration file',
-                process.env.HOME + '/.mediumroast/config.ini'
-            )
-            .option(
-                '-r --rest_server <server>',
-                'The URL of the target mediumroast.io server',
-                'http://cherokee.from-ca.com:46767'
-            )
-            .option(
-                '-a --api_key <key>',
-                'The API key needed to talk to the mediumroast.io server'
-            )
-            .option(
-                '-u --user <user name>',
-                'Your user name for the mediumroast.io server'
-            )
-            .option(
-                '-s --secret <user secret or password>',
-                'Your user secret or password for the mediumroast.io server'
-            )
-            .option(
-                '-o --output <choose the output type to emit>',
-                'Select output type: table, json, xls or csv. xls & csv will save to a file.',
-                'table',
-                'json',
-                'xls',
-                'csv'
-            )
-
-            // Operational command line switches
-            .option(
-                '--find_by_name <name>',
-                'Find an individual Interaction by name'
-            )
-            .option(
-                '--find_by_id <ID>',
-                'Find an individual Interaction by ID'
-            )
-            .option(
-                '--find_by_x <JSON>',
-                'Find object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
-            )
-            .option(
-                '--create <file.json>',
-                'Add objects to the backend by specifying a JSON file'
-            )
-            .option(
-                '--update <JSON>',
-                'Update an object from the backend by specifying the object\'s id and value to update in JSON'
-            )
-            .option(
-                '--delete <ID>',
-                'Delete an object from the backend by specifying the object\'s id'
-            )
-            .option(
-                '--report <ID>',
-                'Create an MS word document for an object by specifying the object\'s id'
-            )
-            .option(
-                '--package',
-                'An additional switch used with --report to generate a ZIP package that includes the interaction'
-            )
-
-        program.parse(process.argv)
-        return program.opts()
-    }
-
-    getConfig(confFile) {
-        const config = new ConfigParser()
-        config.read(confFile)
-        return config
-    }
-
-    getEnv(cliArgs, config) {
-        let env = {
-            "restServer": null,
-            "apiKey": null,
-            "user": null,
-            "secret": null,
-            "workDir": null,
-            "outputDir": null,
-            "s3Server": null,
-            "s3User": null,
-            "s3APIKey": null,
-            "s3Region": null,
-            "s3Source": null
-        }
-
-        // With the cli options as the priority set up the environment for the cli
-        cliArgs.rest_server ? env.restServer = cliArgs.rest_server : env.restServer = config.get('DEFAULT', 'rest_server')
-        cliArgs.api_key ? env.apiKey = cliArgs.api_key : env.apiKey = config.get('DEFAULT', 'api_key')
-        cliArgs.user ? env.user = cliArgs.user : env.user = config.get('DEFAULT', 'user')
-        cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
-
-        // Set up additional parameters from config file
-        env.workDir = config.get('DEFAULT', 'working_dir')
-        env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
-        env.s3Server = config.get('s3_settings', 'server')
-        env.s3User = config.get('s3_settings', 'user')
-        env.s3Region = config.get('s3_settings', 'region')
-        env.s3APIKey = config.get('s3_settings', 'api_key')
-        env.s3Source = config.get('s3_settings', 'source')
-
-        // Return the environmental settings needed for the CLI to operate
-        return env
-    }
-
 
     /**
-     * An output router enabling users to pick their output format of choice for a CLI
-     * @param  {String} outputType Type of output to produce/route to: table, json, csv, xls
-     * @param  {Object} results Data objects to be output
-     * @param  {Object} env Environmental variables from the CLI
-     * @param  {String} objType The object type: Interactions, Studies or Companies
+     * @function saveTextFile
+     * @description Save textual data to a file
+     * @param {String} fileName - full path to the file and the file name to save to
+     * @param {String} content - the string content to save to a file which could be JSON, XML, TXT, etc.
+     * @returns {Array} containing the status of the save operation, status message and null/error
      */
-    outputCLI(outputType, results, env, objType) {
-        // Emit the output as per the cli options
-        if (outputType === 'table') {
-            this.outputTable(results)
-        } else if (outputType === 'json') {
-            console.dir(results)
-        } else if (outputType === 'csv') {
-            this.outputCSV(results, env)
-        } else if (outputType === 'xls') {
-            this.outputXLS(results, env, objType)
-        }
-    }
-
-    outputTable(objects) {
-        let table = new Table({
-            head: ['Id', 'Name', 'Description'],
-            colWidths: [5, 40, 90]
-        })
-
-        for (const myObj in objects) {
-            table.push([
-                objects[myObj].id,
-                objects[myObj].name,
-                objects[myObj].description
-            ])
-        }
-        console.log(table.toString())
-    }
-
-    outputCSV(objects, env) {
-        const fileName = 'Mr_' + this.objectType + '.csv'
-        const myFile = env['outputDir'] + '/' + fileName
-        // const parser = new Parser()
-        const csv = Parser.parse(objects)
-        console.log(csv)
-        this.saveTextFile(myFile, csv)
-    }
-
-    // TODO add error checking via try catch
-    outputXLS(objects, env) {
-        const fileName = 'Mr_' + this.objectType + '.xlsx'
-        const myFile = env['outputDir'] + '/' + fileName
-        const mySheet = XLSX.utils.json_to_sheet(objects)
-        const myWorkbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
-        XLSX.writeFile(myWorkbook, myFile)
-    }
-
-
     saveTextFile(fileName, content) {
         fs.writeFileSync(fileName, content, err => {
             if (err) {
-                return [false, 'Did not save file [' + fileName + '] because: ' + err]
-            } else {
-                return [true, 'Saved file [' + fileName + ']', null]
+                return [false, 'Did not save file [' + fileName + '] because: ' + err, null]
             }
         })
+        return [true, 'Saved file [' + fileName + ']', null]
     }
 
+    /**
+     * @function readTextFile
+     * @description Safely read a text file of any kind
+     * @param {String} fileName - name of the file to read
+     * @returns {Array} containing the status of the read operation, status message and data read
+     */
     readTextFile(fileName) {
         try {
             const fileData = fs.readFileSync(fileName, 'utf8')
@@ -220,31 +56,61 @@ class CLI {
         }
     }
 
-    // simple function for safe directory creation
-    safeMakedir(name) {
+    /**
+     * @function checkFilesystemObject
+     * @description Check to see if a file system object exists or not
+     * @param {String} name - full path to the file system object to check
+     * @returns {Array} containing the status of the check operation, status message and null
+     */
+     checkFilesystemObject(name) {
+        if (fs.existsSync(name)) {
+            return [true, 'The file system object [' + name + '] was detected.', null]
+        } else {
+            return [false, 'The file system object [' + name + '] was not detected.', null]
+        }
+     }
+
+    /**
+     * @function safeMakedir
+     * @description Resursively and safely create a directory
+     * @param {String} dirName - full path to the directory to create
+     * @returns {Array} containing the status of the mkdir operation, status message and null
+     */
+    safeMakedir(dirName) {
         try {
-            if (!fs.existsSync(name)) {
-                fs.mkdirSync(name, { recursive: true })
-                return [true, 'Created directory [' + name + ']', null]
+            if (!fs.existsSync(dirName)) {
+                fs.mkdirSync(dirName, { recursive: true })
+                return [true, 'Created directory [' + dirName + ']', null]
             } else {
-                return [true, 'Directory [' + name + '] exists did not create.', null]
+                return [true, 'Directory [' + dirName + '] exists did not create.', null]
             }
         } catch (err) {
-            return [false, 'Did not create directory [' + name + '] because: ' + err, null]
+            return [false, 'Did not create directory [' + dirName + '] because: ' + err, null]
         }
     }
 
-    // Recursively remove a directory
+    /**
+     * @function rmDir
+     * @description Recursively remove a directory
+     * @param {String} dirName - full path to the parent directory to revmove
+     * @returns {Array} containing the status of the rmdir operation, status message and null
+     */
     rmDir(dirName) {
         try {
-            fs.rmdirSync(dirName, {recursive: true})
+            fs.rmSync(dirName, {recursive: true})
             return [true, 'Removed directory [' + dirName + '] and all contents', null]
         } catch (err) {
             return [false, 'Did not remove directory [' + dirName + '] because: ' + err, null]
         }
     }
 
-    // create a ZIP package
+    /**
+     * @function createZIPArchive
+     * @description Create a ZIP package from a source directory
+     * @param {String} outputFile - the name, including the full path name, of the target ZIP package
+     * @param {Sting} sourceDirectory - the full path to directory where the ZIP package will be stored
+     * @returns {Array} containing the status of the create operation, status message and null 
+     */
     async createZIPArchive(outputFile, sourceDirectory) {
         try {
             const zipPackage = new zip()
@@ -256,7 +122,12 @@ class CLI {
         }
     }
 
-    // Extract a ZIP package
+    /**
+     * @function extractZIPArchive
+     * @description Extract objects from a ZIP package into a target directory
+     * @param {String} inputFile - the ZIP file name, including the full path, to be extracted 
+     * @param {String} targetDirectory - the location for the ZIP package to be extracted to
+     */
     async extractZIPArchive(inputFile, targetDirectory) {
         try {
             const zipPackage = new zip(inputFile)
@@ -267,7 +138,14 @@ class CLI {
         }
     }
 
-    // Download the objects
+    /**
+     * @function s3DownloadObjs
+     * @description From an S3 bucket download the document associated to each interaction
+     * @param {Array} interactions - an array of interaction objects
+     * @param {Object} env - the environmental settings to use for accessing the S3 endpoint
+     * @param {String} targetDirectory - the target location for downloading the objects to
+     * @todo As the implementation grows this function will likely need be put into a separate class
+     */
     async s3DownloadObjs (interactions, env, targetDirectory) {
         const s3Ctl = new AWS.S3({
             accessKeyId: env.s3User ,
@@ -289,4 +167,4 @@ class CLI {
     
 }
 
-export { CLI }
+export { Utilities }

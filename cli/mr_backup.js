@@ -1,18 +1,30 @@
 #!/usr/bin/env node
 
+/**
+ * A CLI utility to backup and restore data from the mediumroast.io
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mr_backup.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
 // Import required modules
 import { Auth, Companies, Interactions, Studies, Users } from '../src/api/mrServer.js'
-import CLI from '../src/helpers.js'
+import { Utilities } from '../src/helpers.js'
 import ConfigParser from 'configparser'
 import program from 'commander'
 
 // Parse the cli options
 function parseCLIArgs() {
+    const name = 'mr_backup'
+    const version = '1.0.0'
+    const description = 'A mediumroast.io CLI utility to backup and restore objects.'
     // Define commandline options
     program
-        .name(this.name) // Set this
-        .version(this.version) // Set this
-        .description(this.description) // Set this
+        .name(name)
+        .version(version)
+        .description(description)
 
     program
         // System command line switches
@@ -22,24 +34,24 @@ function parseCLIArgs() {
             process.env.HOME + '/.mediumroast/config.ini'
         )
         .option(
-            '-r --rest_server <server>',
+            '--rest_server <server>',
             'The URL of the target mediumroast.io server',
             'http://cherokee.from-ca.com:46767'
         )
         .option(
-            '-a --api_key <key>',
+            '--api_key <key>',
             'The API key needed to talk to the mediumroast.io server'
         )
         .option(
-            '-u --user <user name>',
+            '--user <user name>',
             'Your user name for the mediumroast.io server'
         )
         .option(
-            '-s --secret <user secret or password>',
+            '--secret <user secret or password>',
             'Your user secret or password for the mediumroast.io server'
         )
         .option(
-            '-o --output_dir <output location>',
+            '--output_dir <output location>',
             'Select output location to to store the backup',
             process.env.HOME + '/.mediumroast/backups'
         )
@@ -55,22 +67,21 @@ function parseCLIArgs() {
             'Specify whether or not to print out details of the backup process'
         )
         .option(
-            '--operation',
+            '--operation <operation to perform>',
             'Specify which process to perform from: backup or restore',
             'backup',
             'restore'
         )
         .option(
-            '--object_type',
+            '--object_type <object type to restore>',
             'Specify which type of object(s) to backup/restore',
             'all',
             'interactions',
             'studies',
-            'companies',
-            'users'
+            'companies'
         )
         .option(
-            '--backup_file',
+            '--backup_file <backup file name>',
             'Define the backup file to create or restore from, blank means the system will define'
         )
 
@@ -87,7 +98,7 @@ function getConfig(confFile) {
 function getEnv(cliArgs, config) {
     // Create the backup output file name
     const currentTimeInSeconds = Math.floor(Date.now() / 1000)
-    const backupFileName = 'mr_backup_full_' + currentTimeInSeconds
+    const backupFileName = 'mr_backup_full_' + currentTimeInSeconds + '.zip'
 
     let env = {
         "restServer": null,
@@ -98,7 +109,8 @@ function getEnv(cliArgs, config) {
         "outputDir": null,
         "operation": null,
         "objectType": null,
-        "backupFile": null
+        "backupFile": null,
+        "verbose": null
     }
 
     // With the cli options as the priority set up the environment for the cli
@@ -113,12 +125,14 @@ function getEnv(cliArgs, config) {
     env.outputDir = cliArgs.output_dir
     env.operation = cliArgs.operation
     env.objectType = cliArgs.object_type
+    env.verbose = cliArgs.verbose
 
     return env
 }
 
 function restoreObjects (fileName, apiController) {
-    let [success, msg, rawData] = myCli.readTextFile(fileName)
+    // perform check to see if objs exist by counting array results using aptController.getAll()
+    let [success, msg, rawData] = utils.readTextFile(fileName)
         if (success) {
             const jsonData = JSON.parse(rawData)
             jsonData.array.forEach(element => {
@@ -133,7 +147,7 @@ function restoreObjects (fileName, apiController) {
 const myArgs = parseCLIArgs()
 const myConfig = getConfig(myArgs.conf_file)
 const myEnv = getEnv(myArgs, myConfig)
-const myCli = new CLI(null, null, null, null)
+const utils = new Utilities('all')
 
 // Generate the credential & construct the API Controllers
 const myAuth = new Auth(
@@ -146,36 +160,61 @@ const myCredential = myAuth.login()
 const compController = new Companies(myCredential)
 const intController = new Interactions(myCredential)
 const studController = new Studies(myCredential)
-const usersController = new Users(myCredential)
+// const usersController = new Users(myCredential)
 
-// Check working and backup output directories
-myCli.safeMakedir(myEnv.outputDir)
-myCli.safeMakedir(myEnv.workDir)
-myCli.safeMakedir(myEnv.workDir + '/mr_backup') // Working directory for backup packages
-myCli.safeMakedir(myEnv.workDir + '/mr_restore') // Working directory for restores
+// Check the output directory
+utils.safeMakedir(myEnv.outputDir)
+
+utils.safeMakedir(myEnv.workDir + '/mr_restore') // Working directory for restores
 
 if (myEnv.operation == 'backup') {
+    // Create the directory to stage the backup to
+    utils.safeMakedir(myEnv.workDir + '/mr_backup') // Working directory for backup packages
     // Get the data
     const myData = {
         "companies": await compController.getAll(),
         "interactions": await intController.getAll(),
-        "studies": await studController.getAll(),
-        "users": await usersController.getAll()
+        "studies": await studController.getAll()
     }
     // Save the data to individual JSON files
     for (const fil in myData) {
-        myCli.saveTextFile(
+        const status = utils.saveTextFile(
             myEnv.workDir + '/mr_backup/' + fil + '.json',
-            JSON.stringify(myData[fil])
+            JSON.stringify(myData[fil][2])
         )
+        // console.log(status)
+        if (status[0] && myEnv.verbose) {
+            console.log(
+                'SUCCESS: created file [' +
+                myEnv.workDir + '/mr_backup/' + fil + '.json' +
+                '] for all ' + fil + '.'
+            )
+        }
     }
     // Create ZIP package and move to backup dir
-    myCli.createZIPArchive(myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_backup/')
-    // Cleanup the working content
-    myCli.rmDir(myEnv.workDir + '/mr_backup/')
+    const [zipSuccess, zipMsg, zipResult] = await utils.createZIPArchive(
+        myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_backup/'
+    )
+    if (zipSuccess) {
+        console.log('SUCCESS: created backup package [' + myEnv.outputDir + '/' + myEnv.backupFile + '].')
+        // Cleanup the working content
+        const [rmSuccess, rmMsg, rmResult] = utils.rmDir(myEnv.workDir + '/mr_backup/')
+        if (rmSuccess && myEnv.verbose) {
+            console.log(
+                'SUCCESS: cleaned up the temporary backup directory [' +
+                myEnv.workDir + '/mr_backup/' + '].'
+            )
+        }
+    } else {
+        const code = -1
+        console.error('ERROR (%d): Failed to create backup package [' + zipMsg + ']', code)
+        process.exit(code)
+    }
+
 } else if (myEnv.operation == 'restore') {
+    // Add a user prompt to pick pkgs, file system metadata can help the selection
     // Extract ZIP package
-    myCli.extractZIPArchive(myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_restore')
+    utils.extractZIPArchive(myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_restore')
     // Restores
     /* 
     Ultimately we will want to enable recovery of individual objects this is emulating that logic for now.
@@ -183,9 +222,9 @@ if (myEnv.operation == 'backup') {
     const [doUsers, doCompanies, doInteractions, doStudies] = [true, true, true, true] // This is temporary
 
     // User objects
-    if (doUsers) {
-        restoreObjects(myEnv.workDir + '/mr_restore/users.json')
-    }
+    // if (doUsers) {
+    //     restoreObjects(myEnv.workDir + '/mr_restore/users.json')
+    // }
 
     // Company objects
     if (doCompanies) {
@@ -203,5 +242,5 @@ if (myEnv.operation == 'backup') {
     }
 
     // Cleanup the working files
-    myCli.rmDir(myEnv.workDir + '/mr_restore/')
+    utils.rmDir(myEnv.workDir + '/mr_restore/')
 }
