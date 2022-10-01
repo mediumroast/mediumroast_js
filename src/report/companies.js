@@ -185,6 +185,7 @@ class CompanySection {
      * @description Generate the comparisons section for the document from the company in question
      * @param {Object} comparisons - the object containing the comparisons for the company in question
      * @returns {Array} An array containing an introduction to this section and the table with the comparisons
+     * @todo Sort based upon rank from highest to lowest
      */
     makeComparisonDOCX(comparisons) {
         // Transform the comparisons into something that is usable for display
@@ -196,14 +197,14 @@ class CompanySection {
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Score', 'Rank', true)]
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Score', true)]
         for (const comparison in myComparison) {
             myRows.push(
                 this.util.basicComparisonRow(
                     myComparison[comparison].name,
                     myComparison[comparison].role,
-                    myComparison[comparison].score,
                     myComparison[comparison].rank,
+                    myComparison[comparison].score,
                 )
             )
         }

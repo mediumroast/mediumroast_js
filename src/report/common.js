@@ -727,11 +727,12 @@ class DOCXUtilities {
      * @description A higher level function that calls basicTopicRow to create a complete table
      * @param {Object} topics - the result of rankTags
      * @returns {Object} a complete docx table that includes topics
+     * @todo Sort based upon rank from highest to lowest
      */
     topicTable(topics) {
-        let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
+        let myRows = [this.basicTopicRow('Keywords', 'Rank', 'Score', true)]
         for (const topic in topics) {
-            myRows.push(this.basicTopicRow(topic, topics[topic].score.toFixed(2), topics[topic].rank))
+            myRows.push(this.basicTopicRow(topic, topics[topic].rank), topics[topic].score.toFixed(2))
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({

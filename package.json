@@ -1,20 +1,17 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
   "main": "src/api/mrServer.js",
-  "typings": "dist/index",
   "scripts": {
-    "test": "node test/spec",
-    "build": "rollup -c",
-    "pretest": "npm run build"
+    "docs": "jsdoc -R ./README.md -c ./docs_config.json ./src"
   },
   "bin": {
-    "study": "cli/study.js",
-    "company": "cli/company.js",
-    "interaction": "cli/interaction.js",
-    "mr_backup": "cli/mr_backup.js",
-    "mr_setup": "cli/mr_setup.js"
+    "mr_study": "cli/study.js",
+    "mr_company": "cli/company.js",
+    "mr_interaction": "cli/interaction.js",
+    "mr_backup": "cli/backup.js",
+    "mr_setup": "cli/setup.js"
   },
   "type": "module",
   "keywords": [
@@ -52,7 +49,7 @@
     "url": "https://github.com/mediumroast/mediumroast_js.git"
   },
   "url" : "https://github.com/mediumroast/mediumroast_js/issues",
-  "homepage": "https://github.com/mediumroast/mediumroast_js",
+  "homepage": "https://mediumroast.github.io/mediumroast_js/",
   "dependencies": {
     "adm-zip": "^0.5.9",
     "asciiart-logo": "^0.2.7",
