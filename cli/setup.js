@@ -27,8 +27,10 @@ function parseCLIArgs() {
     program
         // System command line switches
         .requiredOption(
-            '-n --no_splash',
-            'Whether or not to include the splash screen at startup.'
+            '-s --splash <yes | no>',
+            'Whether or not to include the splash screen at startup.',
+            'yes',
+            'no'
         )   
 
     program.parse(process.argv)
@@ -40,7 +42,7 @@ function getEnv () {
     return {
         DEFAULT: {
             // TODO Create choices for the rest_server so the user doesn't have to figure this out
-            rest_server: "http://cherokee.from-ca.com:46767",
+            rest_server: "http://cherokee.from-ca.com:16767",
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
@@ -91,7 +93,6 @@ function splashScreen (simple=false) {
 }
 
 // Check to see if we are going to need to perform a setup operation or not.
-// TODO if the config file exists we should warn the user
 async function checkSetup(fileName) {
     const utils = new Utilities('setup')
     const [exists, message, result] = utils.checkFilesystemObject(fileName)
@@ -189,7 +190,7 @@ async function checkSection(env, sectionType) {
 const myArgs = parseCLIArgs()
 
 // Unless we suppress this print out the splash screen.
-if (!myArgs.no_splash) {
+if (myArgs.splash === 'yes') {
     splashScreen()
 }
 

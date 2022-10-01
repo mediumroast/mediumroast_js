@@ -54,6 +54,9 @@ The following packages need to be installed before the the SDK will operate corr
 - inquirer
 You can install all dependencies at once with: `npm i adm-zip, asw-sdk axios box-plot cli-table commander configparser docx json2csv node-fetch xlsx inquirer`.
 
+## SDK documentation for developers
+Documentation for developers that want to consume the SDK is available [here](https://mediumroast.github.io/mediumroast_js/). The documentation will continue to improve over time so keep checking in on the doc.
+
 # Command Line Interface (CLI) for the mediumroast.io
 Inclued within this SDK is a CLI for users who are more inclined to use that tool for interacting with the system.  These tools will be added and updated to over time as the system evolves.  More information on the CLI is available in the [CLI User's Guide](./cli/CLI.md).
 

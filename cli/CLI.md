@@ -8,7 +8,11 @@ To enable system management, setup of the environment for the CLIs, and backup/r
 ### CLI environment setup
 To help users quickly get on board there is a setup utility that generates a configuration in *HOME/.mediumroast/config.ini*. Users are free to modify or create the file by hand. 
 #### Configure your environment to run the CLI
-Command: `mr_setup --no_splash`
+Command: `mr_setup`
+
+Example output:
+
+![mr_setup](https://user-images.githubusercontent.com/10818650/193343225-1b209b5f-3e2c-48b7-90d3-1427a55d07cf.jpg)
 
 ### Backup and restore
 This utility enables a user with permissions to create full backup and perform a full restore of all core mediumroast.io objects. 
@@ -198,5 +202,6 @@ Command: `company --report=1 --package`
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *<company_name>.zip*.
 
 ##### Screenshot of the resulting zip file in MacOS finder
-*UPDATE ME*
+
+![federos_package](https://user-images.githubusercontent.com/10818650/193343324-13917733-40f7-462e-bbc9-f600fbdf9d9c.jpg)
 
