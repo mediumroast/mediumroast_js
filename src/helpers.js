@@ -116,9 +116,9 @@ class Utilities {
             const zipPackage = new zip()
             zipPackage.addLocalFolder(sourceDirectory)
             zipPackage.writeZip(outputFile)
-            return [true, `Created ${outputFile} successfully`, null]
+            return [true, `SUCCESS: Created [${outputFile}] successfully`, null]
         } catch (e) {
-            return [false, `Something went wrong. ${e}`, null]
+            return [false, `ERROR: Something went wrong. [${e}]`, null]
         }
     }
 
@@ -132,9 +132,9 @@ class Utilities {
         try {
             const zipPackage = new zip(inputFile)
             zipPackage.extractAllTo(targetDirectory, true)
-            console.log(`Extracted ${outputFile} successfully`)
+            console.log(`SUCCESS: Extracted [${outputFile}] successfully`)
         } catch (e) {
-            console.log(`Something went wrong. ${e}`)
+            console.log(`ERROR: Something went wrong. [${e}]`)
         }
     }
 
