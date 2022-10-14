@@ -732,7 +732,7 @@ class DOCXUtilities {
     topicTable(topics) {
         let myRows = [this.basicTopicRow('Keywords', 'Rank', 'Score', true)]
         for (const topic in topics) {
-            myRows.push(this.basicTopicRow(topic, topics[topic].rank), topics[topic].score.toFixed(2))
+            myRows.push(this.basicTopicRow(topic, topics[topic].rank), topics[topic].score)
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
