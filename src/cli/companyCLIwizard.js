@@ -120,11 +120,19 @@ async function operationOrNot(myStep) {
  * @returns 
  */
 async function doManual(prototype, summary=false) {
-    let myAnswers = {}
+    let myCompanyObj = {}
     for (const setting in prototype) {
         if (summary) {
-            if (setting !== 'description' || setting !== 'name') {
-                myAnswers[setting] = prototype[setting].value
+            if (![
+                'description', 
+                'name', 
+                'phone', 
+                'website', 
+                'street_address', 
+                'country',
+                'logo_url', 
+                'city'].includes(setting)) {
+                myCompanyObj[setting] = prototype[setting].value
                 continue
             }
         }
@@ -140,10 +148,10 @@ async function doManual(prototype, summary=false) {
                 }
             ])
             .then(async (answer) => {
-                myAnswers[setting] = await answer[setting]
+                myCompanyObj[setting] = await answer[setting]
             })
     }
-    return myAnswers
+    return myCompanyObj
 }
 
 function _joinIndustry(industry) {
@@ -159,13 +167,14 @@ function _joinIndustry(industry) {
 function _getFormUrls(forms){
     let tenQ = 'Unknown'
     let tenK = 'Unknown'
-    for (const form in Object.keys(forms).sort().reverse()) {
-        const formType = forms[form].formType
+    const sortedForms = Object.keys(forms).sort().reverse()
+    for (const form in sortedForms) {
+        const formType = forms[sortedForms[form]].formType
         if (formType.search(/10-Q/g)) {
-            tenQ = forms[form].filingIndex
+            tenQ = forms[sortedForms[form]].filingIndex
             if(tenK !== 'Unknown') {break}
         } else if (formType.search(/10-K/g)) {
-            tenK = forms[form].filingIndex
+            tenK = forms[sortedForms[form]].filingIndex
             if(tenQ !== 'Unknown') {break}
         } else {
             continue
@@ -182,48 +191,109 @@ async function doAutomatic(prototype){
     const myDefault = 'Unknown'
     let myCompanyObj = await getCompany()
     // Else attempt to search company_dns, but if there is no answer then ask if try again or manual
-    if (myCompany.code !== 200){
-        const redo = doOperation('There was no company matching your search. Would you like to try again?')
+    if (!myCompanyObj[0]){
+        const redo = await operationOrNot('There was no company matching your search. Would you like to try again?')
         if (redo) {
-            doAutomatic(prototype)
+            myCompanyObj = await doAutomatic(prototype)
         } else {
-            return // TODO Need to return a value that puts us back to manual or execute manual
+            console.log(chalk.blue.bold('Starting manual company creation process...'))
+            myCompanyObj = await doManual(prototype)
         }
     } else {
-        // Transform the company_dns resulting object into a company object suitable for mediumroast
-        prototype.name.value = myCompany.name ? 'name' in myCompany : prototype.name.value
-        const myIndustry = _joinIndustry(myCompany.industry) ? 'industry' in myCompany : myDefault
-        prototype.industry.value = myIndustry ? myIndustry !== myDefault : prototype.industry.value
-        prototype.url.value = myCompany.website[0] ? 'website' in myCompany : prototype.url.value
-        prototype.street_address.value = myCompany.address ? 'address' in myCompany : prototype.street_address.value
-        prototype.city.value = myCompany.city ? 'city' in myCompany : prototype.city.value
-        prototype.state_province.value = myCompany.stateProvince ? "stateProvince" in myCompany : prototype.state_province.value
-        prototype.country.value = myCompany.country ? 'country' in myCompany : prototype.country.value
-        prototype.phone.value = myCompany.phone ? 'phone' in myCompany : prototype.phone.value
-        prototype.description.value = myCompany.description ? 'description' in myCompany : prototype.description.value
-        prototype.cik.value = myCompany.cik ? 'cik' in myCompany : prototype.cik.value
-        prototype.stock_symbol.value = myCompany.tickers[0] ? 'tickers' in myCompany : prototype.stock_symbol.value
-        prototype.stock_exchange.value = myCompany.exchanges[0] ? 'exchanges' in myCompany : prototype.stock_exchange.value
-        prototype.zip_postal.value = myCompany.zipPostal ? 'zipPostal' in myCompany : prototype.zip_postal.value
-        prototype.longitude.value = myCompany.longitude ? 'longitude' in myCompany : prototype.longitude.value
-        prototype.latitude.value = myCompany.latitude ? 'latitude' in myCompany : prototype.latitude.value
-        const [tenKurl, tenQurl] = _getFormUrls(myCompany.forms)
-        prototype.recent10k_url.value = tenKurl ? tenKurl !== myDefault : prototype.recent10k_url.value
-        prototype.recent10q_url.value = tenQurl ? tenQurl !== myDefault : prototype.recent10q_url.value
-        prototype.wikipedia_url.value = myCompany.wikipediaURL ? 'wikipediaURL' in myCompany : prototype.wikipedia_url.value
-        prototype.sic.value = myCompany.sic ? 'sic' in myCompany : prototype.sic.value
-        prototype.sic_description.value = myCompany.sicDescription ? 'sicDescription' in myCompany : prototype.sic_description.value
-        prototype.company_type.value = myCompany.type ? 'type' in myCompany : prototype.company_type.value
-        prototype.firmographics_url.value = myCompany.type ? 'firmographicsURL' in myCompany : prototype.firmographics_url.value
-        prototype.filings_url.value = myCompany.type ? 'filingsURL' in myCompany : prototype.filings_url.value
-        prototype.owner_transactions.value = myCompany.type ? 'transactionsByOwner' in myCompany : prototype.owner_transactions.value
+        const myCompany = myCompanyObj[2].data
+        // Transform the company_dns  object into a company object suitable for mediumroast
+
+        // Company name
+        'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
+
+        // Company industry
+        let myIndustry = myDefault
+        'industry' in myCompany ? myIndustry = _joinIndustry(myCompany.industry) : myIndustry = myDefault
+        prototype.industry.value = myIndustry
+
+        // Company website
+        'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
+
+        // Company address
+        'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
+
+        // Company city
+        'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
+
+        // Company state/province
+        'stateProvince' in myCompany ? prototype.state_province.value = myCompany.stateProvince : 
+            prototype.state_province.value = prototype.state_province.value
+
+        // Company country
+        'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+
+        // Company phone
+        'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
+
+        // Company description
+        'description' in myCompany ? prototype.description.value = myCompany.description : prototype.description.value = prototype.description.value
+
+        // Company CIK
+        'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
+
+        // Company stock symbol/ticker
+        'tickers' in myCompany ? prototype.stock_symbol.value = myCompany.tickers[0] : 
+            prototype.stock_symbol.value = prototype.stock_symbol.value
+
+        // Company stock exchange
+        'exchanges' in myCompany ? prototype.stock_exchange.value = myCompany.exchanges[0] : 
+            prototype.stock_exchange.value = prototype.stock_exchange.value
+        
+        // Company zip/postal code
+        'zipPostal' in myCompany ? prototype.zip_postal.value = myCompany.zipPostal : 
+            prototype.zip_postal.value = prototype.zip_postal.value
+        
+        // Company longitude coordinate
+        'longitude' in myCompany ? prototype.longitude.value = myCompany.longitude : 
+            prototype.longitude.value = prototype.longitude.value
+        
+        // Company latitude
+        'latitude' in myCompany ? prototype.latitude.value = myCompany.latitude : prototype.latitude.value = prototype.latitude.value
+        
+        // Company 10-k and 10-q urls
+        let [tenKurl, tenQurl] = [null, null]
+        'forms' in myCompany ?  [tenKurl, tenQurl] = _getFormUrls(myCompany.forms) : [tenKurl, tenQurl] = [myDefault, myDefault]
+        tenKurl !== myDefault ? prototype.recent10k_url.value = tenKurl : prototype.recent10k_url.value = prototype.recent10k_url.value
+        tenQurl !== myDefault ? prototype.recent10q_url.value = tenQurl : prototype.recent10q_url.value = prototype.recent10q_url.value
+
+        // Company wikipedia url
+        'wikipediaURL' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipediaURL : 
+            prototype.wikipedia_url.value = prototype.wikipedia_url.value
+        
+        // Company Standard Industry Code
+        'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+
+        // Company SIC description
+        'sicDescription' in myCompany ? prototype.sic_description.value = myCompany.sicDescription : 
+            prototype.sic_description.value = prototype.sic_description.value
+        
+        // Company type
+        'type' in myCompany ? prototype.company_type.value = myCompany.type : 
+            prototype.company_type.value = prototype.company_type.value
+        
+        // Company firmographics url
+        'firmographicsURL' in myCompany ? prototype.firmographics_url.value = myCompany.firmographicsURL : 
+            prototype.firmographics_url.value = prototype.firmographics_url.value
+        
+        // Company public filings url
+        'filingsURL' in myCompany ? prototype.filings_url.value = myCompany.filingsURL : 
+            prototype.filings_url.value = prototype.filings_url.value
+        
+        // Company stock tractions by individual and institutional owner
+        'transactionsByOwner' in myCompany ? prototype.owner_transactions.value = myCompany.transactionsByOwner : 
+            prototype.owner_transactions.value = prototype.owner_transactions.value
         
         // After company_dns is successful then ask if we want a summary review or detailed review
-        const doSummary = doOperation(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
+        const doSummary = await operationOrNot(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
         if (doSummary) {
-            myCompanyObj = doManual(prototype, true)
+            myCompanyObj = await doManual(prototype, true)
         } else {
-            myCompanyObj = doManual(prototype)
+            myCompanyObj = await doManual(prototype)
         }
 
     }
