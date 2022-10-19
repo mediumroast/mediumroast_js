@@ -6,6 +6,8 @@ import program from 'commander'
 import logo from 'asciiart-logo'
 import chalk from 'chalk'
 import ora from "ora"
+import { Auth, Companies, Interactions } from '../api/mrServer.js'
+import { CLIUtilities } from '../cli.js'
 
 // TODO move this to cli/common.js
 // If not suppressed print the splash screen to the console
@@ -53,24 +55,24 @@ async function getObj(company) {
 }
 
 // TODO Move this cli option to cli/common.js
- function parseCLIArgs() {
-    // Define commandline options
-    program
-        .name('spinner')
-        .version('0.0.1')
-        .description('Fetches company info')
+//  function parseCLIArgs() {
+//     // Define commandline options
+//     program
+//         .name('spinner')
+//         .version('0.0.1')
+//         .description('Fetches company info')
 
-    program
-        // System command line switches
-        .requiredOption(
-            '-s --splash <yes | no>',
-            'Whether or not to include the splash screen at startup.',
-            'yes',
-            'no'
-        )
-    program.parse(process.argv)
-    return program.opts()
-}
+//     program
+//         // System command line switches
+//         .requiredOption(
+//             '-s --splash <yes | no>',
+//             'Whether or not to include the splash screen at startup.',
+//             'yes',
+//             'no'
+//         )
+//     program.parse(process.argv)
+//     return program.opts()
+// }
 
 async function getCompany () {
     let myCompany = {}
@@ -232,6 +234,8 @@ async function doAutomatic(prototype){
 
         // Company description
         'description' in myCompany ? prototype.description.value = myCompany.description : prototype.description.value = prototype.description.value
+        // TODO clean description of any quotes either single or double
+        prototype.description.value = prototype.description.value.replace(/["']/g, '')
 
         // Company CIK
         'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
@@ -287,6 +291,22 @@ async function doAutomatic(prototype){
         // Company stock tractions by individual and institutional owner
         'transactionsByOwner' in myCompany ? prototype.owner_transactions.value = myCompany.transactionsByOwner : 
             prototype.owner_transactions.value = prototype.owner_transactions.value
+
+        // Google maps
+        'googleMaps' in myCompany ? prototype.google_maps_url.value = myCompany.googleMaps : 
+            prototype.google_maps_url.value = prototype.google_maps_url.value
+
+        // Google news
+        'googleNews' in myCompany ? prototype.google_news_url.value = myCompany.googleNews : 
+            prototype.google_news_url.value = prototype.google_news_url.value
+
+        // Google finance
+        'googleFinance' in myCompany ? prototype.google_finance_url.value = myCompany.googleFinance : 
+            prototype.google_finance_url.value = prototype.google_finance_url.value
+
+        // Google patents
+        'googlePatents' in myCompany ? prototype.google_patents_url.value = myCompany.googlePatents : 
+            prototype.google_patents_url.value = prototype.google_patents_url.value
         
         // After company_dns is successful then ask if we want a summary review or detailed review
         const doSummary = await operationOrNot(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
@@ -296,14 +316,18 @@ async function doAutomatic(prototype){
             myCompanyObj = await doManual(prototype)
         }
 
+        // Add topics and comparison as empty objects
+        myCompanyObj.topics = {}
+        myCompanyObj.comparison = {}
+
     }
     return myCompanyObj
 }
 
 // TODO move to CLI common.js
-const myArgs = parseCLIArgs()
+// const myArgs = parseCLIArgs()
 // Unless we suppress this print out the splash screen.
-if (myArgs.splash === 'yes') {
+if (true) {
     splashScreen()
 }
 
@@ -342,6 +366,10 @@ let companyPrototype = {
     firmographics_url: {consoleString: "firmographics detail URL for public companies", value:myDefault},
     filings_url: {consoleString: "filings URL for public companies", value:myDefault},
     owner_transactions: {consoleString: "URL containing share ownership reports", value:myDefault},
+    google_maps_url: {consoleString: "URL to locate the company on Google Maps", value:myDefault},
+    google_news_url: {consoleString: "URL to find news about the company on Google", value:myDefault},
+    google_finance_url: {consoleString: "URL to reveal financial insights on Google", value:myDefault},
+    google_patents_url: {consoleString: "URL to locate patent insights on Googles", value:myDefault},
 }
 
 // Define an empty company object
@@ -366,12 +394,34 @@ if (!automatic) {
     myCompany = await doAutomatic(companyPrototype)
 }
 
+// Globals
+const objectType = 'Companies'
 
+// Construct the CLI object
+const myCLI = new CLIUtilities (
+   '2.0',
+   'company',
+   'Command line interface for mediumroast.io Company objects.',
+   objectType
+)
 
-// Perform summary or detailed review
-// Commit object
-// Return company_id/success
+// Construct the Utilities object
+// const utils = new Utilities(objectType)
 
-// const results = await getCompany()
+// Create the environmental settings
+const myArgs = myCLI.parseCLIArgs()
+const myConfig = myCLI.getConfig(myArgs.conf_file)
+const myEnv = myCLI.getEnv(myArgs, myConfig)
 
-console.log(myCompany)
+// Generate the credential & construct the API Controller
+const myAuth = new Auth(
+   myEnv.restServer,
+   myEnv.apiKey,
+   myEnv.user,
+   myEnv.secret
+)
+const myCredential = myAuth.login()
+const apiController = new Companies(myCredential)
+
+const result = await apiController.createObj(myCompany)
+console.log(result)
