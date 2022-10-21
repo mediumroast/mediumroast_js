@@ -14,6 +14,7 @@ import { Auth, Companies, Interactions } from '../src/api/mrServer.js'
 import { Utilities } from '../src/helpers.js'
 import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
+import { AddCompany } from '../src/cli/companyCLIwizard.js'
 
 // Globals
 const objectType = 'Companies'
@@ -160,6 +161,17 @@ if (myArgs.report) {
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
+} else if (myArgs.add_company) {
+   // pass in credential, apiController
+   const newCompany = new AddCompany(myEnv, apiController, myCredential, myCLI)
+   const result = await newCompany.wizard()
+   if(result[0]) {
+      console.log('SUCCESS: Created new company in the backend')
+      process.exit(0)
+   } else {
+      console.error('ERROR: Failed to create company object with %d', result[1].status_code)
+      process.exit(-1)
+   }
 } else {
    [success, stat, results] = await apiController.getAll()
 }

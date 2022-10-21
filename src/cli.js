@@ -13,6 +13,7 @@ import ConfigParser from 'configparser'
 import Table from 'cli-table'
 import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
+import logo from 'asciiart-logo'
 import { Utilities } from './helpers.js'
 
 
@@ -79,6 +80,12 @@ class CLIUtilities {
                 'xls',
                 'csv'
             )
+            .option(
+                '-s --splash <yes | no>',
+                'Whether or not to include the splash screen at startup.',
+                'yes',
+                'no'
+            )
 
             // Operational command line switches
             .option(
@@ -112,6 +119,10 @@ class CLIUtilities {
             .option(
                 '--package',
                 'An additional switch used with --report to generate a ZIP package that includes the interaction'
+            )
+            .option(
+                '--add_company',
+                'Run the CLI wizard to add a company to the mediumroast.io backend.'
             )
 
         program.parse(process.argv)
@@ -150,7 +161,8 @@ class CLIUtilities {
             "s3User": null,
             "s3APIKey": null,
             "s3Region": null,
-            "s3Source": null
+            "s3Source": null,
+            "splash": null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -167,6 +179,9 @@ class CLIUtilities {
         env.s3Region = config.get('s3_settings', 'region')
         env.s3APIKey = config.get('s3_settings', 'api_key')
         env.s3Source = config.get('s3_settings', 'source')
+
+        // Setup options with cli settings only
+        env.splash = cliArgs.splash
 
         // Return the environmental settings needed for the CLI to operate
         return env
@@ -225,6 +240,35 @@ class CLIUtilities {
         const myWorkbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
         XLSX.writeFile(myWorkbook, myFile)
+    }
+
+    /**
+     * @function splasgScreen
+     * @description print a splash screen with using name as the big title, description as the subtitle and a version declaration
+     * @param {String} name Used for the big title on the splash screen.
+     * @param {String} description Forms the subtitle on the splash screen.
+     * @param {String} description Defines the version number on the splash screen.
+     */
+    splashScreen (name, description, version) {
+        const logoConfig = {
+            name: name,
+            // font: 'Speed',
+            lineChars: 10,
+            padding: 3,
+            margin: 3,
+            borderColor: 'bold-gray',
+            logoColor: 'bold-orange',
+            textColor: 'orange',
+        }
+        // Print out the splash screen
+        console.log(
+            logo(logoConfig)
+            .emptyLine()
+            .right(version)
+            .emptyLine()
+            .center(description)
+            .render()
+        )
     }
 }
 
