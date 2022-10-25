@@ -14,9 +14,10 @@ import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
 import { CLIUtilities } from '../src/cli.js'
 import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
+import { AddInteraction } from '../src/cli/interactionWizard.js'
 
 // Globals
-const objectType = 'Interactions'
+const objectType = 'interaction'
 
 // Construct the CLI object
 const myCLI = new CLIUtilities(
@@ -158,6 +159,19 @@ if (myArgs.report) {
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
+} else if (myArgs.add_wizard) {
+   // pass in credential, apiController
+   const newInteraction = new AddInteraction(myEnv, apiController, myCredential, myCLI)
+   const result = await newInteraction.wizard()
+   console.log(result)
+   process.exit()
+   // if(result[0]) {
+   //    console.log('SUCCESS: Created new interaction in the backend')
+   //    process.exit(0)
+   // } else {
+   //    console.error('ERROR: Failed to create interaction object with %d', result[1].status_code)
+   //    process.exit(-1)
+   // }
 } else {
    // Get all objects
    [success, stat, results] = await apiController.getAll()

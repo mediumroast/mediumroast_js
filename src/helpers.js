@@ -164,6 +164,31 @@ class Utilities {
             myFile.write(s3Get.Body)
         }
     }
+
+    /**
+     * @function s3UploadObjs
+     * @description Upload objects to a target bucket on an S3 compatible object store
+     * @param {Array} interactions - an array/list of file names
+     * @param {Object} env - the environmental settings to use for accessing the S3 object store
+     * @param {String} targetBucket - the bucket to upload the content to
+     */
+    async s3UploadObjs (interactions, env, targetBucket) {
+        const s3Ctl = new AWS.S3({
+            accessKeyId: env.s3User ,
+            secretAccessKey: env.s3APIKey,
+            endpoint: env.s3Server ,
+            s3ForcePathStyle: true, // needed with minio?
+            signatureVersion: 'v4',
+            region: env.s3Region // S3 won't work without the region setting
+        })
+        for(const interaction in interactions){
+            const myKey = interactions[interaction].split('/')
+            const myBody = fs.createReadStream(interactions[interaction])
+            const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody}
+            const s3Put = await s3Ctl.putObject(myParams).promise()
+            return [myKey[myKey.length - 1], s3Put] 
+        }
+    }
     
 }
 

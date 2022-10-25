@@ -121,12 +121,18 @@ class CLIUtilities {
                 'An additional switch used with --report to generate a ZIP package that includes the interaction'
             )
             .option(
-                '--add_company',
-                'Run the CLI wizard to add a company to the mediumroast.io backend.'
+                '--add_wizard',
+                `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
             )
 
+            // Ending arguments
+            // .argument(
+            //     '[string]',
+            //     'A fully qualified path to the resource in file system to include, exclusively used for interactions'
+            // )
+
         program.parse(process.argv)
-        return program.opts()
+        return program.opts()//, program.args
     }
 
     /**

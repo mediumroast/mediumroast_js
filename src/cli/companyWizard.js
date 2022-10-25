@@ -103,6 +103,7 @@ class AddCompany {
                     'street_address', 
                     'country',
                     'logo_url',
+                    'region',
                     'role', 
                     'city'].includes(setting)) {
                     myCompanyObj[setting] = prototype[setting].value
@@ -212,7 +213,8 @@ class AddCompany {
             'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
 
             // Company stock symbol/ticker
-            'tickers' in myCompany ? prototype.stock_symbol.value = myCompany.tickers[0] : 
+            const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[0] 
+            'tickers' in myCompany ? prototype.stock_symbol.value = myTicker : 
                 prototype.stock_symbol.value = prototype.stock_symbol.value
 
             // Company stock exchange

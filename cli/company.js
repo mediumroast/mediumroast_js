@@ -14,10 +14,10 @@ import { Auth, Companies, Interactions } from '../src/api/mrServer.js'
 import { Utilities } from '../src/helpers.js'
 import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
-import { AddCompany } from '../src/cli/companyCLIwizard.js'
+import { AddCompany } from '../src/cli/companyWizard.js'
 
 // Globals
-const objectType = 'Companies'
+const objectType = 'company'
 
 // Construct the CLI object
 const myCLI = new CLIUtilities (
@@ -161,7 +161,7 @@ if (myArgs.report) {
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
-} else if (myArgs.add_company) {
+} else if (myArgs.add_wizard) {
    // pass in credential, apiController
    const newCompany = new AddCompany(myEnv, apiController, myCredential, myCLI)
    const result = await newCompany.wizard()
