@@ -249,7 +249,7 @@ class CLIUtilities {
     }
 
     /**
-     * @function splasgScreen
+     * @function splashScreen
      * @description print a splash screen with using name as the big title, description as the subtitle and a version declaration
      * @param {String} name Used for the big title on the splash screen.
      * @param {String} description Forms the subtitle on the splash screen.

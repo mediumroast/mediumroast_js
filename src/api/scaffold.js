@@ -70,6 +70,7 @@ class mrRest {
         }
         try {
             const resp = await axios.post(myURL, obj, myHeaders)
+            // return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.txt]
             return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
             return [false, err, null]

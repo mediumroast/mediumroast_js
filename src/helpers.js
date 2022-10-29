@@ -181,13 +181,21 @@ class Utilities {
             signatureVersion: 'v4',
             region: env.s3Region // S3 won't work without the region setting
         })
+
+        // Process through each interaction file
         for(const interaction in interactions){
-            const myKey = interactions[interaction].split('/')
-            const myBody = fs.createReadStream(interactions[interaction])
-            const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody}
-            const s3Put = await s3Ctl.putObject(myParams).promise()
-            return [myKey[myKey.length - 1], s3Put] 
+            if(!interactions[interaction]){ continue } // Skip if there is an empty entry in the Array
+            const myKey = interactions[interaction].split('/') // split to get to the file name
+            const myBody = fs.createReadStream(interactions[interaction]) // open and read the file
+            const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody} // setup the key elements to talk to S3
+            const s3Put = await s3Ctl.putObject(myParams).promise() // Put the object
+            return [myKey[myKey.length - 1], s3Put] // return the file name and the result of the put
         }
+    }
+
+    printLine () {
+        const line = '-'.repeat(process.stdout.columns)
+        console.log(line)
     }
     
 }

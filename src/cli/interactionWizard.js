@@ -49,7 +49,7 @@ class AddInteraction {
         this.defaultValue = "Unknown"
         this.objectType = "interaction"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
-        this.cutils = new Utilities(this.objectType)
+        this.cutils = new Utilities(this.objectType) // General package utilities
     }
 
     async _getFile(targetBucket='usercontent') {
@@ -63,9 +63,10 @@ class AddInteraction {
             console.log(chalk.red.bold('\t-> The file wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
             myFile = await this._getFile() 
         } 
-        console.log(chalk.blue.bold(`Uploading ${myFile} to S3...`))
+        console.log(chalk.blue.bold(`Uploading ${myFile.file_name} to S3...`))
         const [fileName, uploadResults] = await this.cutils.s3UploadObjs([myFile.file_name], this.env, targetBucket)
-        return this.env.s3Server + `/${targetBucket}/${fileName}`
+        let myUrl = this.env.s3Server + `/${targetBucket}/${fileName}`
+        return myUrl.replace('http', 's3') // Set the protocol to S3 for now
     }
 
     /**
@@ -116,19 +117,21 @@ class AddInteraction {
         // Perform interaction setup
         console.log(chalk.blue.bold('Starting interaction creation process...'))
         myInteraction = await this.wutils.doManual(interactionPrototype)
+        this.cutils.printLine()
 
         // Choose if we want to run the setup or not, and it not exit the program
-        const doFile = await this.wutils.operationOrNot('Is there an file for the interaction you\'d like to include?')
-        if (doFile) {
-            const myUrl = await this._getFile()
-            myInteraction.url = myUrl
-        }
+        console.log(chalk.blue.bold('Prompting for interaction file...'))
+        // NOTE: Eventually we will have an approach were we will either add a file or merely link to a URL where the file 
+        //          resides.
+        // const doFile = await this.wutils.operationOrNot('Is there an file for the interaction you\'d like to include?')
+        // if (doFile) {
+        //     const myUrl = await this._getFile()
+        //     myInteraction.url = myUrl
+        // }
+        const myUrl = await this._getFile()
+        myInteraction.url = myUrl
+        this.cutils.printLine()
 
-        // TODO these items need to be either unique or added separately
-        // name <-- should be derived from the file name
-        // url <-- derive from the target bucket and file name, do not inform the user
-        // groups <-- initially set to a default value, inform the user
-        
         // TODO create a prompting function in commonWizard
         // linked_companies <-- prompt the user with the list of companies, which will be linked later
         // linked_studies <-- prompt the user with the list of studies
@@ -150,7 +153,7 @@ class AddInteraction {
         myInteraction.latitude = myLocation.latitude // Set to discovered value
         myInteraction.longitude = myLocation.longitude // Set to discovered value
         myInteraction.street_address = myLocation.formattedAddress // Set to discovered value
-
+        this.cutils.printLine()
 
         console.log(chalk.blue.bold('Setting special attributes to known values...'))
         // Status
@@ -163,9 +166,20 @@ class AddInteraction {
         myInteraction.public = false
         // Topics
         myInteraction.topics = {}
+        // Groups
+        myInteraction.groups = `${this.env.user}:${this.env.user}`
+        // Current time
+        const myDate = new Date()
+        myInteraction.creation_date = myDate.toISOString()
+        myInteraction.modification_date = myDate.toISOString()
+        myInteraction.date_time = myDate.toISOString()
 
-        // return await this.apiController.createObj(myInteraction)
-        return myInteraction
+        // Creator and Owner ID
+        myInteraction.creator_id = 1
+        myInteraction.owner_id = 1
+
+        return await this.apiController.createObj(myInteraction)
+        // return myInteraction
     }
 
 }
