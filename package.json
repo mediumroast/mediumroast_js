@@ -1,7 +1,7 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.8",
-  "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
+  "version": "0.3.7",
+  "description": "A Javascript SDK to interact with mediumroast.io including command line interfaces.",
   "main": "src/api/mrServer.js",
   "scripts": {
     "docs": "jsdoc -R ./README.md -c ./docs_config.json ./src"
@@ -22,7 +22,10 @@
     "customer success",
     "market insights",
     "customer insights",
-    "competitive insights"
+    "competitive insights",
+    "product discovery",
+    "product ownership",
+    "competitive analysis"
   ],
   "author": "Michael Hay",
   "license": "Apache-2.0",

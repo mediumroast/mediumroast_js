@@ -49,7 +49,7 @@ class mrRest {
             return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
             // console.error(err)
-            return [false, err, err.response.data]
+            return [false, err, null]
         }
     }
 

@@ -5,7 +5,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> CompanySection</title>
+  <title> WizardUtils</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -78,7 +78,7 @@
             <div class="content">
                 <header class="page-title">
                     <p>Class</p>
-                    <h1>CompanySection</h1>
+                    <h1>WizardUtils</h1>
                 </header>
                 
 
@@ -89,9 +89,9 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>CompanySection<span class="signature">(company)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>WizardUtils<span class="signature">(objectType)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description"><p>To operate this class the constructor should be passed a single company object.</p></div>
+            <div class="class-description"><p>Construct an object for common wizard utilities/steps</p></div>
         
     
 </header>
@@ -110,12 +110,12 @@
 
 
     
-    <h4 class="name" id="CompanySection">
-        <a class="href-link" href="#CompanySection">#</a>
+    <h4 class="name" id="WizardUtils">
+        <a class="href-link" href="#WizardUtils">#</a>
         
         <span class="code-name">
             
-                new CompanySection<span class="signature">(company)</span><span class="type-signature"></span>
+                new WizardUtils<span class="signature">(objectType)</span><span class="type-signature"></span>
             
         </span>
     </h4>
@@ -124,10 +124,8 @@
     
     
     <div class="description">
-        <p>A high level class to create sections for a Company report using either
-Microsoft DOCX format or eventually HTML format.  Right now the only available
-implementation is for the DOCX format.  These sections are designed to be consumed
-by a wrapping document which could be for any one of the mediumroast objects.</p>
+        <p>Common steps and utilities needed across all CLI based wizards.  Currently focused on manual
+object creation and proceeding to perform an operation/step or not.</p>
     </div>
     
 
@@ -165,13 +163,13 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
             
 <tr class="deep-level-0">
   
-      <td class="name"><code>company</code></td>
+      <td class="name"><code>objectType</code></td>
   
 
   <td class="type">
   
       
-<code class="param-type">Object</code>
+<code class="param-type">String</code>
 
 
   
@@ -181,7 +179,7 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
 
   
 
-  <td class="description last"><p>The company object to generate the section(s) for</p></td>
+  <td class="description last"><p>the type of object (interaction, company, study) used for these common utilities</p></td>
 </tr>
 
 
@@ -227,9 +225,9 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
 
     
         <p class="tag-source">
-            <a href="report_companies.js.html" class="button">View Source</a>
+            <a href="cli_commonWizard.js.html" class="button">View Source</a>
             <span>
-                <a href="report_companies.js.html">report/companies.js</a>, <a href="report_companies.js.html#line26">line 26</a>
+                <a href="cli_commonWizard.js.html">cli/commonWizard.js</a>, <a href="cli_commonWizard.js.html#line23">line 23</a>
             </span>
         </p>
     
