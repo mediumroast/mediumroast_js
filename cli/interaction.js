@@ -154,6 +154,16 @@ if (myArgs.report) {
       console.error("ERROR (%d): " + msg, -1)
       process.exit(-1)
    }
+} else if (myArgs.update) {
+   const myCLIObj = JSON.parse(myArgs.update)
+   const [success, stat, resp] = await apiController.updateObj(myCLIObj)
+   if(success) {
+      console.log(`SUCCESS: processed update to interaction object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to update interaction object.', -1)
+      process.exit(-1)
+   }
 } else if (myArgs.delete) {
    // Delete an object
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
@@ -163,15 +173,13 @@ if (myArgs.report) {
    // pass in credential, apiController
    const newInteraction = new AddInteraction(myEnv, apiController, myCredential, myCLI)
    const result = await newInteraction.wizard()
-   console.log(result)
-   process.exit()
-   // if(result[0]) {
-   //    console.log('SUCCESS: Created new interaction in the backend')
-   //    process.exit(0)
-   // } else {
-   //    console.error('ERROR: Failed to create interaction object with %d', result[1].status_code)
-   //    process.exit(-1)
-   // }
+   if(result[0]) {
+      console.log('SUCCESS: Created new interaction in the backend')
+      process.exit(0)
+   } else {
+      console.error('ERROR: Failed to create interaction object with %d', result[1].status_code)
+      process.exit(-1)
+   }
 } else {
    // Get all objects
    [success, stat, results] = await apiController.getAll()

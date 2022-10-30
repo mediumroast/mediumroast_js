@@ -157,6 +157,16 @@ if (myArgs.report) {
       console.error("ERROR (%d): " + msg, -1)
       process.exit(-1)
    }
+} else if (myArgs.update) {
+   const myCLIObj = JSON.parse(myArgs.update)
+   const [success, stat, resp] = await apiController.updateObj(myCLIObj)
+   if(success) {
+      console.log(`SUCCESS: processed update to company object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to update company object.', -1)
+      process.exit(-1)
+   }
 } else if (myArgs.delete) {
    console.error('ERROR (%d): Delete not implemented on the backend.', -1)
    process.exit(-1)

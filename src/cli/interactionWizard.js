@@ -175,8 +175,8 @@ class AddInteraction {
         myInteraction.date_time = myDate.toISOString()
 
         // Creator and Owner ID
-        myInteraction.creator_id = 1
-        myInteraction.owner_id = 1
+        myInteraction.creator_id = 1 // we will need to change this to be determined from the environment
+        myInteraction.owner_id = 1 // we will need to change this to be determined from the environment
 
         return await this.apiController.createObj(myInteraction)
         // return myInteraction

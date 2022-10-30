@@ -49,7 +49,7 @@ class mrRest {
             return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
             // console.error(err)
-            return [false, err, null]
+            return [false, err, err.response.data]
         }
     }
 
@@ -73,7 +73,7 @@ class mrRest {
             // return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.txt]
             return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
-            return [false, err, null]
+            return [false, err, err.response.data]
         }
     }
 
@@ -120,10 +120,10 @@ class mrRest {
         }
         try {
             const resp = await axios.delete(url = myURL, data = obj, myHeaders)
-            return (true, resp.data)
+            return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
             console.error(err)
-            return (false, err)
+            return [false, err, err.response.data]
         }
     }
 }
