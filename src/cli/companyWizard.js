@@ -76,68 +76,6 @@ class AddCompany {
         return myCompany
     }
 
-    // TODO this is moved to the commonWizard module, remove when verified
-    // async  operationOrNot(myStep) {
-    //     let doOperation = null 
-    //     await inquirer
-    //             .prompt([
-    //                 {
-    //                     name: "operation",
-    //                     type: "confirm",
-    //                     message: myStep
-    //                 }
-    //             ])
-    //             // If we don't want to perform the setup then exit
-    //             .then((answer) => {
-    //                     doOperation = answer.operation
-    //                 }
-    //             )
-    //     return doOperation
-    // }
-
-    // TODO this is moved to the commonWizard module, remove when verified
-    // async  doManual(prototype, summary=false) {
-    //     let myCompanyObj = {}
-    //     for (const setting in prototype) {
-    //         if (summary) {
-    //             // This is the whitelist of items to manually ask for should we want to do summary verification
-    //             if (![
-    //                 'description', 
-    //                 'name', 
-    //                 'phone', 
-    //                 'website', 
-    //                 'street_address', 
-    //                 'country',
-    //                 'logo_url',
-    //                 'region',
-    //                 'role', 
-    //                 'city'].includes(setting)) {
-    //                 myCompanyObj[setting] = prototype[setting].value
-    //                 continue
-    //             }
-    //         }
-    //         await inquirer
-    //             .prompt([
-    //                 {
-    //                     name: setting,
-    //                     type: 'input',
-    //                     message: 'What\'s the company\'s ' + prototype[setting].consoleString + '?',
-    //                     default() {
-    //                         return prototype[setting].value
-    //                     }
-    //                 }
-    //             ])
-    //             .then(async (answer) => {
-    //                 myCompanyObj[setting] = await answer[setting]
-    //             })
-    //     }
-    //     // Add topics and comparison as empty objects.
-    //     // Needed to ensure that we're including all required attributes before POSTing to the backend.
-    //     myCompanyObj.topics = {}
-    //     myCompanyObj.comparison = {}
-    //     return myCompanyObj
-    // }
-
     _joinIndustry(industry) {
         if(industry.length > 1) {
             return industry.join('|')
@@ -172,12 +110,12 @@ class AddCompany {
         let myCompanyObj = await this.getCompany()
         // Else attempt to search company_dns, but if there is no answer then ask if try again or manual
         if (!myCompanyObj[0]){
-            const redo = await this.operationOrNot('There was no company matching your search. Would you like to try again?')
+            const redo = await this.wutils.operationOrNot('There was no company matching your search. Would you like to try again?')
             if (redo) {
                 myCompanyObj = await this.doAutomatic(prototype)
             } else {
                 console.log(chalk.blue.bold('Starting manual company creation process...'))
-                myCompanyObj = await this.doManual(prototype)
+                myCompanyObj = await this.wutils.doManual(prototype)
             }
         } else {
             const myCompany = myCompanyObj[2].data
@@ -219,7 +157,7 @@ class AddCompany {
             'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
 
             // Company stock symbol/ticker
-            const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[0] 
+            const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[1] 
             'tickers' in myCompany ? prototype.stock_symbol.value = myTicker : 
                 prototype.stock_symbol.value = prototype.stock_symbol.value
 
@@ -288,17 +226,28 @@ class AddCompany {
                 prototype.google_patents_url.value = prototype.google_patents_url.value
             
             // After company_dns is successful then ask if we want a summary review or detailed review
-            const doSummary = await this.operationOrNot(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
+            const doSummary = await this.wutils.operationOrNot(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
             if (doSummary) {
-                myCompanyObj = await this.doManual(prototype, true)
+                myCompanyObj = await this.wutils.doManual(
+                    prototype, 
+                    [
+                        'description', 
+                        'name', 
+                        'phone', 
+                        'website', 
+                        'street_address', 
+                        'country',
+                        'logo_url',
+                        'region',
+                        'role', 
+                        'city',
+                        'company_type'
+                    ],
+                    true
+                )
             } else {
-                myCompanyObj = await this.doManual(prototype)
+                myCompanyObj = await this.wutils.doManual(prototype)
             }
-
-            // Add topics and comparison as empty objects.
-            // Needed to ensure that we're including all required attributes before POSTing to the backend.
-            // myCompanyObj.topics = {}
-            // myCompanyObj.comparison = {}
         }
         return myCompanyObj
     }
@@ -326,7 +275,6 @@ class AddCompany {
         let companyPrototype = {
             name: {consoleString: "name", value:this.defaultValue},
             industry: {consoleString: "industry", value:this.defaultValue},
-            role: {consoleString: "role", value:this.defaultValue},
             url: {consoleString: "website", value:this.defaultValue},
             street_address: {consoleString: "street address", value:this.defaultValue},
             city: {consoleString: "city", value:this.defaultValue},
@@ -393,13 +341,33 @@ class AddCompany {
             myCompany.region = tmpRegion[0]
         this.cutils.printLine()
 
+        // Set the role
+        console.log(chalk.blue.bold('Setting the company\'s role...'))
+        const tmpRole = await this.wutils.doCheckbox(
+            "What role should we assign to this company?",
+            [
+                {name: 'Competitor', checked: true}, 
+                {name: 'Current Partner'},
+                {name: 'Target Partner'},
+                {name: 'Target End User'},
+                {name: 'End User Customer'},
+            ]
+        )
+        myCompany.role = tmpRole[0]
+        this.cutils.printLine()
+
         console.log(chalk.blue.bold('Setting special properties to known values...'))
         // Topics
         myCompany.topics = {}
         // Comparison
         myCompany.comparison = {}
+        // linked_x
+        myCompany.linked_interactions = {}
+        // TODO you need to link to one or more studies
+        myCompany.linked_studies = {}
         this.cutils.printLine()
-        
+        console.log(myCompany)
+
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
         return await this.apiController.createObj(myCompany)
     }

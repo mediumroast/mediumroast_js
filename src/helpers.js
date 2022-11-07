@@ -13,6 +13,7 @@ import zip from 'adm-zip'
 import AWS from 'aws-sdk'
 
 
+
 class Utilities {
     /**
      * A class to enable consistent functionality for basic operations like writing files,

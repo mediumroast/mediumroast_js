@@ -10,7 +10,7 @@
  */
 
 // Import required modules
-import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
+import { Auth, Interactions, Companies, Studies } from '../src/api/mrServer.js'
 import { CLIUtilities } from '../src/cli.js'
 import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
@@ -43,6 +43,7 @@ const myAuth = new Auth(
 const myCredential = myAuth.login()
 const apiController = new Interactions(myCredential)
 const companyController = new Companies(myCredential)
+const studyController = new Studies(myCredential)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
@@ -170,8 +171,13 @@ if (myArgs.report) {
    process.exit(-1)
    //results = await apiController.delete(myArgs.delete)
 } else if (myArgs.add_wizard) {
-   // pass in credential, apiController
-   const newInteraction = new AddInteraction(myEnv, apiController, myCredential, myCLI)
+   // pass in credential, apiController, etc.
+   const myApiCtl = {
+      interaction: apiController,
+      company: companyController,
+      study: studyController
+   }
+   const newInteraction = new AddInteraction(myEnv, myApiCtl, myCredential, myCLI)
    const result = await newInteraction.wizard()
    if(result[0]) {
       console.log('SUCCESS: Created new interaction in the backend')

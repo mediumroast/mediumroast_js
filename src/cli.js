@@ -179,6 +179,7 @@ class CLIUtilities {
 
         // Set up additional parameters from config file
         env.workDir = config.get('DEFAULT', 'working_dir')
+        env.owningCompany = config.get('DEFAULT', 'owning_company')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')

@@ -72,6 +72,7 @@ class WizardUtils {
                     continue
                 }
             }
+            // TODO check to see if the length of setting is more than the console line lenght and if so truncate
             await inquirer
                 .prompt([
                     {

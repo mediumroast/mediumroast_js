@@ -221,6 +221,11 @@ myConfig.s3_settings = await checkSection(myEnv, 's3_settings')
 // Determine if we should setup the s3_settings, and if so process them
 myConfig.document_settings = await checkSection(myEnv, 'document_settings')
 
+// TODOs
+// Create the first "owning company" which is associated to the user by calling the cli wizard for companies
+// We should create a bucket in the object store based upon company
+// Make user we add the owning_company property to the config file
+
 // Write the config file
 const configurator = new ConfigParser()
 for(const section in myConfig){
@@ -237,6 +242,7 @@ configurator.read(fileName)
 const newRestServer = configurator.get('DEFAULT', 'rest_server')
 let success = false
 if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
+
 
 const line = '-'.repeat(process.stdout.columns)
     console.log(line)
