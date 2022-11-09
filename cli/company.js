@@ -168,9 +168,15 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
-   console.error('ERROR (%d): Delete not implemented on the backend.', -1)
-   process.exit(-1)
-   //results = await apiController.delete(myArgs.delete)
+   // Delete an object
+   const [success, stat, resp] = await apiController.deleteObj(myArgs.delete)
+   if(success) {
+      console.log(`SUCCESS: deleted company object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to delete company object.', -1)
+      process.exit(-1)
+   }
 } else if (myArgs.add_wizard) {
    // pass in credential, apiController
    const newCompany = new AddCompany(myEnv, apiController, myCredential, myCLI)

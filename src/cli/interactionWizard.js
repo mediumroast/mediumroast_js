@@ -143,9 +143,10 @@ class AddInteraction {
         // Create and update the object link
         // TODO the linking isn't working correctly
         myCompany.linked_interactions[myInteraction.name] = intHash
-        const [success, msg, result] = await this.companyCtl.updateObj({
+        const [success, msg, result] = await this.companyCtl.updateObj(JSON.stringify({
             id: myCompany.id, linked_interactions: myCompany.linked_interactions
-        })
+        }))
+        console.log(msg)
 
         if(success) {
             return [
@@ -170,11 +171,7 @@ class AddInteraction {
         // Create the object Link
         let objLink = {} 
         objLink[name] = objHash
-        return [
-            true,
-            {status_code: 200, status_msg: "generated linked_study property"},
-            objLink
-        ]
+        return objLink
     }
 
     async _populateInteraction(prototype, myCompany={}, myLinks={}) {
