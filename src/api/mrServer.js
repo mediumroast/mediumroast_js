@@ -166,9 +166,9 @@ class baseObjects {
      * @returns {Array} the results from the called function mrRest class
      * @todo implment when available in the backend
      */
-    async deleteObj(id, endpoint) {
+    async deleteObj(id, endpoint='delete') {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return false 
+        return this.rest.deleteObj(fullEndpoint, {"id": id}) 
     }
 }
 

@@ -35,8 +35,7 @@ function parseCLIArgs() {
         )
         .option(
             '--rest_server <server>',
-            'The URL of the target mediumroast.io server',
-            'http://cherokee.from-ca.com:46767'
+            'The URL of the target mediumroast.io server'
         )
         .option(
             '--api_key <key>',
@@ -178,6 +177,7 @@ if (myEnv.operation == 'backup') {
     }
     // Save the data to individual JSON files
     for (const fil in myData) {
+        console.log(myData[fil])
         const status = utils.saveTextFile(
             myEnv.workDir + '/mr_backup/' + fil + '.json',
             JSON.stringify(myData[fil][2])

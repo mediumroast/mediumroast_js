@@ -14,9 +14,10 @@ import { Auth, Companies, Interactions } from '../src/api/mrServer.js'
 import { Utilities } from '../src/helpers.js'
 import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
+import { AddCompany } from '../src/cli/companyWizard.js'
 
 // Globals
-const objectType = 'Companies'
+const objectType = 'company'
 
 // Construct the CLI object
 const myCLI = new CLIUtilities (
@@ -156,10 +157,37 @@ if (myArgs.report) {
       console.error("ERROR (%d): " + msg, -1)
       process.exit(-1)
    }
+} else if (myArgs.update) {
+   const myCLIObj = JSON.parse(myArgs.update)
+   const [success, stat, resp] = await apiController.updateObj(myCLIObj)
+   if(success) {
+      console.log(`SUCCESS: processed update to company object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to update company object.', -1)
+      process.exit(-1)
+   }
 } else if (myArgs.delete) {
-   console.error('ERROR (%d): Delete not implemented on the backend.', -1)
-   process.exit(-1)
-   //results = await apiController.delete(myArgs.delete)
+   // Delete an object
+   const [success, stat, resp] = await apiController.deleteObj(myArgs.delete)
+   if(success) {
+      console.log(`SUCCESS: deleted company object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to delete company object.', -1)
+      process.exit(-1)
+   }
+} else if (myArgs.add_wizard) {
+   // pass in credential, apiController
+   const newCompany = new AddCompany(myEnv, apiController, myCredential, myCLI)
+   const result = await newCompany.wizard()
+   if(result[0]) {
+      console.log('SUCCESS: Created new company in the backend')
+      process.exit(0)
+   } else {
+      console.error('ERROR: Failed to create company object with %d', result[1].status_code)
+      process.exit(-1)
+   }
 } else {
    [success, stat, results] = await apiController.getAll()
 }

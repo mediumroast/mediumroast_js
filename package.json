@@ -1,7 +1,7 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.4",
-  "description": "A Javascript SDK to interact with the mediumroast.io application including command line interfaces.",
+  "version": "0.3.7",
+  "description": "A Javascript SDK to interact with mediumroast.io including command line interfaces.",
   "main": "src/api/mrServer.js",
   "scripts": {
     "docs": "jsdoc -R ./README.md -c ./docs_config.json ./src"
@@ -22,7 +22,10 @@
     "customer success",
     "market insights",
     "customer insights",
-    "competitive insights"
+    "competitive insights",
+    "product discovery",
+    "product ownership",
+    "competitive analysis"
   ],
   "author": "Michael Hay",
   "license": "Apache-2.0",
@@ -48,7 +51,7 @@
     "type": "git",
     "url": "https://github.com/mediumroast/mediumroast_js.git"
   },
-  "url" : "https://github.com/mediumroast/mediumroast_js/issues",
+  "url": "https://github.com/mediumroast/mediumroast_js/issues",
   "homepage": "https://mediumroast.github.io/mediumroast_js/",
   "dependencies": {
     "adm-zip": "^0.5.9",
@@ -62,7 +65,10 @@
     "docx": "^7.4.1",
     "inquirer": "^9.1.2",
     "json2csv": "^5.0.7",
+    "mediumroast_js": "^0.3.6",
     "node-fetch": "^3.2.10",
+    "node-geocoder": "^4.2.0",
+    "ora": "^6.1.2",
     "prompt-sync": "^4.2.0",
     "xlsx": "^0.18.5"
   }

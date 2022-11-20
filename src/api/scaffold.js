@@ -72,7 +72,7 @@ class mrRest {
             const resp = await axios.post(myURL, obj, myHeaders)
             return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
-            return [false, err, null]
+            return [false, err, err.response.data]
         }
     }
 
@@ -111,18 +111,18 @@ class mrRest {
      */
     async deleteObj(endpoint, obj) {
         const myURL = this.restServer + endpoint
-        const myHeaders = {
+        const payload = {
             headers: {
                 'Accept': 'application/json',
                 'Authorization': this.apiKey
-            }
+            },
+            data: obj
         }
         try {
-            const resp = await axios.delete(url = myURL, data = obj, myHeaders)
-            return (true, resp.data)
+            const resp = await axios.delete(myURL, payload)
+            return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
         } catch (err) {
-            console.error(err)
-            return (false, err)
+            return [false, err,  err.response.data]
         }
     }
 }

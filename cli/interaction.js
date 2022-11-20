@@ -10,13 +10,14 @@
  */
 
 // Import required modules
-import { Auth, Interactions, Companies } from '../src/api/mrServer.js'
+import { Auth, Interactions, Companies, Studies } from '../src/api/mrServer.js'
 import { CLIUtilities } from '../src/cli.js'
 import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
+import { AddInteraction } from '../src/cli/interactionWizard.js'
 
 // Globals
-const objectType = 'Interactions'
+const objectType = 'interaction'
 
 // Construct the CLI object
 const myCLI = new CLIUtilities(
@@ -42,6 +43,7 @@ const myAuth = new Auth(
 const myCredential = myAuth.login()
 const apiController = new Interactions(myCredential)
 const companyController = new Companies(myCredential)
+const studyController = new Studies(myCredential)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
@@ -153,11 +155,42 @@ if (myArgs.report) {
       console.error("ERROR (%d): " + msg, -1)
       process.exit(-1)
    }
+} else if (myArgs.update) {
+   const myCLIObj = JSON.parse(myArgs.update)
+   const [success, stat, resp] = await apiController.updateObj(myCLIObj)
+   if(success) {
+      console.log(`SUCCESS: processed update to interaction object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to update interaction object.', -1)
+      process.exit(-1)
+   }
 } else if (myArgs.delete) {
    // Delete an object
-   console.error('ERROR (%d): Delete not implemented on the backend.', -1)
-   process.exit(-1)
-   //results = await apiController.delete(myArgs.delete)
+   const [success, stat, resp] = await apiController.deleteObj(myArgs.delete)
+   if(success) {
+      console.log(`SUCCESS: deleted interaction object.`)
+      process.exit(0)
+   } else {
+      console.error('ERROR (%d): Unable to delete interaction object.', -1)
+      process.exit(-1)
+   }
+} else if (myArgs.add_wizard) {
+   // pass in credential, apiController, etc.
+   const myApiCtl = {
+      interaction: apiController,
+      company: companyController,
+      study: studyController
+   }
+   const newInteraction = new AddInteraction(myEnv, myApiCtl, myCredential, myCLI)
+   const result = await newInteraction.wizard()
+   if(result[0]) {
+      console.log('SUCCESS: Created new interaction in the backend')
+      process.exit(0)
+   } else {
+      console.error('ERROR: Failed to create interaction object with %d', result[1].status_code)
+      process.exit(-1)
+   }
 } else {
    // Get all objects
    [success, stat, results] = await apiController.getAll()

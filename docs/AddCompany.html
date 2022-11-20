@@ -5,7 +5,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> CompanySection</title>
+  <title> AddCompany</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -78,7 +78,7 @@
             <div class="content">
                 <header class="page-title">
                     <p>Class</p>
-                    <h1>CompanySection</h1>
+                    <h1>AddCompany</h1>
                 </header>
                 
 
@@ -89,9 +89,9 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>CompanySection<span class="signature">(company)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>AddCompany<span class="signature">(env, apiController, credential, cli, companyDNSUrl)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description"><p>To operate this class the constructor should be passed a single company object.</p></div>
+            <div class="class-description"><p>Construct the object to execute the company wizard</p></div>
         
     
 </header>
@@ -110,12 +110,12 @@
 
 
     
-    <h4 class="name" id="CompanySection">
-        <a class="href-link" href="#CompanySection">#</a>
+    <h4 class="name" id="AddCompany">
+        <a class="href-link" href="#AddCompany">#</a>
         
         <span class="code-name">
             
-                new CompanySection<span class="signature">(company)</span><span class="type-signature"></span>
+                new AddCompany<span class="signature">(env, apiController, credential, cli, companyDNSUrl)</span><span class="type-signature"></span>
             
         </span>
     </h4>
@@ -124,10 +124,14 @@
     
     
     <div class="description">
-        <p>A high level class to create sections for a Company report using either
-Microsoft DOCX format or eventually HTML format.  Right now the only available
-implementation is for the DOCX format.  These sections are designed to be consumed
-by a wrapping document which could be for any one of the mediumroast objects.</p>
+        <p>A class which encodes the steps needed to create a company in the mediumroast.io application. There are two
+modes of the automated case and the manual case.  For the automated case, the method wizard() will call
+to the open source company_dns service enabling many of the attributes of a company to be automatically
+filled in.  It is generally suggested for the user to run the automated case to minimze the burden of
+adding the attributes.  However, in some cases running a manual process isn't avoidable, this could be
+because the company name is incorrrect or the company isn't in the Wikipedia.  As a result the user
+can choose to enable a fully manual process to add a company object.  In this mode the default value
+for each attribute is 'Unknown'.</p>
     </div>
     
 
@@ -154,6 +158,8 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
             
 
             
+            <th>Default</th>
+            
 
             <th class="last">Description</th>
         </tr>
@@ -165,7 +171,7 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
             
 <tr class="deep-level-0">
   
-      <td class="name"><code>company</code></td>
+      <td class="name"><code>env</code></td>
   
 
   <td class="type">
@@ -180,8 +186,130 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
   
 
   
+      <td class="default">
+      
+      </td>
+  
 
-  <td class="description last"><p>The company object to generate the section(s) for</p></td>
+  <td class="description last"><p>contains key items needed to interact with the mediumroast.io application</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>apiController</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">Object</code>
+
+
+  
+  </td>
+
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>an object used to interact with the backend for companies</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>credential</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">Object</code>
+
+
+  
+  </td>
+
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>a credential needed to talk to a RESTful service which is the company_dns in this case</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>cli</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">Object</code>
+
+
+  
+  </td>
+
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>the already constructed CLI object</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>companyDNSUrl</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">String</code>
+
+
+  
+  </td>
+
+  
+
+  
+      <td class="default">
+      
+          http://cherokee.from-ca.com:16868
+      
+      </td>
+  
+
+  <td class="description last"><p>the url to the company DNS service</p></td>
 </tr>
 
 
@@ -227,9 +355,9 @@ by a wrapping document which could be for any one of the mediumroast objects.</p
 
     
         <p class="tag-source">
-            <a href="report_companies.js.html" class="button">View Source</a>
+            <a href="cli_companyWizard.js.html" class="button">View Source</a>
             <span>
-                <a href="report_companies.js.html">report/companies.js</a>, <a href="report_companies.js.html#line26">line 26</a>
+                <a href="cli_companyWizard.js.html">cli/companyWizard.js</a>, <a href="cli_companyWizard.js.html#line37">line 37</a>
             </span>
         </p>
     

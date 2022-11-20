@@ -729,10 +729,15 @@ class DOCXUtilities {
      * @returns {Object} a complete docx table that includes topics
      * @todo Sort based upon rank from highest to lowest
      */
-    topicTable(topics) {
-        let myRows = [this.basicTopicRow('Keywords', 'Rank', 'Score', true)]
+     topicTable(topics) {
+        let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
+        // TODO When the score and rank are switched the program will fail and will not create a report.
+        //      This appears to potentially be bug in docx, but as for now we will have to not change
+        //      the code to swap the two columns. Utilmately, the goal would be to swap the columns to
+        //      meet customer needs.
+        // TODO sort the columns based upon rank
         for (const topic in topics) {
-            myRows.push(this.basicTopicRow(topic, topics[topic].rank), topics[topic].score.toFixed(2))
+            myRows.push(this.basicTopicRow(topic, topics[topic].score.toFixed(2), topics[topic].rank))
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
@@ -746,6 +751,8 @@ class DOCXUtilities {
 
         return myTable
     }
+
+
 
     // Create an introductory section
     /**
