@@ -13,7 +13,6 @@ import zip from 'adm-zip'
 import AWS from 'aws-sdk'
 
 
-
 class Utilities {
     /**
      * A class to enable consistent functionality for basic operations like writing files,
@@ -192,6 +191,17 @@ class Utilities {
             const s3Put = await s3Ctl.putObject(myParams).promise() // Put the object
             return [myKey[myKey.length - 1], s3Put] // return the file name and the result of the put
         }
+    }
+
+    async s3CreateBucket (bucketName, env) {
+        const s3Ctl = new AWS.S3({
+            accessKeyId: env.s3User ,
+            secretAccessKey: env.s3APIKey,
+            endpoint: env.s3Server ,
+            s3ForcePathStyle: true, // needed with minio?
+            signatureVersion: 'v4',
+            region: env.s3Region // S3 won't work without the region setting
+        })
     }
 
     printLine () {

@@ -257,7 +257,7 @@ class AddCompany {
      * @description Invoke the text based wizard process to add a company to the mediumroast.io application
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard() {
+    async wizard(isOwner=null) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
             this.cli.splashScreen(
@@ -343,17 +343,21 @@ class AddCompany {
 
         // Set the role
         console.log(chalk.blue.bold('Setting the company\'s role...'))
-        const tmpRole = await this.wutils.doCheckbox(
-            "What role should we assign to this company?",
-            [
-                {name: 'Competitor', checked: true}, 
-                {name: 'Current Partner'},
-                {name: 'Target Partner'},
-                {name: 'Target End User'},
-                {name: 'End User Customer'},
-            ]
-        )
-        myCompany.role = tmpRole[0]
+        if (isOwner) {
+            myCompany.role = isOwner
+        } else {
+            const tmpRole = await this.wutils.doCheckbox(
+                "What role should we assign to this company?",
+                [
+                    {name: 'Competitor', checked: true}, 
+                    {name: 'Current Partner'},
+                    {name: 'Target Partner'},
+                    {name: 'Target End User'},
+                    {name: 'End User Customer'},
+                ]
+            )
+            myCompany.role = tmpRole[0]
+        }
         this.cutils.printLine()
 
         console.log(chalk.blue.bold('Setting special properties to known values...'))

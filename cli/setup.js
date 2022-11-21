@@ -42,7 +42,7 @@ function getEnv () {
     return {
         DEFAULT: {
             // TODO Create choices for the rest_server so the user doesn't have to figure this out
-            rest_server: "http://cherokee.from-ca.com:16767",
+            rest_server: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767"],
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
@@ -67,6 +67,7 @@ function getEnv () {
     }
 }
 
+// TODO replace this with the splash screen in the output module
 // If not suppressed print the splash screen to the console
 function splashScreen (simple=false) {
     const logoConfig = {
@@ -92,6 +93,7 @@ function splashScreen (simple=false) {
     )
 }
 
+// TODO Replace with commonWizard functions
 // Check to see if we are going to need to perform a setup operation or not.
 async function checkSetup(fileName) {
     const utils = new Utilities('setup')
@@ -121,6 +123,7 @@ async function checkSetup(fileName) {
     return true
 }
 
+// TODO replace with commonWizard functions
 // Prompt user to change any settings or keep the default
 async function doSettings(env, isDefault=false) {
     // TODO if either password or user for now we can suppress and immediately set it
