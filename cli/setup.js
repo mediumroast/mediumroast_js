@@ -6,22 +6,31 @@
  * @file mr_setup.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 // Import required modules
 import { Utilities } from '../src/helpers.js'
+import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
+import CLIOutput from '../src/output.js'
+import WizardUtils from '../src/cli/commonWizard.js'
 import ConfigParser from 'configparser'
 import program from 'commander'
-import inquirer from 'inquirer'
-import logo from 'asciiart-logo'
 import chalk from 'chalk'
+
+/* 
+    -----------------------------------------------------------------------
+
+    FUNCTIONS - Key functions needed for MAIN
+
+    ----------------------------------------------------------------------- 
+*/
 
 function parseCLIArgs() {
     // Define commandline options
     program
         .name("mr_setup")
-        .version('1.0.0')
+        .version('2.0.0')
         .description('A utility for setting up the mediumroast.io CLI.')
 
     program
@@ -42,7 +51,7 @@ function getEnv () {
     return {
         DEFAULT: {
             // TODO Create choices for the rest_server so the user doesn't have to figure this out
-            rest_server: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767"],
+            rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767"],
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
@@ -53,7 +62,7 @@ function getEnv () {
             api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
             server: "http://cherokee.from-ca.com:9000",
             region: "leo-dc",
-            source: "openvault"
+            source: "Unknown"
         },
         document_settings: {
             font_type: "Avenir Next",
@@ -67,134 +76,129 @@ function getEnv () {
     }
 }
 
-// TODO replace this with the splash screen in the output module
-// If not suppressed print the splash screen to the console
-function splashScreen (simple=false) {
-    const logoConfig = {
-        name: "mediumroast.io CLI Setup",
-        // font: 'Speed',
-        lineChars: 10,
-        padding: 3,
-        margin: 3,
-        borderColor: 'bold-gray',
-        logoColor: 'bold-orange',
-        textColor: 'orange',
-    }
-    // Print out the splash screen
-    console.log(
-        logo(logoConfig)
-        .emptyLine()
-        .right('version 1.0.0')
-        .emptyLine()
-        .center(
-            "Prompt based setup for mediumroast.io command line interface."
-        )
-        .render()
+async function _checkServer(server, env) {
+    // Generate the credential & construct the API Controllers
+    const myAuth = new Auth(
+        server,
+        env.apiKey,
+        env.user,
+        env.secret
     )
-}
+    const myCredential = myAuth.login()
+    const interactionCtl = new Interactions(myCredential)
+    const companyCtl = new Companies(myCredential)
+    const studyCtl = new Studies(myCredential)
+    
+    // Check to see if the server is empty
+    const myStudies = await studyCtl.getAll()
+    const myCompanies = await companyCtl.getAll()
+    const myInteractions = await interactionCtl.getAll()
+    const [noStudies, noCompanies, noInteractions] = [myStudies.length, myCompanies.length, myInteractions.length]
 
-// TODO Replace with commonWizard functions
-// Check to see if we are going to need to perform a setup operation or not.
-async function checkSetup(fileName) {
-    const utils = new Utilities('setup')
-    const [exists, message, result] = utils.checkFilesystemObject(fileName)
-    if(exists) {
-        await inquirer
-            .prompt([
-                {
-                    name: "run_setup",
-                    type: "confirm",
-                    message: "Hi, I've detected an existing configuration for mediumroast.io. Should I proceed?"
-                }
-            ])
-            // If we don't want to perform the setup then exit
-            .then((answer) => {
-                    if (!answer.run_setup) {
-                        console.log(chalk.red.bold('\t-> Ok exiting the CLI setup.'))
-                        process.exit(0)
-                    }
-                }
-            )
+    // See if the server is empty
+    if (noStudies === 0 && noCompanies === 0 && noInteractions === 0) {
+        return [true, {status_code: 200, status_msg: 'server is ready for use'}, {restServer: server, apiController: companyCtl}]
     } else {
-        console.log(chalk.blueBright.bold('Starting the configuration process for the mediumroast.io CLI.'))
+        return [false, {status_code: 503, status_msg: 'server not ready for use'}, null]
     }
 
-    // We will always return true, because if the user decides to not proceed checkSetup exits
-    return true
 }
 
-// TODO replace with commonWizard functions
-// Prompt user to change any settings or keep the default
-async function doSettings(env, isDefault=false) {
-    // TODO if either password or user for now we can suppress and immediately set it
-    let myAnswers = {}
-    for (const setting in env) {
-        // Skip user and secret if this is the DEFAULT section
-        // TODO eventually replace this with a proper user and password setting
-        if(isDefault && (setting === 'user' || setting === 'secret')) {
-            myAnswers[setting] = env[setting]
+async function discoverServers (servers, env) {
+    let candidateServers = {}
+    const serverPrefix = 'Server-'
+    let idx = 1
+    
+    // Check to see if the servers are available
+    for (const myServer in servers) {
+        const [success, msg, resource] = await _checkServer(myServer, env)
+        if (success) {
+            candidateServers[serverPrefix + String(idx)] = resource
+            idx += 1
+        } else {
             continue
         }
-        await inquirer
-            .prompt([
-                {
-                    name: setting,
-                    type: 'input',
-                    message: 'Set ' + setting + '?',
-                    default() {
-                        return env[setting]
-                    }
-                }
-            ])
-            .then(async (answer) => {
-                myAnswers[setting] = await answer[setting]
-            })
     }
-    return myAnswers
+
+    // Determine if we have any servers and if so return the candidates otherwise return false, etc.
+    const availableServers = candidateServers.length
+    if (availableServers > 0) {
+        return [true, {status_code: 200, status_msg: 'one or more servers is available'}, candidateServers]
+    } else {
+        return [false, {status_code: 503, status_msg: 'no servers are ready please try again'}, null]
+    }
 }
 
-// Perform environmental variable settings for all sections
-async function checkSection(env, sectionType) {
-    const line = '-'.repeat(process.stdout.columns)
-    console.log(line)
-    let myAnswers = {}
-    await inquirer
-        .prompt([
-            {
-                name: "run",
-                type: "confirm",
-                message: "Setup section " +  sectionType + " for the CLI?"
-            }
-        ])
-        // If we don't want to perform the setup then move along and return the defaults
-        .then(async (answer) => {
-                if (!answer.run) {
-                    console.log(
-                        chalk.blue.bold(
-                            '\t-> Ok you don\'t want to change the ' +  
-                            sectionType + ' settings. Populating defaults.'
-                        )
-                    )
-                    myAnswers = env[sectionType]
-                } else {
-                    sectionType === 'DEFAULT' ? 
-                        myAnswers = await doSettings(env[sectionType], true):
-                        myAnswers = await doSettings(env[sectionType], false)
-                    
-                }
-            }
-        )
-        // At this point we've decided to proceed
-        return myAnswers
-        
+// Check to see if the directory for the configuration exists, and
+// if not create it.  Also return the full path to the configuration
+// file.
+function checkConfigDir(configDir='/.mediumroast', configFile='config.ini') {
+    utils.safeMakedir(process.env.HOME + configDir)
+    return process.env.HOME + configDir + '/' + configFile
 }
+
+// Save the configuration file
+function writeConfigFile(myConfig, configFile) {
+    // Write the config file
+    const configurator = new ConfigParser()
+    for(const section in myConfig){
+        configurator.addSection(section)
+        for(const setting in myConfig[section]){
+            configurator.set(section, setting, myConfig[section][setting])
+        }
+    }
+    // This won't return anything so we'll need to see if we can find another way to determine success/failure
+    configurator.write(configFile)
+}
+
+// Verify the configuration was written
+function verifyConfiguration(myConfig, configFile) {
+    const configurator = new ConfigParser()
+    // Read in the config file and check to see if things are ok by confirming the rest_server value matches
+    configurator.read(configFile)
+    const newRestServer = configurator.get('DEFAULT', 'rest_server')
+    let success = false
+    if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
+    return success
+}
+
+/* 
+    -----------------------------------------------------------------------
+
+    MAIN - Steps below represent the main function of the program
+
+    ----------------------------------------------------------------------- 
+*/
 
 // Parse the commandline arguements
 const myArgs = parseCLIArgs()
 
+// Get the key settings to create the configuration file
+let myEnv = getEnv()
+
+// Construct needed classes
+const cliOutput = new CLIOutput(myEnv)
+const wizard = new WizardUtils('all')
+const utils = new Utilities("all")
+
+
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
-    splashScreen()
+    cliOutput.splashScreen(
+        "mediumroast.io CLI Setup Wizard",
+        "version 2.0.0",
+        "Prompt based setup and registration for the mediumroast.io CLI."
+    )
+}
+
+// Check for and create the directory process.env.HOME/.mediumroast
+const configFile = checkConfigDir()
+
+// Are we going to proceed or not?
+const doSetup = await wizard.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
+if (!doSetup) {
+    console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
+    process.exit()
 }
 
 // Define the basic structure of the new object to store to the config file
@@ -204,52 +208,43 @@ let myConfig = {
     document_settings: null
 }
 
-// Get the key settings to create the configuration file
-let myEnv = getEnv()
-
-// Check for and create the directory process.env.HOME/.mediumroast
-const utils = new Utilities(null)
-utils.safeMakedir(process.env.HOME + '/.mediumroast')
-const fileName = process.env.HOME + '/.mediumroast/config.ini'
-
-// Are we going to proceed or not?
-const doSetup = await checkSetup(fileName)
-
-// Determine if we should setup the defaults, and if so process them
-myConfig.DEFAULT = await checkSection(myEnv, 'DEFAULT')
-
-// Determine if we should setup the s3_settings, and if so process them
-myConfig.s3_settings = await checkSection(myEnv, 's3_settings')
-
-// Determine if we should setup the s3_settings, and if so process them
-myConfig.document_settings = await checkSection(myEnv, 'document_settings')
+// Check to see which servers are available for use
+console.log(chalk.blue.bold('Discovering available mediumroast.io servers.'))
+let serverChoice = null
+const [serverSuccess, msg, candidateServers] = await discoverServers(myEnv.DEFAULT.rest_servers, env)
+const serverOptions = []
+for (const candidate in Object.keys(candidateServers)) {
+    serverOptions.push({name: candidate})
+}
+if (serverSuccess) {
+    serverChoice = await wizard.doCheckbox (
+        'Please pick from one of the following servers.',
+        serverOptions
+    )
+} else {
+    console.log(chalk.red.bold('ERROR: No servers are available at the present time, please try again later.'))
+    process.exit(-1)
+}
+myEnv.DEFAULT['rest_server'] = candidateServers[serverChoice].restServer
+const companyController = candidateServers[serverChoice].apiController
+cliOutput.printLine()
 
 // TODOs
 // Create the first "owning company" which is associated to the user by calling the cli wizard for companies
 // We should create a bucket in the object store based upon company
 // Make user we add the owning_company property to the config file
 
+// Persist and verify the config file
 // Write the config file
-const configurator = new ConfigParser()
-for(const section in myConfig){
-    configurator.addSection(section)
-    for(const setting in myConfig[section]){
-        configurator.set(section, setting, myConfig[section][setting])
-    }
-}
-// This won't return anything so we'll need to see if we can find another way to determine success/failure
-configurator.write(fileName)
+console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
+writeConfigFile(myConfig, configFile)
 
-// Read in the config file and check to see if things are ok by confirming the rest_server value matches
-configurator.read(fileName)
-const newRestServer = configurator.get('DEFAULT', 'rest_server')
-let success = false
-if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
-
-
-const line = '-'.repeat(process.stdout.columns)
-    console.log(line)
-
+// Verify the config file
+console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
+const success = verifyConfiguration(myConfig, configFile)
 success ? 
-    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + fileName + '] was written.')) :
-    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + fileName + '] was written.'))
+    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
+    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
+cliOutput.printLine()
+
+

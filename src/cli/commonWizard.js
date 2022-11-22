@@ -179,4 +179,4 @@ class WizardUtils {
         
 }
 
-export { WizardUtils }
+export default WizardUtils

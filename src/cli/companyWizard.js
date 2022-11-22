@@ -13,7 +13,7 @@ import inquirer from "inquirer"
 import chalk from 'chalk'
 import ora from "ora"
 import mrRest from "../api/scaffold.js"
-import { WizardUtils } from "./commonWizard.js"
+import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
 
 class AddCompany {
@@ -257,7 +257,7 @@ class AddCompany {
      * @description Invoke the text based wizard process to add a company to the mediumroast.io application
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard(isOwner=null) {
+    async wizard(isOwner=false) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
             this.cli.splashScreen(
@@ -344,7 +344,7 @@ class AddCompany {
         // Set the role
         console.log(chalk.blue.bold('Setting the company\'s role...'))
         if (isOwner) {
-            myCompany.role = isOwner
+            myCompany.role = 'Owner'
         } else {
             const tmpRole = await this.wutils.doCheckbox(
                 "What role should we assign to this company?",
