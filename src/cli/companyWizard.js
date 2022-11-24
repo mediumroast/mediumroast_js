@@ -15,6 +15,7 @@ import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
+import CLIOutput from "../output.js"
 
 class AddCompany {
     /**
@@ -34,14 +35,13 @@ class AddCompany {
      * @param {Object} cli - the already constructed CLI object
      * @param {String} companyDNSUrl - the url to the company DNS service
      */
-    constructor(env, apiController, credential, cli, companyDNSUrl="http://cherokee.from-ca.com:16868"){
+    constructor(env, apiController, credential, companyDNSUrl="http://cherokee.from-ca.com:16868"){
         this.env = env
         this.apiController = apiController
         this.credential = credential
         this.endpoint = "/V2.0/company/merged/firmographics/"
         this.credential.restServer = companyDNSUrl
         this.rest = new mrRest(this.credential)
-        this.cli = cli
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -53,6 +53,7 @@ class AddCompany {
         this.objectType = "Companies"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
         this.cutils = new Utilities(this.objectType) // General package utilities
+        this.output = new CLIOutput(this.env, this.objectType)
     }
 
 
@@ -260,7 +261,7 @@ class AddCompany {
     async wizard(isOwner=false) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
-            this.cli.splashScreen(
+            this.output.splashScreen(
                 this.name,
                 this.version,
                 this.description
@@ -370,10 +371,10 @@ class AddCompany {
         // TODO you need to link to one or more studies
         myCompany.linked_studies = {}
         this.cutils.printLine()
-        console.log(myCompany)
-
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-        return await this.apiController.createObj(myCompany)
+        let companyResp = await this.apiController.createObj(myCompany)
+        companyResp[1].data = myCompany // This might be a little hacky, but it should work
+        return companyResp
     }
 
 }

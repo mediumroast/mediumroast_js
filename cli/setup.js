@@ -14,6 +14,7 @@ import { Utilities } from '../src/helpers.js'
 import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
 import CLIOutput from '../src/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
+import { AddCompany } from '../src/cli/companyWizard.js'
 import ConfigParser from 'configparser'
 import program from 'commander'
 import chalk from 'chalk'
@@ -50,7 +51,6 @@ function parseCLIArgs() {
 function getEnv () {
     return {
         DEFAULT: {
-            // TODO Create choices for the rest_server so the user doesn't have to figure this out
             rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767"],
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
@@ -80,9 +80,9 @@ async function _checkServer(server, env) {
     // Generate the credential & construct the API Controllers
     const myAuth = new Auth(
         server,
-        env.apiKey,
-        env.user,
-        env.secret
+        env.DEFAULT.api_key,
+        env.DEFAULT.user,
+        env.DEFAULT.secret,
     )
     const myCredential = myAuth.login()
     const interactionCtl = new Interactions(myCredential)
@@ -93,11 +93,11 @@ async function _checkServer(server, env) {
     const myStudies = await studyCtl.getAll()
     const myCompanies = await companyCtl.getAll()
     const myInteractions = await interactionCtl.getAll()
-    const [noStudies, noCompanies, noInteractions] = [myStudies.length, myCompanies.length, myInteractions.length]
+    const [noStudies, noCompanies, noInteractions] = [myStudies[2], myCompanies[2], myInteractions[2]]
 
     // See if the server is empty
-    if (noStudies === 0 && noCompanies === 0 && noInteractions === 0) {
-        return [true, {status_code: 200, status_msg: 'server is ready for use'}, {restServer: server, apiController: companyCtl}]
+    if (noStudies.length === 0 && noCompanies.length === 0 && noInteractions.length === 0) {
+        return [true, {status_code: 200, status_msg: 'server is ready for use'}, {restServer: server, apiController: companyCtl, credential: myCredential}]
     } else {
         return [false, {status_code: 503, status_msg: 'server not ready for use'}, null]
     }
@@ -106,14 +106,14 @@ async function _checkServer(server, env) {
 
 async function discoverServers (servers, env) {
     let candidateServers = {}
-    const serverPrefix = 'Server-'
+    const serverPrefix = 'mediumroast.io server - '
     let idx = 1
     
     // Check to see if the servers are available
     for (const myServer in servers) {
-        const [success, msg, resource] = await _checkServer(myServer, env)
-        if (success) {
-            candidateServers[serverPrefix + String(idx)] = resource
+        const serverResponse = await _checkServer(servers[myServer], env)
+        if (serverResponse[0]) {
+            candidateServers[serverPrefix + String(idx)] = serverResponse[2]
             idx += 1
         } else {
             continue
@@ -121,7 +121,7 @@ async function discoverServers (servers, env) {
     }
 
     // Determine if we have any servers and if so return the candidates otherwise return false, etc.
-    const availableServers = candidateServers.length
+    const availableServers = Object.keys(candidateServers).length
     if (availableServers > 0) {
         return [true, {status_code: 200, status_msg: 'one or more servers is available'}, candidateServers]
     } else {
@@ -178,16 +178,15 @@ let myEnv = getEnv()
 
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
-const wizard = new WizardUtils('all')
+const wizardUtils = new WizardUtils('all')
 const utils = new Utilities("all")
-
 
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
     cliOutput.splashScreen(
-        "mediumroast.io CLI Setup Wizard",
+        "mediumroast.io  Setup Wizard",
         "version 2.0.0",
-        "Prompt based setup and registration for the mediumroast.io CLI."
+        "CLI prompt based setup and registration for the mediumroast.io application."
     )
 }
 
@@ -195,7 +194,7 @@ if (myArgs.splash === 'yes') {
 const configFile = checkConfigDir()
 
 // Are we going to proceed or not?
-const doSetup = await wizard.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
+const doSetup = await wizardUtils.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
 if (!doSetup) {
     console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
     process.exit()
@@ -209,15 +208,16 @@ let myConfig = {
 }
 
 // Check to see which servers are available for use
-console.log(chalk.blue.bold('Discovering available mediumroast.io servers.'))
+console.log(chalk.blue.bold('Discovering available mediumroast.io servers...'))
 let serverChoice = null
-const [serverSuccess, msg, candidateServers] = await discoverServers(myEnv.DEFAULT.rest_servers, env)
+const serverSuccess = await discoverServers(myEnv.DEFAULT.rest_servers, myEnv)
 const serverOptions = []
-for (const candidate in Object.keys(candidateServers)) {
-    serverOptions.push({name: candidate})
-}
-if (serverSuccess) {
-    serverChoice = await wizard.doCheckbox (
+
+if (serverSuccess[0]) {
+    for (const candidate in serverSuccess[2]) {
+        serverOptions.push({name: candidate})
+    }
+    serverChoice = await wizardUtils.doCheckbox (
         'Please pick from one of the following servers.',
         serverOptions
     )
@@ -225,26 +225,39 @@ if (serverSuccess) {
     console.log(chalk.red.bold('ERROR: No servers are available at the present time, please try again later.'))
     process.exit(-1)
 }
-myEnv.DEFAULT['rest_server'] = candidateServers[serverChoice].restServer
-const companyController = candidateServers[serverChoice].apiController
+myEnv.DEFAULT['rest_server'] = serverSuccess[2][serverChoice].restServer
+const companyController = serverSuccess[2][serverChoice].apiController
+const credential = serverSuccess[2][serverChoice].credential
+delete myEnv.DEFAULT.rest_servers
 cliOutput.printLine()
 
-// TODOs
-// Create the first "owning company" which is associated to the user by calling the cli wizard for companies
+
+// Create the first "owning company" for the initial user
+console.log(chalk.blue.bold('Creating owning company...'))
+myEnv.splash = false
+const cWizard = new AddCompany(
+    myEnv,
+    companyController,
+    credential
+)
+const companyResp = await cWizard.wizard(true)
+const myCompany = companyResp[1].data
+cliOutput.printLine()
+
+// TODO 
 // We should create a bucket in the object store based upon company
-// Make user we add the owning_company property to the config file
 
 // Persist and verify the config file
 // Write the config file
-console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
-writeConfigFile(myConfig, configFile)
+// console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
+// writeConfigFile(myConfig, configFile)
 
 // Verify the config file
-console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
-const success = verifyConfiguration(myConfig, configFile)
-success ? 
-    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
-    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
-cliOutput.printLine()
+// console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
+// const success = verifyConfiguration(myConfig, configFile)
+// success ? 
+//     console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
+//     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
+// cliOutput.printLine()
 
 
