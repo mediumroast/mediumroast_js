@@ -13,8 +13,9 @@ import inquirer from "inquirer"
 import chalk from 'chalk'
 import ora from "ora"
 import mrRest from "../api/scaffold.js"
-import { WizardUtils } from "./commonWizard.js"
+import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
+import CLIOutput from "../output.js"
 
 class AddCompany {
     /**
@@ -34,14 +35,17 @@ class AddCompany {
      * @param {Object} cli - the already constructed CLI object
      * @param {String} companyDNSUrl - the url to the company DNS service
      */
-    constructor(env, apiController, credential, cli, companyDNSUrl="http://cherokee.from-ca.com:16868"){
+    constructor(env, apiController, companyDNSUrl="http://cherokee.from-ca.com:16868"){
         this.env = env
         this.apiController = apiController
-        this.credential = credential
         this.endpoint = "/V2.0/company/merged/firmographics/"
-        this.credential.restServer = companyDNSUrl
-        this.rest = new mrRest(this.credential)
-        this.cli = cli
+        this.cred = {
+            apiKey: "Not Applicable",
+            restServer: companyDNSUrl,
+            user: "Not Applicable",
+            secret: "Not Applicable"
+        }
+        this.rest = new mrRest(this.cred)
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -53,6 +57,7 @@ class AddCompany {
         this.objectType = "Companies"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
         this.cutils = new Utilities(this.objectType) // General package utilities
+        this.output = new CLIOutput(this.env, this.objectType)
     }
 
 
@@ -230,8 +235,7 @@ class AddCompany {
             if (doSummary) {
                 myCompanyObj = await this.wutils.doManual(
                     prototype, 
-                    [
-                        'description', 
+                    [ 
                         'name', 
                         'phone', 
                         'website', 
@@ -257,10 +261,10 @@ class AddCompany {
      * @description Invoke the text based wizard process to add a company to the mediumroast.io application
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard(isOwner=null) {
+    async wizard(isOwner=false) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
-            this.cli.splashScreen(
+            this.output.splashScreen(
                 this.name,
                 this.version,
                 this.description
@@ -342,9 +346,8 @@ class AddCompany {
         this.cutils.printLine()
 
         // Set the role
-        console.log(chalk.blue.bold('Setting the company\'s role...'))
         if (isOwner) {
-            myCompany.role = isOwner
+            myCompany.role = 'Owner'
         } else {
             const tmpRole = await this.wutils.doCheckbox(
                 "What role should we assign to this company?",
@@ -358,6 +361,7 @@ class AddCompany {
             )
             myCompany.role = tmpRole[0]
         }
+        console.log(chalk.blue.bold(`Set the company\'s role to [${myCompany.role}]`))
         this.cutils.printLine()
 
         console.log(chalk.blue.bold('Setting special properties to known values...'))
@@ -370,12 +374,12 @@ class AddCompany {
         // TODO you need to link to one or more studies
         myCompany.linked_studies = {}
         this.cutils.printLine()
-        console.log(myCompany)
-
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-        return await this.apiController.createObj(myCompany)
+        let companyResp = await this.apiController.createObj(myCompany)
+        companyResp[1].data = myCompany // This might be a little hacky, but it should work
+        return companyResp
     }
 
 }
 
-export { AddCompany }
+export default AddCompany

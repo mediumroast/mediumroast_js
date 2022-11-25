@@ -14,7 +14,7 @@ import { Auth, Companies, Interactions } from '../src/api/mrServer.js'
 import { Utilities } from '../src/helpers.js'
 import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
-import { AddCompany } from '../src/cli/companyWizard.js'
+import AddCompany from '../src/cli/companyWizard.js'
 
 // Globals
 const objectType = 'company'

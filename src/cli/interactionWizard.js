@@ -17,7 +17,7 @@ import chalk from 'chalk'
 import ora from "ora"
 import path from "node:path"
 import crypto from "node:crypto"
-import { WizardUtils } from "./commonWizard.js"
+import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
 
 class AddInteraction {
@@ -413,7 +413,7 @@ class AddInteraction {
         let [myObjs, autoSuccess, autoMsg] = [{}, null, {}]
         if (automatic) {
             // Perform auto setup
-            console.log(chalk.blue.bold('Starting automatic company creation...'))
+            console.log(chalk.blue.bold('Starting automatic interaction creation...'))
             const [success, msg, objs] = await this.doAutomatic(interactionPrototype)
             myObjs = objs
             autoSuccess = success
