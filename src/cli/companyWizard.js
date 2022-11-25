@@ -35,13 +35,17 @@ class AddCompany {
      * @param {Object} cli - the already constructed CLI object
      * @param {String} companyDNSUrl - the url to the company DNS service
      */
-    constructor(env, apiController, credential, companyDNSUrl="http://cherokee.from-ca.com:16868"){
+    constructor(env, apiController, companyDNSUrl="http://cherokee.from-ca.com:16868"){
         this.env = env
         this.apiController = apiController
-        this.credential = credential
         this.endpoint = "/V2.0/company/merged/firmographics/"
-        this.credential.restServer = companyDNSUrl
-        this.rest = new mrRest(this.credential)
+        this.cred = {
+            apiKey: "Not Applicable",
+            restServer: companyDNSUrl,
+            user: "Not Applicable",
+            secret: "Not Applicable"
+        }
+        this.rest = new mrRest(this.cred)
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -231,8 +235,7 @@ class AddCompany {
             if (doSummary) {
                 myCompanyObj = await this.wutils.doManual(
                     prototype, 
-                    [
-                        'description', 
+                    [ 
                         'name', 
                         'phone', 
                         'website', 
@@ -343,7 +346,6 @@ class AddCompany {
         this.cutils.printLine()
 
         // Set the role
-        console.log(chalk.blue.bold('Setting the company\'s role...'))
         if (isOwner) {
             myCompany.role = 'Owner'
         } else {
@@ -359,6 +361,7 @@ class AddCompany {
             )
             myCompany.role = tmpRole[0]
         }
+        console.log(chalk.blue.bold(`Set the company\'s role to [${myCompany.role}]`))
         this.cutils.printLine()
 
         console.log(chalk.blue.bold('Setting special properties to known values...'))
@@ -379,4 +382,4 @@ class AddCompany {
 
 }
 
-export { AddCompany }
+export default AddCompany

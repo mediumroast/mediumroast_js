@@ -22,12 +22,12 @@ class s3Utilities {
      constructor(env) {
         this.env = env
         this.s3Controller = new AWS.S3({
-            accessKeyId: this.env.s3User ,
-            secretAccessKey: this.env.s3APIKey,
-            endpoint: this.env.s3Server ,
+            accessKeyId: this.env.user ,
+            secretAccessKey: this.env.api_key,
+            endpoint: this.env.server ,
             s3ForcePathStyle: true, // needed with minio?
             signatureVersion: 'v4',
-            region: this.env.s3Region // S3 won't work without the region setting
+            region: this.env.region // S3 won't work without the region setting
         })
     }
 
@@ -36,7 +36,7 @@ class s3Utilities {
     * @description From an S3 bucket download the document associated to each interaction
     * @param {Array} interactions - an array of interaction objects
     * @param {String} targetDirectory - the target location for downloading the objects to
-    * @todo As the implementation grows this function will likely need be put into a separate class
+    * @todo this.env.s3Source is incorrect meaning it will fail for now, add srcBucket as argument
     */
     async s3DownloadObjs (interactions, targetDirectory) {
         for (const interaction in interactions) {

@@ -14,10 +14,13 @@ import { Utilities } from '../src/helpers.js'
 import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
 import CLIOutput from '../src/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
-import { AddCompany } from '../src/cli/companyWizard.js'
-import ConfigParser from 'configparser'
+import AddCompany from '../src/cli/companyWizard.js'
+import s3Utilities from '../src/s3.js'
+
 import program from 'commander'
 import chalk from 'chalk'
+import ConfigParser from 'configparser'
+import crypto from "node:crypto"
 
 /* 
     -----------------------------------------------------------------------
@@ -55,7 +58,11 @@ function getEnv () {
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
-            working_dir: "/tmp"
+            working_dir: "/tmp",
+            company_dns_servers: {
+                "http://cherokee.from-ca.com:16767": "http://cherokee.from-ca.com:16868",
+                "http://cherokee.from-ca.com:26767": "http://cherokee.from-ca.com:26868"
+            }
         },
         s3_settings: {
             user: "medium_roast_io",
@@ -162,6 +169,13 @@ function verifyConfiguration(myConfig, configFile) {
     return success
 }
 
+// Generate a consistent bucket name with only alphanumeric characters,
+// no spaces, and only lowercase text.
+function _generateBucketName(companyName) {
+    let tmpName = companyName.replace(/[^a-z0-9]/gi,'')
+    return tmpName.toLowerCase()
+}
+
 /* 
     -----------------------------------------------------------------------
 
@@ -183,6 +197,7 @@ const utils = new Utilities("all")
 
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
+    console.clear() // Attempt to clear the screen
     cliOutput.splashScreen(
         "mediumroast.io  Setup Wizard",
         "version 2.0.0",
@@ -226,9 +241,11 @@ if (serverSuccess[0]) {
     process.exit(-1)
 }
 myEnv.DEFAULT['rest_server'] = serverSuccess[2][serverChoice].restServer
-const companyController = serverSuccess[2][serverChoice].apiController
+myEnv.DEFAULT['company_dns_server'] = myEnv.DEFAULT['company_dns_servers'][myEnv.DEFAULT['rest_server']] 
+const companyCtl = serverSuccess[2][serverChoice].apiController
 const credential = serverSuccess[2][serverChoice].credential
 delete myEnv.DEFAULT.rest_servers
+delete myEnv.DEFAULT.company_dns_servers
 cliOutput.printLine()
 
 
@@ -237,27 +254,70 @@ console.log(chalk.blue.bold('Creating owning company...'))
 myEnv.splash = false
 const cWizard = new AddCompany(
     myEnv,
-    companyController,
-    credential
+    companyCtl,
+    myEnv.DEFAULT['company_dns_server']
 )
 const companyResp = await cWizard.wizard(true)
 const myCompany = companyResp[1].data
+// Create an S3 bucket derived from the company name, and the steps for creating the
+// bucket name are in _genereateBucketName().
+const bucketName = _generateBucketName(myCompany.name)
+const myS3 = new s3Utilities(myEnv.s3_settings)
+const s3Resp = await myS3.s3CreateBucket(bucketName)
+if(s3Resp) {
+    console.log(chalk.blue.bold(`Added interaction storage space for ${myCompany.name}.`))
+} else {
+    console.log(chalk.blue.red(`Unable to add interaction storage space for ${myCompany.name}.`))
+}
 cliOutput.printLine()
 
-// TODO 
-// We should create a bucket in the object store based upon company
+// Create a default study for interactions to use
+console.log(chalk.blue.bold(`Adding default study to the backend...`))
+const studyCtl = new Studies(credential)
+const myStudy = {
+    name: 'Default Study',
+    description: 'A placeholder study to ensure that interactions are able to have something to link to',
+    public: false,
+    groups: 'default:default',
+    document: {}
+}
+const studyResp = await studyCtl.createObj(myStudy)
+cliOutput.printLine()
+
 
 // Persist and verify the config file
 // Write the config file
-// console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
-// writeConfigFile(myConfig, configFile)
+myConfig.DEFAULT = myEnv.DEFAULT
+myConfig.s3_settings = myEnv.s3_settings
+myConfig.document_settings = myEnv.document_settings
+console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
+writeConfigFile(myConfig, configFile)
 
 // Verify the config file
-// console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
-// const success = verifyConfiguration(myConfig, configFile)
-// success ? 
-//     console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
-//     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
-// cliOutput.printLine()
+console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
+const success = verifyConfiguration(myConfig, configFile)
+success ? 
+    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
+    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
+cliOutput.printLine()
+
+// List all create objects to the console
+console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
+console.log(chalk.blue.bold(`Default Study:`))
+const myStudies = await studyCtl.getAll()
+cliOutput.outputCLI(myStudies[2])
+cliOutput.printLine()
+console.log(chalk.blue.bold(`Registered Company:`))
+const myCompanies = await companyCtl.getAll()
+cliOutput.outputCLI(myCompanies[2])
+cliOutput.printLine()
+
+// Print out the next steps
+console.log(chalk.blue.bold(`Now that you\'ve performed the initial registration here\'s what\'s next.`))
+console.log(chalk.blue.bold(`\t1. Create and register additional companies with mr_company --add_wizard.`))
+console.log(chalk.blue.bold(`\t2. Register and add interactions with mr_interaction --add_wizard.`))
+console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic competitive analysis.')
+cliOutput.printLine()
+
 
 
