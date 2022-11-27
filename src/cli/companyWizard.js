@@ -15,7 +15,7 @@ import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
-import CLIOutput from "../output.js"
+import CLIOutput from "./output.js"
 
 class AddCompany {
     /**

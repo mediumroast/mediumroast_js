@@ -151,18 +151,18 @@ class Environmentals {
      */
     getEnv(cliArgs, config) {
         let env = {
-            "restServer": null,
-            "apiKey": null,
-            "user": null,
-            "secret": null,
-            "workDir": null,
-            "outputDir": null,
-            "s3Server": null,
-            "s3User": null,
-            "s3APIKey": null,
-            "s3Region": null,
-            "s3Source": null,
-            "splash": null
+            restServer: null,
+            apiKey: null,
+            user: null,
+            secret: null,
+            workDir: null,
+            outputDir: null,
+            s3Server: null,
+            s3User: null,
+            s3APIKey: null,
+            s3Region: null,
+            s3Source: null,
+            splash: null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -173,7 +173,7 @@ class Environmentals {
 
         // Set up additional parameters from config file
         env.workDir = config.get('DEFAULT', 'working_dir')
-        env.owningCompany = config.get('DEFAULT', 'owning_company')
+        env.companyDNS = config.get('DEFAULT', 'company_dns_server')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')

@@ -12,7 +12,7 @@ import Table from 'cli-table'
 import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
-import { Utilities } from './helpers.js'
+import { Utilities } from '../helpers.js'
 
 class CLIOutput {
     /**

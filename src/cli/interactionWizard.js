@@ -414,7 +414,7 @@ class AddInteraction {
         if (automatic) {
             // Perform auto setup
             console.log(chalk.blue.bold('Starting automatic interaction creation...'))
-            const [success, msg, objs] = await this.doAutomatic(interactionPrototype)
+            const [success, msg, objs] = await this.doAutomatic(interactionPrototype) // <-- LOOK HERE FOR PATH TO DIRECTORY
             myObjs = objs
             autoSuccess = success
             autoMsg = msg
