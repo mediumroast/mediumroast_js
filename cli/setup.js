@@ -68,7 +68,7 @@ function getEnv () {
             api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
             server: "http://cherokee.from-ca.com:9000",
             region: "leo-dc",
-            source: "Unknown"
+            source: "Unknown" // TODO this is deprecated remove after testing
         },
         document_settings: {
             font_type: "Avenir Next",
@@ -196,7 +196,6 @@ const utils = new Utilities("all")
 
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
-    console.clear() // Attempt to clear the screen
     cliOutput.splashScreen(
         "mediumroast.io  Setup Wizard",
         "version 2.0.0",

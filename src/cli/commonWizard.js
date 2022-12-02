@@ -176,6 +176,18 @@ class WizardUtils {
             }
         }
     }
+
+    async getRegion () {
+        const tmpRegion = await this.doCheckbox(
+            "Which region is this company associated to?",
+            [
+                {name: 'Americas', checked: true}, 
+                {name: 'Europe Middle East, Africa'},
+                {name: 'Asia, Pacific, Japan'}
+            ]
+        )
+        return tmpRegion[0]
+    }
         
 }
 

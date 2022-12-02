@@ -34,14 +34,16 @@ class AddCompany {
      * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
      * @param {Object} cli - the already constructed CLI object
      * @param {String} companyDNSUrl - the url to the company DNS service
+     * @todo replace the company_DNS url with the proper item in the config file
      */
-    constructor(env, apiController, companyDNSUrl="http://cherokee.from-ca.com:16868"){
+    constructor(env, apiController, companyDNSUrl=null){
         this.env = env
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
+        this.env.companyDNS ? this.companyDNS = this.env.companyDNS : this.companyDNS = companyDNSUrl
         this.cred = {
             apiKey: "Not Applicable",
-            restServer: companyDNSUrl,
+            restServer: this.companyDNS,
             user: "Not Applicable",
             secret: "Not Applicable"
         }
@@ -334,15 +336,7 @@ class AddCompany {
         console.log(chalk.blue.bold('Starting location properties selections...'))
         
         // Set the region
-        const tmpRegion = await this.wutils.doCheckbox(
-                "Which region is this interaction associated to?",
-                [
-                    {name: 'Americas', checked: true}, 
-                    {name: 'Europe Middle East, Africa'},
-                    {name: 'Asia, Pacific, Japan'}
-                ]
-            )
-            myCompany.region = tmpRegion[0]
+        myCompany.region = await this.wutils.getRegion()
         this.cutils.printLine()
 
         // Set the role

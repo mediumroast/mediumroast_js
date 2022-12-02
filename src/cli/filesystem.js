@@ -23,7 +23,7 @@ class FilesystemOperators {
      * @param {String} text - the string content to save to a file which could be JSON, XML, TXT, etc.
      * @returns {Array} containing the status of the save operation, status message and null/error
      */
-     saveTextFile(fileName, text) {
+    saveTextFile(fileName, text) {
         fs.writeFileSync(fileName, text, err => {
             if (err) {
                 return [false, 'Did not save file [' + fileName + '] because: ' + err, null]
@@ -53,13 +53,13 @@ class FilesystemOperators {
      * @param {String} name - full path to the file system object to check
      * @returns {Array} containing the status of the check operation, status message and null
      */
-     checkFilesystemObject(name) {
+    checkFilesystemObject(name) {
         if (fs.existsSync(name)) {
             return [true, 'The file system object [' + name + '] was detected.', null]
         } else {
             return [false, 'The file system object [' + name + '] was not detected.', null]
         }
-     }
+    }
 
     /**
      * @function safeMakedir
@@ -92,6 +92,36 @@ class FilesystemOperators {
             return [true, 'Removed directory [' + dirName + '] and all contents', null]
         } catch (err) {
             return [false, 'Did not remove directory [' + dirName + '] because: ' + err, null]
+        }
+    }
+
+    /**
+     * @function listAllFiles
+     * @description List all contents of the directory
+     * @param {String} dirName - full path of the directory to list the contents of
+     * @returns {Array} containing the status of the rmdir operation, status message and either the file contents or null
+     */
+    listAllFiles(dirName) {
+        try {
+            const myFiles = fs.readdirSync(dirName)
+            return [true, 'Able to access [' + dirName + '] and list all content', myFiles]
+        } catch (err) {
+            return [false, 'Unable to list contents of [' + dirName + '] because: ' + err, null]
+        }
+    }
+
+    /**
+     * @function checkFilesystemObjectType
+     * @description Check the type of file system object 
+     * @param {*} fileName - name of the file system object to check
+     * @returns {Array} containing the status of the function, status message and either the file system object type or null
+     */
+    checkFilesystemObjectType(fileName) {
+        try {
+            const myType = fs.statSync(fileName)
+            return [true, 'Able to check [' + fileName + '] and its type', myType]
+        } catch (err) {
+            return [false, 'Unable to check [' + fileName + '] because: ' + err, null]
         }
     }
 }

@@ -100,6 +100,7 @@ class CLIOutput {
             textColor: 'orange',
         }
         // Print out the splash screen
+        console.clear()
         console.log(
             logo(logoConfig)
             .emptyLine()

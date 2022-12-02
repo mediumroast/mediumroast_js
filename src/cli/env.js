@@ -161,8 +161,10 @@ class Environmentals {
             s3User: null,
             s3APIKey: null,
             s3Region: null,
-            s3Source: null,
-            splash: null
+            s3Source: null, // TODO this is deprecated remove after testing
+            splash: null,
+            companyDNS: null
+
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -179,7 +181,7 @@ class Environmentals {
         env.s3User = config.get('s3_settings', 'user')
         env.s3Region = config.get('s3_settings', 'region')
         env.s3APIKey = config.get('s3_settings', 'api_key')
-        env.s3Source = config.get('s3_settings', 'source')
+        env.s3Source = config.get('s3_settings', 'source') // TODO this is deprecated remove after testing
 
         // Setup options with cli settings only
         env.splash = cliArgs.splash

@@ -16,6 +16,8 @@ import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
 import { AddInteraction } from '../src/cli/interactionWizard.js'
 
+import Environmentals from '../src/cli/env.js'
+
 // Globals
 const objectType = 'interaction'
 
@@ -28,10 +30,17 @@ const myCLI = new CLIUtilities(
 )
 const utils = new Utilities(objectType)
 
+const environment = new Environmentals(
+   '2.0',
+   'interaction',
+   'Command line interface for mediumroast.io Interaction objects.',
+   objectType
+)
+
 // Create the environmental settings
-const myArgs = myCLI.parseCLIArgs()
-const myConfig = myCLI.getConfig(myArgs.conf_file)
-const myEnv = myCLI.getEnv(myArgs, myConfig)
+const myArgs = environment.parseCLIArgs()
+const myConfig = environment.getConfig(myArgs.conf_file)
+const myEnv = environment.getEnv(myArgs, myConfig)
 
 // Generate the credential & construct the API Controller
 const myAuth = new Auth(
@@ -184,6 +193,13 @@ if (myArgs.report) {
    }
    const newInteraction = new AddInteraction(myEnv, myApiCtl, myCredential, myCLI)
    const result = await newInteraction.wizard()
+   if(result[0]) {
+      console.log('SUCCESS: Created new interactions in the backend')
+      process.exit(0)
+   } else {
+      console.error('ERROR: Failed to create interaction objects with %d', result[1].status_code)
+      process.exit(-1)
+   }
    if(result[0]) {
       console.log('SUCCESS: Created new interaction in the backend')
       process.exit(0)

@@ -15,6 +15,7 @@ import { Utilities } from '../src/helpers.js'
 import { CLIUtilities } from '../src/cli.js'
 import { CompanyStandalone } from '../src/report/companies.js'
 import AddCompany from '../src/cli/companyWizard.js'
+import Environmentals from '../src/cli/env.js'
 
 // Globals
 const objectType = 'company'
@@ -27,13 +28,20 @@ const myCLI = new CLIUtilities (
    objectType
 )
 
+const environment = new Environmentals(
+   '2.0',
+   'interaction',
+   'Command line interface for mediumroast.io Interaction objects.',
+   objectType
+)
+
 // Construct the Utilities object
 const utils = new Utilities(objectType)
 
 // Create the environmental settings
-const myArgs = myCLI.parseCLIArgs()
-const myConfig = myCLI.getConfig(myArgs.conf_file)
-const myEnv = myCLI.getEnv(myArgs, myConfig)
+const myArgs = environment.parseCLIArgs()
+const myConfig = environment.getConfig(myArgs.conf_file)
+const myEnv = environment.getEnv(myArgs, myConfig)
 
 // Generate the credential & construct the API Controller
 const myAuth = new Auth(
