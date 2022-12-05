@@ -55,7 +55,9 @@ const companyController = new Companies(myCredential)
 const studyController = new Studies(myCredential)
 
 // Predefine the results variable
-let [success, stat, results] = [null, null, null]
+let success = Boolean()
+let stat = Object() || {}
+let results = Array() || []
 
 // Process the cli options
 if (myArgs.report) {
@@ -141,9 +143,11 @@ if (myArgs.report) {
    [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
    // Retrive the interaction by attribute as specified by X
-   const myCLIObj = JSON.parse(myArgs.find_by_x)
-   const toFind = Object.entries(myCLIObj)[0]
-   [success, stat, results] = await apiController.findByX(toFind[0], toFind[1])
+   const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
+   const foundObjects = await apiController.findByX(myKey, myValue)
+   success = foundObjects[0]
+   stat = foundObjects[1]
+   results = foundObjects[2]
 } else if (myArgs.create) {
    // Create objects as defined in a JSON file, see example_data/*.json for examples
    const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)

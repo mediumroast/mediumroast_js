@@ -461,7 +461,7 @@ class AddInteraction {
         )
         if(tmpType[0] === 'Other') {
             const typePrototype = {
-                file_name: {
+                type_name: {
                     consoleString: "type?", 
                     value: interactionType
                 }
@@ -470,7 +470,7 @@ class AddInteraction {
         } else {
             interactionType = tmpType[0]
         }
-        return interactionType
+        return interactionType.type_name
     }
 
     async _mergeResults(controller, interaction, files, company) {
