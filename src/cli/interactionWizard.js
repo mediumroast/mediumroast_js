@@ -364,11 +364,11 @@ class AddInteraction {
             
             // List all files in the directory and process them one at a time
             const allFiles = this.fileSystem.listAllFiles(myDir.dir_name)
-            for(const myIdx in allFiles) {
+            for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
                 const fileName = allFiles[2][myIdx]
                 // Skip files that start with . including present and parent working directories 
-                if(fileName.indexOf('.') === 0) { continue }
+                if(fileName.indexOf('.') === 0) { continue } // TODO check to see if this causes the problem
                 const myContents = await this._uploadFile(myDir.dir_name + '/' + fileName, targetBucket) 
                 myFiles.push(myContents[2])
             }
@@ -449,6 +449,7 @@ class AddInteraction {
                 {name: 'Blog Post'},
                 {name: 'Product Manual'},
                 {name: 'Transcript'},
+                {name: 'About the company'},
                 {name: 'Other'},
             ]
         )
@@ -470,7 +471,7 @@ class AddInteraction {
         let interactionResults = {}
 
         for (const myFile in files) {
-            console.log(chalk.blue.bold(`\tAttempting to create interaction: ${files[myFile].name}.`))
+            console.log(chalk.blue.underline(`\tAttempting to create interaction: ${files[myFile].name}.`))
             let myInteraction = interaction
 
             // Set the interaction_type property
