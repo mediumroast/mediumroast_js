@@ -330,7 +330,7 @@ class AddInteraction {
         }
         const myObjectType = this.fileSystem.checkFilesystemObjectType(fileName)
         if(myObjectType[2].isFile()) {
-            console.log(chalk.blue.bold(`\tUploading [${fileName}] to owning company storage space.`))
+            console.log(chalk.blue.underline(`\tUploading [${fileName}] to owning company storage space.`))
             const [returnedFileName, s3Results] = await this.s3Ops.s3UploadObjs([fileName], targetBucket)
             return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'},myContents]
         } else {
@@ -450,6 +450,7 @@ class AddInteraction {
                 {name: 'Product Manual'},
                 {name: 'Transcript'},
                 {name: 'About the company'},
+                {name: 'Research Paper'},
                 {name: 'Other'},
             ]
         )
