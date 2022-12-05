@@ -330,7 +330,8 @@ class AddInteraction {
         }
         const myObjectType = this.fileSystem.checkFilesystemObjectType(fileName)
         if(myObjectType[2].isFile()) {
-            console.log(chalk.blue.underline(`\tUploading [${fileName}] to owning company storage space.`))
+            process.stdout.write(chalk.blue.bold(`\tUploading -> `))
+            console.log(chalk.blue.underline(`${fileName.slice(0, 72)}...`))
             const [returnedFileName, s3Results] = await this.s3Ops.s3UploadObjs([fileName], targetBucket)
             return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'},myContents]
         } else {
@@ -393,8 +394,11 @@ class AddInteraction {
             myFiles.push(myContents[2])
         }
 
-        return myFiles
+        // An end separator
+        this.output.printLine()
 
+        // Return the result of uploaded files
+        return myFiles
     }
 
     async createInteraction(myInteraction, targetBucket) {
@@ -446,6 +450,7 @@ class AddInteraction {
                 {name: 'US SEC Filing'},
                 {name: 'Patent'},
                 {name: 'Press Release'},
+                {name: 'Announcement'},
                 {name: 'Blog Post'},
                 {name: 'Product Manual'},
                 {name: 'Transcript'},
@@ -461,7 +466,7 @@ class AddInteraction {
                     value: interactionType
                 }
             }
-            interactionType = await this.wutils.doManual(filePrototype)
+            interactionType = await this.wutils.doManual(typePrototype)
         } else {
             interactionType = tmpType[0]
         }
@@ -472,7 +477,8 @@ class AddInteraction {
         let interactionResults = {}
 
         for (const myFile in files) {
-            console.log(chalk.blue.underline(`\tAttempting to create interaction: ${files[myFile].name}.`))
+            process.stdout.write(chalk.blue.bold(`\tCreating interaction -> `))
+            console.log(chalk.blue.underline(`${files[myFile].name.slice(0, 72)}...`))
             let myInteraction = interaction
 
             // Set the interaction_type property
@@ -508,12 +514,12 @@ class AddInteraction {
             myInteraction.reading_time = this.defaultValue
             myInteraction.word_count = this.defaultValue
             myInteraction.page_count = this.defaultValue
-            console.log(chalk.blue.bold(`\tSaving interaction ${myInteraction.name} to mediumroast.io.`))
+            console.log(chalk.blue(`\t\tSaving interaction...`))
             const [createSuccess, createMessage, createResults] = await controller.createObj(myInteraction)
             let linkResults = []
             if (createSuccess) {
                 // TODO revist the linking of studies and companies, these are placeholders for now
-                console.log(chalk.blue.bold(`\tLinking interaction ${myInteraction.name} to ${company}.`))
+                console.log(chalk.blue(`\t\tLinking interaction to company -> ${company.name}`))
                 linkResults = await this._linkInteractionToCompany(company, myInteraction)
                 // const [success, msg, intLinkStudy] = this._linkInteractionToStudy(myStudy, interaction) 
             }
