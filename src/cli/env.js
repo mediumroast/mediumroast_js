@@ -95,10 +95,6 @@ class Environmentals {
                 'Find object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
             )
             .option(
-                '--create <file.json>',
-                'Add objects to the backend by specifying a JSON file'
-            )
-            .option(
                 '--update <JSON>',
                 'Update an object from the backend by specifying the object\'s id and value to update in JSON'
             )

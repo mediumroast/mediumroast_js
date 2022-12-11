@@ -19,22 +19,22 @@ class ArchivePackage {
      * @todo Look at the logic in mr_backup to determine what can be pulled into this class 
      */
     constructor(packageName) {
-        this.packageName = packageName ? packageName : null
+        this.packageName = packageName
     }
 
     /**
      * @async
      * @function createZIPArchive
      * @description Create a ZIP package from a source directory
-     * @param {Sting} sourceDirectory - the full path to directory where the ZIP package will be stored
+     * @param {String} sourceDirectory - the full path to directory where the ZIP package will be stored
      * @returns {Array} containing the status of the create operation, status message and null 
      */
     async createZIPArchive(sourceDirectory) {
         try {
             const zipPackage = new zip()
-            zipPackage.addLocalFolder(sourceDirectory)
-            zipPackage.writeZip(this.packageName)
-            return [true, `SUCCESS: Created [${outputFile}] successfully`, null]
+            await zipPackage.addLocalFolder(sourceDirectory)
+            await zipPackage.writeZip(this.packageName)
+            return [true, `SUCCESS: Created [${this.packageName}] successfully`, null]
         } catch (e) {
             return [false, `ERROR: Something went wrong. [${e}]`, null]
         }

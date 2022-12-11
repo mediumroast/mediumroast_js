@@ -4,7 +4,7 @@
  * @file output.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.1.0
+ * @version 2.1.1
  */
 
 // Import required modules
@@ -12,7 +12,8 @@ import Table from 'cli-table'
 import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
-import { Utilities } from '../helpers.js'
+// import { Utilities } from '../helpers.js' // TODO Delete this as it is no longer needed
+import FilesystemOperators from './filesystem.js'
 
 class CLIOutput {
     /**
@@ -25,7 +26,7 @@ class CLIOutput {
     constructor(env, objectType) {
         this.env = env
         this.objectType = objectType
-        this.utils = new Utilities(objectType)
+        this.fileSystem = new FilesystemOperators()
     }
 
     /**
@@ -52,7 +53,6 @@ class CLIOutput {
             head: ['Id', 'Name', 'Description'],
             colWidths: [5, 40, 90]
         })
-
         for (const myObj in objects) {
             table.push([
                 objects[myObj].id,
@@ -68,7 +68,7 @@ class CLIOutput {
         const fileName = 'Mr_' + this.objectType + '.csv'
         const myFile = this.env.outputDir + '/' + fileName
         const csv = Parser.parse(objects)
-        this.utils.saveTextFile(myFile, csv)
+        this.fileSystem.saveTextFile(myFile, csv)
     }
 
     // TODO add error checking via try catch

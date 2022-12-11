@@ -140,6 +140,26 @@ function restoreObjects (fileName, apiController) {
         } else {
             console.error("ERROR (%d): " + msg, -1)
         }
+    /*
+    const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
+   if (success) {
+      const jsonData = JSON.parse(rawData)
+      const toRegister = jsonData.map(async element => {
+         const [success, stat, resp] = await apiController.createObj(element)
+         if (await stat.status_code == 200) {
+            console.log(`SUCCESS: Created new [${objectType}] object in the mediumroast.io backend.`)
+         } else {
+            console.error('ERROR (%d): ' + stat.status_msg, stat.status_code)
+         }
+      })
+      const registered = await Promise.all(toRegister)
+      console.log(`SUCCESS: Loaded [${jsonData.length}] objects from file [${myArgs.create}].`)
+      process.exit(0)
+   } else {
+      console.error("ERROR (%d): " + msg, -1)
+      process.exit(-1)
+   }
+    */
 }
 
 // Business end of the CLI

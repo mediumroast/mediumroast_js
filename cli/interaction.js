@@ -6,53 +6,67 @@
  * @file interactions.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.0.0
+ * @version 2.2.0
  */
 
 // Import required modules
-import { Auth, Interactions, Companies, Studies } from '../src/api/mrServer.js'
-import { CLIUtilities } from '../src/cli.js'
-import { Utilities } from '../src/helpers.js'
 import { InteractionStandalone } from '../src/report/interactions.js'
-import { AddInteraction } from '../src/cli/interactionWizard.js'
-
+import AddInteraction from '../src/cli/interactionWizard.js'
 import Environmentals from '../src/cli/env.js'
+import s3Utilities from '../src/cli/s3.js'
+import CLIOutput from '../src/cli/output.js'
+import FilesystemOperators from '../src/cli/filesystem.js'
+import serverOperations from '../src/cli/common.js'
+import ArchivePackage from '../src/cli/archive.js'
 
-// Globals
+// External modules
+import chalk from 'chalk'
+
+// Related object type
 const objectType = 'interaction'
 
-// Construct the CLI object
-const myCLI = new CLIUtilities(
-   '2.0',
-   'interaction',
-   'Command line interface for mediumroast.io Interaction objects.',
-   objectType
-)
-const utils = new Utilities(objectType)
-
+// Environmentals object
 const environment = new Environmentals(
    '2.0',
-   'interaction',
-   'Command line interface for mediumroast.io Interaction objects.',
+   `${objectType}`,
+   `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
 )
+
+// Filesystem object
+const fileSystem = new FilesystemOperators()
 
 // Create the environmental settings
 const myArgs = environment.parseCLIArgs()
 const myConfig = environment.getConfig(myArgs.conf_file)
 const myEnv = environment.getEnv(myArgs, myConfig)
 
-// Generate the credential & construct the API Controller
-const myAuth = new Auth(
-   myEnv.restServer,
-   myEnv.apiKey,
-   myEnv.user,
-   myEnv.secret
-)
-const myCredential = myAuth.login()
-const apiController = new Interactions(myCredential)
-const companyController = new Companies(myCredential)
-const studyController = new Studies(myCredential)
+// Output object
+const output = new CLIOutput(myEnv, objectType)
+
+// S3 object
+const s3 = new s3Utilities(myEnv)
+
+// Common server ops and also check the server
+const serverOps = new serverOperations(myEnv)
+// Checking to see if the server is ready for operations
+const serverReady = await serverOps.checkServer()
+if(serverReady[0]) {
+   console.log(
+      chalk.red.bold(
+         `No objects detected on your mediumroast.io server [${myEnv.restServer}].\n` +
+         `Perhaps you should try to run mr_setup first to create the owning company, exiting.`
+      )
+   )
+   process.exit(-1)
+}
+
+// Assign the controllers based upon the available server
+const companyCtl = serverReady[2].companyCtl
+const interactionCtl = serverReady[2].interactionCtl
+const studyCtl = serverReady[2].studyCtl
+const owningCompany = await serverOps.getOwningCompany(companyCtl)
+const sourceBucket = s3.generateBucketName(owningCompany[2])
 
 // Predefine the results variable
 let success = Boolean()
@@ -62,10 +76,10 @@ let results = Array() || []
 // Process the cli options
 if (myArgs.report) {
    // Retrive the interaction by Id
-   const [int_success, int_stat, int_results] = await apiController.findById(myArgs.report)
+   const [int_success, int_stat, int_results] = await interactionCtl.findById(myArgs.report)
    // Retrive the company by Name
    const companyName = Object.keys(int_results[0].linked_companies)[0]
-   const [comp_success, comp_stat, comp_results] = await companyController.findByName(companyName)
+   const [comp_success, comp_stat, comp_results] = await companyCtl.findByName(companyName)
    // Set the root name to be used for file and directory names in case of packaging
    const baseName = int_results[0].name.replace(/ /g,"_")
    // Set the directory name for the package
@@ -81,10 +95,9 @@ if (myArgs.report) {
       'Mediumroast, Inc.' // The authoring company/org
    )
 
-   
    if(myArgs.package) {
       // Create the working directory
-      const [dir_success, dir_msg, dir_res] = utils.safeMakedir(baseDir + '/interactions')
+      const [dir_success, dir_msg, dir_res] = fileSystem.safeMakedir(baseDir + '/interactions')
       
       // If the directory creations was successful download the interaction
       if(dir_success) {
@@ -98,7 +111,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         await utils.s3DownloadObjs(int_results, myEnv, baseDir + '/interactions')
+         await s3.s3DownloadObjs(int_results, baseDir + '/interactions', sourceBucket)
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -111,16 +124,15 @@ if (myArgs.report) {
 
    // Create the package and cleanup as needed
    if (myArgs.package) {
-      const [package_success, package_stat, package_result] = await utils.createZIPArchive(
-         myEnv.outputDir + '/' + baseName + '.zip',
-         baseDir
-      )
+      const archiver = new ArchivePackage(myEnv.outputDir + '/' + baseName + '.zip')
+      const [package_success, package_stat, package_result] = await archiver.createZIPArchive(baseDir)
       if (package_success) {
          console.log(package_stat)
-         utils.rmDir(baseDir)
+         fileSystem.rmDir(baseDir)
          process.exit(0)
       } else {
          console.error(package_stat, -1)
+         fileSystem.rmDir(baseDir)
          process.exit(-1)
       }
 
@@ -137,40 +149,20 @@ if (myArgs.report) {
    
 } else if (myArgs.find_by_id) {
    // Retrive the interaction by Id
-   [success, stat, results] = await apiController.findById(myArgs.find_by_id)
+   [success, stat, results] = await interactionCtl.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
    // Retrive the interaction by Name
-   [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
+   [success, stat, results] = await interactionCtl.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
    // Retrive the interaction by attribute as specified by X
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
-   const foundObjects = await apiController.findByX(myKey, myValue)
+   const foundObjects = await interactionCtl.findByX(myKey, myValue)
    success = foundObjects[0]
    stat = foundObjects[1]
    results = foundObjects[2]
-} else if (myArgs.create) {
-   // Create objects as defined in a JSON file, see example_data/*.json for examples
-   const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
-   if (success) {
-      const jsonData = JSON.parse(rawData)
-      const toRegister = jsonData.map(async element => {
-         const [success, stat, resp] = await apiController.createObj(element)
-         if (await stat.status_code == 200) {
-            console.log(`SUCCESS: Created new [${objectType}] object in the mediumroast.io backend.`)
-         } else {
-            console.error('ERROR (%d): ' + stat.status_msg, stat.status_code)
-         }
-      })
-      const registered = await Promise.all(toRegister)
-      console.log(`SUCCESS: Loaded [${jsonData.length}] objects from file [${myArgs.create}].`)
-      process.exit(0)
-   } else {
-      console.error("ERROR (%d): " + msg, -1)
-      process.exit(-1)
-   }
 } else if (myArgs.update) {
    const myCLIObj = JSON.parse(myArgs.update)
-   const [success, stat, resp] = await apiController.updateObj(myCLIObj)
+   const [success, stat, resp] = await interactionCtl.updateObj(myCLIObj)
    if(success) {
       console.log(`SUCCESS: processed update to interaction object.`)
       process.exit(0)
@@ -180,7 +172,7 @@ if (myArgs.report) {
    }
 } else if (myArgs.delete) {
    // Delete an object
-   const [success, stat, resp] = await apiController.deleteObj(myArgs.delete)
+   const [success, stat, resp] = await interactionCtl.deleteObj(myArgs.delete)
    if(success) {
       console.log(`SUCCESS: deleted interaction object.`)
       process.exit(0)
@@ -189,13 +181,7 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
-   // pass in credential, apiController, etc.
-   const myApiCtl = {
-      interaction: apiController,
-      company: companyController,
-      study: studyController
-   }
-   const newInteraction = new AddInteraction(myEnv, myApiCtl, myCredential, myCLI)
+   const newInteraction = new AddInteraction(myEnv)
    const result = await newInteraction.wizard()
    if(result[0]) {
       console.log('SUCCESS: Created new interactions in the backend')
@@ -204,17 +190,10 @@ if (myArgs.report) {
       console.error('ERROR: Failed to create interaction objects with %d', result[1].status_code)
       process.exit(-1)
    }
-   if(result[0]) {
-      console.log('SUCCESS: Created new interaction in the backend')
-      process.exit(0)
-   } else {
-      console.error('ERROR: Failed to create interaction object with %d', result[1].status_code)
-      process.exit(-1)
-   }
 } else {
    // Get all objects
-   [success, stat, results] = await apiController.getAll()
+   [success, stat, results] = await interactionCtl.getAll()
 }
 
 // Emit the output
-myCLI.outputCLI(myArgs.output, results, myEnv, objectType)
+output.outputCLI(results, myArgs.output)

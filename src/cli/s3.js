@@ -49,11 +49,11 @@ class s3Utilities {
     * @param {String} targetDirectory - the target location for downloading the objects to
     * @todo this.env.s3Source is incorrect meaning it will fail for now, add srcBucket as argument
     */
-    async s3DownloadObjs (interactions, targetDirectory) {
+    async s3DownloadObjs (interactions, targetDirectory, sourceBucket) {
         for (const interaction in interactions) {
             const objWithPath = interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
-            const myParams = {Bucket: this.env.s3Source, Key: myObj}
+            const myParams = {Bucket: sourceBucket, Key: myObj}
             const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
             const s3Get = await this.s3Controller.getObject(myParams).promise()
             myFile.write(s3Get.Body)

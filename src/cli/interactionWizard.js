@@ -6,7 +6,7 @@
  * @file interactionCLIwizard.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.2.0
  */
 
 
@@ -41,13 +41,8 @@ class AddInteraction {
      * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
      * @param {Object} cli - the already constructed CLI object
      */
-    constructor(env, apiControllers, credential, cli){
+    constructor(env){
         this.env = env
-        this.apiController = apiControllers.interaction // TODO remove as unneeeded
-        this.studyCtl = apiControllers.study // TODO remove as unneeded
-        this.companyCtl = apiControllers.company // TODO remove as unneeded
-        this.credential = credential // TODO if unneeded remove
-        this.cli = cli // TODO if unneeded remove
 
         // Splash screen elements
         this.name = "mediumroast.io Interaction Wizard"
@@ -682,4 +677,4 @@ class AddInteraction {
 
 }
 
-export { AddInteraction }
+export default AddInteraction
