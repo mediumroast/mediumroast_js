@@ -15,7 +15,7 @@ import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
-import CLIOutput from "../output.js"
+import CLIOutput from "./output.js"
 
 class AddCompany {
     /**
@@ -32,16 +32,17 @@ class AddCompany {
      * @param {Object} env - contains key items needed to interact with the mediumroast.io application
      * @param {Object} apiController - an object used to interact with the backend for companies
      * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
-     * @param {Object} cli - the already constructed CLI object
      * @param {String} companyDNSUrl - the url to the company DNS service
+     * @todo replace the company_DNS url with the proper item in the config file
      */
-    constructor(env, apiController, companyDNSUrl="http://cherokee.from-ca.com:16868"){
+    constructor(env, apiController, companyDNSUrl=null){
         this.env = env
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
+        this.env.companyDNS ? this.companyDNS = this.env.companyDNS : this.companyDNS = companyDNSUrl
         this.cred = {
             apiKey: "Not Applicable",
-            restServer: companyDNSUrl,
+            restServer: this.companyDNS,
             user: "Not Applicable",
             secret: "Not Applicable"
         }
@@ -278,34 +279,34 @@ class AddCompany {
         // prototype object to do so.
         let companyPrototype = {
             name: {consoleString: "name", value:this.defaultValue},
+            description: {consoleString: "description", value:this.defaultValue},
+            company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             industry: {consoleString: "industry", value:this.defaultValue},
+            sic: {consoleString: "Standard Industry Code", value:this.defaultValue},
+            sic_description: {consoleString: "Standard Industry Code description", value:this.defaultValue},
             url: {consoleString: "website", value:this.defaultValue},
+            logo_url: {consoleString: "logo url", value:this.defaultValue},
             street_address: {consoleString: "street address", value:this.defaultValue},
             city: {consoleString: "city", value:this.defaultValue},
             state_province: {consoleString: "state or province", value:this.defaultValue},
             country: {consoleString: "country", value:this.defaultValue},
+            zip_postal: {consoleString: "zip or postal code", value:this.defaultValue},
+            longitude: {consoleString: "longitude", value:this.defaultValue},
+            latitude: {consoleString: "latitude", value:this.defaultValue},
             phone: {consoleString: "phone number", value:this.defaultValue},
-            description: {consoleString: "description", value:this.defaultValue},
+            google_maps_url: {consoleString: "URL to locate the company on Google Maps", value:this.defaultValue},
+            google_news_url: {consoleString: "URL to find news about the company on Google", value:this.defaultValue},
+            google_finance_url: {consoleString: "URL to reveal financial insights on Google", value:this.defaultValue},
+            google_patents_url: {consoleString: "URL to locate patent insights on Googles", value:this.defaultValue},
             cik: {consoleString: "SEC Central Index Key", value:this.defaultValue},
             stock_symbol: {consoleString: "stock ticker", value:this.defaultValue},
             stock_exchange: {consoleString: "stock exchange", value:this.defaultValue},
             recent10k_url: {consoleString: "recent form 10-K URL", value:this.defaultValue},
             recent10q_url: {consoleString: "recent form 10-Q URL", value:this.defaultValue},
-            zip_postal: {consoleString: "zip or postal code", value:this.defaultValue},
-            longitude: {consoleString: "longitude", value:this.defaultValue},
-            latitude: {consoleString: "latitude", value:this.defaultValue},
-            logo_url: {consoleString: "logo url", value:this.defaultValue},
             wikipedia_url: {consoleString: "wikipedia url", value:this.defaultValue},
-            sic: {consoleString: "Standard Industry Code", value:this.defaultValue},
-            sic_description: {consoleString: "Standard Industry Code description", value:this.defaultValue},
-            company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             firmographics_url: {consoleString: "firmographics detail URL for public companies", value:this.defaultValue},
             filings_url: {consoleString: "filings URL for public companies", value:this.defaultValue},
             owner_transactions: {consoleString: "URL containing share ownership reports", value:this.defaultValue},
-            google_maps_url: {consoleString: "URL to locate the company on Google Maps", value:this.defaultValue},
-            google_news_url: {consoleString: "URL to find news about the company on Google", value:this.defaultValue},
-            google_finance_url: {consoleString: "URL to reveal financial insights on Google", value:this.defaultValue},
-            google_patents_url: {consoleString: "URL to locate patent insights on Googles", value:this.defaultValue},
         }
 
         // Define an empty company object
@@ -334,15 +335,7 @@ class AddCompany {
         console.log(chalk.blue.bold('Starting location properties selections...'))
         
         // Set the region
-        const tmpRegion = await this.wutils.doCheckbox(
-                "Which region is this interaction associated to?",
-                [
-                    {name: 'Americas', checked: true}, 
-                    {name: 'Europe Middle East, Africa'},
-                    {name: 'Asia, Pacific, Japan'}
-                ]
-            )
-            myCompany.region = tmpRegion[0]
+        myCompany.region = await this.wutils.getRegion()
         this.cutils.printLine()
 
         // Set the role

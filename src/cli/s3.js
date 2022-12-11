@@ -17,17 +17,28 @@ class s3Utilities {
      * downloading from S3, reading files, creating ZIP archives, etc.
      * @constructor
      * @classdesc Construct the S3 controller needed to perform various actions
-     * @param {Object} env - An object containing all needed environmental variables
+     * @param {Object} env - An object containing all needed environmental variables for setting up the S3 controller
      */
      constructor(env) {
-        this.env = env
+        env.s3Server ? 
+            this.s3Server = env.s3Server :
+            this.s3Server = env.server
+        env.s3User ?
+            this.s3User = env.s3User :
+            this.s3User = env.user
+        env.s3APIKey ?
+            this.s3APIKey = env.s3APIKey :
+            this.s3APIKey = env.api_key
+        env.s3Region ?
+            this.s3Region = env.s3Region :
+            this.s3Region = env.region
         this.s3Controller = new AWS.S3({
-            accessKeyId: this.env.user ,
-            secretAccessKey: this.env.api_key,
-            endpoint: this.env.server ,
+            accessKeyId: this.s3User ,
+            secretAccessKey: this.s3APIKey,
+            endpoint: this.s3Server ,
             s3ForcePathStyle: true, // needed with minio?
             signatureVersion: 'v4',
-            region: this.env.region // S3 won't work without the region setting
+            region: this.s3Region // S3 won't work without the region setting
         })
     }
 
@@ -38,11 +49,11 @@ class s3Utilities {
     * @param {String} targetDirectory - the target location for downloading the objects to
     * @todo this.env.s3Source is incorrect meaning it will fail for now, add srcBucket as argument
     */
-    async s3DownloadObjs (interactions, targetDirectory) {
+    async s3DownloadObjs (interactions, targetDirectory, sourceBucket) {
         for (const interaction in interactions) {
             const objWithPath = interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
-            const myParams = {Bucket: this.env.s3Source, Key: myObj}
+            const myParams = {Bucket: sourceBucket, Key: myObj}
             const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
             const s3Get = await this.s3Controller.getObject(myParams).promise()
             myFile.write(s3Get.Body)
@@ -102,6 +113,16 @@ class s3Utilities {
             return [false, `FAILED: unable to delete ${targetBucket}`, err] 
         }
 
+    }
+
+    /**
+     * 
+     * @param {String} objectName 
+     * @returns 
+     */
+    generateBucketName(objectName) {
+        let bucketName = objectName.replace(/[^a-z0-9]/gi,'')
+        return bucketName.toLowerCase()
     }
 }
 

@@ -12,15 +12,14 @@
 // Import required modules
 import { Utilities } from '../src/helpers.js'
 import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
-import CLIOutput from '../src/output.js'
+import CLIOutput from '../src/cli/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
-import s3Utilities from '../src/s3.js'
+import s3Utilities from '../src/cli/s3.js'
 
 import program from 'commander'
 import chalk from 'chalk'
 import ConfigParser from 'configparser'
-import crypto from "node:crypto"
 
 /* 
     -----------------------------------------------------------------------
@@ -69,7 +68,7 @@ function getEnv () {
             api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
             server: "http://cherokee.from-ca.com:9000",
             region: "leo-dc",
-            source: "Unknown"
+            source: "Unknown" // TODO this is deprecated remove after testing
         },
         document_settings: {
             font_type: "Avenir Next",
@@ -197,7 +196,6 @@ const utils = new Utilities("all")
 
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
-    console.clear() // Attempt to clear the screen
     cliOutput.splashScreen(
         "mediumroast.io  Setup Wizard",
         "version 2.0.0",
@@ -313,7 +311,7 @@ cliOutput.outputCLI(myCompanies[2])
 cliOutput.printLine()
 
 // Print out the next steps
-console.log(chalk.blue.bold(`Now that you\'ve performed the initial registration here\'s what\'s next.`))
+console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
 console.log(chalk.blue.bold(`\t1. Create and register additional companies with mr_company --add_wizard.`))
 console.log(chalk.blue.bold(`\t2. Register and add interactions with mr_interaction --add_wizard.`))
 console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic competitive analysis.')
