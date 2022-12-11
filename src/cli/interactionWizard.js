@@ -132,18 +132,32 @@ class AddInteraction {
         return objs[myObjId]
     }
 
-    async _linkInteractionToCompany (myCompany, myInteraction) {
+    async _linkInteractionToCompany (myCompany, myInteraction, companyCtl) {
         // Hash the names
         const intHash = crypto.createHash('sha256', myInteraction.name).digest('hex')
+        let myCurrentCompany = {}
+        // Get the most recent copy of the company from the backend before we proceed
+        const currentCompany = await companyCtl.findById(myCompany.id)
+        if(currentCompany[0]) {
+            myCurrentCompany = currentCompany[2][0]
+        } else {
+            return [
+                false,
+                {status_code: 204, status_msg: "unable to link interaction to company"},
+                null
+            ]
+        }
         
         // Create and update the object link
-        // TODO the linking isn't working correctly
-        myCompany.linked_interactions[myInteraction.name] = intHash
-        const [success, msg, result] = await this.companyCtl.updateObj(JSON.stringify({
-            id: myCompany.id, linked_interactions: myCompany.linked_interactions
-        }))
+        myCurrentCompany.linked_interactions[myInteraction.name] = intHash
+        const linkStatus = await companyCtl.updateObj(
+            {
+                id: myCompany.id, 
+                linked_interactions: myCurrentCompany.linked_interactions
+            }
+        )
 
-        if(success) {
+        if(linkStatus[0]) {
             return [
                 true, 
                 {status_code: 200, status_msg: "successfully linked interaction to company"},
@@ -470,10 +484,10 @@ class AddInteraction {
         } else {
             interactionType = tmpType[0]
         }
-        return interactionType.type_name
+        return interactionType
     }
 
-    async _mergeResults(controller, interaction, files, company) {
+    async _mergeResults(controller, interaction, files, company, companyCtl) {
         let interactionResults = {}
 
         for (const myFile in files) {
@@ -520,7 +534,7 @@ class AddInteraction {
             if (createSuccess) {
                 // TODO revist the linking of studies and companies, these are placeholders for now
                 console.log(chalk.blue(`\t\tLinking interaction to company -> ${company.name}`))
-                linkResults = await this._linkInteractionToCompany(company, myInteraction)
+                linkResults = await this._linkInteractionToCompany(company, myInteraction, companyCtl)
                 // const [success, msg, intLinkStudy] = this._linkInteractionToStudy(myStudy, interaction) 
             }
             this.output.printLine()
@@ -663,7 +677,7 @@ class AddInteraction {
         }
 
         // Merge the file names with the interaction prototype to create the interactions
-        return await this._mergeResults(interactionCtl, myInteraction, myFiles, myCompany)
+        return await this._mergeResults(interactionCtl, myInteraction, myFiles, myCompany, companyCtl)
     }
 
 }
