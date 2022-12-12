@@ -182,7 +182,7 @@ if (myArgs.report) {
    }
 } else if (myArgs.add_wizard) {
    // pass in credential, companyCtl
-   const newCompany = new AddCompany(myEnv, companyCtl, myCredential)
+   const newCompany = new AddCompany(myEnv, companyCtl)
    const result = await newCompany.wizard()
    if(result[0]) {
       console.log('SUCCESS: Created new company in the backend')

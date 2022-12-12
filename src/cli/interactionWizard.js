@@ -69,7 +69,7 @@ class AddInteraction {
         return [choices, objsById]
     }
 
-    async _getCompaniesStudies() {
+    async _getCompaniesStudies(companyCtl, studyCtl) {
         
         // Predefine all variables 
         let state = 0
@@ -82,7 +82,7 @@ class AddInteraction {
         // 3 - all objects fetched
         
         // Get all companies
-        const companyResult = await this.companyCtl.getAll()
+        const companyResult = await companyCtl.getAll()
         
         if(!companyResult[0]){
             msg.status_code = 204
@@ -94,7 +94,7 @@ class AddInteraction {
         }
 
         // Get all studies
-        const studyResult = await this.studyCtl.getAll()
+        const studyResult = await studyCtl.getAll()
         if(!studyResult[0]){
             if(msg.status_code === 200){
                 msg.status_code = 206
@@ -270,12 +270,12 @@ class AddInteraction {
         return myInteraction
     }
 
-    async discoverObjects(prototype){
+    async discoverObjects(prototype, companyCtl, studyCtl){
         let myCompany = {}
         let myStudy = {}
         let myInteraction = {}
         // First fetch key objects
-        const [state, msg, myObjs] = await this._getCompaniesStudies()
+        const [state, msg, myObjs] = await this._getCompaniesStudies(companyCtl, studyCtl)
 
         // Able to fetch companies so we can at least enable this automated step
         if(state === 1){
@@ -456,13 +456,18 @@ class AddInteraction {
                 {name: 'Frequently Asked Questions'},
                 {name: 'White Paper'},
                 {name: 'Case Study'},
-                {name: 'US SEC Filing'},
+                {name: 'Public Company Filing'},
+                {name: 'Annual Report'},
                 {name: 'Patent'},
                 {name: 'Press Release'},
                 {name: 'Announcement'},
                 {name: 'Blog Post'},
                 {name: 'Product Manual'},
+                {name: 'Product Data Sheet'},
+                {name: 'Product Overview'},
+                {name: 'Customer Interview Transcript'},
                 {name: 'Transcript'},
+                {name: 'News Article'},
                 {name: 'About the company'},
                 {name: 'Research Paper'},
                 {name: 'Other'},
@@ -652,7 +657,7 @@ class AddInteraction {
         
         // Perform automated Company and Study object discovery
         console.log(chalk.blue.bold('Discovering relevant mediumroast.io objects.'))
-        const [autoSuccess, autoMsg, myObjs] = await this.discoverObjects(interactionPrototype)
+        const [autoSuccess, autoMsg, myObjs] = await this.discoverObjects(interactionPrototype, companyCtl, studyCtl)
         if(autoSuccess) {
             // Assign results if automatic discovery was successful
             myInteraction = myObjs.interaction

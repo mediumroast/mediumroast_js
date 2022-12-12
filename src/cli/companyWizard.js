@@ -31,7 +31,6 @@ class AddCompany {
      * @classdesc Construct the object to execute the company wizard
      * @param {Object} env - contains key items needed to interact with the mediumroast.io application
      * @param {Object} apiController - an object used to interact with the backend for companies
-     * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
      * @param {String} companyDNSUrl - the url to the company DNS service
      * @todo replace the company_DNS url with the proper item in the config file
      */
