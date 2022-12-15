@@ -72,15 +72,15 @@ class WizardUtils {
                     continue
                 }
             }
-            // TODO check to see if the length of setting is more than the console line lenght and if so truncate
+            const myMessage = `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?'
             await inquirer
                 .prompt([
                     {
                         name: setting,
                         type: 'input',
-                        message: `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?',
+                        message: myMessage,
                         default() {
-                            return prototype[setting].value
+                            return prototype[setting].value 
                         }
                     }
                 ])
@@ -176,7 +176,19 @@ class WizardUtils {
             }
         }
     }
+
+    async getRegion () {
+        const tmpRegion = await this.doCheckbox(
+            "Which region is this company associated to?",
+            [
+                {name: 'Americas', checked: true}, 
+                {name: 'Europe Middle East, Africa'},
+                {name: 'Asia, Pacific, Japan'}
+            ]
+        )
+        return tmpRegion[0]
+    }
         
 }
 
-export { WizardUtils }
+export default WizardUtils
