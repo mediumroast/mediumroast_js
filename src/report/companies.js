@@ -116,7 +116,7 @@ class CompanySection {
                 this.patentRow(),
                 this.newsRow(),
                 this.addressRow(),
-                this.util.basicRow('Region', this.util.regions[this.company.region]),
+                this.util.basicRow('Region', this.company.region),
                 this.util.basicRow('Phone', this.company.phone),
                 this.util.basicRow('Type', this.companyType),
                 this.stockSymbolRow(),
@@ -197,7 +197,7 @@ class CompanySection {
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Score', true)]
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Percent Similar', true)]
         for (const comparison in myComparison) {
             myRows.push(
                 this.util.basicComparisonRow(
@@ -229,8 +229,65 @@ class CompanySection {
             this.util.makeHeading2('Comparison Table'),
             myTable
         ]
+    }
 
+    makeCompetiorsDOCX(competitors, isPackage){
+        let competitivePages = []
+        let totalReadingTime = null
+        for (const myComp in competitors) {
+            const competitor = competitors[myComp]
+            const comp = new CompanySection(competitor.company)
+            const interact = new InteractionSection(
+                [competitor.mostSimilar.interaction, competitor.leastSimilar.interaction],
+                competitor.company.name,
+                'Company'
+            )
+            // Compute reading time
+            totalReadingTime += parseInt(competitor.mostSimilar.interaction.reading_time) + parseInt(competitor.leastSimilar.interaction.reading_time)
+            const firmographicsTable = comp.makeFirmographicsDOCX() 
+            const myRows = [
+                this.util.basicTopicRow('Name', 'Percent Similar', 'Category', true),
+                this.util.basicTopicRow(
+                    competitor.mostSimilar.name, 
+                    competitor.mostSimilar.score, 
+                    'Most Similar'),
+                this.util.basicTopicRow(
+                    competitor.leastSimilar.name, 
+                    competitor.leastSimilar.score, 
+                    'Least Similar'),
+            ]
+            const summaryTable = new docx.Table({
+                columnWidths: [60, 20, 20],
+                rows: myRows,
+                width: {
+                    size: 100,
+                    type: docx.WidthType.PERCENTAGE
+                }
+            })
+            competitivePages.push(
+                this.util.makeHeadingBookmark2(`Firmographics for: ${competitor.company.name}`),
+                firmographicsTable,
+                this.util.makeHeadingBookmark2('Table for most/least similar interactions'),
+                summaryTable,
+                this.util.makeHeadingBookmark2('Interaction descriptions'),
+                ...interact.makeDescriptionsDOCX(),
+                this.util.makeHeadingBookmark2('Interaction summaries'),
+                ...interact.makeReferencesDOCX(isPackage)
+            )
 
+        }
+
+        return [
+            this.util.pageBreak(),
+            this.util.makeHeadingBookmark1('Competitive Content'),
+            this.util.makeParagraph(
+                'For the competitive companies compared, by the mediumroast.io, additional data is provided per competitor ' +
+                'including firmographics, most/least similar interaction table, most/least similar interaction descriptions, ' +
+                'and most/least similar interaction summaries.\r\r' +
+                `Note that the total estimated reading time for all competitive most/least similar interactions is ${totalReadingTime} minutes.`
+            ),
+            ...competitivePages
+        ]
     }
 }
 
@@ -245,14 +302,16 @@ class CompanyStandalone {
      * @param {Object} company - the company object to be reported on
      * @param {Array} interactions - the interactions associated to the company
      * @param {String} creator - the author of the report
+     * @param {Object} competitors - the associated competitors for this company
      * @param {*} authorCompany - the company of the report author
      */
-    constructor(company, interactions, creator, authorCompany) {
+    constructor(company, interactions, competitors, creator, authorCompany) {
         this.objectType = 'Company'
         this.creator = creator
         this.authorCompany = authorCompany
         this.title = company.name + ' Company Report'
         this.interactions = interactions
+        this.competitors = competitors
         this.company = company
         this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
         this.introduction = 'The mediumroast.io system automatically generated this document.' +
@@ -308,6 +367,7 @@ class CompanyStandalone {
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),
+            companySection.makeCompetiorsDOCX(this.competitors, isPackage),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
@@ -324,6 +384,11 @@ class CompanyStandalone {
             numbering: this.util.styling.numbering,
             sections: [{
                 properties: {},
+                footers: {
+                    default: new docx.Footer({
+                        children: [this.util.makePageNumber()]
+                    })
+                },
                 children: myDocument,
             }],
         })

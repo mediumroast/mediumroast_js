@@ -72,17 +72,58 @@ const sourceBucket = s3.generateBucketName(owningCompany[2])
 let [success, stat, results] = [null, null, null]
 
 // Process the cli options
+// TODO consider moving this out into at least a separate function to make main clean
 if (myArgs.report) {
    // Retrive the interaction by Id
    const [comp_success, comp_stat, comp_results] = await companyCtl.findById(myArgs.report)
    // Retrive the company by Name
    const interactionNames = Object.keys(comp_results[0].linked_interactions)
+   // Obtain relevant interactions
    let interactions = []
    for (const interactionName in interactionNames) {
       const [mySuccess, myStat, myInteraction] = await interactionCtl.findByName(
          interactionNames[interactionName]
       )
       interactions.push(myInteraction[0])
+   }
+   // Obtain the competitors
+   let competitors = []
+   let competitiveInteractions = []
+   const competitorIds = Object.keys(comp_results[0].comparison)
+   for (const comp in competitorIds) {
+      const competitor = competitorIds[comp]
+      const [compSuccess, compStat, myCompetitor] = await companyCtl.findById(competitor)
+      const [mostSuccess, mostStat, myMost] = await interactionCtl.findByName(
+         comp_results[0].comparison[competitor].most_similar.name
+      )
+      const [leastSuccess, leastStat, myLeast] = await interactionCtl.findByName(
+         comp_results[0].comparison[competitor].least_similar.name
+      )
+      // Format the scores and names
+      const leastScore = String(
+         comp_results[0].comparison[competitor].least_similar.score.toFixed(2) * 100
+      ) + '%'
+      const mostScore = String(
+         comp_results[0].comparison[competitor].most_similar.score.toFixed(2) * 100
+      ) + '%'
+      const leastName = comp_results[0].comparison[competitor].least_similar.name.slice(0,40) + '...'
+      const mostName = comp_results[0].comparison[competitor].most_similar.name.slice(0,40) + '...'
+      competitors.push(
+         {
+            company: myCompetitor[0],
+            mostSimilar: {
+               score: mostScore,
+               name: comp_results[0].comparison[competitor].most_similar.name,
+               interaction: myMost[0]
+            },
+            leastSimilar: {
+               score: leastScore,
+               name: comp_results[0].comparison[competitor].least_similar.name,
+               interaction: myLeast[0]
+            }
+         }
+      )
+      competitiveInteractions.push(myMost[0], myLeast[0])
    }
    // Set the root name to be used for file and directory names in case of packaging
    const baseName = comp_results[0].name.replace(/ /g,"_")
@@ -95,6 +136,7 @@ if (myArgs.report) {
    const docController = new CompanyStandalone(
       comp_results[0], // Company to report on
       interactions, // The interactions associated to the company
+      competitors, // Relevant competitors for the company
       'mediumroast.io barrista robot', // The author
       'Mediumroast, Inc.' // The authoring company/org
    )
@@ -115,6 +157,8 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
+      // Append the competitive interactions on the list and download all
+         interactions = [...interactions, ...competitiveInteractions]
          await s3.s3DownloadObjs(interactions, baseDir + '/interactions', sourceBucket)
       // Else error out and exit
       } else {

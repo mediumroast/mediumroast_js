@@ -99,24 +99,19 @@ class InteractionSection {
         )
 
         // Create the array for the references starting with the introduction
-        let references = [
-            this.util.makeParagraph(
-                'The mediumroast.io system has automatically generated this section.' +
-                ' It includes key metadata from each interaction associated to the object ' + this.objectName +
-                '.  If this report document is produced as a package, instead of standalone, then the' +
-                ' hyperlinks are active and will link to documents on the local folder after the' +
-                ' package is opened.'
-            )
-        ]
-
+        let references = []
+        // Set the variable for the total reading time
+        let totalReadingTime = null
         // Loop over all interactions
         for (const interaction in this.interactions) {
+            // Calculate the aggregate reading time
+            totalReadingTime += parseInt(this.interactions[interaction].reading_time)
             
             // Create the link to the underlying interaction document
             const objWithPath = this.interactions[interaction].url.split('://').pop()
             const myObj = objWithPath.split('/').pop()
             let interactionLink = this.util.makeExternalHyperLink(
-                'Interaction Document', 
+                'Document', 
                 './interactions/' + myObj
             )
             
@@ -132,8 +127,13 @@ class InteractionSection {
                         this.util.makeTextrun('[ '),
                         interactionLink,
                         this.util.makeTextrun(
-                            ' | Creation Date: ' + 
+                            ' | Created on: ' + 
                             this.interactions[interaction].creation_date + 
+                            ' | '
+                        ),
+                        this.util.makeTextrun(
+                            ' Est. Reading Time: ' + 
+                            this.interactions[interaction].reading_time + ' min' + 
                             ' | '
                         ),
                         descriptionsLink,
@@ -151,6 +151,11 @@ class InteractionSection {
                         this.util.makeTextrun(
                             'Creation Date: ' + 
                             this.interactions[interaction].creation_date + 
+                            ' | '
+                        ),
+                        this.util.makeTextrun(
+                            ' Est. Reading Time: ' + 
+                            this.interactions[interaction].reading_time + ' min' + 
                             ' | '
                         ),
                         descriptionsLink,
@@ -183,6 +188,18 @@ class InteractionSection {
                 metadataStrip
             )
         }
+
+        references.splice(0,0,
+            // Section intro
+            this.util.makeParagraph(
+                'The mediumroast.io system automatically generated this section.' +
+                ' It includes key metadata from each interaction associated to the object ' + this.objectName +
+                '.  If this report document is produced as a package, instead of standalone, then the' +
+                ' hyperlinks are active and will link to documents on the local folder after the' +
+                ' package is opened. ' +
+                `Note that the total estimated reading time for all interactions is ${totalReadingTime} minutes.`
+            )
+        )
 
         // Return the built up references
         return references
