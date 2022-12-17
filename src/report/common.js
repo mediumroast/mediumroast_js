@@ -730,7 +730,7 @@ class DOCXUtilities {
      * @todo Sort based upon rank from highest to lowest
      */
      topicTable(topics) {
-        let myRows = [this.basicTopicRow('Keywords', 'Score', 'Rank', true)]
+        let myRows = [this.basicTopicRow('Keywords', 'Term Frequency', 'Rank', true)]
         // TODO When the score and rank are switched the program will fail and will not create a report.
         //      This appears to potentially be bug in docx, but as for now we will have to not change
         //      the code to swap the two columns. Utilmately, the goal would be to swap the columns to
@@ -766,6 +766,16 @@ class DOCXUtilities {
             this.makeHeading1('Introduction'),
             this.makeParagraph(introText)
         ]
+    }
+
+    makePageNumber () {
+        return new docx.Paragraph({
+            children: [
+                new docx.TextRun({
+                    children: ['Page ', docx.PageNumber.CURRENT, ' of ', docx.PageNumber.TOTAL_PAGES],
+                })
+            ]
+        })
     }
 }
 
