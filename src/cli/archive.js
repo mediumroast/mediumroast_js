@@ -50,7 +50,7 @@ class ArchivePackage {
     async extractZIPArchive(targetDirectory) {
         try {
             const zipPackage = new zip(this.packageName)
-            zipPackage.extractAllTo(targetDirectory, true)
+            await zipPackage.extractAllTo(targetDirectory, true, false)
             return [true, `SUCCESS: Extracted [${outputFile}] successfully`, null]
         } catch (e) {
             return [false, `ERROR: Something went wrong. [${e}]`, null]

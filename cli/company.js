@@ -235,6 +235,9 @@ if (myArgs.report) {
       console.error('ERROR: Failed to create company object with %d', result[1].status_code)
       process.exit(-1)
    }
+} else if (myArgs.reset_by_type) {
+   console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
+   process.exit(-1)
 } else {
    [success, stat, results] = await companyCtl.getAll()
 }

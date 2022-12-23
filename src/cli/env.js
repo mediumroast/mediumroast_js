@@ -114,6 +114,10 @@ class Environmentals {
                 '--add_wizard',
                 `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
             )
+            .option(
+                '--reset_by_type <OBJECT_TYPE>',
+                'Reset the status of objects to reprocesses them in the caffeine service.'
+            )
 
             // Ending arguments
             // .argument(
@@ -159,7 +163,8 @@ class Environmentals {
             s3Region: null,
             s3Source: null, // TODO this is deprecated remove after testing
             splash: null,
-            companyDNS: null
+            companyDNS: null,
+            reset: null
 
         }
 
@@ -181,6 +186,9 @@ class Environmentals {
 
         // Setup options with cli settings only
         env.splash = cliArgs.splash
+
+        // Detect if we want to reset a set of objects by their object_type
+        env.reset = cliArgs.reset_by_type
 
         // Return the environmental settings needed for the CLI to operate
         return env

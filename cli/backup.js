@@ -6,7 +6,7 @@
  * @file mr_backup.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.5.0
  */
 
 // Import required modules
@@ -14,11 +14,27 @@ import { Auth, Companies, Interactions, Studies, Users } from '../src/api/mrServ
 import { Utilities } from '../src/helpers.js'
 import ConfigParser from 'configparser'
 import program from 'commander'
+import chalk from 'chalk'
+
+import FilesystemOperators from '../src/cli/filesystem.js' 
+import ArchivePackage from '../src/cli/archive.js'
+import WizardUtils from '../src/cli/commonWizard.js'
+import serverOperations from '../src/cli/common.js'
+
+import * as fs from 'fs'
+
+/* 
+    -----------------------------------------------------------------------
+
+    FUNCTIONS - Key functions needed for MAIN
+
+    ----------------------------------------------------------------------- 
+*/
 
 // Parse the cli options
 function parseCLIArgs() {
     const name = 'mr_backup'
-    const version = '1.0.0'
+    const version = '1.5.0'
     const description = 'A mediumroast.io CLI utility to backup and restore objects.'
     // Define commandline options
     program
@@ -129,138 +145,201 @@ function getEnv(cliArgs, config) {
     return env
 }
 
-function restoreObjects (fileName, apiController) {
-    // perform check to see if objs exist by counting array results using aptController.getAll()
-    let [success, msg, rawData] = utils.readTextFile(fileName)
-        if (success) {
-            const jsonData = JSON.parse(rawData)
-            jsonData.array.forEach(element => {
-                apiController.createObj(jsonData[element])
-            })
-        } else {
-            console.error("ERROR (%d): " + msg, -1)
-        }
-    /*
-    const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
-   if (success) {
-      const jsonData = JSON.parse(rawData)
-      const toRegister = jsonData.map(async element => {
-         const [success, stat, resp] = await apiController.createObj(element)
-         if (await stat.status_code == 200) {
-            console.log(`SUCCESS: Created new [${objectType}] object in the mediumroast.io backend.`)
-         } else {
-            console.error('ERROR (%d): ' + stat.status_msg, stat.status_code)
-         }
-      })
-      const registered = await Promise.all(toRegister)
-      console.log(`SUCCESS: Loaded [${jsonData.length}] objects from file [${myArgs.create}].`)
-      process.exit(0)
-   } else {
-      console.error("ERROR (%d): " + msg, -1)
-      process.exit(-1)
-   }
-    */
+async function restoreObjects (fileName, apiController) {
+    const myFilesystem = new FilesystemOperators()
+    const [success, msg, rawData] = myFilesystem.readTextFile(fileName)
+    if (success) {
+        const jsonData = JSON.parse(rawData)
+        const toRegister = jsonData.map(async element => {
+            let restoredObjs = {}
+            const [success, stat, resp] = await apiController.createObj(element)
+            if (await stat.status_code == 200) {
+                restoredObjs[element.name] = true
+            } else {
+                restoredObjs[element.name] = false
+            }
+            return restoredObjs
+        })
+        const registered = await Promise.all(toRegister)
+        return true
+    } else {
+        return false
+    }
 }
 
-// Business end of the CLI
-const myArgs = parseCLIArgs()
-const myConfig = getConfig(myArgs.conf_file)
-const myEnv = getEnv(myArgs, myConfig)
-const utils = new Utilities('all')
+/**
+ * 
+ * @param {*} apiControllers 
+ * @param {*} myEnv 
+ */
+async function backupObjects(apiControllers, myEnv) {
+    // Construct the file system object
+    const myFilesystem = new FilesystemOperators()
 
-// Generate the credential & construct the API Controllers
-const myAuth = new Auth(
-    myEnv.restServer,
-    myEnv.apiKey,
-    myEnv.user,
-    myEnv.secret
-)
-const myCredential = myAuth.login()
-const compController = new Companies(myCredential)
-const intController = new Interactions(myCredential)
-const studController = new Studies(myCredential)
-// const usersController = new Users(myCredential)
-
-// Check the output directory
-utils.safeMakedir(myEnv.outputDir)
-
-utils.safeMakedir(myEnv.workDir + '/mr_restore') // Working directory for restores
-
-if (myEnv.operation == 'backup') {
     // Create the directory to stage the backup to
-    utils.safeMakedir(myEnv.workDir + '/mr_backup') // Working directory for backup packages
+    myFilesystem.safeMakedir(myEnv.workDir + '/mr_backup') // Working directory for backup packages
+
+    // Provide the user some feedback on what we're about to do
+    process.stdout.write(chalk.blue.bold('Performing backup of all mediumroast.io objects. '))
+
     // Get the data
     const myData = {
-        "companies": await compController.getAll(),
-        "interactions": await intController.getAll(),
-        "studies": await studController.getAll()
+        "companies": await apiControllers.companyCtl.getAll(),
+        "interactions": await apiControllers.interactionCtl.getAll(),
+        "studies": await apiControllers.studyCtl.getAll()
     }
     // Save the data to individual JSON files
     for (const fil in myData) {
-        console.log(myData[fil])
-        const status = utils.saveTextFile(
+        const status = myFilesystem.saveTextFile(
             myEnv.workDir + '/mr_backup/' + fil + '.json',
             JSON.stringify(myData[fil][2])
         )
-        // console.log(status)
-        if (status[0] && myEnv.verbose) {
-            console.log(
-                'SUCCESS: created file [' +
-                myEnv.workDir + '/mr_backup/' + fil + '.json' +
-                '] for all ' + fil + '.'
-            )
-        }
+
     }
     // Create ZIP package and move to backup dir
-    const [zipSuccess, zipMsg, zipResult] = await utils.createZIPArchive(
-        myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_backup/'
-    )
+    const archiver = new ArchivePackage(myEnv.outputDir + '/' + myEnv.backupFile)
+    const [zipSuccess, zipMsg, zipResult] = await archiver.createZIPArchive(myEnv.workDir + '/mr_backup/')
     if (zipSuccess) {
-        console.log('SUCCESS: created backup package [' + myEnv.outputDir + '/' + myEnv.backupFile + '].')
+        console.log(chalk.green.bold(`[Success, created backup package ${myEnv.outputDir + '/' + myEnv.backupFile}]`))
         // Cleanup the working content
-        const [rmSuccess, rmMsg, rmResult] = utils.rmDir(myEnv.workDir + '/mr_backup/')
-        if (rmSuccess && myEnv.verbose) {
-            console.log(
-                'SUCCESS: cleaned up the temporary backup directory [' +
-                myEnv.workDir + '/mr_backup/' + '].'
-            )
-        }
+        const rmSuccess = myFilesystem.rmDir(myEnv.workDir + '/mr_backup/')
     } else {
-        const code = -1
-        console.error('ERROR (%d): Failed to create backup package [' + zipMsg + ']', code)
-        process.exit(code)
+        console.log(chalk.red.bold(`[Unable to create backup package due to ${zipMsg}, exiting.]`))
+        process.exit(-1)
     }
+}
+
+function prepare() {
+    // Business end of the CLI
+    const myArgs = parseCLIArgs()
+    const myConfig = getConfig(myArgs.conf_file)
+    const myEnv = getEnv(myArgs, myConfig)
+
+    // Construct the file system object
+    const myFilesystem = new FilesystemOperators()
+
+    // Check the output directory
+    myFilesystem.safeMakedir(myEnv.outputDir) // Target directory for backup packages
+    myFilesystem.safeMakedir(myEnv.workDir + '/mr_restore/') // Working directory for restores
+
+    // Return the environmental setting
+    return myEnv
+}
+
+async function checkServer(myEnv, operation) {
+    process.stdout.write(chalk.blue.bold('Performing checks to see if the server is ready. '))
+    const serverChecks = new serverOperations(myEnv)
+    const serverReady = await serverChecks.checkServer()
+
+    if(operation === 'backup') {
+        if(serverReady[0]) { // We are looking to ensure that the system is empty without interactions
+            console.log(chalk.red.bold('[No objects detected, exiting]'))
+            process.exit(-1)
+        } else { // We've detected that at least one object has been found on the system so we cannot proceed
+            console.log(chalk.green.bold('[Objects detected, ready.]'))
+            return serverReady
+        }
+    } else if(operation === 'restore') {
+        if(serverReady[0]) { // We are looking to ensure that the system is empty without interactions
+            console.log(chalk.green.bold('[No objects detected, ready]'))
+            return serverReady
+        } else { // We've detected that at least one object has been found on the system so we cannot proceed
+            console.log(chalk.red.bold('[Objects detected, not ready.]'))
+            process.exit(-1)
+        }
+    }
+}
+
+async function getBackup(myEnv) {
+    const myFilesystem = new FilesystemOperators()
+    // Get all of the backup packages in the default backup directory
+    const allFiles = myFilesystem.listAllFiles(myEnv.outputDir)
+    // Construct the wizard utility
+    const wizardUtils = new WizardUtils('all')
+    // Process the individual files and put them into an array of objects
+    let backupFiles = []
+    for(const myIdx in allFiles[2]) {
+        // Set the file name for easier readability
+        const fileName = allFiles[2][myIdx]
+        // Skip files that start with . including present and parent working directories 
+        if(fileName.indexOf('.') === 0) { continue } // TODO check to see if this causes the problem
+        const fileMetadata = fs.statSync(myEnv.outputDir + '/' + fileName)
+        backupFiles.push({name: 'Backup file: ' + fileName + '; Created on: ' + fileMetadata.ctime, value: fileName})
+    }
+    // Prompt the user to pick the backup package
+    const backupFile = await wizardUtils.doCheckbox(
+        "Which backup package would you like to restore from?",
+        backupFiles
+    )
+    // Return the file name of the selected backup package
+    return backupFile[0]
+}
+
+/* 
+    -----------------------------------------------------------------------
+
+    MAIN - Steps below represent the main function of the program
+
+    ----------------------------------------------------------------------- 
+*/
+
+// Prepare the environment for the backup
+const myEnv = prepare()
+
+// Perform a full backup
+if (myEnv.operation == 'backup') {
+    // Check to see if the server is ready for adding interactions
+    const myServerControllers = await checkServer(myEnv, myEnv.operation)
+    await backupObjects(myServerControllers[2], myEnv)
 
 } else if (myEnv.operation == 'restore') {
-    // Add a user prompt to pick pkgs, file system metadata can help the selection
-    // Extract ZIP package
-    utils.extractZIPArchive(myEnv.outputDir + '/' + myEnv.backupFile, myEnv.workDir + '/mr_restore')
+    // Check to see if the server is ready for adding interactions
+    const myServerControllers = await checkServer(myEnv, myEnv.operation)
+
+    // Prompt the user to pick a backup package
+    const myBackup = await getBackup(myEnv)
+
+    // Extract the package to the working directory
+    const archiver = new ArchivePackage(myEnv.outputDir + '/' + myBackup)
+    // NOTE: the zip package does the right thing and unzips the backup package to the working directory, 
+    //      but for some reason it errors out.  So we don't need to worry about the return for now.
+    const archiveResults = await archiver.extractZIPArchive(myEnv.workDir + '/mr_restore/')
+    
     // Restores
-    /* 
-    Ultimately we will want to enable recovery of individual objects this is emulating that logic for now.
-    */
-    const [doUsers, doCompanies, doInteractions, doStudies] = [true, true, true, true] // This is temporary
 
     // User objects
     // if (doUsers) {
     //     restoreObjects(myEnv.workDir + '/mr_restore/users.json')
     // }
 
+    // Define the statuses for each object type to restore
+    let [myCompanies, myInteractions, myStudies] = [true, true, true]
+
+    // 
+    process.stdout.write(chalk.blue.bold(`Restoring objects to mediumroast.io server [${myEnv.restServer}]. `))
+
     // Company objects
-    if (doCompanies) {
-        restoreObjects(myEnv.workDir + '/mr_restore/companies.json')
+    if (myEnv.objectType == 'companies' || myEnv.objectType == 'all' ) {
+        myCompanies = await restoreObjects(myEnv.workDir + '/mr_restore/companies.json', myServerControllers[2].companyCtl)
     }
 
     // Interaction objects
-    if (doInteractions) {
-        restoreObjects(myEnv.workDir + '/mr_restore/interactions.json')
+    if (myEnv.objectType == 'interactions' || myEnv.objectType == 'all' ) {
+        myInteractions = await restoreObjects(myEnv.workDir + '/mr_restore/interactions.json', myServerControllers[2].interactionCtl)
     }
 
     // Study objects
-    if (doStudies) {
-        restoreObjects(myEnv.workDir + '/mr_restore/studies.json')
+    if (myEnv.objectType == 'studies' || myEnv.objectType == 'all' ) {
+        myStudies = await restoreObjects(myEnv.workDir + '/mr_restore/studies.json', myServerControllers[2].studyCtl)
     }
 
     // Cleanup the working files
-    utils.rmDir(myEnv.workDir + '/mr_restore/')
+    const myFilesystem = new FilesystemOperators()
+    myFilesystem.rmDir(myEnv.workDir + '/mr_restore/')
+
+    // Provide a response to the user
+    myCompanies && myStudies && myInteractions ? 
+        console.log(chalk.green.bold(`[Success, restored object backup]`)) :
+        console.log(chalk.red.bold(`[Failed, unable to restore object backup]`))
+
 }
