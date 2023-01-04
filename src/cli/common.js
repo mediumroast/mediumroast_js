@@ -85,11 +85,13 @@ class serverOperations {
                     companyCtl: companyCtl,
                     interactionCtl: interactionCtl,
                     studyCtl: studyCtl, 
-                    credential: myCredential
+                    credential: myCredential,
+                    owner: null
                 }
             ]
         // Else the server isn't empty
         } else {
+            const owningCompany = await this.getOwningCompany(companyCtl)
             return [
                 false, 
                 {status_code: 503, status_msg: 'server not empty'}, 
@@ -98,7 +100,8 @@ class serverOperations {
                     companyCtl: companyCtl,
                     interactionCtl: interactionCtl,
                     studyCtl: studyCtl, 
-                    credential: myCredential
+                    credential: myCredential,
+                    owner: owningCompany[2]
                 }
             ]
         }

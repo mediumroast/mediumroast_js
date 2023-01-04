@@ -10,6 +10,7 @@
 // Import required modules
 import * as fs from 'fs'
 import AWS from 'aws-sdk'
+import * as progressBar from 'cli-progress'
 
 class s3Utilities {
     /**
@@ -111,6 +112,44 @@ class s3Utilities {
             return [true, `SUCCESS: deleted ${targetBucket}`, myBucket] 
         } catch (err) {
             return [false, `FAILED: unable to delete ${targetBucket}`, err] 
+        }
+
+    }
+
+    /**
+     * @function s3DownloadBucket
+     * @description Download a bucket in an S3 object store
+     * @param {String} targetDirectory - the directory to store the bucket contents to
+     * @param {String} sourceBucket - the name of the bucket
+     * @param {Boolean} isCLI - set to true by default, and when true enables a progress bar on the command line 
+     * @returns 
+     */
+    async s3DownloadBucket (targetDirectory, sourceBucket, isCLI=true) {
+        // Setup the bucket parameters
+        const listParams = {Bucket: sourceBucket}
+        try {  
+            // call S3 to list objects in the bucket
+            const myBucketContents = await this.s3Controller.listObjects(listParams).promise()
+            const myObjs = myBucketContents.Contents
+            const totalObjs = myObjs.length
+            const myProgress = new progressBar.SingleBar(
+                {format: '\tArchive progress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+                progressBar.Presets.rect
+            )
+            if (isCLI) {myProgress.start(totalObjs, 0)}
+            for (const objIdx in myObjs) {
+                if (!myObjs[objIdx].Key){ continue } // For blank entries should they exist
+                const myObj = myObjs[objIdx].Key
+                const getParams = {Bucket: sourceBucket, Key: myObj}
+                const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
+                const s3Get = await this.s3Controller.getObject(getParams).promise()
+                myFile.write(s3Get.Body)
+                if (isCLI) {myProgress.increment()}
+            }
+            if (isCLI) {myProgress.stop()}
+            return [true, `SUCCESS: saved contents for ${sourceBucket}`, null] 
+        } catch (err) {
+            return [false, `FAILED: unable to delete ${sourceBucket}`, err] 
         }
 
     }

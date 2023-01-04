@@ -10,8 +10,6 @@
  */
 
 // Import required modules
-import { Auth, Companies, Interactions, Studies, Users } from '../src/api/mrServer.js'
-import { Utilities } from '../src/helpers.js'
 import ConfigParser from 'configparser'
 import program from 'commander'
 import chalk from 'chalk'
@@ -33,7 +31,7 @@ import * as fs from 'fs'
 
 // Parse the cli options
 function parseCLIArgs() {
-    const name = 'mr_backup'
+    const name = 'backup'
     const version = '1.5.0'
     const description = 'A mediumroast.io CLI utility to backup and restore objects.'
     // Define commandline options

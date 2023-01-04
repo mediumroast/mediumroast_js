@@ -111,6 +111,10 @@ class Environmentals {
                 'An additional switch used with --report to generate a ZIP package that includes the interaction'
             )
             .option(
+                '--experimental',
+                'An additional switch used with --report to enable experimental charting for reporting. Requires Apache e-charts server.'
+            )
+            .option(
                 '--add_wizard',
                 `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
             )
@@ -164,7 +168,9 @@ class Environmentals {
             s3Source: null, // TODO this is deprecated remove after testing
             splash: null,
             companyDNS: null,
-            reset: null
+            reset: null,
+            experimental: null,
+            echartsSever: null
 
         }
 
@@ -177,6 +183,7 @@ class Environmentals {
         // Set up additional parameters from config file
         env.workDir = config.get('DEFAULT', 'working_dir')
         env.companyDNS = config.get('DEFAULT', 'company_dns_server')
+        env.echartsSever = config.get('DEFAULT', 'echarts_server')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')
@@ -189,6 +196,9 @@ class Environmentals {
 
         // Detect if we want to reset a set of objects by their object_type
         env.reset = cliArgs.reset_by_type
+
+        // Enable experimental charting for reports
+        env.reset = cliArgs.experimental
 
         // Return the environmental settings needed for the CLI to operate
         return env
