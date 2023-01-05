@@ -10,7 +10,7 @@
 // Import required modules
 import * as fs from 'fs'
 import AWS from 'aws-sdk'
-import * as progressBar from 'cli-progress'
+import * as progress from 'cli-progress'
 
 class s3Utilities {
     /**
@@ -41,6 +41,10 @@ class s3Utilities {
             signatureVersion: 'v4',
             region: this.s3Region // S3 won't work without the region setting
         })
+        this.progressBar = new progress.SingleBar(
+            {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+            progress.Presets.rect
+        )
     }
 
     /**
@@ -64,19 +68,23 @@ class s3Utilities {
     /**
      * @function s3UploadObjs
      * @description Upload objects to a target bucket on an S3 compatible object store
-     * @param {Array} interactions - an array/list of file names
+     * @param {Array} objs - an array/list of file names
      * @param {String} targetBucket - the bucket to upload the content to
      */
-    async s3UploadObjs (interactions, targetBucket) {
+    async s3UploadObjs (objs, targetBucket, isCLI=false) {
         // Process through each interaction file
-        for(const interaction in interactions){
-            if(!interactions[interaction]){ continue } // Skip if there is an empty entry in the Array
-            const myKey = interactions[interaction].split('/') // split to get to the file name
-            const myBody = fs.createReadStream(interactions[interaction]) // open and read the file
+        const totalObjs = objs.length
+        if (isCLI) {this.progressBar.start(totalObjs, 0)}
+        for(const myObj in objs){
+            if(!objs[myObj]){ continue } // Skip if there is an empty entry in the Array
+            const myKey = objs[myObj].split('/') // split to get to the file name
+            const myBody = fs.createReadStream(objs[myObj]) // open and read the file
             const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody} // setup the key elements to talk to S3
             const s3Put = await this.s3Controller.putObject(myParams).promise() // Put the object
-            return [myKey[myKey.length - 1], s3Put] // return the file name and the result of the put
+            if (!isCLI) {return [myKey[myKey.length - 1], s3Put]} // return the file name and the result of the put
+            if (isCLI) {this.progressBar.increment()}
         }
+        if (isCLI) {this.progressBar.stop()}
     }
 
     /**
@@ -117,14 +125,14 @@ class s3Utilities {
     }
 
     /**
-     * @function s3DownloadBucket
+     * @function s3ArchiveBucket
      * @description Download a bucket in an S3 object store
      * @param {String} targetDirectory - the directory to store the bucket contents to
      * @param {String} sourceBucket - the name of the bucket
      * @param {Boolean} isCLI - set to true by default, and when true enables a progress bar on the command line 
      * @returns 
      */
-    async s3DownloadBucket (targetDirectory, sourceBucket, isCLI=true) {
+    async s3ArchiveBucket (targetDirectory, sourceBucket, isCLI=true) {
         // Setup the bucket parameters
         const listParams = {Bucket: sourceBucket}
         try {  
@@ -132,11 +140,7 @@ class s3Utilities {
             const myBucketContents = await this.s3Controller.listObjects(listParams).promise()
             const myObjs = myBucketContents.Contents
             const totalObjs = myObjs.length
-            const myProgress = new progressBar.SingleBar(
-                {format: '\tArchive progress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
-                progressBar.Presets.rect
-            )
-            if (isCLI) {myProgress.start(totalObjs, 0)}
+            if (isCLI) {this.progressBar.start(totalObjs, 0)}
             for (const objIdx in myObjs) {
                 if (!myObjs[objIdx].Key){ continue } // For blank entries should they exist
                 const myObj = myObjs[objIdx].Key
@@ -144,9 +148,9 @@ class s3Utilities {
                 const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
                 const s3Get = await this.s3Controller.getObject(getParams).promise()
                 myFile.write(s3Get.Body)
-                if (isCLI) {myProgress.increment()}
+                if (isCLI) {this.progressBar.increment()}
             }
-            if (isCLI) {myProgress.stop()}
+            if (isCLI) {this.progressBar.stop()}
             return [true, `SUCCESS: saved contents for ${sourceBucket}`, null] 
         } catch (err) {
             return [false, `FAILED: unable to delete ${sourceBucket}`, err] 

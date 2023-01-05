@@ -15,7 +15,6 @@ import program from 'commander'
 import chalk from 'chalk'
 import FilesystemOperators from '../src/cli/filesystem.js' 
 import serverOperations from '../src/cli/common.js'
-import Environmentals from '../src/cli/env.js'
 import s3Utilities from '../src/cli/s3.js'
 
 // console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
@@ -127,7 +126,7 @@ function getEnv(cliArgs, config) {
 
     // Set up additional parameters from command line switches
     env.outputDir = cliArgs.output_dir
-    env.archiveDir = env.outputDir + '/bucket'
+    env.archiveDir = env.outputDir + '/contents'
     env.s3Metadata = env.outputDir + '/s3_meta.json'
     env.operation = cliArgs.operation
     env.verbose = cliArgs.verbose
@@ -154,7 +153,7 @@ function prepare() {
 }
 
 async function checkServer(myEnv) {
-    process.stdout.write(chalk.blue.bold('Performing checks to see if the server is ready. '))
+    process.stdout.write(chalk.blue.bold('Performing checks to see if the mediumroast.io server is ready. '))
     const serverChecks = new serverOperations(myEnv)
     const serverReady = await serverChecks.checkServer()
 
@@ -182,7 +181,6 @@ const myEnv = prepare()
 // S3 controller object
 const s3 = new s3Utilities(myEnv)
 
-
 if (myEnv.operation == 'archive') {
     // Check to see if the server is ready for adding interactions
     const myServer = await checkServer(myEnv)
@@ -194,19 +192,66 @@ if (myEnv.operation == 'archive') {
         owner: myOwner
     }
     console.log(chalk.blue.bold(`Preparing to archive bucket [${myS3Meta.bucket}] to [${myEnv.archiveDir}]` ))
-    await s3.s3DownloadBucket(myEnv.archiveDir, myS3Meta.bucket)
+    await s3.s3ArchiveBucket(myEnv.archiveDir, myS3Meta.bucket)
 
     // Save the metadata
     const myFilesystem = new FilesystemOperators()
-    const metaFile = myEnv.outputDir + '/archive_meta.json'
     process.stdout.write(chalk.blue.bold(`Saving archive metadata ` ))
-    const saveResults = myFilesystem.saveTextFile(metaFile, JSON.stringify(myS3Meta))
+    const saveResults = myFilesystem.saveTextFile(myEnv.s3Metadata, JSON.stringify(myS3Meta))
     if(saveResults[0]) {
-        console.log(chalk.green.bold(`[Saved data to ${metaFile}]`))
+        console.log(chalk.green.bold(`[Saved data to ${myEnv.s3Metadata}]`))
     } else {
-        console.log(chalk.red.bold(`[Unable to save data to ${metaFile}] due to ${saveResults[1]}`))
+        console.log(chalk.red.bold(`[Unable to save data to ${myEnv.s3Metadata} due to ${saveResults[1]}]`))
     }
 
 } else if (myEnv.operation == 'unarchive') {
-    await s3.s3UploadBucket(myEnv.archiveDir, myEnv.s3Bucket)
+    const myFilesystem = new FilesystemOperators()
+
+    // Check to see if the archival directory exists
+    let allFiles = null
+    process.stdout.write(chalk.blue.bold(`Checking and reading the source archive directory ` ))
+    const archiveCheck = myFilesystem.checkFilesystemObject(myEnv.archiveDir)
+    if (archiveCheck[0]) {
+        allFiles = myFilesystem.listAllFiles(myEnv.archiveDir)
+        console.log(chalk.green.bold(`[Read directory ${myEnv.archiveDir}]`))
+    } else {
+        console.log(chalk.red.bold(`[Directory ${myEnv.archiveDir} does not exist, exiting.]`))
+        process.exit(-1)
+    }
+
+    // Check to see if the archival metadata exists
+    let myMetadata = null
+    process.stdout.write(chalk.blue.bold(`Checking for and reading archive metadata ` ))
+    const metaCheck = myFilesystem.checkFilesystemObject(myEnv.s3Metadata)
+    if (metaCheck[0]) {
+        myMetadata = JSON.parse(myFilesystem.readTextFile(myEnv.s3Metadata)[2])
+        console.log(chalk.green.bold(`[File ${myEnv.s3Metadata} read]`))
+    } else {
+        console.log(chalk.red.bold(`[File ${myEnv.s3Metadata} does not exist, exiting.]`))
+        process.exit(-1)
+    }
+
+    // Create the target bucket before we ingest objects
+    process.stdout.write(chalk.blue.bold(`Creating target bucket ` ))
+    const bucketResult = await s3.s3CreateBucket(myMetadata.bucket)
+    if (bucketResult[0]) {
+        console.log(chalk.green.bold(`[Bucket ${myMetadata.bucket} created]`))
+    } else {
+        console.log(chalk.red.bold(`[Bucket ${myMetadata.bucket} cannot be created due to [${bucketResult[2]}] exiting.]`))
+        process.exit(-1)
+    }
+
+    // Upload all objects to the target bucket
+    console.log(chalk.blue.bold(`Uploading objects to target bucket ${myMetadata.bucket}.` ))
+    let sourceObjs = []
+    for(const myIdx in allFiles[2]) {
+        // Set the file name for easier readability
+        const fileName = allFiles[2][myIdx]
+        // Skip files that start with . including present and parent working directories 
+        if(fileName.indexOf('.') === 0) { continue }
+        // Finally add the object to the list to process
+        sourceObjs.push(myEnv.archiveDir + '/' + fileName)
+    }
+    // Upload
+    await s3.s3UploadObjs(sourceObjs, myMetadata.bucket, true)
 }

@@ -371,6 +371,7 @@ class AddInteraction {
                 console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
                 myFiles = await this.getFiles(targetBucket) // TODO test this
             }
+
             
             // List all files in the directory and process them one at a time
             const allFiles = this.fileSystem.listAllFiles(myDir.dir_name)
@@ -378,7 +379,7 @@ class AddInteraction {
                 // Set the file name for easier readability
                 const fileName = allFiles[2][myIdx]
                 // Skip files that start with . including present and parent working directories 
-                if(fileName.indexOf('.') === 0) { continue } // TODO check to see if this causes the problem
+                if(fileName.indexOf('.') === 0) { continue }
                 const myContents = await this._uploadFile(myDir.dir_name + '/' + fileName, targetBucket) 
                 myFiles.push(myContents[2])
             }
