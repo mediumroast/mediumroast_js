@@ -2,6 +2,27 @@
 
 import axios from "axios"
 import * as fs from 'fs'
+import * as path from 'path'
+
+function _transformForBubble(objData) {
+    let chartData = []
+    for(const obj in objData){
+        const objName = objData[obj].name
+        const mostSimilar = (objData[obj].most_similar.score * 100).toFixed(2)
+        const leastSimilar = (objData[obj].least_similar.score * 100).toFixed(2)
+        chartData.push([mostSimilar, leastSimilar, objName])
+    }
+    return chartData
+}
+
+async function _downloadImage(url, dir, filename) {
+    const myFullPath = path.resolve(dir, filename)
+    const myConfig = {
+        responseType: 'stream'
+    }
+    const resp = await axios.get(url, myConfig)
+    resp.data.pipe(fs.createWriteStream(myFullPath))
+}
 
 async function _postToChartServer(jsonObj, server) {
     const myURL = server
@@ -14,47 +35,127 @@ async function _postToChartServer(jsonObj, server) {
         const resp = await axios.post(myURL, jsonObj, myHeaders)
         return [true, {status_code: resp.status, status_msg: resp.statusText}, resp.data]
     } catch (err) {
-        return [false, err, err.response.data]
+        return [false, err, err.response]
     }
 
 }
 
-async function bubbleChart (chartFile='/Users/mihay42/tmp/chart.png') {
+async function bubbleChart (objData, chartServer, dir='/Users/mihay42/tmp', chartFile='bubble_chart.png') {
 // async function bubbleChart (elements, env, chartFile='/Users/mihay42/tmp/chart.png') {
-    const myData = [
-        [87.15, 71.10, 71.93, "Savonix"],
-        [80.71, 50.41 , 75.87, "PrecivityAD"],
-        [81.11 , 54.99, 68.18, "Neurotrack Technologies, Inc."],
-        [100.00, 100.00, 100.00, "uMethod"]
-      ]
-    let chartData = {
-        "type": "png",
-        "width": 600,
-        "height": 400,
-        "base64": false,
-        "download": false,
-        "option": {
-            "backgroundColor": "#fff",
-            "animation": false,
-            "xAxis": {
-              "type": "value",
+    const myData = _transformForBubble(objData)
+    let myChart = {
+        title: {
+            text: "Competitive Landscape",
+            textStyle: {
+                color: '#47798C',
+                fontFamily: 'Avenir Next',
+                fontWeight: 'bold',
+                fontSize: 15
             },
-            "yAxis": {
-              "type": "value"
+            left: '5%',
+            top: '2%'
+        },
+        textStyle: {
+            fontFamily: "Avenir Next",
+            fontWeight: 'light',
+            color: '#6b6c6b',
+            fontSize: 13
+        },
+        imageWidth: 600,
+        imageHeight: 500,
+        backgroundColor: "#0f0d0e",
+        color: "#47798c",
+        animation: false,
+        xAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: "#374246",
+                    width: 1,
+                    opacity: 0.95,
+                    type: "solid"
+                }
             },
-            "series": [
-              {
-                "data": myData,
-                "type": "scatter",
-              }
-            ]
-          }
+            splitNumber: 2,
+            name: "Most similar score",
+            nameLocation: "center",
+            nameGap: 35,
+            nameTextStyle: {
+                color: 'rgba(71,121,140, 0.7)',
+                fontFamily: 'Avenir Next',
+                fontSize: 12
+            },
+            axisLabel: {
+                color: 'rgb(149,181,192, 0.6)',
+                fontFamily: 'Avenir Next',
+                fontSize: 10
+            },
+            show: true,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    type: "dashed",
+                    color: "#374246",
+                    width: 0.5
+                }
+            },
+        },
+        yAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: "#374246",
+                    width: 1,
+                    opacity: 0.95,
+                    type: "solid"
+                }
+            },
+            nameGap: 35,
+            splitNumber: 2,
+            name: "Least similar score",
+            nameLocation: "center",
+            nameTextStyle: {
+                color: 'rgba(71,121,140, 0.7)',
+                fontFamily: 'Avenir Next',
+                fontSize: 12
+            },
+            axisLabel: {
+                color: 'rgb(149,181,192, 0.6)',
+                fontFamily: 'Avenir Next',
+                fontSize: 10
+            },
+            show: true,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    type: "dashed",
+                    color: "#374246",
+                    width: 0.5
+                },
+                scale: true
+            },
+        },
+        "series": [
+            {
+                name: "bubble",
+                data: myData,
+                type: "scatter",
+                symbolSize: [30,30],
+                itemStyle: {
+                    borderColor: 'rgb(149,181,192, 0.9)',
+                    borderWidth: 1,
+                    
+                },
+                label: {
+                    show: true,
+                    formatter: "{@[2]}",
+                    position: "left",
+                    color: 'rgb(149,181,192, 1)',
+                }
+            }
+        ]
     }
-    const myFile = fs.createWriteStream(chartFile)
-    const putResult = await _postToChartServer(chartData, 'http://mediumroast-01:3000')
-    console.log(putResult)
-    myFile.write(putResult[2])
-
+    const putResult = await _postToChartServer(myChart, chartServer)
+    const imageURL = chartServer + '/' + putResult[2].filename
+    await _downloadImage(imageURL, dir, chartFile)
 }
 
 const myServer = 'http://mediumroast-01:3000'
@@ -92,7 +193,8 @@ const myData = {
         "most_similar": { 
             "name": "Life Insurance Industry Invests In Cognitive Health To Tackle The Future Of Aging", 
             "score": 0.8111998438835144 
-        }, "least_similar": { 
+        }, 
+        "least_similar": { 
             "name": "Lets Talk Neurotransmitters - Neurotrack", 
             "score": 0.5499856472015381 
         } 
@@ -100,9 +202,15 @@ const myData = {
     "1": {
         "name": "uMETHOD",
         "similarity": 1.0,
-        "role": "Owner"
+        "role": "Owner",
+        "most_similar": {  
+            "score": 1
+        }, 
+        "least_similar": {  
+            "score": 1
+        } 
 
     }
 }
 
-await bubbleChart()
+await bubbleChart(myData, myServer)
