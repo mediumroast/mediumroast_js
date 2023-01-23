@@ -41,6 +41,8 @@ async function _postToChartServer(jsonObj, server) {
 }
 
 async function bubbleChart (objData, chartServer, dir='/Users/mihay42/tmp', chartFile='bubble_chart.png') {
+    // TODO Build variables for chart title, and axis names
+    // TODO Adapt to env as opposed to discrete variables
 // async function bubbleChart (elements, env, chartFile='/Users/mihay42/tmp/chart.png') {
     const myData = _transformForBubble(objData)
     let myChart = {
@@ -158,8 +160,40 @@ async function bubbleChart (objData, chartServer, dir='/Users/mihay42/tmp', char
     await _downloadImage(imageURL, dir, chartFile)
 }
 
+async function radarChart (objData, chartServer, dir='/Users/mihay42/tmp', chartFile='radar_chart.png') {
+    let myChart = {
+        title: {
+            text: "Overall Interaction Quality",
+            textStyle: {
+                color: '#47798C',
+                fontFamily: 'Avenir Next',
+                fontWeight: 'bold',
+                fontSize: 15
+            },
+            left: '5%',
+            top: '2%'
+        },
+        textStyle: {
+            fontFamily: "Avenir Next",
+            fontWeight: 'light',
+            color: '#6b6c6b',
+            fontSize: 13
+        },
+        imageWidth: 800,
+        imageHeight: 500,
+        backgroundColor: "#0f0d0e",
+        color: "#47798c",
+        animation: false,
+        radar: objData.radar,
+        series: objData.series
+    }
+    const putResult = await _postToChartServer(myChart, chartServer)
+    const imageURL = chartServer + '/' + putResult[2].filename
+    await _downloadImage(imageURL, dir, chartFile)
+}
+
 const myServer = 'http://mediumroast-01:3000'
-const myData = { 
+const bubbleData = { 
     "2": { 
         "name": "Savonix", 
         "similarity": 0.7193503975868225, 
@@ -213,4 +247,36 @@ const myData = {
     }
 }
 
-await bubbleChart(myData, myServer)
+const radarData = {
+    radar: {
+        indicator: [
+          { name: 'Total', max: 30 },
+          { name: 'Product Documents', max: 6 },
+          { name: 'News & Press Releases', max: 6 },
+          { name: 'Social Media', max: 6 },
+          { name: 'Case Studies', max: 6 },
+          { name: 'White Papers', max: 6 }
+        ]
+      },
+    series: [
+        {
+            name: 'Quality Status',
+            type: 'radar',
+            data:[{
+                value: [25, 3, 5, 6, 6, 1],
+                name: 'All Interactions'
+            }],
+            itemStyle: {
+                color: '#47798c'
+            },
+              areaStyle: {
+                opacity: 0.45
+            }
+        }
+    ],
+}
+
+await bubbleChart(bubbleData, myServer)
+await radarChart(radarData, myServer)
+// TODO transform into a module that can be called via the reporting CLI
+// TODO implement the radar chart

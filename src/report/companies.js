@@ -12,6 +12,7 @@ import docx from 'docx'
 import boxPlot from 'box-plot'
 import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
+import { CompanyDashbord } from './dashboard.js'
 
 class CompanySection {
     /**
@@ -303,7 +304,7 @@ class CompanyStandalone {
      * @param {Array} interactions - the interactions associated to the company
      * @param {String} creator - the author of the report
      * @param {Object} competitors - the associated competitors for this company
-     * @param {*} authorCompany - the company of the report author
+     * @param {String} authorCompany - the company of the report author
      */
     constructor(company, interactions, competitors, creator, authorCompany) {
         this.objectType = 'Company'
@@ -344,6 +345,8 @@ class CompanyStandalone {
             this.company.name,
             this.objectType
         )
+        const env = {}
+        const myDash = new CompanyDashbord(env)
 
         // Construct the interactions section
         // const interactionsSection = new InteractionSection(this.interactions)
@@ -380,17 +383,37 @@ class CompanyStandalone {
             company: this.authorCompany,
             title: this.title,
             description: this.description,
+            background: {
+                color: '0F0D0E',
+            },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,
-            sections: [{
-                properties: {},
-                footers: {
-                    default: new docx.Footer({
-                        children: [this.util.makePageNumber()]
-                    })
+            sections: [
+                {
+                    properties: {
+                        page: {
+                            size: {
+                                orientation: docx.PageOrientation.LANDSCAPE,
+                            },
+                        },
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makePageNumber()]
+                        })
+                    },
+                    children: [myDash.makeDashboard({}, {})],
                 },
-                children: myDocument,
-            }],
+                {
+                    properties: {},
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makePageNumber()]
+                        })
+                    },
+                    children: myDocument,
+                }
+            ],
         })
 
         // Persist the document to storage
