@@ -2,14 +2,18 @@
  * A class for common functions for all CLIs.
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file common.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 
 // Import required modules
 import { Auth, Companies, Interactions, Studies } from '../api/mrServer.js'
+import axios from 'axios'
+import * as fs from 'fs'
+import * as path from 'path'
+import FilesystemOperators from './filesystem.js'
 
 class serverOperations {
     /**
@@ -108,5 +112,51 @@ class serverOperations {
     }
 }
 
-export default serverOperations
+class Utilities {
+    /**
+     * @async
+     * @function downloadImage
+     * @description When given a full URL to an image download the image to the defined location
+     * @param {String} url - the full URL to the targeted image
+     * @param {String} dir - the target directory to save the file to
+     * @param {String} filename - the name of the file to save the image to
+     */
+    async downloadImage(url, directory, filename) {
+        const myFullPath = path.resolve(directory, filename)
+        const myConfig = {
+            responseType: 'stream'
+        }
+        const resp = await axios.get(url, myConfig)
+        resp.data.pipe(fs.createWriteStream(myFullPath))
+    }
+
+    /**
+     * @async
+     * @function getLogo
+     * @description Download the logo for a company if defined otherwise write a <company_name>.nologo file 
+     * @param {Object} company - the company object which will have the logo downloaded
+     * @param {String} directory - target directory to store the logo
+     * @todo since docx doesn't yet suppor SVG formatted images this code remains, but isn't called
+     */
+    async getLogo(company, directory) {
+        // Construct the file system object
+        const fileSystem = new FilesystemOperators()
+        // Set the base file name
+        let baseFileName = company.logo_url.split('/').pop()
+        // Download the company logo if available
+        if (company.logo_url !== 'Unknown') {
+            // Get the file name from the logo_url
+            // Perform the download
+            await this.downloadImage(company.logo_url, directory, baseFileName)
+        // Create a control file that says the logo isn't available
+        } else {
+            baseFileName = baseFileName + '.nologo'
+            fileSystem.saveTextFile(directory + '/' + baseFileName + '.nologo', "Unknown")
+        }
+        // Return the base file name
+        return directory + '/' + baseFileName
+    }
+}
+
+export {serverOperations, Utilities}
 

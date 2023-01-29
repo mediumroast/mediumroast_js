@@ -30,6 +30,7 @@ class DOCXUtilities {
      * @param {Float} textFontSize 
      * @param {String} textFontColor
      * @todo when we get to HTML report generation for the front end we will rename this class and create a new one for HTML
+     * @todo adopt settings.js
      */
     constructor (font, fontSize, textFontSize, textFontColor) {
         this.font = font ? font : 'Avenir Next'
@@ -262,6 +263,60 @@ class DOCXUtilities {
                 reference: 'bullet-styles',
                 level: level
             }
+        })
+    }
+
+    /**
+     * @function makeHeader
+     * @description Generate a header with a logo, document type and author as three fields
+     * @param {String} logoFile 
+     * @param {String} documentType 
+     * @param {String} documentAuthor 
+     * @todo handle <filename>.nologo case
+     */
+    makeHeader(itemName, documentType, landscape=false, documentAuthor="By mediumroast.io") {
+        let separator = "\t".repeat(3)
+        if (landscape) { separator = "\t".repeat(4)}
+        return new docx.Header({
+            children: [
+                new docx.Paragraph({
+                    alignment: docx.AlignmentType.CENTER,
+                    children: [
+                        new docx.TextRun({
+                            children: [itemName],
+                            font: this.font,
+                            size: 20,
+                            color: "41A6CE"
+                        }),
+                        new docx.TextRun({
+                            children: [separator, documentType],
+                            font: this.font,
+                            size: 20
+                        }),
+                        new docx.TextRun({
+                            children: [separator, documentAuthor],
+                            font: this.font,
+                            size: 20
+                        })
+                    ],
+                }),
+                // new docx.Paragraph({
+                //     children: [
+                //         new docx.TextRun({
+                //             children: [documentType],
+                //             break: 0
+                //         })
+                //     ],
+                // }),
+                // new docx.Paragraph({
+                //     children: [
+                //         new docx.TextRun({
+                //             children: [documentAuthor],
+                //             break: 0
+                //         })
+                //     ],
+                // }),
+            ],
         })
     }
 

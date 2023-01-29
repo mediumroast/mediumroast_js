@@ -198,7 +198,7 @@ class Environmentals {
         env.reset = cliArgs.reset_by_type
 
         // Enable experimental charting for reports
-        env.reset = cliArgs.experimental
+        env.experimental = cliArgs.experimental
 
         // Return the environmental settings needed for the CLI to operate
         return env

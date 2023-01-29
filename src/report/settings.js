@@ -6,12 +6,15 @@ const docxSettings = {
         dashFontSize: 9,
         tableFontSize: 8,
         titleFontSize: 18,
+        metricFontTitleSize: 11,
         metricFontSize: 48,
         tableBorderSize: 8,
         tableBorderStyle: docx.BorderStyle.SINGLE,
         noBorderStyle: docx.BorderStyle.NIL,
         tableMargin: docx.convertInchesToTwip(0.1),
-        font: "Avenir Next"
+        font: "Avenir Next",
+        metricFont: "Avenir Next Heavy"
+
     },
     coffee: {
         tableBorderColor: "4A7E92", // Light Blue

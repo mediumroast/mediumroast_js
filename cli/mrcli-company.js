@@ -16,7 +16,7 @@ import Environmentals from '../src/cli/env.js'
 import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import serverOperations from '../src/cli/common.js'
+import { serverOperations } from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
@@ -130,13 +130,14 @@ if (myArgs.report) {
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
-   let fileName = process.env.HOME + '/Documents/' + comp_results[0].name.replace(/ /g,"_") + '.docx'
+   let fileName = process.env.HOME + '/Documents/' + baseName + '.docx'
    
    // Set up the document controller
    const docController = new CompanyStandalone(
       comp_results[0], // Company to report on
       interactions, // The interactions associated to the company
       competitors, // Relevant competitors for the company
+      myEnv,
       'mediumroast.io barrista robot', // The author
       'Mediumroast, Inc.' // The authoring company/org
    )
@@ -167,8 +168,12 @@ if (myArgs.report) {
       }
 
    }
+
    // Create the document
    const [report_success, report_stat, report_result] = await docController.makeDOCX(fileName, myArgs.package)
+
+   
+
 
    // Create the package and cleanup as needed
    if (myArgs.package) {

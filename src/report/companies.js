@@ -13,6 +13,8 @@ import boxPlot from 'box-plot'
 import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
+import FilesystemOperators from '../cli/filesystem.js'
+import { Utilities as CLIUtilities } from '../cli/common.js' 
 
 class CompanySection {
     /**
@@ -23,13 +25,17 @@ class CompanySection {
      * @constructor
      * @classdesc To operate this class the constructor should be passed a single company object.
      * @param {Object} company - The company object to generate the section(s) for
+     * @todo Since the ingestion function detects the companyType this property is deprecated and should be removed
+     * @todo separate this class into a separate file
      */
-    constructor(company) {
+    constructor(company, baseDir) {
         this.company = company
         this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
             this.companyType = 'Private' :
             this.companyType = 'Public'
         this.util = new DOCXUtilities()
+        this.baseDir = baseDir
+        this.baseName = company.name.replace(/ /g,"_")
     }
 
     // Create a URL on Google maps to search for the address
@@ -232,20 +238,42 @@ class CompanySection {
         ]
     }
 
-    makeCompetiorsDOCX(competitors, isPackage){
+    async makeCompetiorsDOCX(competitors, isPackage){
+        const myUtils = new CLIUtilities()
         let competitivePages = []
         let totalReadingTime = null
         for (const myComp in competitors) {
+            // Filter in the competitor
             const competitor = competitors[myComp]
+
+            // Construct the object to create company related document sections
             const comp = new CompanySection(competitor.company)
+
+            // Create a section for the most/least similar interactions
             const interact = new InteractionSection(
-                [competitor.mostSimilar.interaction, competitor.leastSimilar.interaction],
+                [
+                    competitor.mostSimilar.interaction, 
+                    competitor.leastSimilar.interaction
+                ],
                 competitor.company.name,
                 'Company'
             )
+            
+            // Download the company logo
+            // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
+            //      use the logos in the document for now.  When SVG support is available this feature
+            //      can be enabled.
+            // await myUtils.getLogo(competitor.company, this.baseDir + '/images')
+
             // Compute reading time
-            totalReadingTime += parseInt(competitor.mostSimilar.interaction.reading_time) + parseInt(competitor.leastSimilar.interaction.reading_time)
+            totalReadingTime += 
+                parseInt(competitor.mostSimilar.interaction.reading_time) + 
+                parseInt(competitor.leastSimilar.interaction.reading_time)
+
+            // Create the company firmographics table
             const firmographicsTable = comp.makeFirmographicsDOCX() 
+
+            // Assemble the rows and table
             const myRows = [
                 this.util.basicTopicRow('Name', 'Percent Similar', 'Category', true),
                 this.util.basicTopicRow(
@@ -265,6 +293,8 @@ class CompanySection {
                     type: docx.WidthType.PERCENTAGE
                 }
             })
+
+            // Construct this competitive pages
             competitivePages.push(
                 this.util.makeHeadingBookmark2(`Firmographics for: ${competitor.company.name}`),
                 firmographicsTable,
@@ -278,14 +308,12 @@ class CompanySection {
 
         }
 
+        // Return the document fragment
         return [
             this.util.pageBreak(),
             this.util.makeHeadingBookmark1('Competitive Content'),
             this.util.makeParagraph(
-                'For the competitive companies compared, by the mediumroast.io, additional data is provided per competitor ' +
-                'including firmographics, most/least similar interaction table, most/least similar interaction descriptions, ' +
-                'and most/least similar interaction summaries.\r\r' +
-                `Note that the total estimated reading time for all competitive most/least similar interactions is ${totalReadingTime} minutes.`
+                `For compared companies additional data is provided including firmographics, most/least similar interaction table, most/least similar interaction descriptions, and most/least similar interaction summaries.\r\rTotal estimated reading time for all source most/least similar interactions is ${totalReadingTime} minutes.`
             ),
             ...competitivePages
         ]
@@ -304,13 +332,18 @@ class CompanyStandalone {
      * @param {Array} interactions - the interactions associated to the company
      * @param {String} creator - the author of the report
      * @param {Object} competitors - the associated competitors for this company
-     * @param {String} authorCompany - the company of the report author
+     * @param {String} author - the company of the report author
+     * @todo Rename this class as report and rename the file as companyDocx.js
+     * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
-    constructor(company, interactions, competitors, creator, authorCompany) {
+    constructor(company, interactions, competitors, env, creator, author) {
         this.objectType = 'Company'
+        this.env = env
         this.creator = creator
-        this.authorCompany = authorCompany
+        this.author = author
         this.title = company.name + ' Company Report'
+        this.baseName = company.name.replace(/ /g,"_")
+        this.baseDir = this.env.workDir + '/' + this.baseName
         this.interactions = interactions
         this.competitors = competitors
         this.company = company
@@ -321,25 +354,55 @@ class CompanyStandalone {
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.util = new DOCXUtilities()
+        this.fileSystem = new FilesystemOperators()
         this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
 
+    // 
+    // Local functions
+    // 
+
+    // Basic operations to prepare for report and package creation
+    _initialize() {
+        // 
+        const subdirs = ['interactions', 'images']
+        for(const myDir in subdirs) {
+            this.fileSystem.safeMakedir(this.baseDir + '/' + subdirs[myDir])
+        }
+    }
+
+    // 
+    // External functions
+    // 
+
     /**
      * @async
      * @function makeDocx
      * @description Generate and save a DOCX report for a Company object
-     * @param {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param {String} fileName - parameter is deprecated, but kept for compatibility
      * @param {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} The result of the writeReport function that is an Array
+     * @todo remove the file name from mrcli-company and this module
      */
     async makeDOCX(fileName, isPackage) {
-        // If fileName isn't specified create a default
-        fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.company.name.replace(/ /g,"_") + '.docx'
+        // Initialize the working directories to create a package and/or download relevant images
+        this._initialize()
 
+        // TODO when we remove fileName we can uncomment the item below
+        // const fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
+        fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
+
+        // Download the logo
+        // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
+        //      use the logos in the document for now.  When SVG support is available this feature
+        //      can be enabled.
+        // const myUtils = new CLIUtilities()
+        // const logoFilename = await myUtils.getLogo(this.company, this.baseDir + '/images')
+        
         // Construct the company section
-        const companySection = new CompanySection(this.company)
+        const companySection = new CompanySection(this.company, this.baseDir)
         const interactionSection = new InteractionSection(
             this.interactions, 
             this.company.name,
@@ -370,7 +433,7 @@ class CompanyStandalone {
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),
-            companySection.makeCompetiorsDOCX(this.competitors, isPackage),
+            await companySection.makeCompetiorsDOCX(this.competitors, isPackage),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
@@ -380,7 +443,7 @@ class CompanyStandalone {
         // Construct the document
         const myDoc = new docx.Document ({
             creator: this.creator,
-            company: this.authorCompany,
+            company: this.author,
             title: this.title,
             description: this.description,
             background: {
@@ -397,6 +460,9 @@ class CompanyStandalone {
                             },
                         },
                     },
+                    headers: {
+                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard', true)
+                    },
                     footers: {
                         default: new docx.Footer({
                             children: [this.util.makePageNumber()]
@@ -406,6 +472,9 @@ class CompanyStandalone {
                 },
                 {
                     properties: {},
+                    headers: {
+                        default: this.util.makeHeader(this.company.name, 'Company comparison detail')
+                    },
                     footers: {
                         default: new docx.Footer({
                             children: [this.util.makePageNumber()]
