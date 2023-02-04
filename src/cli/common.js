@@ -128,6 +128,7 @@ class Utilities {
         }
         const resp = await axios.get(url, myConfig)
         resp.data.pipe(fs.createWriteStream(myFullPath))
+        return myFullPath
     }
 
     /**

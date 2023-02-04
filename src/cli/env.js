@@ -170,8 +170,7 @@ class Environmentals {
             companyDNS: null,
             reset: null,
             experimental: null,
-            echartsSever: null
-
+            echartsServer: null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -181,9 +180,10 @@ class Environmentals {
         cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
 
         // Set up additional parameters from config file
-        env.workDir = config.get('DEFAULT', 'working_dir')
+        env.workDir = process.env.HOME + '/.mediumroast/' + config.get('DEFAULT', 'working_dir')
         env.companyDNS = config.get('DEFAULT', 'company_dns_server')
-        env.echartsSever = config.get('DEFAULT', 'echarts_server')
+        env.echartsServer = config.get('DEFAULT', 'echarts_server')
+        env.theme = config.get('DEFAULT', 'theme')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')

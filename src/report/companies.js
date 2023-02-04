@@ -400,6 +400,14 @@ class CompanyStandalone {
         //      can be enabled.
         // const myUtils = new CLIUtilities()
         // const logoFilename = await myUtils.getLogo(this.company, this.baseDir + '/images')
+
+        // Capture the current date
+        const date = new Date();
+        const preparedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
         
         // Construct the company section
         const companySection = new CompanySection(this.company, this.baseDir)
@@ -408,8 +416,7 @@ class CompanyStandalone {
             this.company.name,
             this.objectType
         )
-        const env = {}
-        const myDash = new CompanyDashbord(env)
+        const myDash = new CompanyDashbord(this.env)
 
         // Construct the interactions section
         // const interactionsSection = new InteractionSection(this.interactions)
@@ -447,7 +454,7 @@ class CompanyStandalone {
             title: this.title,
             description: this.description,
             background: {
-                color: '0F0D0E',
+                color: "0F0D0E",
             },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,
@@ -461,23 +468,29 @@ class CompanyStandalone {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard', true)
+                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard prepared for: ', true)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makePageNumber()]
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate, true)]
                         })
                     },
-                    children: [myDash.makeDashboard({}, {})],
+                    children: [
+                        await myDash.makeDashboard(
+                            this.company, 
+                            this.competitors, 
+                            this.baseDir
+                        )
+                    ],
                 },
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison detail')
+                        default: this.util.makeHeader(this.company.name, 'Company comparison detail prepared for: ')
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makePageNumber()]
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
                         })
                     },
                     children: myDocument,
