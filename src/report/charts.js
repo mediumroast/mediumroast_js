@@ -73,7 +73,6 @@ export async function bubbleChart (
             textStyle: {
                 color: "#" + themeStyle.titleFontColor,
                 fontFamily: generalStyle.font,
-                fontWeight: 'bold',
                 fontSize: generalStyle.chartTitleFontSize
             },
             left: '5%',
@@ -81,7 +80,6 @@ export async function bubbleChart (
         },
         textStyle: {
             fontFamily: generalStyle.font,
-            // fontWeight: 'light',
             color: "#" + themeStyle.titleFontColor,
             fontSize: themeStyle.chartFontSize
         },
@@ -152,7 +150,7 @@ export async function bubbleChart (
                 lineStyle: {
                     type: "dashed",
                     color: themeStyle.chartAxisLineColor,
-                    width: 0.5
+                    width: 0.75
                 },
                 scale: true
             },
@@ -185,66 +183,102 @@ export async function bubbleChart (
     return await cliUtil.downloadImage(imageURL, baseDir + '/images', chartFile)
 }
 
-export async function radarChart (objData, chartServer, dir='/Users/mihay42/tmp', chartFile='radar_chart.png') {
+export async function radarChart (
+    objData, 
+    env,
+    baseDir,
+    chartFile='interaction_radar_chart.png',
+    seriesName="Quality by average",
+    chartTitle="Overall interaction quality by category",
+    dataName="Comparison population",
+) {
+    // Construct the CLIUtilities object
+    const cliUtil = new CLIUtilities()
+
+    // Pick up the settings including those from the theme
+    const generalStyle = docxSettings.general
+    const themeStyle = docxSettings[env.theme]
+
+    const myData = {
+        radar: {
+            shape: 'circle',
+            indicator: [
+              { name: 'Total', max: 30, min: 0 },
+              { name: 'Product Documents', max: 6, min: 0 },
+              { name: 'News & Press Releases', max: 6, min: 0 },
+              { name: 'Social Media', max: 6, min: 0 },
+              { name: 'Case Studies', max: 6, min: 0 },
+              { name: 'White Papers', max: 6, min: 0 }
+            ],
+            axisLine: {
+                lineStyle: {
+                    color: themeStyle.chartAxisLineColor,
+                    width: 1,
+                    opacity: 0.95,
+                    type: "solid"
+                }
+            },
+            splitArea: {
+                show: true,
+                areaStyle: {
+                    color: ['rgba(156,184,200, 0.1)','rgba(156,184,200, 0.09)']
+                }
+            },
+            radius: "75%",
+            center: ["50%","54%"],
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    type: "dashed",
+                    color: [themeStyle.chartAxisLineColor],
+                    width: 0.75
+                }
+            },
+          },
+        series: [
+            {
+                name: seriesName,
+                type: 'radar',
+                data:[{
+                    value: [10, 3, 5, 6, 6, 1], // these should be averages
+                    name: dataName
+                }],
+                itemStyle: {
+                    color: themeStyle.chartSeriesColor,
+                    borderColor: themeStyle.chartSeriesBorderColor,
+                },
+                  areaStyle: {
+                    opacity: 0.45
+                },
+                symbol: 'none'
+            }
+        ],
+    }
     let myChart = {
         title: {
-            text: "Overall Interaction Quality",
+            text: chartTitle,
             textStyle: {
-                color: '#47798C',
-                fontFamily: 'Avenir Next',
-                fontWeight: 'bold',
-                fontSize: 15
+                color: "#" + themeStyle.titleFontColor,
+                fontFamily: generalStyle.heavyFont,
+                fontSize: generalStyle.chartTitleFontSize
             },
             left: '5%',
-            top: '2%'
+            top: '2%',
         },
         textStyle: {
-            fontFamily: "Avenir Next",
-            fontWeight: 'light',
-            color: '#6b6c6b',
-            fontSize: 13
+            fontFamily: generalStyle.font,
+            color: "#" + themeStyle.titleFontColor,
+            fontSize: themeStyle.chartFontSize
         },
         imageWidth: 800,
         imageHeight: 500,
-        backgroundColor: "#0f0d0e",
-        color: "#47798c",
+        backgroundColor: "#" + themeStyle.documentColor,
+        // color: "#47798c",
         animation: false,
-        radar: objData.radar,
-        series: objData.series
+        radar: myData.radar,
+        series: myData.series
     }
-    const putResult = await _postToChartServer(myChart, chartServer)
-    const imageURL = chartServer + '/' + putResult[2].filename
-    await _downloadImage(imageURL, dir, chartFile)
+    const putResult = await _postToChartServer(myChart, env.echartsServer)
+    let imageURL = env.echartsServer  + '/' + putResult[2].filename
+    return await cliUtil.downloadImage(imageURL, baseDir + '/images', chartFile)
 }
-
-const radarData = {
-    radar: {
-        indicator: [
-          { name: 'Total', max: 30 },
-          { name: 'Product Documents', max: 6 },
-          { name: 'News & Press Releases', max: 6 },
-          { name: 'Social Media', max: 6 },
-          { name: 'Case Studies', max: 6 },
-          { name: 'White Papers', max: 6 }
-        ]
-      },
-    series: [
-        {
-            name: 'Quality Status',
-            type: 'radar',
-            data:[{
-                value: [25, 3, 5, 6, 6, 1],
-                name: 'All Interactions'
-            }],
-            itemStyle: {
-                color: '#47798c'
-            },
-              areaStyle: {
-                opacity: 0.45
-            }
-        }
-    ],
-}
-
-// await radarChart(radarData, myServer)
-// TODO transform into a module that can be called via the reporting CLI

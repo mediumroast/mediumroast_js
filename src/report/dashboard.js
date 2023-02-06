@@ -12,7 +12,7 @@ import docx from 'docx'
 import * as fs from 'fs'
 import DOCXUtilities from './common.js'
 import docxSettings from './settings.js'
-import { bubbleChart } from './charts.js'
+import { bubbleChart, radarChart } from './charts.js'
 
 class CompanyDashbord {
     /**
@@ -273,7 +273,8 @@ class CompanyDashbord {
     //     40%      |    40%      |   20%
     // bubble chart | radar chart | nested table for stats
     firstRow (bubbleImage, radarImage, stats) {
-        radarImage = '/Users/mihay42/tmp/radar_chart.png'
+        // console.log(`Bubble chart: [${bubbleImage}]`)
+        // console.log(`Radar chart: [${radarImage}]`)
         // return the row
         return new docx.TableRow({
             children: [
@@ -296,7 +297,6 @@ class CompanyDashbord {
                         top: this.generalStyle.tableMargin
                     },
                     verticalAlign: docx.VerticalAlign.CENTER,
-
                 }),
             ]
         })
@@ -511,11 +511,13 @@ class CompanyDashbord {
     }
 
     insertImage (imageFile, height, width) {
+        console.log(`Chart: [${imageFile}]`)
+        const myFile = fs.readFileSync(imageFile)
         return new docx.Paragraph({
             alignment: docx.AlignmentType.CENTER,
             children: [
                 new docx.ImageRun({
-                    data: fs.readFileSync(imageFile),
+                    data: myFile,
                     transformation: {
                         height: height, // 3 inches
                         width: width
@@ -584,20 +586,33 @@ class CompanyDashbord {
      * @param {*} font
      * @returns 
      * @todo Replace the report/common.js makeParagraph method with this one during refactoring
+     * @todo Add an options object in a future release when refactoring
+     * @todo Review the NOTICE section and at a later date work on all TODOs there
      */
-    makeParagraph (paragraph, size, color, spaceAfter, bold, center, font) {
-        // Note the font size is measured in half points
-        size = 2 * size
+    makeParagraph (
+        paragraph, 
+        size=20, 
+        color="000", 
+        spaceAfter=0, 
+        bold=false, 
+        center=false, 
+        font="Avenir Next", 
+        italics=false, 
+        underline=false
+    ) {
+        size = 2 * size // Font size is measured in half points, multiply by to is needed
         return new docx.Paragraph({
             alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
             children: [
                 new docx.TextRun({
                     text: paragraph,
-                    font: font ? font : this.generalStyle.font,
-                    size: size ? size : 20,
-                    bold: bold ? bold : false, 
-                    break: spaceAfter ? spaceAfter : 0,
-                    color: color ? color : "000",
+                    font: font ? font : "Avenir Next", // Default font: Avenir next
+                    size: size ? size : 20, // Default font size size 10pt or 2 * 10 = 20
+                    bold: bold ? bold : false, // Bold is off by default
+                    italics: italics ? italics : false, // Italics off by default
+                    underline: underline ? underline : false, // Underline off by default
+                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
+                    color: color ? color : "000", // Default color is black 
                 })
             ],
             
@@ -612,27 +627,61 @@ class CompanyDashbord {
      * @returns 
      */
     async makeDashboard(company, competitors, baseDir) {
-        // Find the most similar company
-        const mostSimilarCompany = this._getMostSimilarCompany(
-            company.comparison, 
-            competitors
-        )
         // Create the bubble chart from the company comparisons
         const bubbleChartFile = await bubbleChart(
             company.comparison,
             this.env,
             baseDir
         )
+        // Find the most similar company
+        const mostSimilarCompany = this._getMostSimilarCompany(
+            company.comparison, 
+            competitors
+        )
         // Pull in the relevant interactions from the most similar company
         const mostLeastSimilarInteractions = {
             most_similar: mostSimilarCompany.mostSimilar.interaction,
             least_similar: mostSimilarCompany.leastSimilar.interaction
         }
+        // Create the radard chart from supplied interaction quality data
+        const radarChartFile = await radarChart(
+            {},
+            this.env,
+            baseDir
+        )
+        /**
+         * NOTICE
+         * I believe that there is a potential bug in node.js filesystem module.
+         * This file is needed because otherwise the actual final of the two images
+         * that needs to be inserted into the docx file won't load.  If we create a
+         * scratch file then it will.  Essentially something is off with the last
+         * file created in a series of files, but the second to last file appears ok.
+         * 
+         * Obviously more testing is needed before we approach the node team with something
+         * half baked.  Until then here are some observations:
+         * 1. Unless the file of a given name is present, even if zero bytes, the image data
+         *    will not be put into the file.  If the file name exists then everything works.
+         * 2. Again the last file in a series of files appears to be corrupted and cannot, for
+         *    some odd reason, be read by the docx module and be inserted into a docx file.
+         *    Yet when we look at the file system object within the file system it can be opened
+         *    without any problems.
+         * 
+         * TODOs
+         * 1. Create a separate program that emulates what is done in the mrcli dashboard
+         * 2. Try on multiple OSes
+         * 3. Clearly document the steps and problem encountered
+         * 4. In the separate standalone program try using with and without axios use default http without
+         */
+        const scratchChartFile = await radarChart(
+            {},
+            this.env,
+            baseDir,
+            'scratch_chart.png'
+        )
         // Compute the descriptive statistics for interactions
         const myStats = this._computeInteractionStats(company,competitors)
-        // console.log(mostSimilarCompany)
         let myRows = [
-            this.firstRow(bubbleChartFile, null, myStats),
+            this.firstRow(bubbleChartFile, radarChartFile, myStats),
             this.shellRow("companyDesc", mostSimilarCompany),
             this.shellRow("docDesc", null, mostLeastSimilarInteractions),
         ]
