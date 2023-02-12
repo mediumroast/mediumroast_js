@@ -127,8 +127,8 @@ class Utilities {
         const myConfig = {
             responseType: "stream",
         }
-        const myFilesystem = new FilesystemOperators()
-        const fileResp = myFilesystem.saveTextFile(myFullPath, "")
+        // const myFilesystem = new FilesystemOperators()
+        // const fileResp = myFilesystem.saveTextFile(myFullPath, "")
         try {
             const resp = await axios.get(url, myConfig)
             const imageFile = fs.createWriteStream(myFullPath)

@@ -17,7 +17,7 @@ import chalk from 'chalk'
 import FilesystemOperators from '../src/cli/filesystem.js' 
 import ArchivePackage from '../src/cli/archive.js'
 import WizardUtils from '../src/cli/commonWizard.js'
-import serverOperations from '../src/cli/common.js'
+import {serverOperations} from '../src/cli/common.js'
 
 import * as fs from 'fs'
 

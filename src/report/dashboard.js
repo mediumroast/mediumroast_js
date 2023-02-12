@@ -273,9 +273,6 @@ class CompanyDashbord {
     //     40%      |    40%      |   20%
     // bubble chart | radar chart | nested table for stats
     firstRow (bubbleImage, radarImage, stats) {
-        // console.log(`Bubble chart: [${bubbleImage}]`)
-        // console.log(`Radar chart: [${radarImage}]`)
-        // return the row
         return new docx.TableRow({
             children: [
                 new docx.TableCell({
@@ -510,8 +507,15 @@ class CompanyDashbord {
         })
     }
 
+    /**
+     * 
+     * @param {*} imageFile 
+     * @param {*} height 
+     * @param {*} width 
+     * @returns 
+     * @todo move to common
+     */
     insertImage (imageFile, height, width) {
-        console.log(`Chart: [${imageFile}]`)
         const myFile = fs.readFileSync(imageFile)
         return new docx.Paragraph({
             alignment: docx.AlignmentType.CENTER,
@@ -519,7 +523,7 @@ class CompanyDashbord {
                 new docx.ImageRun({
                     data: myFile,
                     transformation: {
-                        height: height, // 3 inches
+                        height: height,
                         width: width
                     }
                 })
@@ -530,6 +534,7 @@ class CompanyDashbord {
     // Find the closest competitor
     // This uses the Euclidean distantce, given points (x1, y1) and (x2, y2)
     // d = sqrt((x2 - x1)^2 + (y2 - y1)^2) 
+    // TODO we need to adjust the table in the main part of the document to this logic
     _getMostSimilarCompany(comparisons, companies) {
         const x1 = 1 // In this case x1 = 1 and y1 = 1
         const y1 = 1

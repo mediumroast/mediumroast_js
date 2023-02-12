@@ -19,7 +19,7 @@ import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
 
 import CLIOutput from "./output.js"
-import serverOperations from "./common.js"
+import {serverOperations} from "./common.js"
 import s3Utilities from "./s3.js"
 import FilesystemOperators from "./filesystem.js"
 
@@ -342,7 +342,7 @@ class AddInteraction {
             process.stdout.write(chalk.blue.bold(`\tUploading -> `))
             console.log(chalk.blue.underline(`${fileName.slice(0, 72)}...`))
             const [returnedFileName, s3Results] = await this.s3Ops.s3UploadObjs([fileName], targetBucket)
-            return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'},myContents]
+            return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'}, myContents]
         } else {
             myContents.url = this.defaultValue
             return [false, {status_code: 503, status_msg: 'the source is not a file that can be uploaded'}, myContents]
@@ -453,23 +453,25 @@ class AddInteraction {
         const tmpType = await this.wutils.doCheckbox(
             "What kind of interaction is this?",
             [
-                {name: 'General Notes'}, 
-                {name: 'Frequently Asked Questions'},
-                {name: 'White Paper'},
-                {name: 'Case Study'},
+                {name: 'General Notes'}, // Becomes general
+                {name: 'Frequently Asked Questions'}, // Becomes faq
+                {name: 'White Paper'}, // Becomes article
+                {name: 'Case Study'}, // Becomes article
                 {name: 'Public Company Filing'},
                 {name: 'Patent'},
-                {name: 'Press Release'},
-                {name: 'Announcement'},
-                {name: 'Blog Post'},
-                {name: 'Product Document'},
+                {name: 'Press Release'}, // Becomes article
+                {name: 'Blog Post'}, // Becomes social
+                {name: 'Social Media Post(s)'}, // Becomes social
+                {name: 'Product Document'}, // Becomes product/service
+                {name: 'Service Document'}, // Becomes product/service
                 {name: 'Transcript'},
-                {name: 'News Article'},
-                {name: 'About the company'},
-                {name: 'Research Paper'},
+                {name: 'Article'}, // Becomes article
+                {name: 'About the company'}, // Becomes about company
+                {name: 'Research Paper'}, // Becomes article
                 {name: 'Other'},
             ]
         )
+        // TODO we need to debug other
         if(tmpType[0] === 'Other') {
             const typePrototype = {
                 type_name: {

@@ -53,16 +53,19 @@ function parseCLIArgs() {
 function getEnv () {
     return {
         DEFAULT: {
-            rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767", "http://cherokee.from-ca.com:46767"],
+            // rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767", "http://cherokee.from-ca.com:46767"],
+            rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:46767"],
             user: "rflores", // For now we're not going to prompt for this it is a placeholder
             secret: "password", // For now we're not going to prompt for this it is a placeholder
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
             working_dir: "/tmp",
             company_dns_servers: {
                 "http://cherokee.from-ca.com:16767": "http://cherokee.from-ca.com:16868",
-                "http://cherokee.from-ca.com:26767": "http://cherokee.from-ca.com:26868",
+                //"http://cherokee.from-ca.com:26767": "http://cherokee.from-ca.com:26868",
                 "http://cherokee.from-ca.com:46767": "http://cherokee.from-ca.com:46868"
-            }
+            },
+            theme: "coffee",
+            echarts_server: "http://cherokee.from-ca.com:3000"
         },
         s3_settings: {
             user: "medium_roast_io",

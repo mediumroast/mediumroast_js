@@ -227,11 +227,9 @@ class CompanySection {
 
         return [
             this.util.makeParagraph(
-                'The mediumroast.io has compared the content for all companies in the system to ' +
-                this.company.name + '\'s content and discovered that the closest company is ' +
-                topCompanyName + ' acting in the role of a ' + topCompanyRole + '. ' +
-                'Additional detail for other companies ' + this.company.name + ' was compared to are ' +
-                'in the table below.'
+                `The findings from mediumroast.io reveal that ${topCompanyName} is ${this.company.name}'s ` +
+                `closest ${topCompanyRole} in terms of content similarity.  Further information about ` +
+                `${this.company.name}'s  comparison with other companies can be found in the accompanying table.`
             ),
             this.util.makeHeading2('Comparison Table'),
             myTable
@@ -348,6 +346,10 @@ class CompanyStandalone {
         this.competitors = competitors
         this.company = company
         this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
+        /*
+        ChatGPT summary
+        The mediumroast.io system has meticulously crafted this report to provide you with a comprehensive overview of the Company object and its associated interactions. This document features a robust collection of key metadata that provides valuable insights into the company's operations. Furthermore, to enhance the user experience, if this report is part of a package, the hyperlinks within it are designed to be active, linking to various documents within the local folder with just one click after the package is opened. This makes exploring the details of the company a breeze!
+        */
         this.introduction = 'The mediumroast.io system automatically generated this document.' +
             ' It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions.' + 
             '  If this report document is produced as a package, instead of standalone, then the' +
