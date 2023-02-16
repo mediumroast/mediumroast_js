@@ -148,32 +148,17 @@ class CompanySection {
 
         // Using the Euclidean distance find the closest company
         const rankedCompanies = getMostSimilarCompany(comparisons, competitors)
-
         
-
-        // Pluck out the similarity scores to feed them into the blox plot module
-        // const similarityScores = Object.values(comparisons).map(
-        //     (myScore) => {
-        //         return myScore.similarity
-        //     }
-        // )
-        
-
         // const ranges = boxPlot(similarityScores)
         const ranges = boxPlot(rankedCompanies.distances)
-
-        // HERE we're HERE Now we need to adapt the new scores into the mix
-        // Could mean returning things from tools better, and somehow we need
-        // to map the new score into the table and replace the overall 
-        // similarity score.
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
         for (const compare in comparisons) {
             // Rank the tag score using the ranges derived from box plots
-            // if > Q3 then the ranking is High
-            // if in between Q2 and Q3 then the ranking is Medium
-            // if < Q3 then the ranking is Low
+            // if > Q3 then the ranking is Furthest
+            // if in between Q2 and Q3 then the ranking is Nearby
+            // if < Q3 then the ranking is Closest
             let rank = null
             if (rankedCompanies.companyMap[compare] >= ranges.upperQuartile) {
                 rank = 'Furthest'
@@ -250,7 +235,7 @@ class CompanySection {
         ]
     }
 
-    async makeCompetiorsDOCX(competitors, isPackage){
+    async makeCompetitorsDOCX(competitors, isPackage){
         const myUtils = new CLIUtilities()
         let competitivePages = []
         let totalReadingTime = null
@@ -456,7 +441,7 @@ class CompanyStandalone {
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),
-            await companySection.makeCompetiorsDOCX(this.competitors, isPackage),
+            await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],

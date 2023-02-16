@@ -104,10 +104,10 @@ if (myArgs.report) {
       )
       // Format the scores and names
       const leastScore = String(
-         comp_results[0].comparison[competitorIndex].least_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].least_similar.score * 100)
       ) + '%'
       const mostScore = String(
-         comp_results[0].comparison[competitorIndex].most_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].most_similar.score * 100)
       ) + '%'
       const leastName = comp_results[0].comparison[competitorIndex].least_similar.name.slice(0,40) + '...'
       const mostName = comp_results[0].comparison[competitorIndex].most_similar.name.slice(0,40) + '...'
