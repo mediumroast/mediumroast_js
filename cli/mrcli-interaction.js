@@ -16,11 +16,39 @@ import Environmentals from '../src/cli/env.js'
 import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import serverOperations from '../src/cli/common.js'
+import {serverOperations} from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
 import chalk from 'chalk'
+
+// Reset the status of objects for caffiene reprocessing
+async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
+   let interactionResults = {successful: [], failed: []}
+   const myInteractions = await interactionCtl.findByX('interaction_type', interactionType)
+   if(myInteractions[0]) {
+      for(const myInteraction in myInteractions[2]) {
+         const myId = myInteractions[2][myInteraction].id
+         const resetResults = await interactionCtl.updateObj({id: myId, status: objStatus})
+         if(resetResults[0]){
+            interactionResults.successful.push({id: myId, value: objStatus, success: resetResults[0]})
+         } else {
+            interactionResults.failed.push({id: myId, value: objStatus, success: resetResults[0]})
+         }
+      }
+      return [
+         true,
+         {status_code: myInteractions[1].status_code, status_msg: myInteractions[1].status_msg},
+         interactionResults
+      ]
+   } else {
+      return [
+         false,
+         {status_code: myInteractions[1].status_code, status_msg: myInteractions[1].status_msg},
+         null
+      ]
+   }
+}
 
 // Related object type
 const objectType = 'interaction'
@@ -188,6 +216,15 @@ if (myArgs.report) {
       process.exit(0)
    } else {
       console.error('ERROR: Failed to create interaction objects with %d', result[1].status_code)
+      process.exit(-1)
+   }
+} else if (myArgs.reset_by_type) {
+   const resetResponses = await resetStatuses(myArgs.reset_by_type, interactionCtl)
+   if(resetResponses[0]) {
+      console.log(`SUCCESS: Reset status of ${resetResponses[2].successful.length} interactions.`)
+      process.exit(0)
+   } else {
+      console.error(`ERROR: Failed to reset statuses of interactions with type ${myArgs.reset_by_type} and error: %d`, resetResponses[1].status_code)
       process.exit(-1)
    }
 } else {

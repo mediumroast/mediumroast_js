@@ -16,7 +16,7 @@ import Environmentals from '../src/cli/env.js'
 import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import serverOperations from '../src/cli/common.js'
+import { serverOperations } from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
@@ -89,36 +89,39 @@ if (myArgs.report) {
    // Obtain the competitors
    let competitors = []
    let competitiveInteractions = []
-   const competitorIds = Object.keys(comp_results[0].comparison)
-   for (const comp in competitorIds) {
-      const competitor = competitorIds[comp]
-      const [compSuccess, compStat, myCompetitor] = await companyCtl.findById(competitor)
+   const competitorIdxs = Object.keys(comp_results[0].comparison)
+   for (const compIdx in competitorIdxs) {
+      // const competitor = competitorIds[comp]
+      // console.log(comp_results[0].comparison[competitor].name)
+      const competitorIndex = competitorIdxs[compIdx] // Index in the comparison property for the company
+      const competitorName = comp_results[0].comparison[competitorIndex].name // Actual company name
+      const [compSuccess, compStat, myCompetitor] = await companyCtl.findByName(competitorName)
       const [mostSuccess, mostStat, myMost] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitor].most_similar.name
+         comp_results[0].comparison[competitorIndex].most_similar.name
       )
       const [leastSuccess, leastStat, myLeast] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitor].least_similar.name
+         comp_results[0].comparison[competitorIndex].least_similar.name
       )
       // Format the scores and names
       const leastScore = String(
-         comp_results[0].comparison[competitor].least_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].least_similar.score * 100)
       ) + '%'
       const mostScore = String(
-         comp_results[0].comparison[competitor].most_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].most_similar.score * 100)
       ) + '%'
-      const leastName = comp_results[0].comparison[competitor].least_similar.name.slice(0,40) + '...'
-      const mostName = comp_results[0].comparison[competitor].most_similar.name.slice(0,40) + '...'
+      const leastName = comp_results[0].comparison[competitorIndex].least_similar.name.slice(0,40) + '...'
+      const mostName = comp_results[0].comparison[competitorIndex].most_similar.name.slice(0,40) + '...'
       competitors.push(
          {
             company: myCompetitor[0],
             mostSimilar: {
                score: mostScore,
-               name: comp_results[0].comparison[competitor].most_similar.name,
+               name: comp_results[0].comparison[competitorIndex].most_similar.name,
                interaction: myMost[0]
             },
             leastSimilar: {
                score: leastScore,
-               name: comp_results[0].comparison[competitor].least_similar.name,
+               name: comp_results[0].comparison[competitorIndex].least_similar.name,
                interaction: myLeast[0]
             }
          }
@@ -130,13 +133,14 @@ if (myArgs.report) {
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
-   let fileName = process.env.HOME + '/Documents/' + comp_results[0].name.replace(/ /g,"_") + '.docx'
+   let fileName = process.env.HOME + '/Documents/' + baseName + '.docx'
    
    // Set up the document controller
    const docController = new CompanyStandalone(
       comp_results[0], // Company to report on
       interactions, // The interactions associated to the company
       competitors, // Relevant competitors for the company
+      myEnv,
       'mediumroast.io barrista robot', // The author
       'Mediumroast, Inc.' // The authoring company/org
    )
@@ -167,8 +171,12 @@ if (myArgs.report) {
       }
 
    }
+
    // Create the document
    const [report_success, report_stat, report_result] = await docController.makeDOCX(fileName, myArgs.package)
+
+   
+
 
    // Create the package and cleanup as needed
    if (myArgs.package) {
@@ -235,6 +243,9 @@ if (myArgs.report) {
       console.error('ERROR: Failed to create company object with %d', result[1].status_code)
       process.exit(-1)
    }
+} else if (myArgs.reset_by_type) {
+   console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
+   process.exit(-1)
 } else {
    [success, stat, results] = await companyCtl.getAll()
 }

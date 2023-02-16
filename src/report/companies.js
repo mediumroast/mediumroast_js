@@ -12,6 +12,10 @@ import docx from 'docx'
 import boxPlot from 'box-plot'
 import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
+import { CompanyDashbord } from './dashboard.js'
+import FilesystemOperators from '../cli/filesystem.js'
+import { Utilities as CLIUtilities } from '../cli/common.js' 
+import { getMostSimilarCompany } from './tools.js'
 
 class CompanySection {
     /**
@@ -22,13 +26,17 @@ class CompanySection {
      * @constructor
      * @classdesc To operate this class the constructor should be passed a single company object.
      * @param {Object} company - The company object to generate the section(s) for
+     * @todo Since the ingestion function detects the companyType this property is deprecated and should be removed
+     * @todo separate this class into a separate file
      */
-    constructor(company) {
+    constructor(company, baseDir) {
         this.company = company
         this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
             this.companyType = 'Private' :
             this.companyType = 'Public'
         this.util = new DOCXUtilities()
+        this.baseDir = baseDir
+        this.baseName = company.name.replace(/ /g,"_")
     }
 
     // Create a URL on Google maps to search for the address
@@ -134,30 +142,28 @@ class CompanySection {
     }
 
     // Rank supplied topics and return an object that can be rendered
-    rankComparisons (comparisons) {
+    rankComparisons (comparisons, competitors) {
         // Set up a blank object to help determine the top score
         let rankPicker = {}
 
-        // Pluck out the similarity scores to feed them into the blox plot module
-        const similarityScores = Object.values(comparisons).map(
-            (myScore) => {
-                return myScore.similarity
-            }
-        )
-        const ranges = boxPlot(similarityScores)
+        // Using the Euclidean distance find the closest company
+        const rankedCompanies = getMostSimilarCompany(comparisons, competitors)
+        
+        // const ranges = boxPlot(similarityScores)
+        const ranges = boxPlot(rankedCompanies.distances)
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
         for (const compare in comparisons) {
             // Rank the tag score using the ranges derived from box plots
-            // if > Q3 then the ranking is High
-            // if in between Q2 and Q3 then the ranking is Medium
-            // if < Q3 then the ranking is Low
+            // if > Q3 then the ranking is Furthest
+            // if in between Q2 and Q3 then the ranking is Nearby
+            // if < Q3 then the ranking is Closest
             let rank = null
-            if (comparisons[compare].similarity >= ranges.upperQuartile) {
-                rank = 'Closest'
-            } else if (comparisons[compare].similarity <= ranges.lowerQuartile) {
+            if (rankedCompanies.companyMap[compare] >= ranges.upperQuartile) {
                 rank = 'Furthest'
+            } else if (rankedCompanies.companyMap[compare] <= ranges.lowerQuartile) {
+                rank = 'Closest'
             // NOTE: this should work, but for some reason it isn't, head scratcher
             // } else if (ranges.lowerQuartile < comparisons[compare].similarity < ranges.upperQuartile) {
             } else {
@@ -165,12 +171,12 @@ class CompanySection {
             }
 
             // Populate the rank picker to determine the top score
-            rankPicker[comparisons[compare].similarity] = compare
+            rankPicker[rankedCompanies.companyMap[compare]] = compare
             
             // Build the final comparison object
             finalComparisons[compare] = {
                 // Normalize to two decimal places and turn into %
-                score: String(comparisons[compare].similarity.toFixed(2) * 100) + '%', 
+                score: Math.ceil(rankedCompanies.companyMap[compare] * 10), 
                 rank: rank,
                 role: comparisons[compare].role,
                 name: comparisons[compare].name
@@ -187,30 +193,29 @@ class CompanySection {
      * @returns {Array} An array containing an introduction to this section and the table with the comparisons
      * @todo Sort based upon rank from highest to lowest
      */
-    makeComparisonDOCX(comparisons) {
+    makeComparisonDOCX(comparisons, competitors) {
         // Transform the comparisons into something that is usable for display
-        const [myComparison, picks] = this.rankComparisons(comparisons)
+        const [myComparison, picks] = this.rankComparisons(comparisons, competitors)
 
         // Choose the company object with the top score
-        const topChoice = picks[Object.keys(picks).sort().reverse()[0]]
+        const topChoice = picks[Object.keys(picks).sort()[0]]
         const topCompany = myComparison[(topChoice)]
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Percent Similar', true)]
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Similarity Distance', true)]
         for (const comparison in myComparison) {
             myRows.push(
                 this.util.basicComparisonRow(
                     myComparison[comparison].name,
                     myComparison[comparison].role,
-                    myComparison[comparison].rank,
-                    myComparison[comparison].score,
+                    `${String.fromCharCode(0x2588).repeat(myComparison[comparison].score)}    (${myComparison[comparison].rank})`,
                 )
             )
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [25, 25, 25, 25],
+            columnWidths: [40, 30, 30],
             rows: myRows,
             width: {
                 size: 100,
@@ -220,31 +225,52 @@ class CompanySection {
 
         return [
             this.util.makeParagraph(
-                'The mediumroast.io has compared the content for all companies in the system to ' +
-                this.company.name + '\'s content and discovered that the closest company is ' +
-                topCompanyName + ' acting in the role of a ' + topCompanyRole + '. ' +
-                'Additional detail for other companies ' + this.company.name + ' was compared to are ' +
-                'in the table below.'
+                `According to findings from mediumroast.io, the closest company to ${this.company.name} in terms of ` +
+                `content similarity is ${topCompanyName} who appears to be a ${topCompanyRole} of ${this.company.name}. ` +
+                `Additional information on ` +
+                `${this.company.name}'s comparison with other companies is available in the accompanying table.`
             ),
             this.util.makeHeading2('Comparison Table'),
             myTable
         ]
     }
 
-    makeCompetiorsDOCX(competitors, isPackage){
+    async makeCompetitorsDOCX(competitors, isPackage){
+        const myUtils = new CLIUtilities()
         let competitivePages = []
         let totalReadingTime = null
         for (const myComp in competitors) {
+            // Filter in the competitor
             const competitor = competitors[myComp]
+
+            // Construct the object to create company related document sections
             const comp = new CompanySection(competitor.company)
+
+            // Create a section for the most/least similar interactions
             const interact = new InteractionSection(
-                [competitor.mostSimilar.interaction, competitor.leastSimilar.interaction],
+                [
+                    competitor.mostSimilar.interaction, 
+                    competitor.leastSimilar.interaction
+                ],
                 competitor.company.name,
                 'Company'
             )
+            
+            // Download the company logo
+            // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
+            //      use the logos in the document for now.  When SVG support is available this feature
+            //      can be enabled.
+            // await myUtils.getLogo(competitor.company, this.baseDir + '/images')
+
             // Compute reading time
-            totalReadingTime += parseInt(competitor.mostSimilar.interaction.reading_time) + parseInt(competitor.leastSimilar.interaction.reading_time)
+            totalReadingTime += 
+                parseInt(competitor.mostSimilar.interaction.reading_time) + 
+                parseInt(competitor.leastSimilar.interaction.reading_time)
+
+            // Create the company firmographics table
             const firmographicsTable = comp.makeFirmographicsDOCX() 
+
+            // Assemble the rows and table
             const myRows = [
                 this.util.basicTopicRow('Name', 'Percent Similar', 'Category', true),
                 this.util.basicTopicRow(
@@ -264,6 +290,8 @@ class CompanySection {
                     type: docx.WidthType.PERCENTAGE
                 }
             })
+
+            // Construct this competitive pages
             competitivePages.push(
                 this.util.makeHeadingBookmark2(`Firmographics for: ${competitor.company.name}`),
                 firmographicsTable,
@@ -277,14 +305,12 @@ class CompanySection {
 
         }
 
+        // Return the document fragment
         return [
             this.util.pageBreak(),
             this.util.makeHeadingBookmark1('Competitive Content'),
             this.util.makeParagraph(
-                'For the competitive companies compared, by the mediumroast.io, additional data is provided per competitor ' +
-                'including firmographics, most/least similar interaction table, most/least similar interaction descriptions, ' +
-                'and most/least similar interaction summaries.\r\r' +
-                `Note that the total estimated reading time for all competitive most/least similar interactions is ${totalReadingTime} minutes.`
+                `For compared companies additional data is provided including firmographics, most/least similar interaction table, most/least similar interaction descriptions, and most/least similar interaction summaries.\r\rTotal estimated reading time for all source most/least similar interactions is ${totalReadingTime} minutes.`
             ),
             ...competitivePages
         ]
@@ -303,47 +329,95 @@ class CompanyStandalone {
      * @param {Array} interactions - the interactions associated to the company
      * @param {String} creator - the author of the report
      * @param {Object} competitors - the associated competitors for this company
-     * @param {*} authorCompany - the company of the report author
+     * @param {String} author - the company of the report author
+     * @todo Rename this class as report and rename the file as companyDocx.js
+     * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
-    constructor(company, interactions, competitors, creator, authorCompany) {
+    constructor(company, interactions, competitors, env, creator, author) {
         this.objectType = 'Company'
+        this.env = env
         this.creator = creator
-        this.authorCompany = authorCompany
+        this.author = author
         this.title = company.name + ' Company Report'
+        this.baseName = company.name.replace(/ /g,"_")
+        this.baseDir = this.env.workDir + '/' + this.baseName
         this.interactions = interactions
         this.competitors = competitors
         this.company = company
         this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
+        /*
+        ChatGPT summary
+        The mediumroast.io system has meticulously crafted this report to provide you with a comprehensive overview of the Company object and its associated interactions. This document features a robust collection of key metadata that provides valuable insights into the company's operations. Furthermore, to enhance the user experience, if this report is part of a package, the hyperlinks within it are designed to be active, linking to various documents within the local folder with just one click after the package is opened. This makes exploring the details of the company a breeze!
+        */
         this.introduction = 'The mediumroast.io system automatically generated this document.' +
             ' It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions.' + 
             '  If this report document is produced as a package, instead of standalone, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.util = new DOCXUtilities()
+        this.fileSystem = new FilesystemOperators()
         this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
 
+    // 
+    // Local functions
+    // 
+
+    // Basic operations to prepare for report and package creation
+    _initialize() {
+        // 
+        const subdirs = ['interactions', 'images']
+        for(const myDir in subdirs) {
+            this.fileSystem.safeMakedir(this.baseDir + '/' + subdirs[myDir])
+        }
+    }
+
+    // 
+    // External functions
+    // 
+
     /**
      * @async
      * @function makeDocx
      * @description Generate and save a DOCX report for a Company object
-     * @param {String} fileName - Full path to the file name, if no file name is supplied a default is assumed
+     * @param {String} fileName - parameter is deprecated, but kept for compatibility
      * @param {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} The result of the writeReport function that is an Array
+     * @todo remove the file name from mrcli-company and this module
      */
     async makeDOCX(fileName, isPackage) {
-        // If fileName isn't specified create a default
-        fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.company.name.replace(/ /g,"_") + '.docx'
+        // Initialize the working directories to create a package and/or download relevant images
+        this._initialize()
 
+        // TODO when we remove fileName we can uncomment the item below
+        // const fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
+        fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
+
+        // Download the logo
+        // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
+        //      use the logos in the document for now.  When SVG support is available this feature
+        //      can be enabled.
+        // const myUtils = new CLIUtilities()
+        // const logoFilename = await myUtils.getLogo(this.company, this.baseDir + '/images')
+
+        // Capture the current date
+        const date = new Date();
+        const preparedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
+        
         // Construct the company section
-        const companySection = new CompanySection(this.company)
+        const companySection = new CompanySection(this.company, this.baseDir)
         const interactionSection = new InteractionSection(
             this.interactions, 
             this.company.name,
             this.objectType
         )
+        const myDash = new CompanyDashbord(this.env)
 
         // Construct the interactions section
         // const interactionsSection = new InteractionSection(this.interactions)
@@ -356,7 +430,7 @@ class CompanyStandalone {
                 companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparisonDOCX(this.comparison),
+            companySection.makeComparisonDOCX(this.comparison, this.competitors),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +
@@ -367,7 +441,7 @@ class CompanyStandalone {
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),
-            companySection.makeCompetiorsDOCX(this.competitors, isPackage),
+            await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
@@ -377,20 +451,52 @@ class CompanyStandalone {
         // Construct the document
         const myDoc = new docx.Document ({
             creator: this.creator,
-            company: this.authorCompany,
+            company: this.author,
             title: this.title,
             description: this.description,
+            background: {
+                color: "0F0D0E",
+            },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,
-            sections: [{
-                properties: {},
-                footers: {
-                    default: new docx.Footer({
-                        children: [this.util.makePageNumber()]
-                    })
+            sections: [
+                {
+                    properties: {
+                        page: {
+                            size: {
+                                orientation: docx.PageOrientation.LANDSCAPE,
+                            },
+                        },
+                    },
+                    headers: {
+                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard prepared for: ', true)
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate, true)]
+                        })
+                    },
+                    children: [
+                        await myDash.makeDashboard(
+                            this.company, 
+                            this.competitors, 
+                            this.baseDir
+                        )
+                    ],
                 },
-                children: myDocument,
-            }],
+                {
+                    properties: {},
+                    headers: {
+                        default: this.util.makeHeader(this.company.name, 'Company comparison detail prepared for: ')
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
+                        })
+                    },
+                    children: myDocument,
+                }
+            ],
         })
 
         // Persist the document to storage

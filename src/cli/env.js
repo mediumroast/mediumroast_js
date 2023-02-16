@@ -111,8 +111,16 @@ class Environmentals {
                 'An additional switch used with --report to generate a ZIP package that includes the interaction'
             )
             .option(
+                '--experimental',
+                'An additional switch used with --report to enable experimental charting for reporting. Requires Apache e-charts server.'
+            )
+            .option(
                 '--add_wizard',
                 `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
+            )
+            .option(
+                '--reset_by_type <OBJECT_TYPE>',
+                'Reset the status of objects to reprocesses them in the caffeine service.'
             )
 
             // Ending arguments
@@ -159,8 +167,10 @@ class Environmentals {
             s3Region: null,
             s3Source: null, // TODO this is deprecated remove after testing
             splash: null,
-            companyDNS: null
-
+            companyDNS: null,
+            reset: null,
+            experimental: null,
+            echartsServer: null
         }
 
         // With the cli options as the priority set up the environment for the cli
@@ -170,8 +180,10 @@ class Environmentals {
         cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
 
         // Set up additional parameters from config file
-        env.workDir = config.get('DEFAULT', 'working_dir')
+        env.workDir = process.env.HOME + '/.mediumroast/' + config.get('DEFAULT', 'working_dir')
         env.companyDNS = config.get('DEFAULT', 'company_dns_server')
+        env.echartsServer = config.get('DEFAULT', 'echarts_server')
+        env.theme = config.get('DEFAULT', 'theme')
         env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')
@@ -181,6 +193,12 @@ class Environmentals {
 
         // Setup options with cli settings only
         env.splash = cliArgs.splash
+
+        // Detect if we want to reset a set of objects by their object_type
+        env.reset = cliArgs.reset_by_type
+
+        // Enable experimental charting for reports
+        env.experimental = cliArgs.experimental
 
         // Return the environmental settings needed for the CLI to operate
         return env
