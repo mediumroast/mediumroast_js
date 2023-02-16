@@ -203,12 +203,12 @@ export async function radarChart (
         radar: {
             shape: 'circle',
             indicator: [
-              { name: 'Total', max: 30, min: 0 },
-              { name: 'Product Documents', max: 6, min: 0 },
-              { name: 'News & Press Releases', max: 6, min: 0 },
-              { name: 'Social Media', max: 6, min: 0 },
-              { name: 'Case Studies', max: 6, min: 0 },
-              { name: 'White Papers', max: 6, min: 0 }
+              { name: 'Total', max: 100, min: 0 }, // 15 is 100%
+              { name: 'Product/Service', max: 20, min: 0 }, // 20% for each category
+              { name: 'Press Releases', max: 20, min: 0 }, // 20% for each category
+              { name: 'Social', max: 20, min: 0 }, // 20% for each category
+              { name: 'About', max: 20, min: 0 }, // 20% for each category
+              { name: 'Article', max: 20, min: 0 } // 20% for each category
             ],
             axisLine: {
                 lineStyle: {
@@ -240,7 +240,7 @@ export async function radarChart (
                 name: seriesName,
                 type: 'radar',
                 data:[{
-                    value: [10, 3, 5, 6, 6, 1], // these should be averages
+                    value: [93, 20, 30, 15, 25, 0], // these should be averages
                     name: dataName
                 }],
                 itemStyle: {

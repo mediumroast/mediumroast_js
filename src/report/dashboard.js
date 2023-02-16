@@ -534,7 +534,6 @@ class CompanyDashbord {
     // Find the closest competitor
     // This uses the Euclidean distantce, given points (x1, y1) and (x2, y2)
     // d = sqrt((x2 - x1)^2 + (y2 - y1)^2) 
-    // TODO we need to adjust the table in the main part of the document to this logic
     _getMostSimilarCompany(comparisons, companies) {
         const x1 = 1 // In this case x1 = 1 and y1 = 1
         const y1 = 1
@@ -546,8 +545,7 @@ class CompanyDashbord {
                 )
             distances[myDistance] = companyId
         }
-        const mostSimilarId = distances[Math.max(...Object.keys(distances))]
-        // Need to think about what to return
+        const mostSimilarId = distances[Math.min(...Object.keys(distances))]
         const mostSimilarCompany = companies.filter(company => {
             if (parseInt(company.company.id) === parseInt(mostSimilarId)) {
                 return company
@@ -560,14 +558,20 @@ class CompanyDashbord {
     _computeInteractionStats(company, competitors) {
         // Pull out company interactions
         const companyInteractions = Object.keys(company.linked_interactions).length
+
         // Get the total number of interactions
-        let totalInteractions = 0
+        // Add the current company interactions to the total
+        let totalInteractions = companyInteractions 
+        // Sum all other companies' interactions
         for(const competitor in competitors) {
             totalInteractions += Object.keys(competitors[competitor].company.linked_interactions).length
         }
+
         // Compute the average interactions per company
         const totalCompanies = 1 + competitors.length  
         const averageInteractions = Math.round(totalInteractions/totalCompanies) 
+
+        // Return the result
         return {
             totalStatsTitle: "Total Interactions",
             totalStats: totalInteractions,

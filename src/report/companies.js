@@ -15,6 +15,7 @@ import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
 import FilesystemOperators from '../cli/filesystem.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
+import { getMostSimilarCompany } from './tools.js'
 
 class CompanySection {
     /**
@@ -141,17 +142,30 @@ class CompanySection {
     }
 
     // Rank supplied topics and return an object that can be rendered
-    rankComparisons (comparisons) {
+    rankComparisons (comparisons, competitors) {
         // Set up a blank object to help determine the top score
         let rankPicker = {}
 
+        // Using the Euclidean distance find the closest company
+        const rankedCompanies = getMostSimilarCompany(comparisons, competitors)
+
+        
+
         // Pluck out the similarity scores to feed them into the blox plot module
-        const similarityScores = Object.values(comparisons).map(
-            (myScore) => {
-                return myScore.similarity
-            }
-        )
-        const ranges = boxPlot(similarityScores)
+        // const similarityScores = Object.values(comparisons).map(
+        //     (myScore) => {
+        //         return myScore.similarity
+        //     }
+        // )
+        
+
+        // const ranges = boxPlot(similarityScores)
+        const ranges = boxPlot(rankedCompanies.distances)
+
+        // HERE we're HERE Now we need to adapt the new scores into the mix
+        // Could mean returning things from tools better, and somehow we need
+        // to map the new score into the table and replace the overall 
+        // similarity score.
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
@@ -161,10 +175,10 @@ class CompanySection {
             // if in between Q2 and Q3 then the ranking is Medium
             // if < Q3 then the ranking is Low
             let rank = null
-            if (comparisons[compare].similarity >= ranges.upperQuartile) {
-                rank = 'Closest'
-            } else if (comparisons[compare].similarity <= ranges.lowerQuartile) {
+            if (rankedCompanies.companyMap[compare] >= ranges.upperQuartile) {
                 rank = 'Furthest'
+            } else if (rankedCompanies.companyMap[compare] <= ranges.lowerQuartile) {
+                rank = 'Closest'
             // NOTE: this should work, but for some reason it isn't, head scratcher
             // } else if (ranges.lowerQuartile < comparisons[compare].similarity < ranges.upperQuartile) {
             } else {
@@ -172,12 +186,12 @@ class CompanySection {
             }
 
             // Populate the rank picker to determine the top score
-            rankPicker[comparisons[compare].similarity] = compare
+            rankPicker[rankedCompanies.companyMap[compare]] = compare
             
             // Build the final comparison object
             finalComparisons[compare] = {
                 // Normalize to two decimal places and turn into %
-                score: String(comparisons[compare].similarity.toFixed(2) * 100) + '%', 
+                score: Math.ceil(rankedCompanies.companyMap[compare] * 10), 
                 rank: rank,
                 role: comparisons[compare].role,
                 name: comparisons[compare].name
@@ -194,30 +208,29 @@ class CompanySection {
      * @returns {Array} An array containing an introduction to this section and the table with the comparisons
      * @todo Sort based upon rank from highest to lowest
      */
-    makeComparisonDOCX(comparisons) {
+    makeComparisonDOCX(comparisons, competitors) {
         // Transform the comparisons into something that is usable for display
-        const [myComparison, picks] = this.rankComparisons(comparisons)
+        const [myComparison, picks] = this.rankComparisons(comparisons, competitors)
 
         // Choose the company object with the top score
-        const topChoice = picks[Object.keys(picks).sort().reverse()[0]]
+        const topChoice = picks[Object.keys(picks).sort()[0]]
         const topCompany = myComparison[(topChoice)]
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Percent Similar', true)]
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Similarity Distance', true)]
         for (const comparison in myComparison) {
             myRows.push(
                 this.util.basicComparisonRow(
                     myComparison[comparison].name,
                     myComparison[comparison].role,
-                    myComparison[comparison].rank,
-                    myComparison[comparison].score,
+                    `${String.fromCharCode(0x2588).repeat(myComparison[comparison].score)}    (${myComparison[comparison].rank})`,
                 )
             )
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [25, 25, 25, 25],
+            columnWidths: [40, 30, 30],
             rows: myRows,
             width: {
                 size: 100,
@@ -227,9 +240,10 @@ class CompanySection {
 
         return [
             this.util.makeParagraph(
-                `The findings from mediumroast.io reveal that ${topCompanyName} is ${this.company.name}'s ` +
-                `closest ${topCompanyRole} in terms of content similarity.  Further information about ` +
-                `${this.company.name}'s  comparison with other companies can be found in the accompanying table.`
+                `According to findings from mediumroast.io, the closest company to ${this.company.name} in terms of ` +
+                `content similarity is ${topCompanyName} who appears to be a ${topCompanyRole} of ${this.company.name}. ` +
+                `Additional information on ` +
+                `${this.company.name}'s comparison with other companies is available in the accompanying table.`
             ),
             this.util.makeHeading2('Comparison Table'),
             myTable
@@ -431,7 +445,7 @@ class CompanyStandalone {
                 companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparisonDOCX(this.comparison),
+            companySection.makeComparisonDOCX(this.comparison, this.competitors),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +

@@ -687,14 +687,14 @@ class DOCXUtilities {
      * @param {Boolean} bold - whether or not to make the text/prose bold typically used for header row
      * @returns {Object} a new 4 column docx TableRow object
      */
-    basicComparisonRow (company, role, score, rank, bold) {
+    basicComparisonRow (company, role, distance, bold) {
         const myFontSize = 16
         // return the row
         return new docx.TableRow({
             children: [
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 40,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
@@ -702,7 +702,7 @@ class DOCXUtilities {
                 }),
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 30,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
@@ -710,19 +710,11 @@ class DOCXUtilities {
                 }),
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 30,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(score, myFontSize, bold ? true : false)]
-                }),
-                new docx.TableCell({
-                    width: {
-                        size: 25,
-                        type: docx.WidthType.PERCENTAGE,
-                        font: this.font,
-                    },
-                    children: [this.makeParagraph(rank, myFontSize, bold ? true : false)]
+                    children: [this.makeParagraph(distance, myFontSize, bold ? true : false)]
                 }),
             ]
         })
