@@ -89,36 +89,39 @@ if (myArgs.report) {
    // Obtain the competitors
    let competitors = []
    let competitiveInteractions = []
-   const competitorIds = Object.keys(comp_results[0].comparison)
-   for (const comp in competitorIds) {
-      const competitor = competitorIds[comp]
-      const [compSuccess, compStat, myCompetitor] = await companyCtl.findById(competitor)
+   const competitorIdxs = Object.keys(comp_results[0].comparison)
+   for (const compIdx in competitorIdxs) {
+      // const competitor = competitorIds[comp]
+      // console.log(comp_results[0].comparison[competitor].name)
+      const competitorIndex = competitorIdxs[compIdx] // Index in the comparison property for the company
+      const competitorName = comp_results[0].comparison[competitorIndex].name // Actual company name
+      const [compSuccess, compStat, myCompetitor] = await companyCtl.findByName(competitorName)
       const [mostSuccess, mostStat, myMost] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitor].most_similar.name
+         comp_results[0].comparison[competitorIndex].most_similar.name
       )
       const [leastSuccess, leastStat, myLeast] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitor].least_similar.name
+         comp_results[0].comparison[competitorIndex].least_similar.name
       )
       // Format the scores and names
       const leastScore = String(
-         comp_results[0].comparison[competitor].least_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].least_similar.score * 100)
       ) + '%'
       const mostScore = String(
-         comp_results[0].comparison[competitor].most_similar.score.toFixed(2) * 100
+         Math.round(comp_results[0].comparison[competitorIndex].most_similar.score * 100)
       ) + '%'
-      const leastName = comp_results[0].comparison[competitor].least_similar.name.slice(0,40) + '...'
-      const mostName = comp_results[0].comparison[competitor].most_similar.name.slice(0,40) + '...'
+      const leastName = comp_results[0].comparison[competitorIndex].least_similar.name.slice(0,40) + '...'
+      const mostName = comp_results[0].comparison[competitorIndex].most_similar.name.slice(0,40) + '...'
       competitors.push(
          {
             company: myCompetitor[0],
             mostSimilar: {
                score: mostScore,
-               name: comp_results[0].comparison[competitor].most_similar.name,
+               name: comp_results[0].comparison[competitorIndex].most_similar.name,
                interaction: myMost[0]
             },
             leastSimilar: {
                score: leastScore,
-               name: comp_results[0].comparison[competitor].least_similar.name,
+               name: comp_results[0].comparison[competitorIndex].least_similar.name,
                interaction: myLeast[0]
             }
          }

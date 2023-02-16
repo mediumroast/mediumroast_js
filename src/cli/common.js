@@ -13,6 +13,7 @@ import { Auth, Companies, Interactions, Studies } from '../api/mrServer.js'
 import axios from 'axios'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as http from 'http'
 import FilesystemOperators from './filesystem.js'
 
 class serverOperations {
@@ -121,13 +122,27 @@ class Utilities {
      * @param {String} dir - the target directory to save the file to
      * @param {String} filename - the name of the file to save the image to
      */
-    async downloadImage(url, directory, filename) {
+    async downloadImage(url, directory, filename, showDownloadStatus=false) {
         const myFullPath = path.resolve(directory, filename)
         const myConfig = {
-            responseType: 'stream'
+            responseType: "stream",
         }
-        const resp = await axios.get(url, myConfig)
-        resp.data.pipe(fs.createWriteStream(myFullPath))
+        // const myFilesystem = new FilesystemOperators()
+        // const fileResp = myFilesystem.saveTextFile(myFullPath, "")
+        try {
+            const resp = await axios.get(url, myConfig)
+            const imageFile = fs.createWriteStream(myFullPath)
+            const myDownload = resp.data.pipe(imageFile)
+            await myDownload.on('finish', () => {
+                imageFile.close()
+                if(showDownloadStatus) {
+                    console.log(`SUCCESS: Downloaded [${myFullPath}]`)
+                }
+            })
+            return myFullPath
+        } catch (err) {
+            console.log(`ERROR: Unable to download file due to [${err}]`)
+        }
     }
 
     /**

@@ -15,6 +15,7 @@ import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
 import FilesystemOperators from '../cli/filesystem.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
+import { getMostSimilarCompany } from './tools.js'
 
 class CompanySection {
     /**
@@ -141,30 +142,28 @@ class CompanySection {
     }
 
     // Rank supplied topics and return an object that can be rendered
-    rankComparisons (comparisons) {
+    rankComparisons (comparisons, competitors) {
         // Set up a blank object to help determine the top score
         let rankPicker = {}
 
-        // Pluck out the similarity scores to feed them into the blox plot module
-        const similarityScores = Object.values(comparisons).map(
-            (myScore) => {
-                return myScore.similarity
-            }
-        )
-        const ranges = boxPlot(similarityScores)
+        // Using the Euclidean distance find the closest company
+        const rankedCompanies = getMostSimilarCompany(comparisons, competitors)
+        
+        // const ranges = boxPlot(similarityScores)
+        const ranges = boxPlot(rankedCompanies.distances)
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
         for (const compare in comparisons) {
             // Rank the tag score using the ranges derived from box plots
-            // if > Q3 then the ranking is High
-            // if in between Q2 and Q3 then the ranking is Medium
-            // if < Q3 then the ranking is Low
+            // if > Q3 then the ranking is Furthest
+            // if in between Q2 and Q3 then the ranking is Nearby
+            // if < Q3 then the ranking is Closest
             let rank = null
-            if (comparisons[compare].similarity >= ranges.upperQuartile) {
-                rank = 'Closest'
-            } else if (comparisons[compare].similarity <= ranges.lowerQuartile) {
+            if (rankedCompanies.companyMap[compare] >= ranges.upperQuartile) {
                 rank = 'Furthest'
+            } else if (rankedCompanies.companyMap[compare] <= ranges.lowerQuartile) {
+                rank = 'Closest'
             // NOTE: this should work, but for some reason it isn't, head scratcher
             // } else if (ranges.lowerQuartile < comparisons[compare].similarity < ranges.upperQuartile) {
             } else {
@@ -172,12 +171,12 @@ class CompanySection {
             }
 
             // Populate the rank picker to determine the top score
-            rankPicker[comparisons[compare].similarity] = compare
+            rankPicker[rankedCompanies.companyMap[compare]] = compare
             
             // Build the final comparison object
             finalComparisons[compare] = {
                 // Normalize to two decimal places and turn into %
-                score: String(comparisons[compare].similarity.toFixed(2) * 100) + '%', 
+                score: Math.ceil(rankedCompanies.companyMap[compare] * 10), 
                 rank: rank,
                 role: comparisons[compare].role,
                 name: comparisons[compare].name
@@ -194,30 +193,29 @@ class CompanySection {
      * @returns {Array} An array containing an introduction to this section and the table with the comparisons
      * @todo Sort based upon rank from highest to lowest
      */
-    makeComparisonDOCX(comparisons) {
+    makeComparisonDOCX(comparisons, competitors) {
         // Transform the comparisons into something that is usable for display
-        const [myComparison, picks] = this.rankComparisons(comparisons)
+        const [myComparison, picks] = this.rankComparisons(comparisons, competitors)
 
         // Choose the company object with the top score
-        const topChoice = picks[Object.keys(picks).sort().reverse()[0]]
+        const topChoice = picks[Object.keys(picks).sort()[0]]
         const topCompany = myComparison[(topChoice)]
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Rank', 'Percent Similar', true)]
+        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Similarity Distance', true)]
         for (const comparison in myComparison) {
             myRows.push(
                 this.util.basicComparisonRow(
                     myComparison[comparison].name,
                     myComparison[comparison].role,
-                    myComparison[comparison].rank,
-                    myComparison[comparison].score,
+                    `${String.fromCharCode(0x2588).repeat(myComparison[comparison].score)}    (${myComparison[comparison].rank})`,
                 )
             )
         }
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [25, 25, 25, 25],
+            columnWidths: [40, 30, 30],
             rows: myRows,
             width: {
                 size: 100,
@@ -227,18 +225,17 @@ class CompanySection {
 
         return [
             this.util.makeParagraph(
-                'The mediumroast.io has compared the content for all companies in the system to ' +
-                this.company.name + '\'s content and discovered that the closest company is ' +
-                topCompanyName + ' acting in the role of a ' + topCompanyRole + '. ' +
-                'Additional detail for other companies ' + this.company.name + ' was compared to are ' +
-                'in the table below.'
+                `According to findings from mediumroast.io, the closest company to ${this.company.name} in terms of ` +
+                `content similarity is ${topCompanyName} who appears to be a ${topCompanyRole} of ${this.company.name}. ` +
+                `Additional information on ` +
+                `${this.company.name}'s comparison with other companies is available in the accompanying table.`
             ),
             this.util.makeHeading2('Comparison Table'),
             myTable
         ]
     }
 
-    async makeCompetiorsDOCX(competitors, isPackage){
+    async makeCompetitorsDOCX(competitors, isPackage){
         const myUtils = new CLIUtilities()
         let competitivePages = []
         let totalReadingTime = null
@@ -348,6 +345,10 @@ class CompanyStandalone {
         this.competitors = competitors
         this.company = company
         this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
+        /*
+        ChatGPT summary
+        The mediumroast.io system has meticulously crafted this report to provide you with a comprehensive overview of the Company object and its associated interactions. This document features a robust collection of key metadata that provides valuable insights into the company's operations. Furthermore, to enhance the user experience, if this report is part of a package, the hyperlinks within it are designed to be active, linking to various documents within the local folder with just one click after the package is opened. This makes exploring the details of the company a breeze!
+        */
         this.introduction = 'The mediumroast.io system automatically generated this document.' +
             ' It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions.' + 
             '  If this report document is produced as a package, instead of standalone, then the' +
@@ -400,6 +401,14 @@ class CompanyStandalone {
         //      can be enabled.
         // const myUtils = new CLIUtilities()
         // const logoFilename = await myUtils.getLogo(this.company, this.baseDir + '/images')
+
+        // Capture the current date
+        const date = new Date();
+        const preparedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
         
         // Construct the company section
         const companySection = new CompanySection(this.company, this.baseDir)
@@ -408,8 +417,7 @@ class CompanyStandalone {
             this.company.name,
             this.objectType
         )
-        const env = {}
-        const myDash = new CompanyDashbord(env)
+        const myDash = new CompanyDashbord(this.env)
 
         // Construct the interactions section
         // const interactionsSection = new InteractionSection(this.interactions)
@@ -422,7 +430,7 @@ class CompanyStandalone {
                 companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparisonDOCX(this.comparison),
+            companySection.makeComparisonDOCX(this.comparison, this.competitors),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +
@@ -433,7 +441,7 @@ class CompanyStandalone {
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),
-            await companySection.makeCompetiorsDOCX(this.competitors, isPackage),
+            await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
             [   this.util.pageBreak(),
                 this.util.makeHeading1('References')
             ],
@@ -447,7 +455,7 @@ class CompanyStandalone {
             title: this.title,
             description: this.description,
             background: {
-                color: '0F0D0E',
+                color: "0F0D0E",
             },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,
@@ -461,23 +469,29 @@ class CompanyStandalone {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard', true)
+                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard prepared for: ', true)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makePageNumber()]
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate, true)]
                         })
                     },
-                    children: [myDash.makeDashboard({}, {})],
+                    children: [
+                        await myDash.makeDashboard(
+                            this.company, 
+                            this.competitors, 
+                            this.baseDir
+                        )
+                    ],
                 },
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison detail')
+                        default: this.util.makeHeader(this.company.name, 'Company comparison detail prepared for: ')
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makePageNumber()]
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
                         })
                     },
                     children: myDocument,

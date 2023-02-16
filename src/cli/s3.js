@@ -79,6 +79,7 @@ class s3Utilities {
             if(!objs[myObj]){ continue } // Skip if there is an empty entry in the Array
             const myKey = objs[myObj].split('/') // split to get to the file name
             const myBody = fs.createReadStream(objs[myObj]) // open and read the file
+            // TODO need to remove any leading or trailing spaces from the file name
             const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody} // setup the key elements to talk to S3
             const s3Put = await this.s3Controller.putObject(myParams).promise() // Put the object
             if (!isCLI) {return [myKey[myKey.length - 1], s3Put]} // return the file name and the result of the put

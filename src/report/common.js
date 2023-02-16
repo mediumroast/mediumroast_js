@@ -34,6 +34,7 @@ class DOCXUtilities {
      */
     constructor (font, fontSize, textFontSize, textFontColor) {
         this.font = font ? font : 'Avenir Next'
+        this.heavyFont = 'Avenir Next Heavy'
         this.size = fontSize ? fontSize : 11
         this.textFontSize = textFontSize ? textFontSize : 22
         this.textFontColor = textFontColor ? textFontColor : '#41a6ce'
@@ -268,13 +269,12 @@ class DOCXUtilities {
 
     /**
      * @function makeHeader
-     * @description Generate a header with a logo, document type and author as three fields
-     * @param {String} logoFile 
+     * @description Generate a header with an item's name and the document type fields
+     * @param {String} itemName 
      * @param {String} documentType 
-     * @param {String} documentAuthor 
-     * @todo handle <filename>.nologo case
+     * @param {Boolean} landscape 
      */
-    makeHeader(itemName, documentType, landscape=false, documentAuthor="By mediumroast.io") {
+    makeHeader(itemName, documentType, landscape=false) {
         let separator = "\t".repeat(3)
         if (landscape) { separator = "\t".repeat(4)}
         return new docx.Header({
@@ -283,40 +283,44 @@ class DOCXUtilities {
                     alignment: docx.AlignmentType.CENTER,
                     children: [
                         new docx.TextRun({
+                            children: [documentType],
+                            font: this.font,
+                            size: 20
+                        }),
+                        new docx.TextRun({
                             children: [itemName],
-                            font: this.font,
+                            font: this.heavyFont,
                             size: 20,
-                            color: "41A6CE"
-                        }),
-                        new docx.TextRun({
-                            children: [separator, documentType],
-                            font: this.font,
-                            size: 20
-                        }),
-                        new docx.TextRun({
-                            children: [separator, documentAuthor],
-                            font: this.font,
-                            size: 20
+                            color: "c7701e"
                         })
                     ],
                 }),
-                // new docx.Paragraph({
-                //     children: [
-                //         new docx.TextRun({
-                //             children: [documentType],
-                //             break: 0
-                //         })
-                //     ],
-                // }),
-                // new docx.Paragraph({
-                //     children: [
-                //         new docx.TextRun({
-                //             children: [documentAuthor],
-                //             break: 0
-                //         })
-                //     ],
-                // }),
             ],
+        })
+    }
+
+    makeFooter(documentAuthor, datePrepared, landscape=false) {
+        let separator = "\t"
+        if (landscape) { separator = "\t".repeat(2)}
+        return new docx.Paragraph({
+            alignment: docx.AlignmentType.CENTER,
+            children: [
+                new docx.TextRun({
+                    children: ['Page ', docx.PageNumber.CURRENT, ' of ', docx.PageNumber.TOTAL_PAGES, separator],
+                    font: this.font,
+                    size: 18
+                }),
+                new docx.TextRun({
+                    children: ['|', separator, documentAuthor, separator],
+                    font: this.font,
+                    size: 18
+                }),
+                new docx.TextRun({
+                    children: ['|', separator, datePrepared],
+                    font: this.font,
+                    size: 18
+                })
+            ]
         })
     }
 
@@ -683,14 +687,14 @@ class DOCXUtilities {
      * @param {Boolean} bold - whether or not to make the text/prose bold typically used for header row
      * @returns {Object} a new 4 column docx TableRow object
      */
-    basicComparisonRow (company, role, score, rank, bold) {
+    basicComparisonRow (company, role, distance, bold) {
         const myFontSize = 16
         // return the row
         return new docx.TableRow({
             children: [
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 40,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
@@ -698,7 +702,7 @@ class DOCXUtilities {
                 }),
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 30,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
@@ -706,19 +710,11 @@ class DOCXUtilities {
                 }),
                 new docx.TableCell({
                     width: {
-                        size: 25,
+                        size: 30,
                         type: docx.WidthType.PERCENTAGE,
                         font: this.font,
                     },
-                    children: [this.makeParagraph(score, myFontSize, bold ? true : false)]
-                }),
-                new docx.TableCell({
-                    width: {
-                        size: 25,
-                        type: docx.WidthType.PERCENTAGE,
-                        font: this.font,
-                    },
-                    children: [this.makeParagraph(rank, myFontSize, bold ? true : false)]
+                    children: [this.makeParagraph(distance, myFontSize, bold ? true : false)]
                 }),
             ]
         })
@@ -821,16 +817,6 @@ class DOCXUtilities {
             this.makeHeading1('Introduction'),
             this.makeParagraph(introText)
         ]
-    }
-
-    makePageNumber () {
-        return new docx.Paragraph({
-            children: [
-                new docx.TextRun({
-                    children: ['Page ', docx.PageNumber.CURRENT, ' of ', docx.PageNumber.TOTAL_PAGES],
-                })
-            ]
-        })
     }
 }
 

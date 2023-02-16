@@ -16,6 +16,7 @@ import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
+import crypto from "node:crypto"
 
 class AddCompany {
     /**
@@ -60,6 +61,16 @@ class AddCompany {
         this.output = new CLIOutput(this.env, this.objectType)
     }
 
+    _linkObj(name) {
+        // Hash the names
+        // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
+        const objHash = crypto.createHash('sha256', name).digest('hex')
+
+        // Create the object Link
+        let objLink = {} 
+        objLink[name] = objHash
+        return objLink
+    }
 
     async  getCompany () {
         let myCompany = {}
@@ -361,10 +372,17 @@ class AddCompany {
         myCompany.topics = {}
         // Comparison
         myCompany.comparison = {}
-        // linked_x
+        // Quality
+        myCompany.quality = {}
+
+
+        // NOTICE in the alpha version these will no longer be needed
+        // Linked interactions
         myCompany.linked_interactions = {}
-        // TODO you need to link to one or more studies
-        myCompany.linked_studies = {}
+        // Link the default study
+        myCompany.linked_studies = this._linkObj('Default Study')
+
+
         this.cutils.printLine()
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
         let companyResp = await this.apiController.createObj(myCompany)

@@ -6,14 +6,21 @@ const docxSettings = {
         dashFontSize: 9,
         tableFontSize: 8,
         titleFontSize: 18,
+        companyNameFontSize: 11.5,
         metricFontTitleSize: 11,
         metricFontSize: 48,
+        chartTitleFontSize: 18,
+        chartFontSize: 10,
+        chartAxesFontSize: 12,
+        chartTickFontSize: 10,
+        chartSymbolSize: 30,
         tableBorderSize: 8,
         tableBorderStyle: docx.BorderStyle.SINGLE,
         noBorderStyle: docx.BorderStyle.NIL,
         tableMargin: docx.convertInchesToTwip(0.1),
         font: "Avenir Next",
-        metricFont: "Avenir Next Heavy"
+        heavyFont: "Avenir Next Heavy",
+        lightFont: "Avenir Next Light"
 
     },
     coffee: {
@@ -21,6 +28,12 @@ const docxSettings = {
         documentColor: "0F0D0E", // Coffee black
         titleFontColor: "41A6CE", // Saturated Light Blue
         fontColor: "DCE9F6", // Ultra light Blue
+        chartAxisLineColor: "#374246",
+        chartAxisFontColor: "rgba(71,121,140, 0.7)",
+        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
+        chartItemFontColor: "rgba(149,181,192, 0.9)",
+        chartSeriesColor: "rgb(71,113,128)",
+        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
         highlightFontColor: ""
     },
     latte: {

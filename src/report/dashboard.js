@@ -12,6 +12,7 @@ import docx from 'docx'
 import * as fs from 'fs'
 import DOCXUtilities from './common.js'
 import docxSettings from './settings.js'
+import { bubbleChart, radarChart } from './charts.js'
 
 class CompanyDashbord {
     /**
@@ -21,10 +22,10 @@ class CompanyDashbord {
      * @param {Object} env - Environmental variable settings for the CLI environment
      * @param {String} theme - Governs the color of the dashboard, be either coffee or latte 
      */
-    constructor(env, theme='coffee') {
+    constructor(env) {
         this.env = env
         this.util = new DOCXUtilities()
-        this.themeStyle = docxSettings[theme] // Set the theme for the report
+        this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
         
         // Define specifics for table borders
@@ -80,8 +81,14 @@ class CompanyDashbord {
         }
     }
 
+    /**
+     * 
+     * @param {*} statistics 
+     * @returns 
+     * @todo turn into a loop instead of having the code repeated
+     * @todo if the length of any number is greater than 3 digits shrink the font size by 15% and round down
+     */
     _statisticsTable(statistics) {
-        // TODO if the length of any number is greater than 3 digits shrink the font size by 15% and round down
         const myRows = [
             new docx.TableRow({
                 children: [
@@ -94,7 +101,7 @@ class CompanyDashbord {
                                 0,
                                 true,
                                 true,
-                                this.generalStyle.metricFont
+                                this.generalStyle.heavyFont
                             )
                         ],
                         borders: this.bottomBorder,
@@ -136,7 +143,7 @@ class CompanyDashbord {
                                 0,
                                 true,
                                 true,
-                                this.generalStyle.metricFont
+                                this.generalStyle.heavyFont
                             )
                         ],
                         borders: this.bottomBorder,
@@ -178,7 +185,7 @@ class CompanyDashbord {
                                 0,
                                 true,
                                 true,
-                                this.generalStyle.metricFont
+                                this.generalStyle.heavyFont
                             )
                         ],
                         borders: this.bottomBorder,
@@ -209,6 +216,48 @@ class CompanyDashbord {
                     }),
                 ]
             }),
+            new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        children: [
+                            this.makeParagraph(
+                                statistics.totalCompanies,
+                                this.generalStyle.metricFontSize,
+                                this.themeStyle.titleFontColor,
+                                0,
+                                true,
+                                true,
+                                this.generalStyle.heavyFont
+                            )
+                        ],
+                        borders: this.bottomBorder,
+                        margins: {
+                            top: this.generalStyle.tableMargin
+                        }
+                    }),
+                ]
+            }),
+            new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        children: [
+                            this.makeParagraph(
+                                statistics.totalCompaniesTitle,
+                                this.generalStyle.metricFontTitleSize,
+                                this.themeStyle.titleFontColor,
+                                0,
+                                false,
+                                true
+                            )
+                        ],
+                        borders: this.noBorders,
+                        margins: {
+                            bottom: this.generalStyle.tableMargin,
+                            top: this.generalStyle.tableMargin
+                        }
+                    }),
+                ]
+            }),
         ]
         return new docx.Table({
             columnWidths: [95],
@@ -224,9 +273,6 @@ class CompanyDashbord {
     //     40%      |    40%      |   20%
     // bubble chart | radar chart | nested table for stats
     firstRow (bubbleImage, radarImage, stats) {
-        bubbleImage = '/Users/mihay42/tmp/bubble_chart.png'
-        radarImage = '/Users/mihay42/tmp/radar_chart.png'
-        // return the row
         return new docx.TableRow({
             children: [
                 new docx.TableCell({
@@ -248,54 +294,66 @@ class CompanyDashbord {
                         top: this.generalStyle.tableMargin
                     },
                     verticalAlign: docx.VerticalAlign.CENTER,
-
                 }),
             ]
         })
     }
 
     // A custom table that contains a company logo/name and description
-    _companyDescRow(company, descriptionLen=350) {
+    _companyDescRow(company, descriptionLen=550) {
         // Trim the length of the description to the required size
-        let companyDesc = company.description
+        let companyDesc = company.company.description
         companyDesc = companyDesc.replace(/\.\.\.|\.$/, '')
         if (companyDesc.length > descriptionLen) {
             companyDesc = companyDesc.substring(0,descriptionLen)
         }
         companyDesc = companyDesc + '...'
-        const myRow = new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    // TODO this needs to be a relevant URL which points to the relevant company
-                    children: [this.insertImage(company.logo_url, 19.44, 86.4)],
-                    borders: this.noBorders,
-                    margins: {
-                        left: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin,
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    }
-                }),
-                new docx.TableCell({
+        const myRows = [
+                new docx.TableRow({
                     children: [
-                        this.makeParagraph(
-                            companyDesc, 
-                            this.generalStyle.dashFontSize,
-                            this.themeStyle.fontColor, 
-                            false
-                        )
+                        new docx.TableCell({
+                            children: [
+                                this.makeParagraph(
+                                        company.company.name, // Text for the paragraph
+                                        this.generalStyle.companyNameFontSize, // Font size
+                                        this.themeStyle.titleFontColor, // Specify the font color
+                                        0, // Set the space after attribute to 0
+                                        false, // Set bold to false
+                                        true, // Set alignment to center
+                                        this.generalStyle.heavyFont // Define the font used
+                                    )
+                                ],
+                            borders: this.noBorders,
+                            columnSpan: 2,
+                            margins: {
+                                top: this.generalStyle.tableMargin
+                            }
+                        }),
                     ],
-                    borders: this.noBorders,
-                    margins: {
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    }
-                }),
-            ]
-        })
+            }),
+            new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        children: [
+                            this.makeParagraph(
+                                companyDesc, 
+                                this.generalStyle.dashFontSize,
+                                this.themeStyle.fontColor, 
+                                false
+                            )
+                        ],
+                        borders: this.noBorders,
+                        margins: {
+                            bottom: this.generalStyle.tableMargin,
+                            top: this.generalStyle.tableMargin
+                        }
+                    }),
+                ]
+            })
+        ]   
         return new docx.Table({
-            columnWidths: [10, 90],
-            rows: [myRow],
+            columnWidths: [100],
+            rows: myRows,
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
@@ -303,7 +361,14 @@ class CompanyDashbord {
         })
     }
 
-    _docDescRow (docs, fileNameLen=25, docLen=460, headerText="Relevant Interactions") {
+    _docDescRow (
+        docs, 
+        fileNameLen=25, 
+        docLen=460, 
+        headerText="Most/Least Similar Interactions",
+        mostSimilarRowName="Most similar",
+        leastSimilarRowName="Least similar"
+    ) {
         // TODO add the header row with colspan=3, centered, and with margins all around to myrows
         let myRows = [
             new docx.TableRow({
@@ -313,10 +378,11 @@ class CompanyDashbord {
                             this.makeParagraph(
                                     headerText, 
                                     this.generalStyle.dashFontSize,
-                                    this.themeStyle.fontColor,
+                                    this.themeStyle.titleFontColor,
                                     0, // Set the space after attribute to 0
                                     true, // Set bold to true
-                                    true // Set alignment to center
+                                    true, // Set alignment to center
+                                    this.generalStyle.heavyFont // Define the font used
                                 )
                             ],
                         borders: this.noBorders,
@@ -331,20 +397,19 @@ class CompanyDashbord {
         })]
         for(const doc in docs) {
             let docCategoryName = ""
-            doc === "most_similar" ? docCategoryName = "Most similar" : docCategoryName = "Least similar"
+            doc === "most_similar" ? docCategoryName = mostSimilarRowName : docCategoryName = leastSimilarRowName
             // Trim the length of the document name
             let docName = docs[doc].name
             if (docName.length > fileNameLen) {
                 docName = docName.substring(0,fileNameLen) + '...'
             }
             // Trim the length of the document description
-            let docDesc = docs[doc].text
+            let docDesc = docs[doc].description
             docDesc = docDesc.replace(/\.\.\.|\.$/, '')
             if (docDesc.length > docLen) {
                 docDesc = docDesc.substring(0,docLen)
             }
             docDesc = docDesc + '...'
-            // TODO look into setting widths explicitly for each cell
             myRows.push(
                     new docx.TableRow({
                         children: [
@@ -442,19 +507,81 @@ class CompanyDashbord {
         })
     }
 
+    /**
+     * 
+     * @param {*} imageFile 
+     * @param {*} height 
+     * @param {*} width 
+     * @returns 
+     * @todo move to common
+     */
     insertImage (imageFile, height, width) {
+        const myFile = fs.readFileSync(imageFile)
         return new docx.Paragraph({
             alignment: docx.AlignmentType.CENTER,
             children: [
                 new docx.ImageRun({
-                    data: fs.readFileSync(imageFile),
+                    data: myFile,
                     transformation: {
-                        height: height, // 3 inches
+                        height: height,
                         width: width
                     }
                 })
             ]
         })
+    }
+
+    // Find the closest competitor
+    // This uses the Euclidean distantce, given points (x1, y1) and (x2, y2)
+    // d = sqrt((x2 - x1)^2 + (y2 - y1)^2) 
+    _getMostSimilarCompany(comparisons, companies) {
+        const x1 = 1 // In this case x1 = 1 and y1 = 1
+        const y1 = 1
+        let distances = {}
+        for(const companyId in comparisons) {
+            const myDistance = Math.sqrt(
+                    (comparisons[companyId].most_similar.score - x1) ** 2 + 
+                    (comparisons[companyId].least_similar.score - y1) ** 2
+                )
+            distances[myDistance] = companyId
+        }
+        const mostSimilarId = distances[Math.min(...Object.keys(distances))]
+        const mostSimilarCompany = companies.filter(company => {
+            if (parseInt(company.company.id) === parseInt(mostSimilarId)) {
+                return company
+            }
+        })
+        return mostSimilarCompany[0]
+    }
+
+    // Compute interaction descriptive statistics
+    _computeInteractionStats(company, competitors) {
+        // Pull out company interactions
+        const companyInteractions = Object.keys(company.linked_interactions).length
+
+        // Get the total number of interactions
+        // Add the current company interactions to the total
+        let totalInteractions = companyInteractions 
+        // Sum all other companies' interactions
+        for(const competitor in competitors) {
+            totalInteractions += Object.keys(competitors[competitor].company.linked_interactions).length
+        }
+
+        // Compute the average interactions per company
+        const totalCompanies = 1 + competitors.length  
+        const averageInteractions = Math.round(totalInteractions/totalCompanies) 
+
+        // Return the result
+        return {
+            totalStatsTitle: "Total Interactions",
+            totalStats: totalInteractions,
+            averageStatsTitle: "Average Interactions/Company",
+            averageStats: averageInteractions,
+            companyStatsTitle: "Interactions",
+            companyStats: companyInteractions,
+            totalCompaniesTitle: "Total Companies",
+            totalCompanies: totalCompanies
+        }
     }
 
     /**
@@ -468,20 +595,33 @@ class CompanyDashbord {
      * @param {*} font
      * @returns 
      * @todo Replace the report/common.js makeParagraph method with this one during refactoring
+     * @todo Add an options object in a future release when refactoring
+     * @todo Review the NOTICE section and at a later date work on all TODOs there
      */
-    makeParagraph (paragraph, size, color, spaceAfter, bold, center, font) {
-        // Note the font size is measured in half points
-        size = 2 * size
+    makeParagraph (
+        paragraph, 
+        size=20, 
+        color="000", 
+        spaceAfter=0, 
+        bold=false, 
+        center=false, 
+        font="Avenir Next", 
+        italics=false, 
+        underline=false
+    ) {
+        size = 2 * size // Font size is measured in half points, multiply by to is needed
         return new docx.Paragraph({
             alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
             children: [
                 new docx.TextRun({
                     text: paragraph,
-                    font: font ? font : this.generalStyle.font,
-                    size: size ? size : 20,
-                    bold: bold ? bold : false, 
-                    break: spaceAfter ? spaceAfter : 0,
-                    color: color ? color : "000",
+                    font: font ? font : "Avenir Next", // Default font: Avenir next
+                    size: size ? size : 20, // Default font size size 10pt or 2 * 10 = 20
+                    bold: bold ? bold : false, // Bold is off by default
+                    italics: italics ? italics : false, // Italics off by default
+                    underline: underline ? underline : false, // Underline off by default
+                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
+                    color: color ? color : "000", // Default color is black 
                 })
             ],
             
@@ -489,39 +629,70 @@ class CompanyDashbord {
     }
 
     /**
-     * 
+     * @async
      * @param {Object} company - the company the dashboard is for
      * @param {Object} competitors - the competitors to the company
+     * @param {String} baseDir - the complete directory needed to store images for the dashboard
      * @returns 
      */
-    makeDashboard(company, competitor, interactions) {
-        competitor = {
-            description: "Savonix is a company developing a mobile neurocognitive assessment and brain health platform. The platform allows users to access accurate cognitive data in domains from attention and impulse control to different kinds of memory to assess for dementia risk. It also enables users to screen for cognitive health directly from their mobile device.",
-            logo_url: "/Users/mihay42/tmp/savonix.png",
-            name: "Savonix"
+    async makeDashboard(company, competitors, baseDir) {
+        // Create the bubble chart from the company comparisons
+        const bubbleChartFile = await bubbleChart(
+            company.comparison,
+            this.env,
+            baseDir
+        )
+        // Find the most similar company
+        const mostSimilarCompany = this._getMostSimilarCompany(
+            company.comparison, 
+            competitors
+        )
+        // Pull in the relevant interactions from the most similar company
+        const mostLeastSimilarInteractions = {
+            most_similar: mostSimilarCompany.mostSimilar.interaction,
+            least_similar: mostSimilarCompany.leastSimilar.interaction
         }
-        interactions = {
-            most_similar: {
-                name: "Science - Savonix",
-                text: "This is the value of Savonix. We leverage our powerful database of cognitive, lifestyle, and other health data to assess and monitor your brain health over time. Our clinically validated, neurocognitive test provides real-time results for instant and delayed verbal memory, impulse control, attention, focus, emotion identification, information processing speed, flexible thinking, working memory and executive function. The role of memory in dement..."
-            },
-            least_similar: {
-                name: "Bayer Selects Savonix Digital Cognitive Assessment Platform to Validate the Effects of Multivitamin Supplement Berocca in Malaysia | Business Wire",
-                text: "A global leader in digital tests for cognitive health, and Bayer's consumer health division today announces a partnership agreement to work together to validate the effects of multivitamin supplement Berocca in the Malaysian market. A Savonix digital cognitive assessment, which takes around 10 minutes to complete, will be administered to 200 university students between the ages of 18-25 in Malaysia. The platform is an accessible, consumer-friendly and comprehensive tool for professional cognitive screens..."
-            },
-        }
-        const myStats = {
-            totalStatsTitle: "Total Interactions",
-            totalStats: 52,
-            averageStatsTitle: "Average Interactions/Company",
-            averageStats: 13,
-            companyStatsTitle: "uMETHOD Interactions",
-            companyStats: 13
-        }
+        // Compute the descriptive statistics for interactions
+        const myStats = this._computeInteractionStats(company,competitors)
+        // Create the radard chart from supplied interaction quality data
+        const radarChartFile = await radarChart(
+            {company: company, competitors: competitors, stats: myStats},
+            this.env,
+            baseDir
+        )
+        /**
+         * NOTICE
+         * I believe that there is a potential bug in node.js filesystem module.
+         * This file is needed because otherwise the actual final of the two images
+         * that needs to be inserted into the docx file won't load.  If we create a
+         * scratch file then it will.  Essentially something is off with the last
+         * file created in a series of files, but the second to last file appears ok.
+         * 
+         * Obviously more testing is needed before we approach the node team with something
+         * half baked.  Until then here are some observations:
+         * 1. Unless the file of a given name is present, even if zero bytes, the image data
+         *    will not be put into the file.  If the file name exists then everything works.
+         * 2. Again the last file in a series of files appears to be corrupted and cannot, for
+         *    some odd reason, be read by the docx module and be inserted into a docx file.
+         *    Yet when we look at the file system object within the file system it can be opened
+         *    without any problems.
+         * 
+         * TODOs
+         * 1. Create a separate program that emulates what is done in the mrcli dashboard
+         * 2. Try on multiple OSes
+         * 3. Clearly document the steps and problem encountered
+         * 4. In the separate standalone program try using with and without axios use default http without
+         */
+        const scratchChartFile = await radarChart(
+            {company: company, competitors: competitors, stats: myStats},
+            this.env,
+            baseDir,
+            'scratch_chart.png'
+        )
         let myRows = [
-            this.firstRow(null, null, myStats),
-            this.shellRow("companyDesc", competitor),
-            this.shellRow("docDesc", null, interactions),
+            this.firstRow(bubbleChartFile, radarChartFile, myStats),
+            this.shellRow("companyDesc", mostSimilarCompany),
+            this.shellRow("docDesc", null, mostLeastSimilarInteractions),
         ]
         const myTable = new docx.Table({
             columnWidths: [40, 40, 20],

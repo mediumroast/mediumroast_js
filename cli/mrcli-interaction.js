@@ -16,7 +16,7 @@ import Environmentals from '../src/cli/env.js'
 import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import serverOperations from '../src/cli/common.js'
+import {serverOperations} from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
