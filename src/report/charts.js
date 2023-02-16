@@ -31,6 +31,50 @@ async function _postToChartServer(jsonObj, server) {
 
 }
 
+function _transformForRadar(company, competitors) {
+    // Build a lookup table
+    const lookup = {
+        'General Notes': 'General', 
+        'Frequently Asked Questions': 'General',
+        'White Paper': 'Article',
+        'Case Study': 'Article',
+        'Public Company Filing': 'General',
+        'Patent': 'General',
+        'Press Release': 'Article',
+        'Blog Post': 'Social',
+        'Social Media Post(s)': 'Social',
+        'Product Document': 'Product/Service',
+        'Service Document': 'Product/Service',
+        'Transcript': 'General',
+        'Article': 'Article',
+        'About the company': 'About',
+        'Research Paper': 'General',
+    }
+    // Define the model for recording the scores for the radar chart
+    let counts = {
+        'General': 0,
+        'Article': 0,
+        'Social': 0,
+        'Product/Service': 0,
+        'About': 0
+    }
+
+    let competitorQualities = competitors.map( 
+        (competitor) => {
+            return competitor.company.quality
+        }
+    )
+    competitorQualities.push(company.quality)
+
+    for (const quality in competitorQualities) {
+        const qualities = Object.keys(competitorQualities[quality])
+        for(const qualityType in qualities) {
+            counts[lookup[qualities[qualityType]]] += competitorQualities[quality][qualities[qualityType]]
+        }
+    }
+    return counts
+}
+
 // --------------------------------------------------------
 // External methods: bubbleChart(), radardChart()
 // --------------------------------------------------------
@@ -191,24 +235,39 @@ export async function radarChart (
     seriesName="Quality by average",
     chartTitle="Overall interaction quality by category",
     dataName="Comparison population",
+    standards={total: 15}
 ) {
     // Construct the CLIUtilities object
     const cliUtil = new CLIUtilities()
+
+    // Transform data for the chart
+    let myQualityCounts = _transformForRadar(objData.company, objData.competitors)
+    // Compute and normalize the total number of interactions
+    // Total
+    const standardTotal = Math.round(objData.stats.averageStats / standards.total) * 100
+    // Normalize by total
+    const myTotal = objData.stats.totalStats
+    const myCategories = Object.keys(myQualityCounts)
+    for (const category in myCategories) {
+        myQualityCounts[myCategories[category]] = Math.round(myQualityCounts[myCategories[category]] / myTotal * 100)
+    }
 
     // Pick up the settings including those from the theme
     const generalStyle = docxSettings.general
     const themeStyle = docxSettings[env.theme]
 
+    
+
     const myData = {
         radar: {
             shape: 'circle',
             indicator: [
-              { name: 'Total', max: 100, min: 0 }, // 15 is 100%
+              { name: 'Total', max: 100, min: 0 }, // 15 * N would be the total max or 100%
               { name: 'Product/Service', max: 20, min: 0 }, // 20% for each category
-              { name: 'Press Releases', max: 20, min: 0 }, // 20% for each category
+              { name: 'Article', max: 20, min: 0 }, // 20% for each category
               { name: 'Social', max: 20, min: 0 }, // 20% for each category
               { name: 'About', max: 20, min: 0 }, // 20% for each category
-              { name: 'Article', max: 20, min: 0 } // 20% for each category
+              { name: 'General', max: 20, min: 0 } // 20% for each category
             ],
             axisLine: {
                 lineStyle: {
@@ -240,7 +299,14 @@ export async function radarChart (
                 name: seriesName,
                 type: 'radar',
                 data:[{
-                    value: [93, 20, 30, 15, 25, 0], // these should be averages
+                    value: [
+                        standardTotal, 
+                        myQualityCounts['Product/Service'], 
+                        myQualityCounts['Article'], 
+                        myQualityCounts['Social'], 
+                        myQualityCounts['About'], 
+                        myQualityCounts['General']
+                    ], // these should be averages
                     name: dataName
                 }],
                 itemStyle: {

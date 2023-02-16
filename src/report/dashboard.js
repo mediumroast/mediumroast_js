@@ -652,9 +652,11 @@ class CompanyDashbord {
             most_similar: mostSimilarCompany.mostSimilar.interaction,
             least_similar: mostSimilarCompany.leastSimilar.interaction
         }
+        // Compute the descriptive statistics for interactions
+        const myStats = this._computeInteractionStats(company,competitors)
         // Create the radard chart from supplied interaction quality data
         const radarChartFile = await radarChart(
-            {},
+            {company: company, competitors: competitors, stats: myStats},
             this.env,
             baseDir
         )
@@ -682,13 +684,11 @@ class CompanyDashbord {
          * 4. In the separate standalone program try using with and without axios use default http without
          */
         const scratchChartFile = await radarChart(
-            {},
+            {company: company, competitors: competitors, stats: myStats},
             this.env,
             baseDir,
             'scratch_chart.png'
         )
-        // Compute the descriptive statistics for interactions
-        const myStats = this._computeInteractionStats(company,competitors)
         let myRows = [
             this.firstRow(bubbleChartFile, radarChartFile, myStats),
             this.shellRow("companyDesc", mostSimilarCompany),
