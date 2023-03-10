@@ -13,7 +13,6 @@ import { Auth, Companies, Interactions, Studies } from '../api/mrServer.js'
 import axios from 'axios'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as http from 'http'
 import FilesystemOperators from './filesystem.js'
 
 class serverOperations {
