@@ -82,11 +82,8 @@ class CompanyFormatters {
         this.company.country !== this.defaultValue ?
             locationString += this.company.country :
             locationString = locationString
-        
-        let coordinates = null
-        locationString ? coordinates = await this.getGeospatialData(locationString) : coordinates = coordinates
 
-        return coordinates
+        return locationString
     }
 
     /**
