@@ -356,7 +356,7 @@ class CompanyStandalone {
             ' package is opened.'
         this.util = new DOCXUtilities()
         this.fileSystem = new FilesystemOperators()
-        this.topics = this.util.rankTags(this.company.topics)
+        // this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
     }
@@ -436,8 +436,8 @@ class CompanyStandalone {
                     'The following topics were automatically generated from all ' +
                     this.noInteractions + ' interactions associated to this company.'
                 ),
-                this.util.makeHeading2('Topics Table'),
-                this.util.topicTable(this.topics),
+                // this.util.makeHeading2('Topics Table'),
+                // this.util.topicTable(this.topics),
                 this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
             ],
             ...interactionSection.makeDescriptionsDOCX(),

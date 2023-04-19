@@ -164,9 +164,10 @@ class InteractionSection {
                 })
             }
 
+            // NOTE: Early reviews by users show topcis are confusing
             // Generate the topic table
-            const topics = this.util.rankTags(this.interactions[interaction].topics)
-            const topicTable = this.util.topicTable(topics)
+            // const topics = this.util.rankTags(this.interactions[interaction].topics)
+            // const topicTable = this.util.topicTable(topics)
             
             // Push all of the content into the references array
             references.push(
@@ -183,8 +184,9 @@ class InteractionSection {
                     this.interactions[interaction].abstract,
                     this.fontSize * 1.5
                 ),
-                this.util.makeHeading2('Topics'),
-                topicTable,
+                // NOTE: Early reviews by users show topcis are confusing
+                // this.util.makeHeading2('Topics'), 
+                // topicTable,
                 metadataStrip
             )
         }
