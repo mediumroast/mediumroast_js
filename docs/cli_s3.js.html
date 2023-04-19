@@ -7,7 +7,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> cli/commonWizard.js</title>
+  <title> cli/s3.js</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -80,7 +80,7 @@
             <div class="content">
                 <header class="page-title">
                     <p>Source</p>
-                    <h1>cli/commonWizard.js</h1>
+                    <h1>cli/s3.js</h1>
                 </header>
                 
 
@@ -90,199 +90,178 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * A class for common steps in a CLI based wizard.
+ * A class used for higher level access to S3 compatible storage systems and services
  * @author Michael Hay &lt;michael.hay@mediumroast.io>
- * @file commonWizard.js
+ * @file s3.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 2.1.0
  */
 
-
 // Import required modules
-import inquirer from "inquirer"
-import node_geocoder from "node-geocoder"
+import * as fs from 'fs'
+import AWS from 'aws-sdk'
+import * as progress from 'cli-progress'
 
-class WizardUtils {
+class s3Utilities {
     /**
-     * Common steps and utilities needed across all CLI based wizards.  Currently focused on manual
-     * object creation and proceeding to perform an operation/step or not.
+     * A class to enable consistent functionality for basic operations like writing files,
+     * downloading from S3, reading files, creating ZIP archives, etc.
      * @constructor
-     * @classdesc Construct an object for common wizard utilities/steps
-     * @param {String} objectType - the type of object (interaction, company, study) used for these common utilities
+     * @classdesc Construct the S3 controller needed to perform various actions
+     * @param {Object} env - An object containing all needed environmental variables for setting up the S3 controller
      */
-    constructor(objectType){
-        // Class globals
-        this.defaultValue = "Unknown"
-        this.objectType = objectType
-        this.geoProvider = 'openstreetmap' // Openstreet maps provides consistent outputs w/o API keys, etc.
-        this.itemLineLength = 80 // The line length for long items in a checkbox
-    }
-
-    /**
-     * @async
-     * @function operationOrNot
-     * @description Prompt the user for a step to take and return true if they want to take the step or false if they don't
-     * @param {String} myStep - the name of the step to check
-     * @returns {Boolean} - returns true or false relating to if the user wants to perform the step or not
-     */
-    async operationOrNot(myStep) {
-        let doOperation = null 
-        await inquirer
-                .prompt([
-                    {
-                        name: "operation",
-                        type: "confirm",
-                        message: myStep
-                    }
-                ])
-                // If we don't want to perform the setup then exit
-                .then((answer) => {
-                        doOperation = answer.operation
-                    }
-                )
-        return doOperation
-    }
-
-    /**
-     * @async
-     * @function doManual
-     * @description Using an input prototype object step the user through setting each property
-     * @param {Object} prototype - the object to use for prompting the user
-     * @param {Array} whiteList - a list used in conjunction with summary
-     * @param {Boolean} summary - when present only the items in whiteList will be prompted to the user
-     * @returns {Object} - the final object with the changes the user wants to see
-     */
-    async doManual(prototype, whiteList=[], summary=false) {
-        let myObj = {}
-        for (const setting in prototype) {
-            if (summary) {
-                // This is the whitelist of items to manually ask for should we want to do summary verification
-                if (!whiteList.includes(setting)) {
-                    myObj[setting] = prototype[setting].value
-                    continue
-                }
-            }
-            const myMessage = `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?'
-            await inquirer
-                .prompt([
-                    {
-                        name: setting,
-                        type: 'input',
-                        message: myMessage,
-                        default() {
-                            return prototype[setting].value 
-                        }
-                    }
-                ])
-                .then(async (answer) => {
-                    myObj[setting] = await answer[setting]
-                })
-        }
-        return myObj
-    }
-
-    async doCheckbox(message, choices){
-        let myResult = null
-            await inquirer
-                .prompt([
-                    {
-                        name: 'option',
-                        type: 'checkbox',
-                        message: message,
-                        choices: choices,
-                        validate(answer) {
-                            if(answer.length !== 1){
-                                return 'Please choose from one of the options available.'
-                            }
-                            return true
-                        }
-                    }
-                ])
-                .then(async (answer) => {
-                    myResult = await answer.option
-                })
-        return myResult
-    }
-
-    async locate(location) {
-        const options = {
-            provider: this.geoProvider,
-            httpAdapter: 'https'
-        }
-        const myGeoCoder = node_geocoder(options)
-        const coordinates = await myGeoCoder.geocode(location)
-        return coordinates
-    }
-
-    async getLatLong(mrObj) {
-        let locationString = "" // Set to an empty string
-        // Add the address if present
-        mrObj.street_address !== this.defaultValue ? 
-            locationString = mrObj.street_address + ', ' : 
-            locationString = locationString
-        // Add the state/province if present
-        mrObj.city !== this.defaultValue ? 
-            locationString += mrObj.city + ', ' :
-            locationString = locationString
-        // Add state/province if present
-        mrObj.state_province !== this.defaultValue ?
-            locationString += mrObj.state_province + ', ' :
-            locationString = locationString
-        // Add zip/postal code if present
-        mrObj.zip_postal !== this.defaultValue ?
-            locationString += mrObj.zip_postal + ', ' :
-            locationString = locationString
-        // Add country if present
-        mrObj.country !== this.defaultValue ?
-            locationString += mrObj.country :
-            locationString = locationString
-        
-        let coordinates = null
-        locationString ? coordinates = await this.locate(locationString) : coordinates = coordinates
-        
-        // TODO test to see if an empty array will trigger this or not
-        if(coordinates) {
-            let idx = 0
-            const choices = coordinates.map(
-                (choice) => {
-                    const item = {
-                        name: choice.formattedAddress.substring(0, this.itemLineLength) + `... [item: ${idx}]`
-                    }
-                    idx += 1
-                    return item
-                }
-            )
-            const addressChoice = await this.doCheckbox(
-                `Which address is closest to your intended ${this.objectType}\'s location?`,
-                choices
-            )
-            let myItem = parseInt(addressChoice[0].split('item:')[1].replace(']', ''))
-            return coordinates[myItem]
-        } else {
-            return {
-                latitude: this.defaultValue,
-                longitude: this.defaultValue,
-                formattedAddress: this.defaultValue
-            }
-        }
-    }
-
-    async getRegion () {
-        const tmpRegion = await this.doCheckbox(
-            "Which region is this company associated to?",
-            [
-                {name: 'Americas', checked: true}, 
-                {name: 'Europe Middle East, Africa'},
-                {name: 'Asia, Pacific, Japan'}
-            ]
+     constructor(env) {
+        env.s3Server ? 
+            this.s3Server = env.s3Server :
+            this.s3Server = env.server
+        env.s3User ?
+            this.s3User = env.s3User :
+            this.s3User = env.user
+        env.s3APIKey ?
+            this.s3APIKey = env.s3APIKey :
+            this.s3APIKey = env.api_key
+        env.s3Region ?
+            this.s3Region = env.s3Region :
+            this.s3Region = env.region
+        this.s3Controller = new AWS.S3({
+            accessKeyId: this.s3User ,
+            secretAccessKey: this.s3APIKey,
+            endpoint: this.s3Server ,
+            s3ForcePathStyle: true, // needed with minio?
+            signatureVersion: 'v4',
+            region: this.s3Region // S3 won't work without the region setting
+        })
+        this.progressBar = new progress.SingleBar(
+            {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+            progress.Presets.rect
         )
-        return tmpRegion[0]
     }
-        
+
+    /**
+    * @function s3DownloadObjs
+    * @description From an S3 bucket download the document associated to each interaction
+    * @param {Array} interactions - an array of interaction objects
+    * @param {String} targetDirectory - the target location for downloading the objects to
+    * @todo this.env.s3Source is incorrect meaning it will fail for now, add srcBucket as argument
+    */
+    async s3DownloadObjs (interactions, targetDirectory, sourceBucket) {
+        for (const interaction in interactions) {
+            const objWithPath = interactions[interaction].url.split('://').pop()
+            const myObj = objWithPath.split('/').pop()
+            const myParams = {Bucket: sourceBucket, Key: myObj}
+            const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
+            const s3Get = await this.s3Controller.getObject(myParams).promise()
+            myFile.write(s3Get.Body)
+        }
+    }
+
+    /**
+     * @function s3UploadObjs
+     * @description Upload objects to a target bucket on an S3 compatible object store
+     * @param {Array} objs - an array/list of file names
+     * @param {String} targetBucket - the bucket to upload the content to
+     */
+    async s3UploadObjs (objs, targetBucket, isCLI=false) {
+        // Process through each interaction file
+        const totalObjs = objs.length
+        if (isCLI) {this.progressBar.start(totalObjs, 0)}
+        for(const myObj in objs){
+            if(!objs[myObj]){ continue } // Skip if there is an empty entry in the Array
+            const myKey = objs[myObj].split('/') // split to get to the file name
+            const myBody = fs.createReadStream(objs[myObj]) // open and read the file
+            // TODO need to remove any leading or trailing spaces from the file name
+            const myParams = {Bucket: targetBucket, Key: myKey[myKey.length - 1], Body: myBody} // setup the key elements to talk to S3
+            const s3Put = await this.s3Controller.putObject(myParams).promise() // Put the object
+            if (!isCLI) {return [myKey[myKey.length - 1], s3Put]} // return the file name and the result of the put
+            if (isCLI) {this.progressBar.increment()}
+        }
+        if (isCLI) {this.progressBar.stop()}
+    }
+
+    /**
+     * @function s3CreateBucket
+     * @description Create a bucket in an S3 object store
+     * @param {String} targetBucket - the name of the bucket
+     * @returns 
+     */
+    async s3CreateBucket (targetBucket) {
+        // Setup the bucket parameters
+        const myParams = {Bucket: targetBucket}
+        try {  
+            // call S3 to create the bucket
+            const myBucket = await this.s3Controller.createBucket(myParams).promise()
+            return [true, `SUCCESS: created ${targetBucket}`, myBucket] 
+        } catch (err) {
+            return [false, `FAILED: unable to create ${targetBucket}`, err] 
+        }
+    }
+
+    /**
+     * @function s3DeleteBucket
+     * @description Delete a bucket in an S3 object store
+     * @param {String} targetBucket - the name of the bucket 
+     * @returns 
+     */
+    async s3DeleteBucket (targetBucket) {
+        // Setup the bucket parameters
+        const myParams = {Bucket: targetBucket}
+        try {  
+            // call S3 to create the bucket
+            const myBucket = await this.s3Controller.deleteBucket(myParams).promise()
+            return [true, `SUCCESS: deleted ${targetBucket}`, myBucket] 
+        } catch (err) {
+            return [false, `FAILED: unable to delete ${targetBucket}`, err] 
+        }
+
+    }
+
+    /**
+     * @function s3ArchiveBucket
+     * @description Download a bucket in an S3 object store
+     * @param {String} targetDirectory - the directory to store the bucket contents to
+     * @param {String} sourceBucket - the name of the bucket
+     * @param {Boolean} isCLI - set to true by default, and when true enables a progress bar on the command line 
+     * @returns 
+     */
+    async s3ArchiveBucket (targetDirectory, sourceBucket, isCLI=true) {
+        // Setup the bucket parameters
+        const listParams = {Bucket: sourceBucket}
+        try {  
+            // call S3 to list objects in the bucket
+            const myBucketContents = await this.s3Controller.listObjects(listParams).promise()
+            const myObjs = myBucketContents.Contents
+            const totalObjs = myObjs.length
+            if (isCLI) {this.progressBar.start(totalObjs, 0)}
+            for (const objIdx in myObjs) {
+                if (!myObjs[objIdx].Key){ continue } // For blank entries should they exist
+                const myObj = myObjs[objIdx].Key
+                const getParams = {Bucket: sourceBucket, Key: myObj}
+                const myFile = fs.createWriteStream(targetDirectory + '/' + myObj)
+                const s3Get = await this.s3Controller.getObject(getParams).promise()
+                myFile.write(s3Get.Body)
+                if (isCLI) {this.progressBar.increment()}
+            }
+            if (isCLI) {this.progressBar.stop()}
+            return [true, `SUCCESS: saved contents for ${sourceBucket}`, null] 
+        } catch (err) {
+            return [false, `FAILED: unable to delete ${sourceBucket}`, err] 
+        }
+
+    }
+
+    /**
+     * 
+     * @param {String} objectName 
+     * @returns 
+     */
+    generateBucketName(objectName) {
+        let bucketName = objectName.replace(/[^a-z0-9]/gi,'')
+        return bucketName.toLowerCase()
+    }
 }
 
-export default WizardUtils</code></pre>
+export default s3Utilities</code></pre>
         </article>
     </section>
 

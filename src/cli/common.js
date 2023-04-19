@@ -13,7 +13,6 @@ import { Auth, Companies, Interactions, Studies } from '../api/mrServer.js'
 import axios from 'axios'
 import * as fs from 'fs'
 import * as path from 'path'
-import FilesystemOperators from './filesystem.js'
 
 class serverOperations {
     /**
@@ -142,33 +141,6 @@ class Utilities {
         } catch (err) {
             console.log(`ERROR: Unable to download file due to [${err}]`)
         }
-    }
-
-    /**
-     * @async
-     * @function getLogo
-     * @description Download the logo for a company if defined otherwise write a <company_name>.nologo file 
-     * @param {Object} company - the company object which will have the logo downloaded
-     * @param {String} directory - target directory to store the logo
-     * @todo since docx doesn't yet suppor SVG formatted images this code remains, but isn't called
-     */
-    async getLogo(company, directory) {
-        // Construct the file system object
-        const fileSystem = new FilesystemOperators()
-        // Set the base file name
-        let baseFileName = company.logo_url.split('/').pop()
-        // Download the company logo if available
-        if (company.logo_url !== 'Unknown') {
-            // Get the file name from the logo_url
-            // Perform the download
-            await this.downloadImage(company.logo_url, directory, baseFileName)
-        // Create a control file that says the logo isn't available
-        } else {
-            baseFileName = baseFileName + '.nologo'
-            fileSystem.saveTextFile(directory + '/' + baseFileName + '.nologo', "Unknown")
-        }
-        // Return the base file name
-        return directory + '/' + baseFileName
     }
 }
 

@@ -2,9 +2,9 @@
  * A class that safely wraps RESTful calls to the backend server
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file scaffold.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 // Import required modules
@@ -76,30 +76,30 @@ class mrRest {
         }
     }
 
-    /**
-     * @function patchObj
-     * @description Patch an object using endpoint and a Javascript object.
-     * @param  {String} endpoint The full URL to the RESTful target
-     * @param  {Object} obj Data objects for input
-     * @returns  {Array} An array starting with a boolean success/failure and resulting data
-     * @todo This may not be needed for the final implementation, verify with the backend
-     */
-    async patchObj(endpoint, obj) {
-        const myURL = this.restServer + endpoint
-        const myHeaders = {
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': this.apiKey
-            }
-        }
-        try {
-            const resp = await axios.patch(url = myURL, data = obj, myHeaders)
-            return (true, resp.data)
-        } catch (err) {
-            console.error(err)
-            return (false, err)
-        }
-    }
+    // /**
+    //  * @function patchObj
+    //  * @description Patch an object using endpoint and a Javascript object.
+    //  * @param  {String} endpoint The full URL to the RESTful target
+    //  * @param  {Object} obj Data objects for input
+    //  * @returns  {Array} An array starting with a boolean success/failure and resulting data
+    //  * @todo This may not be needed for the final implementation, verify with the backend
+    //  */
+    // async patchObj(endpoint, obj) {
+    //     const myURL = this.restServer + endpoint
+    //     const myHeaders = {
+    //         headers: {
+    //             'Accept': 'application/json',
+    //             'Authorization': this.apiKey
+    //         }
+    //     }
+    //     try {
+    //         const resp = await axios.patch(url = myURL, data = obj, myHeaders)
+    //         return (true, resp.data)
+    //     } catch (err) {
+    //         console.error(err)
+    //         return (false, err)
+    //     }
+    // }
 
     /**
      * @function deleteObj

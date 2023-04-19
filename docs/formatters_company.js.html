@@ -7,7 +7,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> cli/commonWizard.js</title>
+  <title> formatters/company.js</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -80,7 +80,7 @@
             <div class="content">
                 <header class="page-title">
                     <p>Source</p>
-                    <h1>cli/commonWizard.js</h1>
+                    <h1>formatters/company.js</h1>
                 </header>
                 
 
@@ -90,122 +90,52 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * A class for common steps in a CLI based wizard.
+ * A set of common utilities to format company objects given results from company_dns
  * @author Michael Hay &lt;michael.hay@mediumroast.io>
- * @file commonWizard.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @file company.js
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
  */
 
-
-// Import required modules
-import inquirer from "inquirer"
 import node_geocoder from "node-geocoder"
 
-class WizardUtils {
-    /**
-     * Common steps and utilities needed across all CLI based wizards.  Currently focused on manual
-     * object creation and proceeding to perform an operation/step or not.
-     * @constructor
-     * @classdesc Construct an object for common wizard utilities/steps
-     * @param {String} objectType - the type of object (interaction, company, study) used for these common utilities
-     */
-    constructor(objectType){
-        // Class globals
-        this.defaultValue = "Unknown"
-        this.objectType = objectType
-        this.geoProvider = 'openstreetmap' // Openstreet maps provides consistent outputs w/o API keys, etc.
-        this.itemLineLength = 80 // The line length for long items in a checkbox
+class CompanyFormatters {
+    constructor (companyObj) {
+        this.company = companyObj
+        this.geoProvider = 'openstreetmap'
+        this.defaultValue = 'Unknown' 
     }
 
     /**
-     * @async
-     * @function operationOrNot
-     * @description Prompt the user for a step to take and return true if they want to take the step or false if they don't
-     * @param {String} myStep - the name of the step to check
-     * @returns {Boolean} - returns true or false relating to if the user wants to perform the step or not
+     * 
+     * @param {*} forms 
+     * @returns 
      */
-    async operationOrNot(myStep) {
-        let doOperation = null 
-        await inquirer
-                .prompt([
-                    {
-                        name: "operation",
-                        type: "confirm",
-                        message: myStep
-                    }
-                ])
-                // If we don't want to perform the setup then exit
-                .then((answer) => {
-                        doOperation = answer.operation
-                    }
-                )
-        return doOperation
-    }
-
-    /**
-     * @async
-     * @function doManual
-     * @description Using an input prototype object step the user through setting each property
-     * @param {Object} prototype - the object to use for prompting the user
-     * @param {Array} whiteList - a list used in conjunction with summary
-     * @param {Boolean} summary - when present only the items in whiteList will be prompted to the user
-     * @returns {Object} - the final object with the changes the user wants to see
-     */
-    async doManual(prototype, whiteList=[], summary=false) {
-        let myObj = {}
-        for (const setting in prototype) {
-            if (summary) {
-                // This is the whitelist of items to manually ask for should we want to do summary verification
-                if (!whiteList.includes(setting)) {
-                    myObj[setting] = prototype[setting].value
-                    continue
-                }
+    getRecentPublicFormUrls(forms){
+        let tenQ = this.defaultValue
+        let tenK = this.defaultValue
+        const sortedForms = Object.keys(forms).sort().reverse()
+        for (const form in sortedForms) {
+            const formType = forms[sortedForms[form]].formType
+            if (formType.search(/10-Q/g)) {
+                tenQ = forms[sortedForms[form]].filingIndex
+                if(tenK !== this.defaultValue) {break}
+            } else if (formType.search(/10-K/g)) {
+                tenK = forms[sortedForms[form]].filingIndex
+                if(tenQ !== this.defaultValue) {break}
+            } else {
+                continue
             }
-            const myMessage = `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?'
-            await inquirer
-                .prompt([
-                    {
-                        name: setting,
-                        type: 'input',
-                        message: myMessage,
-                        default() {
-                            return prototype[setting].value 
-                        }
-                    }
-                ])
-                .then(async (answer) => {
-                    myObj[setting] = await answer[setting]
-                })
         }
-        return myObj
+        return(tenK, tenQ)
     }
 
-    async doCheckbox(message, choices){
-        let myResult = null
-            await inquirer
-                .prompt([
-                    {
-                        name: 'option',
-                        type: 'checkbox',
-                        message: message,
-                        choices: choices,
-                        validate(answer) {
-                            if(answer.length !== 1){
-                                return 'Please choose from one of the options available.'
-                            }
-                            return true
-                        }
-                    }
-                ])
-                .then(async (answer) => {
-                    myResult = await answer.option
-                })
-        return myResult
-    }
-
-    async locate(location) {
+    /**
+     * 
+     * @param {*} location 
+     * @returns 
+     */
+    async getGeospatialData(location) {
         const options = {
             provider: this.geoProvider,
             httpAdapter: 'https'
@@ -215,74 +145,73 @@ class WizardUtils {
         return coordinates
     }
 
-    async getLatLong(mrObj) {
+    /**
+     * 
+     * 
+     * @returns 
+     * @todo review how we plan to implement the return
+     */
+    async getLocationData() {
         let locationString = "" // Set to an empty string
         // Add the address if present
-        mrObj.street_address !== this.defaultValue ? 
-            locationString = mrObj.street_address + ', ' : 
+        this.company.street_address !== this.defaultValue ? 
+            locationString = this.company.street_address + ', ' : 
             locationString = locationString
         // Add the state/province if present
-        mrObj.city !== this.defaultValue ? 
-            locationString += mrObj.city + ', ' :
+        this.company.city !== this.defaultValue ? 
+            locationString += this.company.city + ', ' :
             locationString = locationString
         // Add state/province if present
-        mrObj.state_province !== this.defaultValue ?
-            locationString += mrObj.state_province + ', ' :
+        this.company.state_province !== this.defaultValue ?
+            locationString += this.company.state_province + ', ' :
             locationString = locationString
         // Add zip/postal code if present
-        mrObj.zip_postal !== this.defaultValue ?
-            locationString += mrObj.zip_postal + ', ' :
+        this.company.zip_postal !== this.defaultValue ?
+            locationString += this.company.zip_postal + ', ' :
             locationString = locationString
         // Add country if present
-        mrObj.country !== this.defaultValue ?
-            locationString += mrObj.country :
+        this.company.country !== this.defaultValue ?
+            locationString += this.company.country :
             locationString = locationString
-        
-        let coordinates = null
-        locationString ? coordinates = await this.locate(locationString) : coordinates = coordinates
-        
-        // TODO test to see if an empty array will trigger this or not
-        if(coordinates) {
-            let idx = 0
-            const choices = coordinates.map(
-                (choice) => {
-                    const item = {
-                        name: choice.formattedAddress.substring(0, this.itemLineLength) + `... [item: ${idx}]`
-                    }
-                    idx += 1
-                    return item
-                }
-            )
-            const addressChoice = await this.doCheckbox(
-                `Which address is closest to your intended ${this.objectType}\'s location?`,
-                choices
-            )
-            let myItem = parseInt(addressChoice[0].split('item:')[1].replace(']', ''))
-            return coordinates[myItem]
-        } else {
-            return {
-                latitude: this.defaultValue,
-                longitude: this.defaultValue,
-                formattedAddress: this.defaultValue
-            }
-        }
+
+        return locationString
     }
 
-    async getRegion () {
-        const tmpRegion = await this.doCheckbox(
-            "Which region is this company associated to?",
-            [
-                {name: 'Americas', checked: true}, 
-                {name: 'Europe Middle East, Africa'},
-                {name: 'Asia, Pacific, Japan'}
-            ]
-        )
-        return tmpRegion[0]
+    /**
+     * 
+     * @returns
+     */
+    getURL() {
+        return(this.company.website[0])
     }
-        
+
+    /**
+     * @returns
+     */
+    getCleanDescription() {
+        return this.company.description.replace(/["']/g, '')
+    }
+
+    /**
+     * 
+     * @returns 
+     */
+    getCleanTickers() {
+        return this.company.tickers[0] + ':' + this.company.tickers[1] 
+    }
+
+    /**
+     * 
+     * @returns 
+     */
+    getExchange() {
+        return this.company.exchanges[0]
+    }
+
+
 }
 
-export default WizardUtils</code></pre>
+export default CompanyFormatters</code></pre>
         </article>
     </section>
 

@@ -255,12 +255,6 @@ class CompanySection {
                 competitor.company.name,
                 'Company'
             )
-            
-            // Download the company logo
-            // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
-            //      use the logos in the document for now.  When SVG support is available this feature
-            //      can be enabled.
-            // await myUtils.getLogo(competitor.company, this.baseDir + '/images')
 
             // Compute reading time
             totalReadingTime += 
@@ -394,13 +388,6 @@ class CompanyStandalone {
         // TODO when we remove fileName we can uncomment the item below
         // const fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
         fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
-
-        // Download the logo
-        // NOTE Since SVG formats aren't yet supported in the Javascript docx module we won't 
-        //      use the logos in the document for now.  When SVG support is available this feature
-        //      can be enabled.
-        // const myUtils = new CLIUtilities()
-        // const logoFilename = await myUtils.getLogo(this.company, this.baseDir + '/images')
 
         // Capture the current date
         const date = new Date();
