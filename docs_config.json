@@ -1,6 +1,7 @@
 {
     "plugins": [
-        "plugins/markdown"
+        "plugins/markdown",
+        "plugins/summarize"
     ],
     "opts": {
         "template": "node_modules/better-docs", 
@@ -16,12 +17,12 @@
         "better-docs": {
             "name": "mediumroast.io sdk documentation",
             "logo": "images/mr_logo.png",
-            "title": "SDK Documentation for the mediumroast.io",
-
+            "title": "SDK and CLI Documentation for the mediumroast.io",
+            "style": "style.css",
 	        "hideGenerator": false,
             "navLinks": [
                 {
-                    "label": "Github",
+                    "label": "Mediumroast Jascript SDK/CLI on Github",
                     "href": "https://github.com/mediumroast/mediumroast_js"
                 }
             ]

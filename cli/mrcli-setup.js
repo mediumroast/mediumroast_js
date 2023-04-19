@@ -53,10 +53,14 @@ function parseCLIArgs() {
 function getEnv () {
     return {
         DEFAULT: {
-            // rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:26767", "http://cherokee.from-ca.com:46767"],
+            // Define the new URLs for the various services
+            // mr_server: "https://app.mediumroast.io/api",
+            // company_dns: "https://www.mediumroast.io/company_dns",
+            // company_logos: "http://cherokee.from-ca.com:3030/allicons.json?url=",
+            // echarts: "http://cherokee.from-ca.com:3000",
+
             rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:46767"],
-            user: "rflores", // For now we're not going to prompt for this it is a placeholder
-            secret: "password", // For now we're not going to prompt for this it is a placeholder
+
             api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
             working_dir: "/tmp",
             company_dns_servers: {
@@ -74,17 +78,21 @@ function getEnv () {
             region: "leo-dc",
             source: "Unknown" // TODO this is deprecated remove after testing
         },
-        document_settings: {
-            font_type: "Avenir Next",
-            font_size: 10,
-            title_font_color: "#41a6ce",
-            title_font_size: 14,
-            company: "Mediumroast, Inc.",
-            copyright: "Copyright 2022, Mediumroast. All rights reserved.",
-            output_dir: "Documents"
-        }
+        // document_settings: {
+        //     font_type: "Avenir Next",
+        //     font_size: 10,
+        //     title_font_color: "#41a6ce",
+        //     title_font_size: 14,
+        //     company: "Mediumroast, Inc.",
+        //     copyright: "Copyright 2022, Mediumroast. All rights reserved.",
+        //     output_dir: "Documents"
+        // }
     }
 }
+
+// TODO checkServer is now a shared function and can be removed from here
+// TODO talk to Raul about what kinds of prechecks should or should not be run. It is possible
+//      that _checkServer could be deprecated as is.
 
 async function _checkServer(server, env) {
     // Generate the credential & construct the API Controllers
