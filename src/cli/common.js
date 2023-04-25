@@ -142,6 +142,33 @@ class Utilities {
             console.log(`ERROR: Unable to download file due to [${err}]`)
         }
     }
+
+    /* USED TO START A BROWSER SESSION FROM THE CLI TO A URI
+    const { exec } = require('child_process');
+
+    // Replace this with the actual verification URI returned from Auth0
+    const verificationUri = 'https://example.com/verify';
+
+    // Determine the platform we're running on (Windows vs. Unix-like)
+    const platform = process.platform;
+    let cmd;
+
+    if (platform === 'win32') {
+    // Windows
+    cmd = `start "" "${verificationUri}"`;
+    } else {
+    // Unix-like
+    cmd = `open "${verificationUri}"`;
+    }
+
+    // Execute the shell command to open the verification URI in the default web browser
+    exec(cmd, (err, stdout, stderr) => {
+    if (err) {
+        console.error(`Error opening web browser: ${err}`);
+    }
+    });
+
+    */
 }
 
 export {serverOperations, Utilities}

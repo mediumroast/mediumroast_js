@@ -307,7 +307,7 @@ class AddCompany {
             google_maps_url: {consoleString: "URL to locate the company on Google Maps", value:this.defaultValue},
             google_news_url: {consoleString: "URL to find news about the company on Google", value:this.defaultValue},
             google_finance_url: {consoleString: "URL to reveal financial insights on Google", value:this.defaultValue},
-            google_patents_url: {consoleString: "URL to locate patent insights on Googles", value:this.defaultValue},
+            google_patents_url: {consoleString: "URL to locate patent insights on Google", value:this.defaultValue},
             cik: {consoleString: "SEC Central Index Key", value:this.defaultValue},
             stock_symbol: {consoleString: "stock ticker", value:this.defaultValue},
             stock_exchange: {consoleString: "stock exchange", value:this.defaultValue},
