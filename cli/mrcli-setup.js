@@ -209,19 +209,15 @@ while (!authorized) {
 // Obtaining the tokens
 console.log(chalk.blue.bold(`Requesting access and refresh tokens from the identity service with [${deviceCode}].`))
 const theTokens = await deviceFlow.getTokens(deviceCode)
-const accessToken = theTokens[1].access_token
-const accessTokenType = theTokens[1].token_type
-const accessTokenExpiry = theTokens[1].expires_in
-// myConfig.DEFAULT.access_token = accessToken
-
+myConfig.DEFAULT.access_token = theTokens[1].access_token
+myConfig.DEFAULT.token_type = theTokens[1].token_type
+myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
 cliOutput.printLine()
-console.log(theTokens)
-process.exit()
 
 // Persist and verify the config file
-console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
 // Check for and create the directory process.env.HOME/.mediumroast
 const configFile = checkConfigDir()
+console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
 // Write the config file
 writeConfigFile(myConfig, configFile)
 // Verify the config file
@@ -231,6 +227,8 @@ success ?
     console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
+
+process.exit()
 
 // Create the first "owning company" for the initial user
 console.log(chalk.blue.bold('Creating owning company...'))
