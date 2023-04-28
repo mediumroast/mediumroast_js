@@ -88,6 +88,7 @@ class Authenticate {
                 grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
                 client_id: this.clientId,
                 device_code: userCode,
+                scope: this.scope
             })
         }
         let tokens
@@ -105,12 +106,13 @@ class Authenticate {
      * @description Initiate a login to the mediumroast.io application
      * @returns {Object} the credential object needed to perform API calls to mediumroast.io
      */
-    login() {
+    login(env) {
+        const token = `${env.DEFAULT.token_type} ${env.DEFAULT.access_token}`
         return {
-            'apiKey': this.apiKey,
-            'restServer': this.restServer,
-            'user': this.user,
-            'secret': this.secret
+            apiKey: token,
+            restServer: env.DEFAULT.mr_erver,
+            tokenType: env.DEFAULT.token_type
+
         }
     }
 

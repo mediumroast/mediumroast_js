@@ -2,9 +2,9 @@
  * A class used to build CLIs for accessing and reporting on mediumroast.io objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file companyCLIwizard.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 
@@ -35,11 +35,13 @@ class AddCompany {
      * @param {String} companyDNSUrl - the url to the company DNS service
      * @todo replace the company_DNS url with the proper item in the config file
      */
-    constructor(env, apiController, companyDNSUrl=null){
+    constructor(env, apiController, companyDNSUrl=null, companyLogoUrl=null){
         this.env = env
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
-        this.env.companyDNS ? this.companyDNS = this.env.companyDNS : this.companyDNS = companyDNSUrl
+        this.sicEndpoint = ""
+        this.env.company_dns ? this.companyDNS = this.env.company_dns : this.companyDNS = companyDNSUrl
+        this.env.company_logos ? this.companyLogos = this.env.company_logos : this.companyDNS = companyLogoUrl
         this.cred = {
             apiKey: "Not Applicable",
             restServer: this.companyDNS,
@@ -50,7 +52,7 @@ class AddCompany {
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
-        this.version = "version 1.0.0"
+        this.version = "version 1.1.0"
         this.description = "Prompt based company object creation for the mediumroast.io."
 
         // Class globals
@@ -61,6 +63,7 @@ class AddCompany {
         this.output = new CLIOutput(this.env, this.objectType)
     }
 
+    // TODO we will deprecate this operation in favor of linking in the backend
     _linkObj(name) {
         // Hash the names
         // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
@@ -92,6 +95,7 @@ class AddCompany {
         return myCompany
     }
 
+    // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
     _joinIndustry(industry) {
         if(industry.length > 1) {
             return industry.join('|')
@@ -351,6 +355,7 @@ class AddCompany {
         // Set the role
         if (isOwner) {
             myCompany.role = 'Owner'
+        // TODO harmonize with the web_ui
         } else {
             const tmpRole = await this.wutils.doCheckbox(
                 "What role should we assign to this company?",

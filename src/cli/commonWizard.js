@@ -119,6 +119,7 @@ class WizardUtils {
         return myResult
     }
 
+    // TODO consider harmonizing with the web_ui such that we no longer need to add a module for geocoding
     async locate(location) {
         const options = {
             provider: this.geoProvider,
@@ -129,6 +130,7 @@ class WizardUtils {
         return coordinates
     }
 
+    
     async getLatLong(mrObj) {
         let locationString = "" // Set to an empty string
         // Add the address if present
@@ -185,6 +187,7 @@ class WizardUtils {
     /**
      * 
      * @returns 
+     * @todo harmonize with the web_ui
      */
     async getRegion () {
         const tmpRegion = await this.doCheckbox(
@@ -198,6 +201,11 @@ class WizardUtils {
         return tmpRegion[0]
     }
 
+    /**
+     * 
+     * @param {*} eulaText 
+     * @returns 
+     */
     async doEula (eulaText) {
         // Clear the console
         console.clear()

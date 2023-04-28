@@ -11,7 +11,7 @@
 
 // Import required modules
 import { Utilities } from '../src/helpers.js'
-import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
+import { Auth, Companies, Studies } from '../src/api/mrServer.js'
 import CLIOutput from '../src/cli/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
@@ -111,12 +111,6 @@ function verifyConfiguration(myConfig, configFile) {
     return success
 }
 
-// Generate a consistent bucket name with only alphanumeric characters,
-// no spaces, and only lowercase text.
-function _generateBucketName(companyName) {
-    let tmpName = companyName.replace(/[^a-z0-9]/gi,'')
-    return tmpName.toLowerCase()
-}
 
 async function getDeviceCode () {
     const myMessage = 'Please input the device code you copied from the browswer: '
@@ -177,11 +171,11 @@ myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible
 cliOutput.printLine()
 
 // Perform device flow authorization
-const deviceFlow = new Authenticate()
+const authenticator = new Authenticate()
 console.log(chalk.blue.bold('Opening your browser to register the identity of this client, you only need to do this once.'))
 
 // Open the browser to obtain the client specific device code
-const [challengeCode, clientId] = await deviceFlow.openPKCEUrl()
+const [challengeCode, clientId] = await authenticator.openPKCEUrl()
 myConfig.DEFAULT.client_id = clientId
 myConfig.DEFAULT.challenge_code = challengeCode
 
@@ -191,7 +185,7 @@ myConfig.DEFAULT.pkce_device_code = pkceDeviceCode
 
 // Authorize this client to obtain tokens
 console.log(chalk.blue.bold('Requesting the authorization code from the identity service.'))
-const authorizationCode = await deviceFlow.authorizeClient(pkceDeviceCode, challengeCode)
+const authorizationCode = await authenticator.authorizeClient(pkceDeviceCode, challengeCode)
 const deviceCode = authorizationCode[1].device_code
 myConfig.DEFAULT.device_code = deviceCode
 const userCode = authorizationCode[1].user_code
@@ -199,7 +193,7 @@ const userCode = authorizationCode[1].user_code
 // Verify the client authorization
 console.log(chalk.blue.bold(`Opening the browser to authorize the client with [${userCode}].`))
 const verificationUriComplete = authorizationCode[1].verification_uri_complete
-await deviceFlow.verifyClientAuth(verificationUriComplete)
+await authenticator.verifyClientAuth(verificationUriComplete)
 let authorized = null
 while (!authorized) {
     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
@@ -208,7 +202,8 @@ while (!authorized) {
 // 
 // Obtaining the tokens
 console.log(chalk.blue.bold(`Requesting access and refresh tokens from the identity service with [${deviceCode}].`))
-const theTokens = await deviceFlow.getTokens(deviceCode)
+const theTokens = await authenticator.getTokens(deviceCode)
+console.log(theTokens)
 myConfig.DEFAULT.access_token = theTokens[1].access_token
 myConfig.DEFAULT.token_type = theTokens[1].token_type
 myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
@@ -230,20 +225,25 @@ cliOutput.printLine()
 
 process.exit()
 
+// Generate the needed controllers to interact with the backend
+const credential = authenticator.login(myEnv)
+const companyCtl = new Companies(credential)
+const studyCtl = new Studies(credential)
+
 // Create the first "owning company" for the initial user
 console.log(chalk.blue.bold('Creating owning company...'))
 myEnv.splash = false
 const cWizard = new AddCompany(
     myEnv,
     companyCtl,
-    myEnv.DEFAULT['company_dns_server']
+    myEnv.DEFAULT.company_dns
 )
 const companyResp = await cWizard.wizard(true)
 const myCompany = companyResp[1].data
 // Create an S3 bucket derived from the company name, and the steps for creating the
 // bucket name are in _genereateBucketName().
-const bucketName = _generateBucketName(myCompany.name)
 const myS3 = new s3Utilities(myEnv.s3_settings)
+const bucketName = myS3.generateBucketName(myCompany.name)
 const s3Resp = await myS3.s3CreateBucket(bucketName)
 if(s3Resp) {
     console.log(chalk.blue.bold(`Added interaction storage space for ${myCompany.name}.`))
@@ -254,7 +254,6 @@ cliOutput.printLine()
 
 // Create a default study for interactions to use
 console.log(chalk.blue.bold(`Adding default study to the backend...`))
-const studyCtl = new Studies(credential)
 const myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',
