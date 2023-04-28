@@ -17,13 +17,15 @@ class Authenticate {
      */
     constructor(domain, contentType, clientId, callbackUrl, state, scope) {
         this.domain = domain ? domain : 'dev-tfmnyye458bzcq0u.us.auth0.com'
+        // this.domain = domain ? domain : 'dev-tfmnyye458bzcq0u.us.auth0.com'
         this.codePath = '/oauth/device/code'
         this.tokenPath = '/oauth/token'
         this.callbackUrl = callbackUrl ? callbackUrl : 'http://localhost:3000/login'
         this.state = state ? state : 'mrCLIstate'
         this.scope = scope ? scope : 'companies:read'
         this.contentType = contentType ? contentType : 'application/x-www-form-urlencoded'
-        this.clientId = clientId ? clientId : '0ZhDegyCotxYL8Ov9Cj4K7Z0MugtgaY0'
+        // this.clientId = clientId ? clientId : '0ZhDegyCotxYL8Ov9Cj4K7Z0MugtgaY0'
+        this.clientId = clientId ? clientId : 'xifSWB6CzfG5g21RZzl4lpjsg9yCTXLJ'
     }
 
     _base64URLEncode(str) {
