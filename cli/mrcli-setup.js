@@ -186,6 +186,7 @@ myConfig.DEFAULT.pkce_device_code = pkceDeviceCode
 // Authorize this client to obtain tokens
 console.log(chalk.blue.bold('Requesting the authorization code from the identity service.'))
 const authorizationCode = await authenticator.authorizeClient(pkceDeviceCode, challengeCode)
+console.log(authorizationCode) // FAIL here
 const deviceCode = authorizationCode[1].device_code
 myConfig.DEFAULT.device_code = deviceCode
 const userCode = authorizationCode[1].user_code
