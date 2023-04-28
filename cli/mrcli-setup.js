@@ -199,6 +199,7 @@ let authorized = null
 while (!authorized) {
     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
 }
+process.exit()
 
 // 
 // Obtaining the tokens

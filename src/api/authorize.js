@@ -70,6 +70,7 @@ class Authenticate {
             authorizationCode = await axios.request(options)
             return [true, authorizationCode.data]
         } catch (err) {
+            console.log('AUTH CODE')
             return [false, err]
         }
     }
@@ -98,6 +99,7 @@ class Authenticate {
             tokens = await axios.request(options)
             return [true, tokens.data]
         } catch (err) {
+            console.log('TOKENS')
             return [false, err]
         }
     }
