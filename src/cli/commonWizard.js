@@ -67,7 +67,7 @@ class WizardUtils {
      * @param {Boolean} summary - when present only the items in whiteList will be prompted to the user
      * @returns {Object} - the final object with the changes the user wants to see
      */
-    async doManual(prototype, whiteList=[], summary=false) {
+    async doManual(prototype, whiteList=[], summary=false, altMessage=null) {
         let myObj = {}
         for (const setting in prototype) {
             if (summary) {
@@ -77,7 +77,11 @@ class WizardUtils {
                     continue
                 }
             }
-            const myMessage = `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?'
+            let myMessage
+            altMessage ? 
+                myMessage = `What\'s the ${this.objectType}\'s ${prototype[setting].consoleString}?`:
+                myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`
+
             await inquirer
                 .prompt([
                     {

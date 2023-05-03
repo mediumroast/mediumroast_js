@@ -107,7 +107,8 @@ class Authenticate {
 
     /**
      * @function login
-     * @description Initiate a login to the mediumroast.io application
+     * @description Perform "login" steps to create a credential object for usage in all RESTful interactions
+     * @param {Object} env - the environment passed into the login function that includes relevant data for credential creation
      * @returns {Object} the credential object needed to perform API calls to mediumroast.io
      */
     login(env) {
@@ -115,8 +116,8 @@ class Authenticate {
         return {
             apiKey: token,
             restServer: env.DEFAULT.mr_erver,
-            tokenType: env.DEFAULT.token_type
-
+            tokenType: env.DEFAULT.token_type,
+            user: `${env.DEFAULT.first_name}<${env.DEFAULT.email_address}>`
         }
     }
 

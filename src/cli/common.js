@@ -26,15 +26,9 @@ class serverOperations {
         env.restServer ? 
             this.restServer = env.restServer :
             this.restServer = server
-        env.user ?
-            this.user = env.user :
-            this.user = env.DEFAULT.user
-        env.secret ?
-            this.secret = env.secret :
-            this.secret = env.DEFAULT.secret
         env.apiKey ?
             this.apiKey = env.apiKey :
-            this.apiKey = env.DEFAULT.api_key
+            this.apiKey = env.DEFAULT.access_token
     }
     
     /** 
@@ -46,12 +40,30 @@ class serverOperations {
      * @todo the user will have the owning company included in their profile so we don't need to do anything more sophisticated
     */
     async getOwningCompany(companyCtl) {
+        // TODO this should turn into a two step process
+        // 1. Obtain the company name from the user object
+        // 2. Lookup the company name and ensure it is an owning company
+        // If both of these checks work out then we're ok to say there is an owning company
         const [success, msg, results] = await companyCtl.findByX('role','Owner')
         if (success && results.length > 0) {
             return [true, {status_code: 200, status_msg: 'detected owning company'}, results[0].name]
         } else {
             return [false, {status_code: 404, status_msg: 'owning company not found'}, null]
         }
+    }
+
+    decodeJWT (token) {
+        if(token !== null || token !== undefined){
+         const base64String = token.split('.')[1]
+         const decodedValue = JSON.parse(
+                                Buffer.from(
+                                    base64String,    
+                                    'base64')
+                                .toString('ascii')
+                            )
+         return decodedValue
+        }
+        return null
     }
 
     /**
@@ -66,8 +78,7 @@ class serverOperations {
         const myAuth = new Auth(
             this.restServer,
             this.apiKey,
-            this.user,
-            this.secret,
+            this.user
         )
         const myCredential = myAuth.login()
         const interactionCtl = new Interactions(myCredential)

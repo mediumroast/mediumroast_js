@@ -123,12 +123,6 @@ class Environmentals {
                 'Reset the status of objects to reprocesses them in the caffeine service.'
             )
 
-            // Ending arguments
-            // .argument(
-            //     '[string]',
-            //     'A fully qualified path to the resource in file system to include, exclusively used for interactions'
-            // )
-
         program.parse(process.argv)
         return program.opts()//, program.args
     }
@@ -152,10 +146,11 @@ class Environmentals {
      * @param {Object} cliArgs - should contain the results of parseCLIArgs() above
      * @param {Object} config - should contain the results of getConfig() above
      * @returns {Object} after merging cliArgs and config an Object containing the final environmental settings 
+     * @todo this will change with mr_rest...
      */
     getEnv(cliArgs, config) {
         let env = {
-            restServer: null,
+            restServer: null, // TODO review and chnage
             apiKey: null,
             user: null,
             secret: null,
@@ -174,17 +169,18 @@ class Environmentals {
         }
 
         // With the cli options as the priority set up the environment for the cli
-        cliArgs.rest_server ? env.restServer = cliArgs.rest_server : env.restServer = config.get('DEFAULT', 'rest_server')
-        cliArgs.api_key ? env.apiKey = cliArgs.api_key : env.apiKey = config.get('DEFAULT', 'api_key')
-        cliArgs.user ? env.user = cliArgs.user : env.user = config.get('DEFAULT', 'user')
-        cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
+        cliArgs.rest_server ? env.restServer = cliArgs.rest_server : env.restServer = config.get('DEFAULT', 'mr_server')
+        cliArgs.api_key ? env.apiKey = cliArgs.api_key : env.apiKey = config.get('DEFAULT', 'access_token')
+        // TODO the below are deprecated
+        // cliArgs.user ? env.user = cliArgs.user : env.user = config.get('DEFAULT', 'user')
+        // cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
 
         // Set up additional parameters from config file
         env.workDir = process.env.HOME + '/.mediumroast/' + config.get('DEFAULT', 'working_dir')
-        env.companyDNS = config.get('DEFAULT', 'company_dns_server')
-        env.echartsServer = config.get('DEFAULT', 'echarts_server')
+        env.companyDNS = config.get('DEFAULT', 'company_dns')
+        env.echartsServer = config.get('DEFAULT', 'echarts')
         env.theme = config.get('DEFAULT', 'theme')
-        env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
+        env.outputDir = process.env.HOME + '/' + config.get('DEFAULT', 'report_output_dir')
         env.s3Server = config.get('s3_settings', 'server')
         env.s3User = config.get('s3_settings', 'user')
         env.s3Region = config.get('s3_settings', 'region')

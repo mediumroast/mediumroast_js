@@ -23,6 +23,8 @@ import program from 'commander'
 import chalk from 'chalk'
 import ConfigParser from 'configparser'
 import inquirer from "inquirer"
+import { Users } from 'mediumroast_js'
+import AddUser from '../src/cli/userWizard.js'
 
 /* 
     -----------------------------------------------------------------------
@@ -60,13 +62,18 @@ function getEnv () {
             company_dns: "https://www.mediumroast.io/company_dns",
             company_logos: "http://cherokee.from-ca.com:3030/allicons.json?url=",
             echarts: "http://cherokee.from-ca.com:3000",
+            working_directory: "working",
+            report_output_dir: "Documents",
+            theme: "coffee",
             access_token: "",
             refresh_token: "",
             pkce_device_code: "",
             device_code: "",
             challenge_code: "",
             client_id: "", 
-            accepted_eula: false
+            accepted_eula: false,
+            user_first_name: "",
+            user_email_address: ""
         },
         s3_settings: {
             user: "medium_roast_io",
@@ -199,7 +206,6 @@ let authorized = null
 while (!authorized) {
     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
 }
-process.exit()
 
 // 
 // Obtaining the tokens
@@ -210,6 +216,9 @@ myConfig.DEFAULT.access_token = theTokens[1].access_token
 myConfig.DEFAULT.token_type = theTokens[1].token_type
 myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
 cliOutput.printLine()
+
+// Create the first user
+// TODO user email address and first_name should be added to config file
 
 // Persist and verify the config file
 // Check for and create the directory process.env.HOME/.mediumroast
@@ -231,8 +240,9 @@ process.exit()
 const credential = authenticator.login(myEnv)
 const companyCtl = new Companies(credential)
 const studyCtl = new Studies(credential)
+const userCtl = new Users(credential)
 
-// Create the first "owning company" for the initial user
+// Create the owning company for the initial user
 console.log(chalk.blue.bold('Creating owning company...'))
 myEnv.splash = false
 const cWizard = new AddCompany(
@@ -240,21 +250,37 @@ const cWizard = new AddCompany(
     companyCtl,
     myEnv.DEFAULT.company_dns
 )
-const companyResp = await cWizard.wizard(true)
-const myCompany = companyResp[1].data
+let companyResp = await cWizard.wizard(true)
+const owningCompany = companyResp[1].data
 // Create an S3 bucket derived from the company name, and the steps for creating the
 // bucket name are in _genereateBucketName().
 const myS3 = new s3Utilities(myEnv.s3_settings)
-const bucketName = myS3.generateBucketName(myCompany.name)
+const bucketName = myS3.generateBucketName(owningCompany.name)
 const s3Resp = await myS3.s3CreateBucket(bucketName)
 if(s3Resp) {
-    console.log(chalk.blue.bold(`Added interaction storage space for ${myCompany.name}.`))
+    console.log(chalk.blue.bold(`Added interaction storage space for ${owningCompany.name}.`))
 } else {
-    console.log(chalk.blue.red(`Unable to add interaction storage space for ${myCompany.name}.`))
+    console.log(chalk.blue.red(`Unable to add interaction storage space for ${owningCompany.name}.`))
+    process.exit(-1)
 }
 cliOutput.printLine()
 
-// Create a default study for interactions to use
+// Obtain user attributes
+console.log(chalk.blue.bold('Obtaining details about you...'))
+const uWizard = new AddUser(
+    myEnv,
+    userCtl
+)
+const userResp = await uWizard.wizard(owningCompany.name, true)
+cliOutput.printLine()
+
+// Create the first company
+console.log(chalk.blue.bold('Creating the first company...'))
+companyResp = await cWizard.wizard(true)
+const firstCompany = companyResp[1].data
+cliOutput.printLine()
+
+// Create a default study for interactions and companies to use
 console.log(chalk.blue.bold(`Adding default study to the backend...`))
 const myStudy = {
     name: 'Default Study',
@@ -264,18 +290,17 @@ const myStudy = {
     document: {}
 }
 const studyResp = await studyCtl.createObj(myStudy)
+// TODO perform linkages between company and study objects
 cliOutput.printLine()
-
-
 
 
 // List all create objects to the console
 console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
-console.log(chalk.blue.bold(`Default Study:`))
+console.log(chalk.blue.bold(`Default study:`))
 const myStudies = await studyCtl.getAll()
 cliOutput.outputCLI(myStudies[2])
 cliOutput.printLine()
-console.log(chalk.blue.bold(`Registered Company:`))
+console.log(chalk.blue.bold(`Owning and first companies:`))
 const myCompanies = await companyCtl.getAll()
 cliOutput.outputCLI(myCompanies[2])
 cliOutput.printLine()

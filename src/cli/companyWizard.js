@@ -272,8 +272,10 @@ class AddCompany {
     }
 
     /**
+     * @async
      * @function wizard
      * @description Invoke the text based wizard process to add a company to the mediumroast.io application
+     * @param {Boolean} isOwner - determines if this company should be the owning company or not
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
     async wizard(isOwner=false) {
@@ -349,7 +351,7 @@ class AddCompany {
         console.log(chalk.blue.bold('Starting location properties selections...'))
         
         // Set the region
-        myCompany.region = await this.wutils.getRegion()
+        myCompany.region = await this.wutils.getRegion() // TODO this needs to be updated
         this.cutils.printLine()
 
         // Set the role

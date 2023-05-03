@@ -2,9 +2,9 @@
  * A class used for consistent outputting of CLI data
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file output.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.1.1
+ * @version 2.2.0
  */
 
 // Import required modules
@@ -12,7 +12,6 @@ import Table from 'cli-table'
 import Parser from 'json2csv'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
-// import { Utilities } from '../helpers.js' // TODO Delete this as it is no longer needed
 import FilesystemOperators from './filesystem.js'
 
 class CLIOutput {
@@ -48,37 +47,72 @@ class CLIOutput {
         }
     }
 
-    outputTable(objects) {
-        let table = new Table({
-            head: ['Id', 'Name', 'Description'],
-            colWidths: [5, 40, 90]
-        })
-        for (const myObj in objects) {
-            table.push([
-                objects[myObj].id,
-                objects[myObj].name,
-                objects[myObj].description
-            ])
+    // NOTE: Not exterally facing doesn't require JSDoc signture
+    // Purpose: Output an ASCII formatted table with key object metadata to the console
+    outputTable(objects, isUserObject=false) {
+        // User objects output
+        // Note: The separation between User and other objects is due to their structure. Pointedly 
+        //          user objects do not contain name and description fields.
+        let table
+        if (isUserObject) {
+            table = new Table({
+                head: ['Id', 'First Name', 'Last Name', 'Roles', 'Company'],
+                colWidths: [5, 15, 15, 20, 30]
+            })
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].id,
+                    objects[myObj].first_name,
+                    objects[myObj].last_name,
+                    objects[myObj].roles,
+                    objects[myObj].company
+                ])
+            }
+        // Study, Company and Interaction objects output
+        } else {
+            table = new Table({
+                head: ['Id', 'Name', 'Description'],
+                colWidths: [5, 40, 90]
+            })
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].id,
+                    objects[myObj].name,
+                    objects[myObj].description
+                ])
+            }
         }
         console.log(table.toString())
     }
 
-    // TODO add error checking via try catch
+    // NOTE: Not exterally facing doesn't require JSDoc signture
+    // Purpose: Output a CSV file to this.env.outputDir containing all object metadata
     outputCSV(objects) {
         const fileName = 'Mr_' + this.objectType + '.csv'
         const myFile = this.env.outputDir + '/' + fileName
-        const csv = Parser.parse(objects)
-        this.fileSystem.saveTextFile(myFile, csv)
+        try {
+            const csv = Parser.parse(objects)
+            this.fileSystem.saveTextFile(myFile, csv)
+            return [true, null]
+        } catch (err) {
+            return [false, err]
+        }
     }
 
-    // TODO add error checking via try catch
+    // NOTE: Not exterally facing doesn't require JSDoc signture
+    // Purpose: Output an XLSX file to this.env.outputDir containing all object metadata
     outputXLS(objects) {
         const fileName = 'Mr_' + this.objectType + '.xlsx'
         const myFile = this.env.outputDir + '/' + fileName
-        const mySheet = XLSX.utils.json_to_sheet(objects)
-        const myWorkbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
-        XLSX.writeFile(myWorkbook, myFile)
+        try {
+            const mySheet = XLSX.utils.json_to_sheet(objects)
+            const myWorkbook = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
+            XLSX.writeFile(myWorkbook, myFile)
+            return [true, null]
+        } catch (err) {
+            return [false, err]
+        }
     }
 
     /**
@@ -86,12 +120,11 @@ class CLIOutput {
      * @description print a splash screen with using name as the big title, description as the subtitle and a version declaration
      * @param {String} name Used for the big title on the splash screen.
      * @param {String} description Forms the subtitle on the splash screen.
-     * @param {String} description Defines the version number on the splash screen.
+     * @param {String} version Defines the version number on the splash screen.
      */
      splashScreen (name, description, version) {
         const logoConfig = {
             name: name,
-            // font: 'Speed',
             lineChars: 10,
             padding: 3,
             margin: 3,
