@@ -60,15 +60,15 @@ function getEnv () {
         DEFAULT: {
             mr_server: "https://app.mediumroast.io/api",
             company_dns: "https://www.mediumroast.io/company_dns",
-            company_logos: "http://cherokee.from-ca.com:3030/allicons.json?url=",
-            echarts: "http://cherokee.from-ca.com:3000",
+            company_logos: "https://logo-server.mediumroast.io:7000/allicons.json?url=",
+            echarts: "https://chart-server.mediumroast.io:11000",
             working_directory: "working",
             report_output_dir: "Documents",
             theme: "coffee",
             access_token: "",
-            refresh_token: "",
             pkce_device_code: "",
             device_code: "",
+            code_verifier: "",
             challenge_code: "",
             client_id: "", 
             accepted_eula: false,
@@ -78,7 +78,7 @@ function getEnv () {
         s3_settings: {
             user: "medium_roast_io",
             api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
-            server: "http://cherokee.from-ca.com:9000",
+            server: "https://s3.mediumroast.io:9000",
             region: "leo-dc",
             source: "Unknown" // TODO this is deprecated remove after testing
         }
@@ -179,43 +179,75 @@ cliOutput.printLine()
 
 // Perform device flow authorization
 const authenticator = new Authenticate()
-console.log(chalk.blue.bold('Opening your browser to register the identity of this client, you only need to do this once.'))
-
-// Open the browser to obtain the client specific device code
-const [challengeCode, clientId] = await authenticator.openPKCEUrl()
-myConfig.DEFAULT.client_id = clientId
-myConfig.DEFAULT.challenge_code = challengeCode
-
-// Prompt the user to paste the device code into the setup utility
-const pkceDeviceCode = await getDeviceCode()
-myConfig.DEFAULT.pkce_device_code = pkceDeviceCode
-
-// Authorize this client to obtain tokens
-console.log(chalk.blue.bold('Requesting the authorization code from the identity service.'))
-const authorizationCode = await authenticator.authorizeClient(pkceDeviceCode, challengeCode)
-console.log(authorizationCode) // FAIL here
-const deviceCode = authorizationCode[1].device_code
-myConfig.DEFAULT.device_code = deviceCode
-const userCode = authorizationCode[1].user_code
+// ----------------------- DEV CODE ----------------------------
+const [result, data] = await authenticator.getDeviceCode()
+myConfig.DEFAULT.device_code = data.device_code
+const userCode = data.user_code
+const verificationUri = data.verification_uri
+const verificationUriComplete = data.verification_uri_complete
 
 // Verify the client authorization
-console.log(chalk.blue.bold(`Opening the browser to authorize the client with [${userCode}].`))
-const verificationUriComplete = authorizationCode[1].verification_uri_complete
-await authenticator.verifyClientAuth(verificationUriComplete)
+console.log(chalk.blue.bold(`Opening your browser to authorize this client, copy or type this code in your browser [${userCode}].`))
+await authenticator.verifyClientAuth(verificationUri)
 let authorized = null
+// Prompt the user and await their login and approval
 while (!authorized) {
     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
 }
 
+// Obtain the tokens
+const theTokens = await authenticator.getTokensDeviceCode(myConfig.DEFAULT.device_code)
+console.log(theTokens)
+
+process.exit()
+
+process.exit()
+
+
+// ----------------------- AUTH CODE ---------------------------
+// This flow is related to auth_code and not device_code
+// console.log(chalk.blue.bold('Creating a random code verifier and challenge code to for this client.'))
+// myConfig.DEFAULT.code_verifier = authenticator.createCodeVerifier()
+// myConfig.DEFAULT.challenge_code = authenticator.createChallengeCode(myConfig.DEFAULT.code_verifier)
+
+// console.log(`Code Verifier>>> [${myConfig.DEFAULT.code_verifier}]`)
+// console.log(`Challenge Code>>> [${myConfig.DEFAULT.challenge_code}]`)
+
+
+// console.log(chalk.blue.bold('Opening the browser for an authorization code; please copy this code to the clipboard.'))
+
+// // Open the browser to obtain the client specific device code
+// await authenticator.openPKCEUrl(myConfig.DEFAULT)
+
+// // Prompt the user to paste the device code into the setup utility copied from the browser
+// myConfig.DEFAULT.pkce_device_code = await getDeviceCode()
+
+// Authorize this client to obtain tokens
+// console.log(chalk.blue.bold('Requesting the authorization code from the identity service.'))
+// const authorizationCode = await authenticator.authorizeClient(myConfig.DEFAULT.pkce_device_code, myConfig.DEFAULT.challenge_code)
+// myConfig.DEFAULT.device_code = authorizationCode[1].device_code
+// const userCode = authorizationCode[1].user_code
+
+
+// // Verify the client authorization
+// console.log(chalk.blue.bold(`Opening the browser to authorize the client with [${userCode}].`))
+// const verificationUriComplete = authorizationCode[1].verification_uri_complete
+// await authenticator.verifyClientAuth(verificationUriComplete)
+// let authorized = null
+// while (!authorized) {
+//     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
+// }
+
 // 
 // Obtaining the tokens
-console.log(chalk.blue.bold(`Requesting access and refresh tokens from the identity service with [${deviceCode}].`))
-const theTokens = await authenticator.getTokens(deviceCode)
-console.log(theTokens)
-myConfig.DEFAULT.access_token = theTokens[1].access_token
-myConfig.DEFAULT.token_type = theTokens[1].token_type
-myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
+// console.log(chalk.blue.bold(`Requesting access and refresh tokens from the identity service with [${myConfig.DEFAULT.pkce_device_code}].`))
+// const theTokens = await authenticator.getTokens(myConfig.DEFAULT.pkce_device_code, myConfig.DEFAULT.code_verifier)
+// console.log(theTokens)
+// myConfig.DEFAULT.access_token = theTokens[1].access_token
+// myConfig.DEFAULT.token_type = theTokens[1].token_type
+// myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
 cliOutput.printLine()
+
 
 // Create the first user
 // TODO user email address and first_name should be added to config file
@@ -234,13 +266,13 @@ success ?
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
 
-process.exit()
-
 // Generate the needed controllers to interact with the backend
 const credential = authenticator.login(myEnv)
 const companyCtl = new Companies(credential)
 const studyCtl = new Studies(credential)
 const userCtl = new Users(credential)
+
+process.exit()
 
 // Create the owning company for the initial user
 console.log(chalk.blue.bold('Creating owning company...'))
@@ -250,8 +282,7 @@ const cWizard = new AddCompany(
     companyCtl,
     myEnv.DEFAULT.company_dns
 )
-let companyResp = await cWizard.wizard(true)
-const owningCompany = companyResp[1].data
+let owningCompany = await cWizard.wizard(true, false)
 // Create an S3 bucket derived from the company name, and the steps for creating the
 // bucket name are in _genereateBucketName().
 const myS3 = new s3Utilities(myEnv.s3_settings)
@@ -271,7 +302,7 @@ const uWizard = new AddUser(
     myEnv,
     userCtl
 )
-const userResp = await uWizard.wizard(owningCompany.name, true)
+let myUser = await uWizard.wizard(owningCompany.name, true, false)
 cliOutput.printLine()
 
 // Create the first company
@@ -294,7 +325,7 @@ const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
 
 
-// List all create objects to the console
+// List all created objects to the console
 console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
 console.log(chalk.blue.bold(`Default study:`))
 const myStudies = await studyCtl.getAll()

@@ -30,17 +30,6 @@ class AddUser {
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
         this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
-        this.userPrototype = {
-            first_name: {consoleString: "first name", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            last_name: {consoleString: "last name", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            email: {consoleString: "email address", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            phone: {consoleString: "phone number, including country code", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            linkedin: {consoleString: "LinkedIn handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            twitter: {consoleString: "Twitter handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            can_contact: {consoleString: "contact you from time to time", value: false, altMessage: 'Can we'}, // Special prompt
-            roles: {consoleString: "last name", value: 'admin'}, // Do not prompt
-            new_user: {consoleString: "new user", value: true} // Do not prompt
-        }
     }
 
     async _createUser (prototype) {
@@ -74,7 +63,7 @@ class AddUser {
      * @param {Boolean} firstUser - if this is the first time the user is created or not
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard(companyName, firstUser=false) {
+    async wizard(companyName, firstUser=false, createObj=true) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
             this.output.splashScreen(
@@ -82,6 +71,18 @@ class AddUser {
                 this.version,
                 this.description
             )
+        }
+
+        let userPrototype = {
+            first_name: {consoleString: "first name", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            last_name: {consoleString: "last name", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            email: {consoleString: "email address", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            phone: {consoleString: "phone number, including country code", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            linkedin: {consoleString: "LinkedIn handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            twitter: {consoleString: "Twitter handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            can_contact: {consoleString: "contact you from time to time", value: false, altMessage: 'Can we'}, // Special prompt
+            roles: {consoleString: "roles", value: 'admin'}, // Do not prompt
+            new_user: {consoleString: "new user", value: true} // Do not prompt
         }
 
         // Define the target user object
@@ -96,26 +97,25 @@ class AddUser {
 
         // Perform user creation setup
         console.log(chalk.blue.bold('Starting user creation...'))
-        myUser = await this._createUser(this.userPrototype)
+        myUser = await this._createUser(userPrototype)
         this.cutils.printLine()
 
         // Assign special values to the user
         console.log(chalk.blue.bold('Setting special properties to known values...'))
         firstUser ?
-            myUser.roles = `${companyName},admin`: // If this is the first user they'll be the administrator
-            myUser.roles = `${companyName},user` // Otherwise they aren't 
+            myUser.roles = `admin`: // If this is the first user they'll be the administrator
+            myUser.roles = `user` // Otherwise they aren't 
         myUser.new_user = this.userPrototype.new_user.value
         myUser.company = companyName
-        myUser.can_contact = await this._contactPrompt(this.userPrototype.can_contact) // TODO check the value
+        myUser.can_contact = await this._contactPrompt(userPrototype.can_contact) // TODO check the value
         this.cutils.printLine()
-
-        console.log(chalk.blue.bold(`Saving details for ${myUser.first_name} to mediumroast.io...`))
-        console.log(myUser) // TODO remove when production
-        return true // TODO remove when production
-        // TODO uncomment when production
-        // let companyResp = await this.apiController.createObj(myUser)
-        // companyResp[1].data = myCompany // This might be a little hacky, but it should work
-        // return companyResp
+        
+        if (createObj) {
+            console.log(chalk.blue.bold(`Saving details for ${myUser.first_name} to mediumroast.io...`))
+            return await this.apiController.createObj(myUser)
+        } else {
+            return myUser
+        }
     }
 
 }

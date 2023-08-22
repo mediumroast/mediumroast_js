@@ -276,9 +276,10 @@ class AddCompany {
      * @function wizard
      * @description Invoke the text based wizard process to add a company to the mediumroast.io application
      * @param {Boolean} isOwner - determines if this company should be the owning company or not
+     * @param {Boolean} createObj - defines if this wizard should create the object or merely return it
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard(isOwner=false) {
+    async wizard(isOwner=false, createObj=true) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
             this.output.splashScreen(
@@ -388,13 +389,14 @@ class AddCompany {
         myCompany.linked_interactions = {}
         // Link the default study
         myCompany.linked_studies = this._linkObj('Default Study')
-
-
         this.cutils.printLine()
+
+        if (createObj) {
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-        let companyResp = await this.apiController.createObj(myCompany)
-        companyResp[1].data = myCompany // This might be a little hacky, but it should work
-        return companyResp
+        return await this.apiController.createObj(myCompany)
+        } else {
+            return myCompany
+        }
     }
 
 }

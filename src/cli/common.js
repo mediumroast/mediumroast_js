@@ -52,19 +52,7 @@ class serverOperations {
         }
     }
 
-    decodeJWT (token) {
-        if(token !== null || token !== undefined){
-         const base64String = token.split('.')[1]
-         const decodedValue = JSON.parse(
-                                Buffer.from(
-                                    base64String,    
-                                    'base64')
-                                .toString('ascii')
-                            )
-         return decodedValue
-        }
-        return null
-    }
+    
 
     /**
      * @async
@@ -138,8 +126,6 @@ class Utilities {
         const myConfig = {
             responseType: "stream",
         }
-        // const myFilesystem = new FilesystemOperators()
-        // const fileResp = myFilesystem.saveTextFile(myFullPath, "")
         try {
             const resp = await axios.get(url, myConfig)
             const imageFile = fs.createWriteStream(myFullPath)

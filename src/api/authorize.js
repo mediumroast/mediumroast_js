@@ -17,15 +17,19 @@ class Authenticate {
      */
     constructor(domain, contentType, clientId, callbackUrl, state, scope) {
         this.domain = domain ? domain : 'dev-tfmnyye458bzcq0u.us.auth0.com'
-        // this.domain = domain ? domain : 'dev-tfmnyye458bzcq0u.us.auth0.com'
         this.codePath = '/oauth/device/code'
         this.tokenPath = '/oauth/token'
-        this.callbackUrl = callbackUrl ? callbackUrl : 'http://localhost:3000/login'
+        this.callbackUrl = callbackUrl ? callbackUrl : 'https://app.mediumroast.io'
+        // this.audience = 'https://app.mediumroast.io/app'
+        this.audience = 'mediumroast-endpoint'
         this.state = state ? state : 'mrCLIstate'
         this.scope = scope ? scope : 'companies:read'
+        this.algorithm = 'S256'
         this.contentType = contentType ? contentType : 'application/x-www-form-urlencoded'
-        // this.clientId = clientId ? clientId : '0ZhDegyCotxYL8Ov9Cj4K7Z0MugtgaY0'
-        this.clientId = clientId ? clientId : 'xifSWB6CzfG5g21RZzl4lpjsg9yCTXLJ'
+        // this.clientId = clientId ? clientId : 'sDflkHs3V3sg0QaZnrLEkuinXnTftkKk'
+        this.clientId = clientId ? clientId : '0ZhDegyCotxYL8Ov9Cj4K7Z0MugtgaY0'
+        // NOTE: Only a native app can do PKCE, question: can the native app authenticate to the API?
+        // https://dev-tfmnyye458bzcq0u.us.auth0.com/oauth/device/code
     }
 
     _base64URLEncode(str) {
@@ -35,22 +39,17 @@ class Authenticate {
             .replace(/=/g, '')
     }
 
-    _createChallengeCode() {
-        const randString = crypto.randomBytes(32)
-        const base64String = this._base64URLEncode(randString)
-        return this._base64URLEncode(crypto.createHash('sha256').update(base64String).digest())
+    createCodeVerifier (bytesLength=32) {
+        const randString = crypto.randomBytes(bytesLength)
+        return this._base64URLEncode(randString)
     }
 
-    async openPKCEUrl() {
-        const challengeCode = this._createChallengeCode()
-        // Construct the URL to build the client challenge
-        const pkceUrl =  `https://${this.domain}/authorize?response_type=code&code_challenge=${challengeCode}&code_challenge_method=S256&client_id=${this.clientId}&redirect_uri=${this.callbackUrl}&scope=${this.scope}&state=${this.state}`
-        // Call the browser
-        const myCmd = await open(pkceUrl)
-        return [challengeCode, this.clientId]
+    createChallengeCode(codeVerifier) {
+        const codeVerifierHash = crypto.createHash('sha256').update(codeVerifier).digest()
+        return this._base64URLEncode(codeVerifierHash)
     }
 
-    async authorizeClient(deviceCode, challengeCode) {
+    async getDeviceCode() {
         const options = {
             method: 'POST',
             url: `https://${this.domain}${this.codePath}`,
@@ -58,19 +57,57 @@ class Authenticate {
               'content-type': this.contentType
             },
             data: new URLSearchParams({
-                grant_type: 'authorization_code',
                 client_id: this.clientId,
-                code_verifier: challengeCode,
-                code: deviceCode,
-                redirect_uri: this.callbackUrl
+                scope: this.scope,
+                audience: this.audience
           })
         }
-        let authorizationCode
+        let authorized
         try {
-            authorizationCode = await axios.request(options)
-            return [true, authorizationCode.data]
+            authorized = await axios.request(options)
+            return [true, authorized.data]
         } catch (err) {
-            console.log('AUTH CODE')
+            return [false, err]
+        }
+    }
+
+    async openPKCEUrl(config) {
+        // Construct the URL to build the client challenge
+        const pkceUrl =  `https://${this.domain}/authorize?` + 
+                `response_type=code&` + 
+                `code_challenge=${config.challenge_code}&` + 
+                `code_challenge_method=${this.algorithm}&` + 
+                `client_id=${this.clientId}&` + 
+                `redirect_uri=${this.callbackUrl}&` + 
+                `scope='openid%20profile'&` + 
+                `state=${this.state}`
+
+        console.log(`URL>>> [${pkceUrl}]`)
+        // Call the browser
+        const myCmd = await open(pkceUrl)
+    }
+
+    async authorizeClient(authorizationCode, codeVerifier) {
+        const options = {
+            method: 'POST',
+            url: `https://${this.domain}${this.codePath}`,
+            headers: {
+              'content-type': this.contentType
+            },
+            data: new URLSearchParams({
+                // grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+                grant_type: 'authorization_code',
+                client_id: this.clientId,
+                code_verifier: codeVerifier,
+                code: authorizationCode,
+                redirect_uri: this.callbackUrl,
+          })
+        }
+        let authorized
+        try {
+            authorized = await axios.request(options)
+            return [true, authorized.data]
+        } catch (err) {
             return [false, err]
         }
     }
@@ -80,7 +117,32 @@ class Authenticate {
         return [true, null]
     }
 
-    async getTokens(userCode) {
+    async getTokens(authorizationCode, codeVerifier) {
+        const options = {
+            method: 'POST',
+            url: `https://${this.domain}${this.tokenPath}`,
+            headers: {
+              'content-type': this.contentType
+            },
+            data: new URLSearchParams({
+                // grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+                grant_type: 'authorization_code',
+                client_id: this.clientId,
+                code_verifier: codeVerifier,
+                code: authorizationCode,
+                redirect_uri: this.callbackUrl
+            })
+        }
+        let tokens
+        try {
+            tokens = await axios.request(options)
+            return [true, tokens.data]
+        } catch (err) {
+            return [false, err]
+        }
+    }
+
+    async getTokensDeviceCode(deviceCode) {
         const options = {
             method: 'POST',
             url: `https://${this.domain}${this.tokenPath}`,
@@ -90,8 +152,7 @@ class Authenticate {
             data: new URLSearchParams({
                 grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
                 client_id: this.clientId,
-                device_code: userCode,
-                scope: this.scope
+                device_code: deviceCode
             })
         }
         let tokens
@@ -99,7 +160,6 @@ class Authenticate {
             tokens = await axios.request(options)
             return [true, tokens.data]
         } catch (err) {
-            console.log('TOKENS')
             return [false, err]
         }
     }
@@ -128,6 +188,26 @@ class Authenticate {
      */
     logout() {
         return true
+    }
+
+    /**
+     * @function decodeJWT
+     * @description Given an input as a Java Web Token, decode and send back an object with the contents
+     * @param {String} token - the JWT to decode
+     * @returns {Object} the decoded token
+     */
+    decodeJWT (token) {
+        if(token !== null || token !== undefined){
+         const base64String = token.split('.')[1]
+         const decodedValue = JSON.parse(
+                                Buffer.from(
+                                    base64String,    
+                                    'base64')
+                                .toString('ascii')
+                            )
+         return decodedValue
+        }
+        return null
     }
 }
 
