@@ -66,18 +66,17 @@ function getEnv () {
             report_output_dir: "Documents",
             theme: "coffee",
             access_token: "",
-            pkce_device_code: "",
+            access_token_expiry: "",
+            token_type: "",
             device_code: "",
-            code_verifier: "",
-            challenge_code: "",
-            client_id: "", 
             accepted_eula: false,
             user_first_name: "",
             user_email_address: ""
         },
         s3_settings: {
             user: "medium_roast_io",
-            api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
+            // api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
+            api_key: "",
             server: "https://s3.mediumroast.io:9000",
             region: "leo-dc",
             source: "Unknown" // TODO this is deprecated remove after testing
@@ -116,13 +115,6 @@ function verifyConfiguration(myConfig, configFile) {
     let success = false
     if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
     return success
-}
-
-
-async function getDeviceCode () {
-    const myMessage = 'Please input the device code you copied from the browswer: '
-    const myCode = await inquirer.prompt({name: 'theCode',message: myMessage})
-    return myCode.theCode
 }
 
 /* 
@@ -166,91 +158,123 @@ if (myArgs.splash === 'yes') {
 
 
 // Are we going to proceed or not?
-const doSetup = await wizardUtils.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
-if (!doSetup) {
-    console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
-    process.exit()
-}
+// const doSetup = await wizardUtils.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
+// if (!doSetup) {
+//     console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
+//     process.exit()
+// }
 
-// Ask the user to accept the EULA, if they do not the function will exit
-const acceptEula = await wizardUtils.doEula(demoEulaText)
-myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
-cliOutput.printLine()
 
-// Perform device flow authorization
+// // Ask the user to accept the EULA, if they do not the function will exit
+// const acceptEula = await wizardUtils.doEula(demoEulaText)
+// myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
+// cliOutput.printLine()
+
+// // Perform device flow authorization
 const authenticator = new Authenticate()
-// ----------------------- DEV CODE ----------------------------
-const [result, data] = await authenticator.getDeviceCode()
-myConfig.DEFAULT.device_code = data.device_code
-const userCode = data.user_code
-const verificationUri = data.verification_uri
-const verificationUriComplete = data.verification_uri_complete
-
-// Verify the client authorization
-console.log(chalk.blue.bold(`Opening your browser to authorize this client, copy or type this code in your browser [${userCode}].`))
-await authenticator.verifyClientAuth(verificationUri)
-let authorized = null
-// Prompt the user and await their login and approval
-while (!authorized) {
-    authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
-}
-
-// Obtain the tokens
-const theTokens = await authenticator.getTokensDeviceCode(myConfig.DEFAULT.device_code)
-console.log(theTokens)
-
-process.exit()
-
-process.exit()
-
-
-// ----------------------- AUTH CODE ---------------------------
-// This flow is related to auth_code and not device_code
-// console.log(chalk.blue.bold('Creating a random code verifier and challenge code to for this client.'))
-// myConfig.DEFAULT.code_verifier = authenticator.createCodeVerifier()
-// myConfig.DEFAULT.challenge_code = authenticator.createChallengeCode(myConfig.DEFAULT.code_verifier)
-
-// console.log(`Code Verifier>>> [${myConfig.DEFAULT.code_verifier}]`)
-// console.log(`Challenge Code>>> [${myConfig.DEFAULT.challenge_code}]`)
-
-
-// console.log(chalk.blue.bold('Opening the browser for an authorization code; please copy this code to the clipboard.'))
-
-// // Open the browser to obtain the client specific device code
-// await authenticator.openPKCEUrl(myConfig.DEFAULT)
-
-// // Prompt the user to paste the device code into the setup utility copied from the browser
-// myConfig.DEFAULT.pkce_device_code = await getDeviceCode()
-
-// Authorize this client to obtain tokens
-// console.log(chalk.blue.bold('Requesting the authorization code from the identity service.'))
-// const authorizationCode = await authenticator.authorizeClient(myConfig.DEFAULT.pkce_device_code, myConfig.DEFAULT.challenge_code)
-// myConfig.DEFAULT.device_code = authorizationCode[1].device_code
-// const userCode = authorizationCode[1].user_code
-
+// // ----------------------- DEVICE CODE ----------------------------
+// const [result, data] = await authenticator.getDeviceCode()
+// myConfig.DEFAULT.device_code = data.device_code
+// const userCode = data.user_code
+// const verificationUri = data.verification_uri
+// // const verificationUriComplete = data.verification_uri_complete
 
 // // Verify the client authorization
-// console.log(chalk.blue.bold(`Opening the browser to authorize the client with [${userCode}].`))
-// const verificationUriComplete = authorizationCode[1].verification_uri_complete
-// await authenticator.verifyClientAuth(verificationUriComplete)
+// console.log(chalk.blue.bold(`Opening your browser to authorize this client, copy or type this code in your browser [${userCode}].`))
+// await authenticator.verifyClientAuth(verificationUri)
 // let authorized = null
+// // Prompt the user and await their login and approval
 // while (!authorized) {
 //     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
 // }
 
-// 
-// Obtaining the tokens
-// console.log(chalk.blue.bold(`Requesting access and refresh tokens from the identity service with [${myConfig.DEFAULT.pkce_device_code}].`))
-// const theTokens = await authenticator.getTokens(myConfig.DEFAULT.pkce_device_code, myConfig.DEFAULT.code_verifier)
-// console.log(theTokens)
+// // Obtain the token and save to the environmental object
+// const theTokens = await authenticator.getTokensDeviceCode(myConfig.DEFAULT.device_code)
 // myConfig.DEFAULT.access_token = theTokens[1].access_token
 // myConfig.DEFAULT.token_type = theTokens[1].token_type
 // myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
-cliOutput.printLine()
+// cliOutput.printLine()
 
 
 // Create the first user
 // TODO user email address and first_name should be added to config file
+// Why add these, I don't remember?
+
+// Generate the needed controllers to interact with the backend
+const credential = authenticator.login(myEnv)
+const companyCtl = new Companies(credential)
+const studyCtl = new Studies(credential)
+const userCtl = new Users(credential)
+
+// Obtain user attributes
+console.log(chalk.blue.bold('Learning a little more about you...'))
+const uWizard = new AddUser(
+    myConfig,
+    userCtl // NOTE: User creation is commented out
+)
+// TODO: We do not yet know the name of the company so have to update the user later on.
+let myUser = await uWizard.wizard(true, false)
+myConfig.DEFAULT.company = myUser[2].company_name
+cliOutput.printLine()
+
+
+// Create the owning company for the initial user
+console.log(chalk.blue.bold('Creating your owning company...'))
+myEnv.splash = false
+const cWizard = new AddCompany(
+    myConfig,
+    companyCtl, // NOTE: Company creation is commented out
+    myConfig.DEFAULT.company_dns
+)
+let owningCompany = await cWizard.wizard(true, false)
+console.log(`Firmographics summary for ${owningCompany[2].name}`)
+console.log(`\tWebsite: ${owningCompany[2].url}`)
+console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
+console.log(`\tsic: ${owningCompany[2].sic}`)
+
+// TODO Set company user name to user name set in the company wizard
+
+process.exit()
+
+// Create an S3 account derived from the user's full name, plus some randomness
+console.log(chalk.blue.bold(`Establishing the storage container for ${myConfig.DEFAULT.company}...`))
+const myS3 = new s3Utilities(myEnv.s3_settings)
+// Get the key from the command line
+const s3PromptObj = {
+    key: {consoleString: "the provided API Key for the storage container", value: null, altMessage: 'Please input'},
+}
+const apiKey = await wizardUtils.doManual(
+    s3PromptObj, // Object that we should send to doManual
+    ['key'], // Set of attributes to prompt for
+    true, // Should we prompt only for the whitelisted attributtes
+    true // Use an alternative message than the default supplied
+)
+
+// Create the s3Name name
+// NOTES:
+// 1. containerName = userName = s3Name
+// 2. userName can only access a container named userName
+// 3. Permissions for the container are GET, PUT and LIST, others may be added over time
+// 4. 
+const s3Name = myS3.generateBucketName(myConfig.DEFAULT.company)
+
+// Call the API to create the user
+const [s3User, s3Key] = await myS3.s3AddUser(s3Name)
+
+// Set the S3 credential information into the env
+myConfig.DEFAULT.s3_settings.api_key = s3Key
+myConfig.DEFAULT.s3_settings.bucket = s3Name
+myConfig.DEFAULT.s3_settings.user = s3Name
+
+// Create the bucket
+const s3Resp = await myS3.s3CreateBucket(s3Name)
+if(s3Resp[0]) {
+    console.log(chalk.blue.bold(`Added interaction storage space for ${owningCompany.name}.`))
+} else {
+    console.log(chalk.blue.red(`Unable to add interaction storage space for ${owningCompany.name}.`))
+    process.exit(-1)
+}
+cliOutput.printLine()
 
 // Persist and verify the config file
 // Check for and create the directory process.env.HOME/.mediumroast
@@ -266,44 +290,8 @@ success ?
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
 
-// Generate the needed controllers to interact with the backend
-const credential = authenticator.login(myEnv)
-const companyCtl = new Companies(credential)
-const studyCtl = new Studies(credential)
-const userCtl = new Users(credential)
-
 process.exit()
 
-// Create the owning company for the initial user
-console.log(chalk.blue.bold('Creating owning company...'))
-myEnv.splash = false
-const cWizard = new AddCompany(
-    myEnv,
-    companyCtl,
-    myEnv.DEFAULT.company_dns
-)
-let owningCompany = await cWizard.wizard(true, false)
-// Create an S3 bucket derived from the company name, and the steps for creating the
-// bucket name are in _genereateBucketName().
-const myS3 = new s3Utilities(myEnv.s3_settings)
-const bucketName = myS3.generateBucketName(owningCompany.name)
-const s3Resp = await myS3.s3CreateBucket(bucketName)
-if(s3Resp) {
-    console.log(chalk.blue.bold(`Added interaction storage space for ${owningCompany.name}.`))
-} else {
-    console.log(chalk.blue.red(`Unable to add interaction storage space for ${owningCompany.name}.`))
-    process.exit(-1)
-}
-cliOutput.printLine()
-
-// Obtain user attributes
-console.log(chalk.blue.bold('Obtaining details about you...'))
-const uWizard = new AddUser(
-    myEnv,
-    userCtl
-)
-let myUser = await uWizard.wizard(owningCompany.name, true, false)
-cliOutput.printLine()
 
 // Create the first company
 console.log(chalk.blue.bold('Creating the first company...'))
@@ -321,8 +309,10 @@ const myStudy = {
     document: {}
 }
 const studyResp = await studyCtl.createObj(myStudy)
-// TODO perform linkages between company and study objects
 cliOutput.printLine()
+
+// TODO perform linkages between company and study objects
+// cliOutput.printLine()
 
 
 // List all created objects to the console
@@ -338,9 +328,9 @@ cliOutput.printLine()
 
 // Print out the next steps
 console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
-console.log(chalk.blue.bold(`\t1. Create and register additional companies with mr_company --add_wizard.`))
-console.log(chalk.blue.bold(`\t2. Register and add interactions with mr_interaction --add_wizard.`))
-console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic competitive analysis.')
+console.log(chalk.blue.bold(`\t1. Create and register additional companies with mrcli company --add_wizard.`))
+console.log(chalk.blue.bold(`\t2. Register and add interactions with mrcli interaction --add_wizard.`))
+console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic company comparisons.')
 cliOutput.printLine()
 
 

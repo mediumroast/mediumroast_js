@@ -4,7 +4,7 @@
  * @file userWizard.js
  * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 // Import required modules
@@ -12,6 +12,7 @@ import inquirer from "inquirer"
 import chalk from 'chalk'
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
+import { Utilities } from "../helpers.js"
 
 
 class AddUser {
@@ -21,7 +22,7 @@ class AddUser {
 
         // Splash screen elements
         this.name = "mediumroast.io user wizard"
-        this.version = "version 1.0.0"
+        this.version = "version 1.1.0"
         this.description = "Prompt based user object creation for the mediumroast.io."
 
         // Class globals
@@ -38,6 +39,7 @@ class AddUser {
             [           // Set of attributes to prompt for
                 'first_name', 
                 'last_name', 
+                'company_name', 
                 'email', 
                 'phone', 
                 'linkedin',
@@ -63,7 +65,7 @@ class AddUser {
      * @param {Boolean} firstUser - if this is the first time the user is created or not
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
      */
-    async wizard(companyName, firstUser=false, createObj=true) {
+    async wizard(firstUser=false, createObj=true) {
         // Unless we suppress this print out the splash screen.
         if (this.env.splash) {
             this.output.splashScreen(
@@ -79,7 +81,8 @@ class AddUser {
             email: {consoleString: "email address", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
             phone: {consoleString: "phone number, including country code", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
             linkedin: {consoleString: "LinkedIn handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
-            twitter: {consoleString: "Twitter handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            twitter: {consoleString: "X handle", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
+            company_name: {consoleString: "company name", value: this.defaultValue, altMessage: 'What\'s your'}, // Prompt
             can_contact: {consoleString: "contact you from time to time", value: false, altMessage: 'Can we'}, // Special prompt
             roles: {consoleString: "roles", value: 'admin'}, // Do not prompt
             new_user: {consoleString: "new user", value: true} // Do not prompt
@@ -96,25 +99,24 @@ class AddUser {
         }
 
         // Perform user creation setup
-        console.log(chalk.blue.bold('Starting user creation...'))
+        console.log(chalk.blue.bold('Starting user registration.'))
         myUser = await this._createUser(userPrototype)
-        this.cutils.printLine()
 
         // Assign special values to the user
-        console.log(chalk.blue.bold('Setting special properties to known values...'))
+        myUser.can_contact = await this._contactPrompt(userPrototype.can_contact) // TODO check the value
         firstUser ?
             myUser.roles = `admin`: // If this is the first user they'll be the administrator
             myUser.roles = `user` // Otherwise they aren't 
-        myUser.new_user = this.userPrototype.new_user.value
-        myUser.company = companyName
-        myUser.can_contact = await this._contactPrompt(userPrototype.can_contact) // TODO check the value
-        this.cutils.printLine()
+        myUser.new_user = userPrototype.new_user.value
+        console.log(chalk.green('Finished user definition.'))
         
         if (createObj) {
             console.log(chalk.blue.bold(`Saving details for ${myUser.first_name} to mediumroast.io...`))
-            return await this.apiController.createObj(myUser)
+            return await this.apiController.createObj(myUser) // TODO: this should change to fit into the below
+            // TODO: Verify the return structure, unsure if this actually returns the created object or just status message
+            // return []
         } else {
-            return myUser
+            return [true, {status_code: 200, status_msg: `Returning object for ${myUser.first_name}`}, myUser]
         }
     }
 

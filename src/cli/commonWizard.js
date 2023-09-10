@@ -67,7 +67,7 @@ class WizardUtils {
      * @param {Boolean} summary - when present only the items in whiteList will be prompted to the user
      * @returns {Object} - the final object with the changes the user wants to see
      */
-    async doManual(prototype, whiteList=[], summary=false, altMessage=null) {
+    async doManual(prototype, whiteList=[], summary=false, altMessage=false) {
         let myObj = {}
         for (const setting in prototype) {
             if (summary) {
@@ -78,9 +78,11 @@ class WizardUtils {
                 }
             }
             let myMessage
-            altMessage ? 
-                myMessage = `What\'s the ${this.objectType}\'s ${prototype[setting].consoleString}?`:
-                myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`
+
+            altMessage ?
+                myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`:
+                myMessage = `What\'s the ${this.objectType}\'s ${prototype[setting].consoleString}?`
+                
 
             await inquirer
                 .prompt([
@@ -197,9 +199,9 @@ class WizardUtils {
         const tmpRegion = await this.doCheckbox(
             "Which region is this company associated to?",
             [
-                {name: 'Americas', checked: true}, 
-                {name: 'Europe Middle East, Africa'},
-                {name: 'Asia, Pacific, Japan'}
+                {name: 'North, Meso and South America', value: "AMER", checked: true}, 
+                {name: 'Europe, Middle East, and Africa', value: "EMEA",},
+                {name: 'Asia, Pacific and ASEAN', value: "APAC",}
             ]
         )
         return tmpRegion[0]

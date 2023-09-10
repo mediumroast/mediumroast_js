@@ -40,15 +40,24 @@ class AddCompany {
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
         this.sicEndpoint = ""
-        this.env.company_dns ? this.companyDNS = this.env.company_dns : this.companyDNS = companyDNSUrl
-        this.env.company_logos ? this.companyLogos = this.env.company_logos : this.companyDNS = companyLogoUrl
-        this.cred = {
+        this.env.DEFAULT.company_dns ? this.companyDNS = this.env.DEFAULT.company_dns : this.companyDNS = companyDNSUrl
+        
+        this.companyDNSCred = {
             apiKey: "Not Applicable",
             restServer: this.companyDNS,
             user: "Not Applicable",
             secret: "Not Applicable"
         }
-        this.rest = new mrRest(this.cred)
+        this.companyDNSRest = new mrRest(this.companyDNSCred)
+
+        this.env.DEFAULT.company_logos ? this.companyLogos = this.env.DEFAULT.company_logos : this.companyDNS = companyLogoUrl
+        this.companyLogosCred = {
+            apiKey: "Not Applicable",
+            restServer: this.companyLogos,
+            user: "Not Applicable",
+            secret: "Not Applicable"
+        }
+        this.companyLogosRest = new mrRest(this.companyLogosCred)
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -75,24 +84,19 @@ class AddCompany {
         return objLink
     }
 
-    async  getCompany () {
+    async  getCompany (companyName) {
         let myCompany = {}
-        const mySpinner = new ora('Attempting to fetch data from company_dns...')
-        await inquirer
-                .prompt([
-                    {
-                        name: 'company',
-                        type: 'input',
-                        message: 'What\'s the name of the company you\'d like to add?'
-                    }
-                ])
-                .then(async (answer) => { 
-                    mySpinner.start()
-                    const companyAnswer = await answer.company
-                    myCompany = await this.rest.getObj(this.endpoint + companyAnswer)
-                })
+        const mySpinner = new ora('Fetching data from the company_dns...')
+        const myURL = this.endpoint + companyName
+        mySpinner.start()
+            myCompany = await this.companyDNSRest.getObj(myURL)
         mySpinner.stop()
         return myCompany
+    }
+
+    async getLogo (companyWebsite) {
+        const myLogos = await this.companyLogosRest.getObj(companyWebsite)
+        return myLogos[2].icons[0].url
     }
 
     // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
@@ -126,21 +130,44 @@ class AddCompany {
     }
 
 
-    async  doAutomatic(prototype){
-        let myCompanyObj = await this.getCompany()
-        // Else attempt to search company_dns, but if there is no answer then ask if try again or manual
+    async  doAutomatic(prototype, company){
+        // Attempt to search company_dns, but if there is no answer then ask if try again or manual
+        let myCompanyObj = await this.getCompany(company.name)
+        
         if (!myCompanyObj[0]){
             const redo = await this.wutils.operationOrNot('There was no company matching your search. Would you like to try again?')
             if (redo) {
-                myCompanyObj = await this.doAutomatic(prototype)
+                // TODO: Ensure that if this is a non-public company were doing the right thing, this means the white list
+                myCompanyObj = await this.doAutomatic(prototype, company)
             } else {
                 console.log(chalk.blue.bold('Starting manual company creation process...'))
-                myCompanyObj = await this.wutils.doManual(prototype)
+                // TODO: Ensure that if this is a non-public company were doing the right thing, this means the white list
+                if (company.company_type === 'Public') {
+                    myCompanyObj = await this.wutils.doManual(prototype)
+                } else {
+                    myCompanyObj = await this.wutils.doManual(
+                        prototype,
+                        [ 
+                            'phone', 
+                            'website', 
+                            'description', 
+                            'street_address', 
+                            'city',
+                            'stateProvince',
+                            'zipPostal',
+                            'country',
+                            'wikipediaURL'   
+                        ],
+                        true
+                    )
+                    // Search for SIC
+                    // Get Lat & Long
+                }
             }
         } else {
-            const myCompany = myCompanyObj[2].data
             // Transform the company_dns  object into a company object suitable for mediumroast
-
+            const myCompany = myCompanyObj[2].data
+            
             // Company name
             'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
 
@@ -246,21 +273,18 @@ class AddCompany {
                 prototype.google_patents_url.value = prototype.google_patents_url.value
             
             // After company_dns is successful then ask if we want a summary review or detailed review
-            const doSummary = await this.wutils.operationOrNot(`Would you like to do a summary review of attributes for ${prototype.name.value}?`)
+            const doSummary = await this.wutils.operationOrNot(`Review summary for ${prototype.name.value} (note - No means detailed review)?`)
             if (doSummary) {
                 myCompanyObj = await this.wutils.doManual(
                     prototype, 
                     [ 
                         'name', 
                         'phone', 
-                        'website', 
+                        'url', 
+                        'description', 
                         'street_address', 
-                        'country',
-                        'logo_url',
-                        'region',
-                        'role', 
                         'city',
-                        'company_type'
+                        'country',  
                     ],
                     true
                 )
@@ -295,7 +319,7 @@ class AddCompany {
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
         let companyPrototype = {
-            name: {consoleString: "name", value:this.defaultValue},
+            name: {consoleString: "name", value:this.env.DEFAULT.company},
             description: {consoleString: "description", value:this.defaultValue},
             company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             industry: {consoleString: "industry", value:this.defaultValue},
@@ -336,26 +360,38 @@ class AddCompany {
             process.exit()
         }
 
-        // Choose if we want manual or automatic
-        const automatic = await this.wutils.operationOrNot('Would like to proceed with automatic company creation?')
-        if (!automatic) {
-            // Perform manual setup
-            console.log(chalk.blue.bold('Starting manual company creation...'))
-            myCompany = await this.wutils.doManual(companyPrototype)
-        } else {
-            // Perform auto setup
-            console.log(chalk.blue.bold('Starting automatic company creation...'))
-            myCompany = await this.doAutomatic(companyPrototype)
-        }
-        this.cutils.printLine()
-
-        console.log(chalk.blue.bold('Starting location properties selections...'))
+        // Defining essential company attributes
+        console.log(chalk.blue.bold('Defining key company attributes like name, type, role and region.'))
+ 
+        // Pull in the name from the env
+        let tmpCompany = await this.wutils.doManual(
+            {name: {
+                consoleString: "name is", 
+                value:this.env.DEFAULT.company,
+                altMessage: "Your company\'s"
+            }},
+            [],
+            false,
+            true
+        )
         
-        // Set the region
-        myCompany.region = await this.wutils.getRegion() // TODO this needs to be updated
-        this.cutils.printLine()
+        // Assign the company's name based upon what was supplied in the env and confirmed by the user
+        myCompany.name = tmpCompany.name
 
-        // Set the role
+        // Define the company type
+        const tmpCompanyType = await this.wutils.doCheckbox(
+            "What type of company is this?",
+            [
+                {name: 'Public', checked: true}, 
+                {name: 'Private'}, 
+                {name: 'Non Profit'}, 
+                {name: 'Not for Profit'}
+            ]
+        )
+        myCompany.company_type = tmpCompanyType[0]
+        console.log(chalk.blue.bold(`Set the company\'s type to [${myCompany.company_type}]`))
+
+        // Set company role
         if (isOwner) {
             myCompany.role = 'Owner'
         // TODO harmonize with the web_ui
@@ -368,11 +404,26 @@ class AddCompany {
                     {name: 'Target Partner'},
                     {name: 'Target End User'},
                     {name: 'End User Customer'},
+                    {name: 'Former Customer'}
                 ]
             )
             myCompany.role = tmpRole[0]
         }
         console.log(chalk.blue.bold(`Set the company\'s role to [${myCompany.role}]`))
+
+        // Set the region
+        myCompany.region = await this.wutils.getRegion()
+        console.log(chalk.blue.bold(`Set the company\'s region to [${myCompany.region}]`))
+        this.cutils.printLine()
+
+
+        // NOTE: We will need to pass in the company name and type to help us determine what do to
+        // If anything other than public we don't need to fill out the full set
+        // General flow should be to try and discover the company attributes, and fallback to manual.
+        // NOTE: We could consider adding new company firmographics to a central DB
+
+        console.log(chalk.blue.bold(`Attempting to automatically discover company firmographics.`))
+        myCompany = await this.doAutomatic(companyPrototype, myCompany)
         this.cutils.printLine()
 
         console.log(chalk.blue.bold('Setting special properties to known values...'))
@@ -382,20 +433,19 @@ class AddCompany {
         myCompany.comparison = {}
         // Quality
         myCompany.quality = {}
+        // Logo
+        myCompany.logo_url = await this.getLogo(myCompany.url)
+        console.log(chalk.green('Finished company definition.'))
 
-
-        // NOTICE in the alpha version these will no longer be needed
-        // Linked interactions
-        myCompany.linked_interactions = {}
-        // Link the default study
-        myCompany.linked_studies = this._linkObj('Default Study')
-        this.cutils.printLine()
 
         if (createObj) {
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-        return await this.apiController.createObj(myCompany)
+            // NOTE: This is temporarily commented out
+            return await this.apiController.createObj(myCompany)
+            // TODO: Change return structure to the following when we understand what is being returned
+            // return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
         } else {
-            return myCompany
+            return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
         }
     }
 
