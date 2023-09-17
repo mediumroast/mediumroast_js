@@ -17,6 +17,7 @@ import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
 import crypto from "node:crypto"
+import axios from "axios"
 
 class AddCompany {
     /**
@@ -35,13 +36,14 @@ class AddCompany {
      * @param {String} companyDNSUrl - the url to the company DNS service
      * @todo replace the company_DNS url with the proper item in the config file
      */
-    constructor(env, apiController, companyDNSUrl=null, companyLogoUrl=null){
+    constructor(env, apiController, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
         this.env = env
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
         this.sicEndpoint = ""
-        this.env.DEFAULT.company_dns ? this.companyDNS = this.env.DEFAULT.company_dns : this.companyDNS = companyDNSUrl
         
+        
+        this.env.DEFAULT.company_dns ? this.companyDNS = this.env.DEFAULT.company_dns : this.companyDNS = companyDNSUrl
         this.companyDNSCred = {
             apiKey: "Not Applicable",
             restServer: this.companyDNS,
@@ -58,6 +60,15 @@ class AddCompany {
             secret: "Not Applicable"
         }
         this.companyLogosRest = new mrRest(this.companyLogosCred)
+
+        this.env.DEFAULT.nominatim ? this.nominatim = this.env.DEFAULT.nominatim : this.nominatim = nominatimUrl
+        this.nominatimCred = this.companyDNSCred = {
+            apiKey: "Not Applicable",
+            restServer: this.nominatim,
+            user: "Not Applicable",
+            secret: "Not Applicable"
+        }
+        this.nominatiumRest = new mrRest(this.nominatimCred)
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -99,6 +110,15 @@ class AddCompany {
         return myLogos[2].icons[0].url
     }
 
+    async getLatLong(address) {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${address}&format=json`)
+        if (response.data && response.data[0]) {
+            return [true, {status_code: 200, status_msg: `SUCCESS: found coordinates for ${address}`}, [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)]]
+        } else {
+            return [false, {status_code: 404, status_msg: `FAILED: could not find coordinates for ${address}`}, null]
+        }
+    }
+
     // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
     _joinIndustry(industry) {
         if(industry.length > 1) {
@@ -129,169 +149,321 @@ class AddCompany {
         return [tenK, tenQ]
     }
 
-
-    async  doAutomatic(prototype, company){
-        // Attempt to search company_dns, but if there is no answer then ask if try again or manual
-        let myCompanyObj = await this.getCompany(company.name)
+    _setPublicCompany(publicCompanyObj, prototype) {
+        // Transform the company_dns  object into a company object suitable for mediumroast
+        const myCompany = publicCompanyObj[2].data
         
-        if (!myCompanyObj[0]){
-            const redo = await this.wutils.operationOrNot('There was no company matching your search. Would you like to try again?')
-            if (redo) {
-                // TODO: Ensure that if this is a non-public company were doing the right thing, this means the white list
-                myCompanyObj = await this.doAutomatic(prototype, company)
-            } else {
-                console.log(chalk.blue.bold('Starting manual company creation process...'))
-                // TODO: Ensure that if this is a non-public company were doing the right thing, this means the white list
-                if (company.company_type === 'Public') {
-                    myCompanyObj = await this.wutils.doManual(prototype)
-                } else {
-                    myCompanyObj = await this.wutils.doManual(
-                        prototype,
-                        [ 
-                            'phone', 
-                            'website', 
-                            'description', 
-                            'street_address', 
-                            'city',
-                            'stateProvince',
-                            'zipPostal',
-                            'country',
-                            'wikipediaURL'   
-                        ],
-                        true
-                    )
-                    // Search for SIC
-                    // Get Lat & Long
-                }
-            }
-        } else {
-            // Transform the company_dns  object into a company object suitable for mediumroast
-            const myCompany = myCompanyObj[2].data
-            
-            // Company name
-            'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
+        // Company name
+        'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
 
-            // Company industry
-            let myIndustry = this.defaultValue
-            'industry' in myCompany ? myIndustry = this._joinIndustry(myCompany.industry) : myIndustry = this.defaultValue
-            prototype.industry.value = myIndustry
+        // Company industry
+        // TODO given the changes in the company_dns this is no longer right need to review this
+        let myIndustry = this.defaultValue
+        'industry' in myCompany ? myIndustry = this._joinIndustry(myCompany.industry) : myIndustry = this.defaultValue
+        prototype.industry.value = myIndustry
 
-            // Company website
-            'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
+        // Company website
+        'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
 
-            // Company address
-            'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
+        // Company address
+        'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
 
-            // Company city
-            'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
+        // Company city
+        'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
 
-            // Company state/province
-            'stateProvince' in myCompany ? prototype.state_province.value = myCompany.stateProvince : 
-                prototype.state_province.value = prototype.state_province.value
+        // Company state/province
+        'stateProvince' in myCompany ? prototype.state_province.value = myCompany.stateProvince : 
+            prototype.state_province.value = prototype.state_province.value
 
-            // Company country
-            'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+        // Company country
+        'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
 
-            // Company phone
-            'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
+        // Company phone
+        'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
 
-            // Company description
-            'description' in myCompany ? prototype.description.value = myCompany.description : prototype.description.value = prototype.description.value
-            // TODO clean description of any quotes either single or double
-            prototype.description.value = prototype.description.value.replace(/["']/g, '')
+        // Company description
+        'description' in myCompany ? prototype.description.value = myCompany.description : prototype.description.value = prototype.description.value
+        // TODO clean description of any quotes either single or double
+        prototype.description.value = prototype.description.value.replace(/["']/g, '')
+
+        // Company CIK
+        'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
+
+        // Company stock symbol/ticker
+        const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[1] 
+        'tickers' in myCompany ? prototype.stock_symbol.value = myTicker : 
+            prototype.stock_symbol.value = prototype.stock_symbol.value
+
+        // Company stock exchange
+        'exchanges' in myCompany ? prototype.stock_exchange.value = myCompany.exchanges[0] : 
+            prototype.stock_exchange.value = prototype.stock_exchange.value
+        
+        // Company zip/postal code
+        'zipPostal' in myCompany ? prototype.zip_postal.value = myCompany.zipPostal : 
+            prototype.zip_postal.value = prototype.zip_postal.value
+        
+        // Company longitude coordinate
+        'longitude' in myCompany ? prototype.longitude.value = myCompany.longitude : 
+            prototype.longitude.value = prototype.longitude.value
+        
+        // Company latitude
+        'latitude' in myCompany ? prototype.latitude.value = myCompany.latitude : prototype.latitude.value = prototype.latitude.value
+        
+        // Company 10-k and 10-q urls
+        let [tenKurl, tenQurl] = [null, null]
+        'forms' in myCompany ?  [tenKurl, tenQurl] = this._getFormUrls(myCompany.forms) : [tenKurl, tenQurl] = [this.defaultValue, this.defaultValue]
+        tenKurl !== this.defaultValue ? prototype.recent10k_url.value = tenKurl : prototype.recent10k_url.value = prototype.recent10k_url.value
+        tenQurl !== this.defaultValue ? prototype.recent10q_url.value = tenQurl : prototype.recent10q_url.value = prototype.recent10q_url.value
+
+        // Company wikipedia url
+        'wikipediaURL' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipediaURL : 
+            prototype.wikipedia_url.value = prototype.wikipedia_url.value
+        
+        // Company Standard Industry Code
+        'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+
+        // Company SIC description
+        'sicDescription' in myCompany ? prototype.sic_description.value = myCompany.sicDescription : 
+            prototype.sic_description.value = prototype.sic_description.value
+        
+        // Company type
+        'type' in myCompany ? prototype.company_type.value = myCompany.type : 
+            prototype.company_type.value = prototype.company_type.value
+        
+        // Company firmographics url
+        'firmographicsURL' in myCompany ? prototype.firmographics_url.value = myCompany.firmographicsURL : 
+            prototype.firmographics_url.value = prototype.firmographics_url.value
+        
+        // Company public filings url
+        'filingsURL' in myCompany ? prototype.filings_url.value = myCompany.filingsURL : 
+            prototype.filings_url.value = prototype.filings_url.value
+        
+        // Company stock tractions by individual and institutional owner
+        'transactionsByOwner' in myCompany ? prototype.owner_transactions.value = myCompany.transactionsByOwner : 
+            prototype.owner_transactions.value = prototype.owner_transactions.value
+
+        // Google maps
+        'googleMaps' in myCompany ? prototype.google_maps_url.value = myCompany.googleMaps : 
+            prototype.google_maps_url.value = prototype.google_maps_url.value
+
+        // Google news
+        'googleNews' in myCompany ? prototype.google_news_url.value = myCompany.googleNews : 
+            prototype.google_news_url.value = prototype.google_news_url.value
+
+        // Google finance
+        'googleFinance' in myCompany ? prototype.google_finance_url.value = myCompany.googleFinance : 
+            prototype.google_finance_url.value = prototype.google_finance_url.value
+
+        // Google patents
+        'googlePatents' in myCompany ? prototype.google_patents_url.value = myCompany.googlePatents : 
+            prototype.google_patents_url.value = prototype.google_patents_url.value
+
+        return prototype
+    }
+
+    _setGeneralCompany(generalCompanyObj, prototype, isPublic) {
+        // Transform the company_dns  object into a company object suitable for mediumroast
+        const myCompany = generalCompanyObj
+        
+        // Company name
+        'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
+
+        // Company website
+        'url' in myCompany ? prototype.url.value = myCompany.url : prototype.url.value = prototype.url.value
+
+        // Company address
+        'street_address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
+
+        // Company city
+        'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
+
+        // Company state/province
+        'state_province' in myCompany ? prototype.state_province.value = myCompany.state_province : 
+            prototype.state_province.value = prototype.state_province.value
+
+        // Company country
+        'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+
+        // Company phone
+        'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
+
+        // Company description
+        'description' in myCompany ? prototype.description.value = myCompany.description : prototype.description.value = prototype.description.value
+        // TODO clean description of any quotes either single or double
+        prototype.description.value = prototype.description.value.replace(/["']/g, '')
+        
+        // Company longitude coordinate
+        'longitude' in myCompany ? prototype.longitude.value = myCompany.longitude : 
+            prototype.longitude.value = prototype.longitude.value
+        
+        // Company latitude
+        'latitude' in myCompany ? prototype.latitude.value = myCompany.latitude : prototype.latitude.value = prototype.latitude.value
+
+        // Company wikipedia url
+        'wikipedia_url' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipedia_url : 
+            prototype.wikipedia_url.value = prototype.wikipedia_url.value
+        
+        // Company Standard Industry Code
+        'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+
+        // Company SIC description
+        'sic_description' in myCompany ? prototype.sic_description.value = myCompany.sic_description : 
+            prototype.sic_description.value = prototype.sic_description.value
+        
+        // Company type
+        'type' in myCompany ? prototype.company_type.value = myCompany.type : 
+            prototype.company_type.value = prototype.company_type.value
+
+        // Google maps
+        'google_maps_url' in myCompany ? prototype.google_maps_url.value = myCompany.google_maps_url : 
+            prototype.google_maps_url.value = prototype.google_maps_url.value
+
+        // Google news
+        'google_news_url' in myCompany ? prototype.google_news_url.value = myCompany.google_news_url : 
+            prototype.google_news_url.value = prototype.google_news_url.value
+
+        // Google patents
+        'google_patents_url' in myCompany ? prototype.google_patents_url.value = myCompany.google_patents_url : 
+            prototype.google_patents_url.value = prototype.google_patents_url.value
+
+        if(isPublic) {
+            // Company firmographics url
+            'firmographics_url' in myCompany ? prototype.firmographics_url.value = myCompany.firmographicsURL : 
+            prototype.firmographics_url.value = prototype.firmographics_url.value
+    
+            // Company public filings url
+            'filings_url' in myCompany ? prototype.filings_url.value = myCompany.filings_url : 
+            prototype.filings_url.value = prototype.filings_url.value
+    
+            // Company stock tractions by individual and institutional owner
+            'owner_transactions' in myCompany ? prototype.owner_transactions.value = myCompany.owner_transactions : 
+            prototype.owner_transactions.value = prototype.owner_transactions.value
+
+            // Google finance
+            'google_finance_url' in myCompany ? prototype.google_finance_url.value = myCompany.google_finance_url : 
+            prototype.google_finance_url.value = prototype.google_finance_url.value
+
+            // Company 10-k and 10-q urls
+            'recent10k_url' in myCompany ? prototype.recent10k_url.value = myCompany.recent10k_url : prototype.recent10k_url.value = prototype.recent10k_url.value
+            'recent10q_url' in myCompany ? prototype.recent10q_url.value = myCompany.recent10q_url : prototype.recent10q_url.value = prototype.recent10q_url.value
+
 
             // Company CIK
             'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
 
             // Company stock symbol/ticker
-            const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[1] 
-            'tickers' in myCompany ? prototype.stock_symbol.value = myTicker : 
-                prototype.stock_symbol.value = prototype.stock_symbol.value
+            'stock_symbol' in myCompany ? prototype.stock_symbol.value = myCompany.stock_symbol : prototype.stock_symbol.value = prototype.stock_symbol.value
 
             // Company stock exchange
-            'exchanges' in myCompany ? prototype.stock_exchange.value = myCompany.exchanges[0] : 
-                prototype.stock_exchange.value = prototype.stock_exchange.value
-            
-            // Company zip/postal code
-            'zipPostal' in myCompany ? prototype.zip_postal.value = myCompany.zipPostal : 
-                prototype.zip_postal.value = prototype.zip_postal.value
-            
-            // Company longitude coordinate
-            'longitude' in myCompany ? prototype.longitude.value = myCompany.longitude : 
-                prototype.longitude.value = prototype.longitude.value
-            
-            // Company latitude
-            'latitude' in myCompany ? prototype.latitude.value = myCompany.latitude : prototype.latitude.value = prototype.latitude.value
-            
-            // Company 10-k and 10-q urls
-            let [tenKurl, tenQurl] = [null, null]
-            'forms' in myCompany ?  [tenKurl, tenQurl] = this._getFormUrls(myCompany.forms) : [tenKurl, tenQurl] = [this.defaultValue, this.defaultValue]
-            tenKurl !== this.defaultValue ? prototype.recent10k_url.value = tenKurl : prototype.recent10k_url.value = prototype.recent10k_url.value
-            tenQurl !== this.defaultValue ? prototype.recent10q_url.value = tenQurl : prototype.recent10q_url.value = prototype.recent10q_url.value
+            'stock_exchange' in myCompany ? prototype.stock_exchange.value = myCompany.stock_exchange : prototype.stock_exchange.value = prototype.stock_exchange.value
 
-            // Company wikipedia url
-            'wikipediaURL' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipediaURL : 
-                prototype.wikipedia_url.value = prototype.wikipedia_url.value
-            
-            // Company Standard Industry Code
-            'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+        }
 
-            // Company SIC description
-            'sicDescription' in myCompany ? prototype.sic_description.value = myCompany.sicDescription : 
-                prototype.sic_description.value = prototype.sic_description.value
-            
-            // Company type
-            'type' in myCompany ? prototype.company_type.value = myCompany.type : 
-                prototype.company_type.value = prototype.company_type.value
-            
-            // Company firmographics url
-            'firmographicsURL' in myCompany ? prototype.firmographics_url.value = myCompany.firmographicsURL : 
-                prototype.firmographics_url.value = prototype.firmographics_url.value
-            
-            // Company public filings url
-            'filingsURL' in myCompany ? prototype.filings_url.value = myCompany.filingsURL : 
-                prototype.filings_url.value = prototype.filings_url.value
-            
-            // Company stock tractions by individual and institutional owner
-            'transactionsByOwner' in myCompany ? prototype.owner_transactions.value = myCompany.transactionsByOwner : 
-                prototype.owner_transactions.value = prototype.owner_transactions.value
+        return prototype
+    }
 
-            // Google maps
-            'googleMaps' in myCompany ? prototype.google_maps_url.value = myCompany.googleMaps : 
-                prototype.google_maps_url.value = prototype.google_maps_url.value
 
-            // Google news
-            'googleNews' in myCompany ? prototype.google_news_url.value = myCompany.googleNews : 
-                prototype.google_news_url.value = prototype.google_news_url.value
+    async  doAutomatic(prototype, company){
+        // Set up white lists which match to the prototype keys
+        
+        const publicCompanyWhiteList = [ 
+            'name', 
+            'description', 
+            'url', 
+            'phone', 
+            'street_address', 
+            'city',
+            'state_province',
+            'zip_postal',
+            'country',  
+        ]
+        const generalCompanyWhiteList = [ 
+            'name',
+            'phone', 
+            'website', 
+            'description', 
+            'street_address', 
+            'city',
+            'state_province',
+            'zip_postal',
+            'country',
+            'wikipedia_url',
+            'sic',
+            'sic_description'   
+        ]
 
-            // Google finance
-            'googleFinance' in myCompany ? prototype.google_finance_url.value = myCompany.googleFinance : 
-                prototype.google_finance_url.value = prototype.google_finance_url.value
+        // switch to the right whitelist based upon company type
+        // NOTE: Not using tenary because there could be a future need to branch for other types of companies
+        let myWhiteList = generalCompanyWhiteList
+        if (company.company_type === 'Public') {myWhiteList = publicCompanyWhiteList}
 
-            // Google patents
-            'googlePatents' in myCompany ? prototype.google_patents_url.value = myCompany.googlePatents : 
-                prototype.google_patents_url.value = prototype.google_patents_url.value
-            
-            // After company_dns is successful then ask if we want a summary review or detailed review
-            const doSummary = await this.wutils.operationOrNot(`Review summary for ${prototype.name.value} (note - No means detailed review)?`)
-            if (doSummary) {
+        // Attempt to search company_dns, but if there is no answer then ask if try again or do manual
+        let myCompanyObj = await this.getCompany(company.name)
+        let usedCompanyDNS = true
+        
+        // If we don't get a response from the company_dns we need to do a manual entry
+        if (!myCompanyObj[0]){
+            usedCompanyDNS = false
+            console.log(chalk.blue.bold('No matching company found, starting manual company definition...'))
+            if (company.company_type === 'Public') {
+                // NOTE There's a problem here, the return from company_dns is not harmonized with the prototype.
+                //      Therefore, when we sync the company object with the prototype with _setPublicCompany() it
+                //      will potentially fail and/or imperfectly work. More thinking is needed here as we need to 
+                //      handle a variety of cases where we don't get the inputs expected from company_dns.  One
+                //      potential approach is to make use of _setGeneralCompany() to have a switch for public that
+                //      essentially does the remainder of steps to sync. We'd then need to set a switch related to
+                //      if company_dns worked or not.  This is likely the best case.
+                myCompanyObj = await this.wutils.doManual(prototype)
+            } else {
+                // Since this is not a confirmation we want to prompt for items that we only need inputs for
                 myCompanyObj = await this.wutils.doManual(
-                    prototype, 
+                    prototype,
                     [ 
-                        'name', 
                         'phone', 
-                        'url', 
+                        'website', 
                         'description', 
                         'street_address', 
                         'city',
-                        'country',  
+                        'state_province',
+                        'zip_postal',
+                        'country',
+                        'wikipedia_url'   
                     ],
                     true
                 )
-            } else {
-                myCompanyObj = await this.wutils.doManual(prototype)
+                
             }
+            // Search for SIC
+
+            // Get Lat & Long
+            const fullAddress = `${myCompanyObj.street_address}+${myCompanyObj.city}+${myCompanyObj.state_province}+${myCompanyObj.zip_postal}+${myCompanyObj.country}`
+            const [lat, long] = await this.getLatLong(fullAddress)
+            myCompanyObj.latitude = lat
+            myCompanyObj.longitude = long
+            // Set the google links
+            process.exit()
         }
+        
+        // If this is a public company process differently
+        if (company.company_type === 'Public') {
+            // Should company_dns results be used then use _setPublicCompany, else use _setGeneralCompany
+            usedCompanyDNS ?  
+                prototype = this._setPublicCompany(myCompanyObj, prototype) :
+                prototype = this._setGeneralCompany(myCompanyObj, prototype, true)
+        } else {
+            // This is for all non-public companies
+            prototype = this._setGeneralCompany(myCompanyObj, prototype)
+        }
+        
+            
+        // After company_dns is successful then ask if we want a summary review or detailed review
+        const doSummary = await this.wutils.operationOrNot(`Review summary for ${prototype.name.value} (note - No means detailed review)?`)
+        if (doSummary) {
+            myCompanyObj = await this.wutils.doManual(prototype, myWhiteList, true)
+        } else {
+            myCompanyObj = await this.wutils.doManual(prototype)
+        }
+
         return myCompanyObj
     }
 
@@ -382,7 +554,7 @@ class AddCompany {
         const tmpCompanyType = await this.wutils.doCheckbox(
             "What type of company is this?",
             [
-                {name: 'Public', checked: true}, 
+                {name: 'Public'}, 
                 {name: 'Private'}, 
                 {name: 'Non Profit'}, 
                 {name: 'Not for Profit'}
@@ -399,7 +571,7 @@ class AddCompany {
             const tmpRole = await this.wutils.doCheckbox(
                 "What role should we assign to this company?",
                 [
-                    {name: 'Competitor', checked: true}, 
+                    {name: 'Competitor'}, 
                     {name: 'Current Partner'},
                     {name: 'Target Partner'},
                     {name: 'Target End User'},

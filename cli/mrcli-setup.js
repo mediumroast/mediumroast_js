@@ -62,6 +62,8 @@ function getEnv () {
             company_dns: "https://www.mediumroast.io/company_dns",
             company_logos: "https://logo-server.mediumroast.io:7000/allicons.json?url=",
             echarts: "https://chart-server.mediumroast.io:11000",
+            nominatim: 'https://nominatim.openstreetmap.org/search?addressdetails=1&q=',
+            user_agent: 'mediumroast-cli',
             working_directory: "working",
             report_output_dir: "Documents",
             theme: "coffee",
