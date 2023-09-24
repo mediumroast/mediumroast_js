@@ -11,6 +11,11 @@
 // Import required modules
 import inquirer from "inquirer"
 import node_geocoder from "node-geocoder"
+import wrap from 'wrap-ansi'
+import { clear } from 'console'
+import readline from 'readline';
+import chalk from 'chalk'
+import { EOL } from 'os'
 
 class WizardUtils {
     /**
@@ -62,7 +67,7 @@ class WizardUtils {
      * @param {Boolean} summary - when present only the items in whiteList will be prompted to the user
      * @returns {Object} - the final object with the changes the user wants to see
      */
-    async doManual(prototype, whiteList=[], summary=false) {
+    async doManual(prototype, whiteList=[], summary=false, altMessage=false) {
         let myObj = {}
         for (const setting in prototype) {
             if (summary) {
@@ -72,7 +77,13 @@ class WizardUtils {
                     continue
                 }
             }
-            const myMessage = `What\'s the ${this.objectType}\'s ` + prototype[setting].consoleString + '?'
+            let myMessage
+
+            altMessage ?
+                myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`:
+                myMessage = `What\'s the ${prototype[setting].consoleString}?`
+                
+
             await inquirer
                 .prompt([
                     {
@@ -114,6 +125,31 @@ class WizardUtils {
         return myResult
     }
 
+    async doList(message, choices){
+        let myResult = null
+            await inquirer
+                .prompt([
+                    {
+                        name: 'option',
+                        type: 'list',
+                        message: message,
+                        choices: choices,
+                        validate(answer) {
+                            if(answer.length !== 1){
+                                return 'Please choose from one of the options available.'
+                            }
+                            return true
+                        }
+                    }
+                ])
+                .then(async (answer) => {
+                    myResult = await answer.option
+                })
+        return myResult
+    }
+
+    // TODO consider harmonizing with the web_ui such that we no longer need to add a module for geocoding
+    // TODO this is deprecated as we're using openstreetmaps directly
     async locate(location) {
         const options = {
             provider: this.geoProvider,
@@ -124,6 +160,7 @@ class WizardUtils {
         return coordinates
     }
 
+    
     async getLatLong(mrObj) {
         let locationString = "" // Set to an empty string
         // Add the address if present
@@ -162,7 +199,7 @@ class WizardUtils {
                     return item
                 }
             )
-            const addressChoice = await this.doCheckbox(
+            const addressChoice = await this.doList(
                 `Which address is closest to your intended ${this.objectType}\'s location?`,
                 choices
             )
@@ -177,16 +214,68 @@ class WizardUtils {
         }
     }
 
+    /**
+     * 
+     * @returns 
+     */
     async getRegion () {
-        const tmpRegion = await this.doCheckbox(
+        const tmpRegion = await this.doList(
             "Which region is this company associated to?",
             [
-                {name: 'Americas', checked: true}, 
-                {name: 'Europe Middle East, Africa'},
-                {name: 'Asia, Pacific, Japan'}
+                {name: 'North, Meso and South America (AMER)', value: "AMER"}, 
+                {name: 'Europe, Middle East, and Africa (EMEA)', value: "EMEA"},
+                {name: 'Asia, Pacific and ASEAN (APAC)', value: "APAC"}
             ]
         )
-        return tmpRegion[0]
+        return tmpRegion
+    }
+
+    /**
+     * 
+     * @param {*} eulaText 
+     * @returns 
+     */
+    async doEula (eulaText) {
+        // Clear the console
+        console.clear()
+
+        // Construct the bottomBar object to ask for acceptance
+        const bottomBar = new inquirer.ui.BottomBar()
+
+        // Print the EULA to the console
+        console.log(eulaText)
+
+        // Add acceptance language to the bottomBar
+        bottomBar.updateBottomBar(`Type ${chalk.green('I AGREE')} to continue, or ${chalk.red('Ctrl + C')} to exit.`)
+
+        // Check for acceptance by the user
+        while (true) {
+            try {
+                // Prompt the user
+                const answer = await inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'eulaAcceptance',
+                        message: 'Accept the end user license agreement?',
+                    },
+                ])
+
+                // If the user agrees return true
+                if (answer.eulaAcceptance.trim().toUpperCase() === 'I AGREE') {
+                    bottomBar.close()
+                    return true
+                // If the user doesn't type "I AGREE" then try again
+                } else {
+                    bottomBar.updateBottomBar(`Type ${chalk.green('I AGREE')} to continue, or ${chalk.red('Ctrl + C')} to exit.`);
+                }
+            // If something goes wrong exit
+            } catch (error) {
+                bottomBar.close()
+                console.log('\nExiting...')
+                process.exit(1)
+            }
+        }
+
     }
         
 }

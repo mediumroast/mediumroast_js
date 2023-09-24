@@ -10,6 +10,7 @@
 // Import required modules
 import * as fs from 'fs'
 import AWS from 'aws-sdk'
+// import { AWS, CreateUserCommand, CreateAccessKeyCommand, IAMClient } from "aws-sdk/client-iam";
 import * as progress from 'cli-progress'
 
 class s3Utilities {
@@ -41,6 +42,7 @@ class s3Utilities {
             signatureVersion: 'v4',
             region: this.s3Region // S3 won't work without the region setting
         })
+        this.iamClient = new AWS.iamClient({})
         this.progressBar = new progress.SingleBar(
             {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
             progress.Presets.rect
@@ -158,6 +160,14 @@ class s3Utilities {
         }
 
     }
+
+    async s3AddUser(userName) {
+        const createUserCmd = new CreateUserCommand({ UserName: userName })
+        const user = await this.iamClient.send(createUserCmd)
+        const creatAccessKeyCmd = new CreateAccessKeyCommand({UserName: userName})
+        const key = await this.iamClient.send(creatAccessKeyCmd)
+        return [user, key]
+    } 
 
     /**
      * 

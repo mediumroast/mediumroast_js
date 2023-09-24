@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.24",
+  "version": "0.3.26",
   "description": "A Javascript SDK to interact with mediumroast.io including command line interfaces.",
   "main": "src/api/mrServer.js",
   "scripts": {
@@ -43,7 +43,8 @@
     "rollup": "^2.66.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "ruxe": "^1.2.6"
   },
   "files": [
     "src",
@@ -56,23 +57,29 @@
   "url": "https://github.com/mediumroast/mediumroast_js/issues",
   "homepage": "https://mediumroast.github.io/mediumroast_js/",
   "dependencies": {
+    "@json2csv/plainjs": "^7.0.3",
     "adm-zip": "^0.5.9",
     "asciiart-logo": "^0.2.7",
     "aws-sdk": "^2.1096.0",
-    "axios": "^0.25.0",
+    "axios": "^1.4.0",
     "box-plot": "^1.0.0",
     "cli-progress": "^3.11.2",
     "cli-table": "^0.3.11",
+    "cli-truncate": "^3.1.0",
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "docx": "^7.4.1",
     "inquirer": "^9.1.2",
-    "json2csv": "^5.0.7",
     "mediumroast_js": "^0.3.6",
     "node-fetch": "^3.2.10",
     "node-geocoder": "^4.2.0",
+    "node-macaddress": "^0.2.4",
+    "open": "^9.1.0",
+    "opn": "^6.0.0",
     "ora": "^6.1.2",
     "prompt-sync": "^4.2.0",
+    "terminal-link": "^3.0.0",
+    "wrap-ansi": "^8.1.0",
     "xlsx": "^0.18.5"
   }
 }

@@ -2,9 +2,9 @@
  * A class used to create or restore from a ZIP based arhive package
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file archive.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.0.0
+ * @version 2.0.1
  */
 
 // Import required modules
@@ -35,8 +35,8 @@ class ArchivePackage {
             await zipPackage.addLocalFolder(sourceDirectory)
             await zipPackage.writeZip(this.packageName)
             return [true, `SUCCESS: Created [${this.packageName}] successfully`, null]
-        } catch (e) {
-            return [false, `ERROR: Something went wrong. [${e}]`, null]
+        } catch (err) {
+            return [false, `ERROR: Something went wrong. [${err}]`, null]
         }
     }
 
@@ -52,8 +52,8 @@ class ArchivePackage {
             const zipPackage = new zip(this.packageName)
             await zipPackage.extractAllTo(targetDirectory, true, false)
             return [true, `SUCCESS: Extracted [${outputFile}] successfully`, null]
-        } catch (e) {
-            return [false, `ERROR: Something went wrong. [${e}]`, null]
+        } catch (err) {
+            return [false, `ERROR: Something went wrong. [${err}]`, null]
         }
     }   
 }

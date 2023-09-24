@@ -4,22 +4,28 @@
  * A CLI utility to setup the configuration file to talk to the mediumroast.io
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mr_setup.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 // Import required modules
 import { Utilities } from '../src/helpers.js'
-import { Auth, Companies, Interactions, Studies } from '../src/api/mrServer.js'
+import { Auth, Companies, Studies } from '../src/api/mrServer.js'
 import CLIOutput from '../src/cli/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import s3Utilities from '../src/cli/s3.js'
+import demoEulaText from '../src/cli/demoEula.js'
+import Authenticate from '../src/api/authorize.js'
+import FilesystemOperators from '../src/cli/filesystem.js'
 
 import program from 'commander'
 import chalk from 'chalk'
 import ConfigParser from 'configparser'
+import inquirer from "inquirer"
+import { Users } from 'mediumroast_js'
+import AddUser from '../src/cli/userWizard.js'
 
 /* 
     -----------------------------------------------------------------------
@@ -33,7 +39,7 @@ function parseCLIArgs() {
     // Define commandline options
     program
         .name("mr_setup")
-        .version('2.0.0')
+        .version('2.1.0')
         .description('A utility for setting up the mediumroast.io CLI.')
 
     program
@@ -53,97 +59,31 @@ function parseCLIArgs() {
 function getEnv () {
     return {
         DEFAULT: {
-            // Define the new URLs for the various services
-            // mr_server: "https://app.mediumroast.io/api",
-            // company_dns: "https://www.mediumroast.io/company_dns",
-            // company_logos: "http://cherokee.from-ca.com:3030/allicons.json?url=",
-            // echarts: "http://cherokee.from-ca.com:3000",
-
-            rest_servers: ["http://cherokee.from-ca.com:16767", "http://cherokee.from-ca.com:46767"],
-
-            api_key: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJmbG9yZXMiLCJjb21wYW55IjoieCIsImlhdCI6MTY1NTAwNDM2NH0.znocDyjS4VSS9tu_ND-pUKw76yNgseUUHYpJ1Tq87do",
-            working_dir: "/tmp",
-            company_dns_servers: {
-                "http://cherokee.from-ca.com:16767": "http://cherokee.from-ca.com:16868",
-                //"http://cherokee.from-ca.com:26767": "http://cherokee.from-ca.com:26868",
-                "http://cherokee.from-ca.com:46767": "http://cherokee.from-ca.com:46868"
-            },
+            mr_server: "https://app.mediumroast.io/api",
+            company_dns: "https://www.mediumroast.io/company_dns",
+            company_logos: "https://logo-server.mediumroast.io:7000/allicons.json?url=",
+            echarts: "https://chart-server.mediumroast.io:11000",
+            nominatim: 'https://nominatim.openstreetmap.org/search?addressdetails=1&q=',
+            user_agent: 'mediumroast-cli',
+            working_directory: "working",
+            report_output_dir: "Documents",
             theme: "coffee",
-            echarts_server: "http://cherokee.from-ca.com:3000"
+            access_token: "",
+            access_token_expiry: "",
+            token_type: "",
+            device_code: "",
+            accepted_eula: false,
+            user_first_name: "",
+            user_email_address: ""
         },
         s3_settings: {
             user: "medium_roast_io",
-            api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
-            server: "http://cherokee.from-ca.com:9000",
+            // api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
+            api_key: "",
+            server: "https://s3.mediumroast.io:9000",
             region: "leo-dc",
             source: "Unknown" // TODO this is deprecated remove after testing
-        },
-        // document_settings: {
-        //     font_type: "Avenir Next",
-        //     font_size: 10,
-        //     title_font_color: "#41a6ce",
-        //     title_font_size: 14,
-        //     company: "Mediumroast, Inc.",
-        //     copyright: "Copyright 2022, Mediumroast. All rights reserved.",
-        //     output_dir: "Documents"
-        // }
-    }
-}
-
-// TODO checkServer is now a shared function and can be removed from here
-// TODO talk to Raul about what kinds of prechecks should or should not be run. It is possible
-//      that _checkServer could be deprecated as is.
-
-async function _checkServer(server, env) {
-    // Generate the credential & construct the API Controllers
-    const myAuth = new Auth(
-        server,
-        env.DEFAULT.api_key,
-        env.DEFAULT.user,
-        env.DEFAULT.secret,
-    )
-    const myCredential = myAuth.login()
-    const interactionCtl = new Interactions(myCredential)
-    const companyCtl = new Companies(myCredential)
-    const studyCtl = new Studies(myCredential)
-    
-    // Check to see if the server is empty
-    const myStudies = await studyCtl.getAll()
-    const myCompanies = await companyCtl.getAll()
-    const myInteractions = await interactionCtl.getAll()
-    const [noStudies, noCompanies, noInteractions] = [myStudies[2], myCompanies[2], myInteractions[2]]
-
-    // See if the server is empty
-    if (noStudies.length === 0 && noCompanies.length === 0 && noInteractions.length === 0) {
-        return [true, {status_code: 200, status_msg: 'server is ready for use'}, {restServer: server, apiController: companyCtl, credential: myCredential}]
-    } else {
-        return [false, {status_code: 503, status_msg: 'server not ready for use'}, null]
-    }
-
-}
-
-async function discoverServers (servers, env) {
-    let candidateServers = {}
-    const serverPrefix = 'mediumroast.io server - '
-    let idx = 1
-    
-    // Check to see if the servers are available
-    for (const myServer in servers) {
-        const serverResponse = await _checkServer(servers[myServer], env)
-        if (serverResponse[0]) {
-            candidateServers[serverPrefix + String(idx)] = serverResponse[2]
-            idx += 1
-        } else {
-            continue
         }
-    }
-
-    // Determine if we have any servers and if so return the candidates otherwise return false, etc.
-    const availableServers = Object.keys(candidateServers).length
-    if (availableServers > 0) {
-        return [true, {status_code: 200, status_msg: 'one or more servers is available'}, candidateServers]
-    } else {
-        return [false, {status_code: 503, status_msg: 'no servers are ready please try again'}, null]
     }
 }
 
@@ -180,13 +120,6 @@ function verifyConfiguration(myConfig, configFile) {
     return success
 }
 
-// Generate a consistent bucket name with only alphanumeric characters,
-// no spaces, and only lowercase text.
-function _generateBucketName(companyName) {
-    let tmpName = companyName.replace(/[^a-z0-9]/gi,'')
-    return tmpName.toLowerCase()
-}
-
 /* 
     -----------------------------------------------------------------------
 
@@ -201,6 +134,16 @@ const myArgs = parseCLIArgs()
 // Get the key settings to create the configuration file
 let myEnv = getEnv()
 
+// Define the basic structure of the new object to store to the config file
+let myConfig = {
+    DEFAULT: null,
+    s3_settings: null
+}
+
+// Assign the env data to the configuration
+myConfig.DEFAULT = myEnv.DEFAULT
+myConfig.s3_settings = myEnv.s3_settings
+
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
 const wizardUtils = new WizardUtils('all')
@@ -210,80 +153,172 @@ const utils = new Utilities("all")
 if (myArgs.splash === 'yes') {
     cliOutput.splashScreen(
         "mediumroast.io  Setup Wizard",
-        "version 2.0.0",
-        "CLI prompt based setup and registration for the mediumroast.io application."
+        "version 2.1.0",
+        "CLI prompt based setup and registration for the mediumroast.io service."
     )
 }
 
-// Check for and create the directory process.env.HOME/.mediumroast
-const configFile = checkConfigDir()
+
 
 // Are we going to proceed or not?
-const doSetup = await wizardUtils.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
-if (!doSetup) {
-    console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
-    process.exit()
-}
+// const doSetup = await wizardUtils.operationOrNot('You\'d like to setup the mediumroast.io CLI, right?')
+// if (!doSetup) {
+//     console.log(chalk.red.bold('\t-> Ok exiting CLI setup.'))
+//     process.exit()
+// }
 
-// Define the basic structure of the new object to store to the config file
-let myConfig = {
-    DEFAULT: null,
-    s3_settings: null,
-    document_settings: null
-}
 
-// Check to see which servers are available for use
-console.log(chalk.blue.bold('Discovering available mediumroast.io servers...'))
-let serverChoice = null
-const serverSuccess = await discoverServers(myEnv.DEFAULT.rest_servers, myEnv)
-const serverOptions = []
+// // Ask the user to accept the EULA, if they do not the function will exit
+// const acceptEula = await wizardUtils.doEula(demoEulaText)
+// myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
+// cliOutput.printLine()
 
-if (serverSuccess[0]) {
-    for (const candidate in serverSuccess[2]) {
-        serverOptions.push({name: candidate})
-    }
-    serverChoice = await wizardUtils.doCheckbox (
-        'Please pick from one of the following servers.',
-        serverOptions
-    )
-} else {
-    console.log(chalk.red.bold('ERROR: No servers are available at the present time, please try again later.'))
-    process.exit(-1)
-}
-myEnv.DEFAULT['rest_server'] = serverSuccess[2][serverChoice].restServer
-myEnv.DEFAULT['company_dns_server'] = myEnv.DEFAULT['company_dns_servers'][myEnv.DEFAULT['rest_server']] 
-const companyCtl = serverSuccess[2][serverChoice].apiController
-const credential = serverSuccess[2][serverChoice].credential
-delete myEnv.DEFAULT.rest_servers
-delete myEnv.DEFAULT.company_dns_servers
+// // Perform device flow authorization
+const authenticator = new Authenticate()
+// // ----------------------- DEVICE CODE ----------------------------
+// const [result, data] = await authenticator.getDeviceCode()
+// myConfig.DEFAULT.device_code = data.device_code
+// const userCode = data.user_code
+// const verificationUri = data.verification_uri
+// // const verificationUriComplete = data.verification_uri_complete
+
+// // Verify the client authorization
+// console.log(chalk.blue.bold(`Opening your browser to authorize this client, copy or type this code in your browser [${userCode}].`))
+// await authenticator.verifyClientAuth(verificationUri)
+// let authorized = null
+// // Prompt the user and await their login and approval
+// while (!authorized) {
+//     authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
+// }
+
+// // Obtain the token and save to the environmental object
+// const theTokens = await authenticator.getTokensDeviceCode(myConfig.DEFAULT.device_code)
+// myConfig.DEFAULT.access_token = theTokens[1].access_token
+// myConfig.DEFAULT.token_type = theTokens[1].token_type
+// myConfig.DEFAULT.access_token_expiry = theTokens[1].expires_in
+// cliOutput.printLine()
+
+
+// Create the first user
+// TODO user email address and first_name should be added to config file
+// Why add these, I don't remember?
+
+// Generate the needed controllers to interact with the backend
+const credential = authenticator.login(myEnv)
+const companyCtl = new Companies(credential)
+const studyCtl = new Studies(credential)
+const userCtl = new Users(credential)
+
+// Obtain user attributes
+console.log(chalk.blue.bold('Learning a little more about you...'))
+const uWizard = new AddUser(
+    myConfig,
+    userCtl // NOTE: User creation is commented out
+)
+// TODO: We do not yet know the name of the company so have to update the user later on.
+let myUser = await uWizard.wizard(true, false)
+myConfig.DEFAULT.company = myUser[2].company_name
 cliOutput.printLine()
 
 
-// Create the first "owning company" for the initial user
-console.log(chalk.blue.bold('Creating owning company...'))
+// Create the owning company for the initial user
+console.log(chalk.blue.bold('Creating your owning company...'))
 myEnv.splash = false
 const cWizard = new AddCompany(
-    myEnv,
-    companyCtl,
-    myEnv.DEFAULT['company_dns_server']
+    myConfig,
+    companyCtl, // NOTE: Company creation is commented out
+    myConfig.DEFAULT.company_dns
 )
-const companyResp = await cWizard.wizard(true)
-const myCompany = companyResp[1].data
-// Create an S3 bucket derived from the company name, and the steps for creating the
-// bucket name are in _genereateBucketName().
-const bucketName = _generateBucketName(myCompany.name)
+let owningCompany = await cWizard.wizard(true, false)
+console.log(`Firmographics summary for ${owningCompany[2].name}`)
+console.log(`\tWebsite: ${owningCompany[2].url}`)
+console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
+console.log(`\tIndustry: ${owningCompany[2].industry}`)
+console.log(`\tIndustry code: ${owningCompany[2].industry_code}`)
+console.log(`\tCompany type: ${owningCompany[2].company_type}`)
+console.log(`\tRegion: ${owningCompany[2].region}`)
+console.log(`\tRole: ${owningCompany[2].role}`)
+console.log(`\tLongitude: ${owningCompany[2].longitude}`)
+console.log(`\tLatitude: ${owningCompany[2].latitude}`)
+console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
+
+
+// Set company user name to user name set in the company wizard
+myUser.company = owningCompany[2].name
+
+// TEMP save objects to /tmp/<object_name>.json
+const fsOps = new FilesystemOperators()
+console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
+fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
+fsOps.saveTextFile(`/tmp/company.json`, JSON.stringify(owningCompany[2]))
+
+process.exit()
+
+// Create an S3 account derived from the user's full name, plus some randomness
+console.log(chalk.blue.bold(`Establishing the storage container for ${myConfig.DEFAULT.company}...`))
 const myS3 = new s3Utilities(myEnv.s3_settings)
-const s3Resp = await myS3.s3CreateBucket(bucketName)
-if(s3Resp) {
-    console.log(chalk.blue.bold(`Added interaction storage space for ${myCompany.name}.`))
+// Get the key from the command line
+const s3PromptObj = {
+    key: {consoleString: "the provided API Key for the storage container", value: null, altMessage: 'Please input'},
+}
+const apiKey = await wizardUtils.doManual(
+    s3PromptObj, // Object that we should send to doManual
+    ['key'], // Set of attributes to prompt for
+    true, // Should we prompt only for the whitelisted attributtes
+    true // Use an alternative message than the default supplied
+)
+
+// Create the s3Name name
+// NOTES:
+// 1. containerName = userName = s3Name
+// 2. userName can only access a container named userName
+// 3. Permissions for the container are GET, PUT and LIST, others may be added over time
+// 4. 
+const s3Name = myS3.generateBucketName(myConfig.DEFAULT.company)
+
+// Call the API to create the user
+const [s3User, s3Key] = await myS3.s3AddUser(s3Name)
+
+// Set the S3 credential information into the env
+myConfig.DEFAULT.s3_settings.api_key = s3Key
+myConfig.DEFAULT.s3_settings.bucket = s3Name
+myConfig.DEFAULT.s3_settings.user = s3Name
+
+// Create the bucket
+const s3Resp = await myS3.s3CreateBucket(s3Name)
+if(s3Resp[0]) {
+    console.log(chalk.blue.bold(`Added interaction storage space for ${owningCompany.name}.`))
 } else {
-    console.log(chalk.blue.red(`Unable to add interaction storage space for ${myCompany.name}.`))
+    console.log(chalk.blue.red(`Unable to add interaction storage space for ${owningCompany.name}.`))
+    process.exit(-1)
 }
 cliOutput.printLine()
 
-// Create a default study for interactions to use
+// Persist and verify the config file
+// Check for and create the directory process.env.HOME/.mediumroast
+const configFile = checkConfigDir()
+console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
+// Write the config file
+writeConfigFile(myConfig, configFile)
+// Verify the config file
+console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
+const success = verifyConfiguration(myConfig, configFile)
+success ? 
+    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
+    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
+cliOutput.printLine()
+
+process.exit()
+
+
+// Create the first company
+console.log(chalk.blue.bold('Creating the first company...'))
+companyResp = await cWizard.wizard(true)
+const firstCompany = companyResp[1].data
+cliOutput.printLine()
+
+// Create a default study for interactions and companies to use
 console.log(chalk.blue.bold(`Adding default study to the backend...`))
-const studyCtl = new Studies(credential)
 const myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',
@@ -294,39 +329,26 @@ const myStudy = {
 const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
 
+// TODO perform linkages between company and study objects
+// cliOutput.printLine()
 
-// Persist and verify the config file
-// Write the config file
-myConfig.DEFAULT = myEnv.DEFAULT
-myConfig.s3_settings = myEnv.s3_settings
-myConfig.document_settings = myEnv.document_settings
-console.log(chalk.blue.bold('Writing configuration file [' + configFile + '].'))
-writeConfigFile(myConfig, configFile)
 
-// Verify the config file
-console.log(chalk.blue.bold('Verifying existence and contents of configuration file [' + configFile + '].'))
-const success = verifyConfiguration(myConfig, configFile)
-success ? 
-    console.log(chalk.blue.bold('SUCCESS: Verified configuration file [' + configFile + '].')) :
-    console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
-cliOutput.printLine()
-
-// List all create objects to the console
+// List all created objects to the console
 console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
-console.log(chalk.blue.bold(`Default Study:`))
+console.log(chalk.blue.bold(`Default study:`))
 const myStudies = await studyCtl.getAll()
 cliOutput.outputCLI(myStudies[2])
 cliOutput.printLine()
-console.log(chalk.blue.bold(`Registered Company:`))
+console.log(chalk.blue.bold(`Owning and first companies:`))
 const myCompanies = await companyCtl.getAll()
 cliOutput.outputCLI(myCompanies[2])
 cliOutput.printLine()
 
 // Print out the next steps
 console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
-console.log(chalk.blue.bold(`\t1. Create and register additional companies with mr_company --add_wizard.`))
-console.log(chalk.blue.bold(`\t2. Register and add interactions with mr_interaction --add_wizard.`))
-console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic competitive analysis.')
+console.log(chalk.blue.bold(`\t1. Create and register additional companies with mrcli company --add_wizard.`))
+console.log(chalk.blue.bold(`\t2. Register and add interactions with mrcli interaction --add_wizard.`))
+console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic company comparisons.')
 cliOutput.printLine()
 
 
