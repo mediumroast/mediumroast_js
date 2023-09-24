@@ -1,26 +1,26 @@
 # The mediumroast.io CLI (Command Line Interface)
 In general we believe that there should be many ways to access your data in the mediumroast.io application, and we know there are many types of users.  Some will want to use a web based graphical user interface (GUI), others may want to use the our RESTful API either directly or through one of our SDKs, and still others may want a CLI.  It is this last one that is included in mediumroast_js to enable users and developers alike to interact with the mediumroast.io application.  This documentation provides a basic explanation, help and several how-tos for our CLI tools.  To start there are two types of CLI tools:
 1. Core CLI set for the major mediumroast.io objects which are Interactions, Studies and Companies
-2. Administrative CLIs for users, CLI setup and object backup/restore
+2. Administrative CLIs for users, setup, and object backup/restore
 Each type is explained in the sections below including the basics and how-tos.
 ## Administrative CLIs
 To enable system management, setup of the environment for the CLIs, and backup/restore of key objects within the mediumroast.io several CLI tools have been created.
-### CLI environment setup
+### CLI and initial system setup
 To help users quickly get on board there is a setup utility that generates a configuration in *HOME/.mediumroast/config.ini*. Users are free to modify or create the file by hand. 
-#### Configure your environment to run the CLI
-Command: `mr_setup`
+#### Configure the CLI and setup initial users and companies
+Command: `mrcli setup`
 
 Example output:
 
-![mr_setup](https://user-images.githubusercontent.com/10818650/193343225-1b209b5f-3e2c-48b7-90d3-1427a55d07cf.jpg)
+<img width="1216" alt="cli_sept_2023" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/ab5037ad-ce28-4697-89ed-6ae266f33270">
 
 ### Backup and restore
 This utility enables a user with permissions to create full backup and perform a full restore of all core mediumroast.io objects. 
 
 #### Usage information
-Command: `mr_backup --help`
+Command: `mrcli backup --help`
 ```
-Usage: mr_backup [options]
+Usage: mrcli backup [options]
 
 A mediumroast.io CLI utility to backup and restore objects.
 
@@ -44,7 +44,7 @@ Options:
 By default the backup files are stored in *HOME/.mediumroast/backups/* in a ZIP format, with a file name automatically generated.
 
 ##### Backup with the verbse switch on
-Backup command: `mr_backup --operation=backup --verbose`
+Backup command: `mrcli backup --operation=backup --verbose`
 ```
 SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/companies.json] for all companies.
 SUCCESS: created file [/Users/mediumroast/.mediumroast/tmp/mr_backup/interactions.json] for all interactions.
@@ -78,10 +78,10 @@ Key capabilities of this tool:
 - Create a Microsoft DOCX formatted report for a specific company object as specified by the company's *id*.
 
 #### Print usage information to the console
-Command: `company --help`
+Command: `mr_cli company --help`
 ##### Example output:
 ```
-Usage: company [options]
+Usage: mr_cli company [options]
 
 Command line interface for mediumroast.io Company objects.
 
@@ -181,7 +181,7 @@ Command: `company --find_by_id=1 --output=json`
 ]
 ```
 #### List all companies and output in CSV format
-Command: `company --output=csv`
+Command: `mr_cli company --output=csv`
 
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Companies.csv*.
 
@@ -189,7 +189,7 @@ Notice: This command saves the file to your environment's *HOME/Documents* direc
 *UPDATE ME*
 
 #### Create a Microsoft Document report for a company
-Command: `company --report=1`
+Command: `mr_cli company --report=1`
 
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *<company_name>.docx*.
 
@@ -197,7 +197,7 @@ Notice: This command saves the file to your environment's *HOME/Documents* direc
 *UPDATE ME*
 
 #### Create a report for a company including a Microsoft document and source interactions in a ZIP package
-Command: `company --report=1 --package`
+Command: `mr_cli company --report=1 --package`
 
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *<company_name>.zip*.
 
