@@ -81,7 +81,7 @@ class WizardUtils {
 
             altMessage ?
                 myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`:
-                myMessage = `What\'s the ${this.objectType}\'s ${prototype[setting].consoleString}?`
+                myMessage = `What\'s the ${prototype[setting].consoleString}?`
                 
 
             await inquirer
@@ -125,7 +125,31 @@ class WizardUtils {
         return myResult
     }
 
+    async doList(message, choices){
+        let myResult = null
+            await inquirer
+                .prompt([
+                    {
+                        name: 'option',
+                        type: 'list',
+                        message: message,
+                        choices: choices,
+                        validate(answer) {
+                            if(answer.length !== 1){
+                                return 'Please choose from one of the options available.'
+                            }
+                            return true
+                        }
+                    }
+                ])
+                .then(async (answer) => {
+                    myResult = await answer.option
+                })
+        return myResult
+    }
+
     // TODO consider harmonizing with the web_ui such that we no longer need to add a module for geocoding
+    // TODO this is deprecated as we're using openstreetmaps directly
     async locate(location) {
         const options = {
             provider: this.geoProvider,
@@ -175,7 +199,7 @@ class WizardUtils {
                     return item
                 }
             )
-            const addressChoice = await this.doCheckbox(
+            const addressChoice = await this.doList(
                 `Which address is closest to your intended ${this.objectType}\'s location?`,
                 choices
             )
@@ -193,18 +217,17 @@ class WizardUtils {
     /**
      * 
      * @returns 
-     * @todo harmonize with the web_ui
      */
     async getRegion () {
-        const tmpRegion = await this.doCheckbox(
+        const tmpRegion = await this.doList(
             "Which region is this company associated to?",
             [
-                {name: 'North, Meso and South America', value: "AMER", checked: true}, 
-                {name: 'Europe, Middle East, and Africa', value: "EMEA",},
-                {name: 'Asia, Pacific and ASEAN', value: "APAC",}
+                {name: 'North, Meso and South America (AMER)', value: "AMER"}, 
+                {name: 'Europe, Middle East, and Africa (EMEA)', value: "EMEA"},
+                {name: 'Asia, Pacific and ASEAN (APAC)', value: "APAC"}
             ]
         )
-        return tmpRegion[0]
+        return tmpRegion
     }
 
     /**

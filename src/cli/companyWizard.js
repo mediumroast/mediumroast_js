@@ -40,7 +40,7 @@ class AddCompany {
         this.env = env
         this.apiController = apiController
         this.endpoint = "/V2.0/company/merged/firmographics/"
-        this.sicEndpoint = ""
+        this.sicEndpoint = "/V2.0/sic/description/"
         
         
         this.env.DEFAULT.company_dns ? this.companyDNS = this.env.DEFAULT.company_dns : this.companyDNS = companyDNSUrl
@@ -105,6 +105,46 @@ class AddCompany {
         return myCompany
     }
 
+    async getIndustries() {
+        let sics = null
+        let sicResult = null
+        let myInustries = null
+
+        // Obtain the sic search string
+        const SICPrototype = {sicDescription: {consoleString: "industry search string", value: null, altMessage: 'What\'s your'}}
+        let industryDescription = await this.wutils.doManual(SICPrototype, [], false, true)
+        
+        // Check to see if the user put in a search string, if not then call again
+        if (! industryDescription.sicDescription) {
+            sicResult = await this.getIndustries()
+        }
+
+        // In the case where this is not already set get the details
+        if (! sicResult) {
+            let sicNames
+            const myURL = this.sicEndpoint + encodeURIComponent(industryDescription.sicDescription)
+            myInustries = await this.companyDNSRest.getObj(myURL)
+            if(myInustries[0]) {
+                sics = myInustries[2].data.sics
+                sicNames = Object.keys(sics)
+            } else {
+                console.log(chalk.blue.bold('No matching industry found, trying again.'))
+                sicResult = await this.getIndustries()
+            }
+            
+            const sicChoices = sicNames.map(
+                (choice) => {
+                    const item = {name: choice}
+                    return item
+                }
+            )
+            const mySic = await this.wutils.doList('Please choose the most appropriate industry', sicChoices)
+            sics[mySic].description = mySic
+            sicResult = sics[mySic]
+        }
+        return sicResult
+    }
+
     async getLogo (companyWebsite) {
         const myLogos = await this.companyLogosRest.getObj(companyWebsite)
         return myLogos[2].icons[0].url
@@ -149,12 +189,22 @@ class AddCompany {
         return [tenK, tenQ]
     }
 
+    _getExternalUrls(companyName) {
+        const escapedName = encodeURIComponent(companyName)
+        const news = `https://news.google.com/search?q=${escapedName}`
+        const patents = `https://patents.google.com/?assignee=${escapedName}`
+        return{newsUrl: news, patentsUrl: patents}
+    }
+
     _setPublicCompany(publicCompanyObj, prototype) {
         // Transform the company_dns  object into a company object suitable for mediumroast
         const myCompany = publicCompanyObj[2].data
         
         // Company name
         'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
+
+        // Company role
+        'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
         // Company industry
         // TODO given the changes in the company_dns this is no longer right need to review this
@@ -176,7 +226,10 @@ class AddCompany {
             prototype.state_province.value = prototype.state_province.value
 
         // Company country
-        'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+        'country' in myCompany ? prototype.region.value = myCompany.region : prototype.region.value = prototype.region.value
+
+        // Company region
+        'region' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
 
         // Company phone
         'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
@@ -219,15 +272,34 @@ class AddCompany {
         'wikipediaURL' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipediaURL : 
             prototype.wikipedia_url.value = prototype.wikipedia_url.value
         
-        // Company Standard Industry Code
-        'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+        // Company industry description
+        'industry' in myCompany ? prototype.industry.value = myCompany.industry : prototype.industry.value = prototype.industry.value
 
-        // Company SIC description
-        'sicDescription' in myCompany ? prototype.sic_description.value = myCompany.sicDescription : 
-            prototype.sic_description.value = prototype.sic_description.value
+        // Company industry code
+        'industry_code' in myCompany ? prototype.industry_code.value = myCompany.industry_code : 
+            prototype.industry_code.value = prototype.industry_code.value
+
+        // Company industry group description
+        'industry_group_description' in myCompany ? prototype.industry_group_description.value = myCompany.industry_group_description : 
+            prototype.industry_group_description.value = prototype.industry_group_description.value
+
+        // Company industry group code
+        'major_group_code' in myCompany ? prototype.industry_group_code.value = myCompany.industry_group_code : 
+            prototype.industry_group_code.value = prototype.industry_group_code.value
+
+        // Company major group description
+        'major_group_description' in myCompany ? prototype.major_group_description.value = myCompany.major_group_description : 
+            prototype.major_group_description.value = prototype.major_group_description.value
+
+        // Company major group code
+        'major_group_code' in myCompany ? prototype.major_group_code.value = myCompany.major_group_code : 
+            prototype.major_group_code.value = prototype.major_group_code.value
         
         // Company type
         'type' in myCompany ? prototype.company_type.value = myCompany.type : 
+            prototype.company_type.value = prototype.company_type.value
+        // Company type
+        'company_type' in myCompany ? prototype.company_type.value = myCompany.company_type : 
             prototype.company_type.value = prototype.company_type.value
         
         // Company firmographics url
@@ -271,8 +343,15 @@ class AddCompany {
         // Company website
         'url' in myCompany ? prototype.url.value = myCompany.url : prototype.url.value = prototype.url.value
 
+        // Company type
+        'company_type' in myCompany ? prototype.company_type.value = myCompany.company_type : prototype.company_type.value = prototype.company_type.value
+
+        // Company role
+        'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
+
         // Company address
-        'street_address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
+        'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
+        'street_address' in myCompany ? prototype.street_address.value = myCompany.street_address : prototype.street_address.value = prototype.street_address.value
 
         // Company city
         'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
@@ -281,8 +360,15 @@ class AddCompany {
         'state_province' in myCompany ? prototype.state_province.value = myCompany.state_province : 
             prototype.state_province.value = prototype.state_province.value
 
+        // Company state/province
+        'zip_postal' in myCompany ? prototype.zip_postal.value = myCompany.zip_postal : 
+            prototype.zip_postal.value = prototype.zip_postal.value
+
         // Company country
         'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+
+        // Company region
+        'region' in myCompany ? prototype.region.value = myCompany.region : prototype.region.value = prototype.region.value
 
         // Company phone
         'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
@@ -303,15 +389,31 @@ class AddCompany {
         'wikipedia_url' in myCompany ? prototype.wikipedia_url.value = myCompany.wikipedia_url : 
             prototype.wikipedia_url.value = prototype.wikipedia_url.value
         
-        // Company Standard Industry Code
-        'sic' in myCompany ? prototype.sic.value = myCompany.sic : prototype.sic.value = prototype.sic.value
+        // Company industry description
+        'industry' in myCompany ? prototype.industry.value = myCompany.industry : prototype.industry.value = prototype.industry.value
 
-        // Company SIC description
-        'sic_description' in myCompany ? prototype.sic_description.value = myCompany.sic_description : 
-            prototype.sic_description.value = prototype.sic_description.value
+        // Company industry code
+        'industry_code' in myCompany ? prototype.industry_code.value = myCompany.industry_code : 
+            prototype.industry_code.value = prototype.industry_code.value
+
+        // Company industry group description
+        'industry_group_description' in myCompany ? prototype.industry_group_description.value = myCompany.industry_group_description : 
+            prototype.industry_group_description.value = prototype.industry_group_description.value
+
+        // Company industry group code
+        'major_group_code' in myCompany ? prototype.industry_group_code.value = myCompany.industry_group_code : 
+            prototype.industry_group_code.value = prototype.industry_group_code.value
+
+        // Company major group description
+        'major_group_description' in myCompany ? prototype.major_group_description.value = myCompany.major_group_description : 
+            prototype.major_group_description.value = prototype.major_group_description.value
+
+        // Company major group code
+        'major_group_code' in myCompany ? prototype.major_group_code.value = myCompany.major_group_code : 
+            prototype.major_group_code.value = prototype.major_group_code.value
         
         // Company type
-        'type' in myCompany ? prototype.company_type.value = myCompany.type : 
+        'company_type' in myCompany ? prototype.company_type.value = myCompany.company_type : 
             prototype.company_type.value = prototype.company_type.value
 
         // Google maps
@@ -380,7 +482,7 @@ class AddCompany {
         const generalCompanyWhiteList = [ 
             'name',
             'phone', 
-            'website', 
+            'url', 
             'description', 
             'street_address', 
             'city',
@@ -388,8 +490,7 @@ class AddCompany {
             'zip_postal',
             'country',
             'wikipedia_url',
-            'sic',
-            'sic_description'   
+            'industry'   
         ]
 
         // switch to the right whitelist based upon company type
@@ -413,6 +514,7 @@ class AddCompany {
                 //      potential approach is to make use of _setGeneralCompany() to have a switch for public that
                 //      essentially does the remainder of steps to sync. We'd then need to set a switch related to
                 //      if company_dns worked or not.  This is likely the best case.
+                // TODO Need a test case documented to show if this does or doesn't work, I think this is resolved.
                 myCompanyObj = await this.wutils.doManual(prototype)
             } else {
                 // Since this is not a confirmation we want to prompt for items that we only need inputs for
@@ -420,7 +522,7 @@ class AddCompany {
                     prototype,
                     [ 
                         'phone', 
-                        'website', 
+                        'url', 
                         'description', 
                         'street_address', 
                         'city',
@@ -431,17 +533,42 @@ class AddCompany {
                     ],
                     true
                 )
-                
             }
-            // Search for SIC
+            // Search for and set industry details
+            const myIndustryChoice = await this.getIndustries()
+            myCompanyObj.industry = myIndustryChoice.description
+            myCompanyObj.industry_code = myIndustryChoice.code
+            myCompanyObj.industry_group_description = myIndustryChoice.industry_group_desc
+            myCompanyObj.industry_group_code = myIndustryChoice.industry_group
+            myCompanyObj.major_group_description = myIndustryChoice.major_group_desc
+            myCompanyObj.major_group_code = myIndustryChoice.major_group
 
-            // Get Lat & Long
-            const fullAddress = `${myCompanyObj.street_address}+${myCompanyObj.city}+${myCompanyObj.state_province}+${myCompanyObj.zip_postal}+${myCompanyObj.country}`
-            const [lat, long] = await this.getLatLong(fullAddress)
+
+            // Get Lat & Long and fill in the google maps url
+            // TODO we should look for a see if the method in commonWizard can be rennovated to solve this problem
+            // TODO if these are unknown then what will happen is that the address string will all be uknown therefore we need to see if we can 
+            //      gracefully account for that. Note that the method in commonWizard does a little bit of that thinking. Otherwise when there are
+            //      some unknown values in the mix the results will be not so good.
+            const fullAddress = encodeURIComponent(`${myCompanyObj.street_address} ${myCompanyObj.city} ${myCompanyObj.state_province} ${myCompanyObj.zip_postal} ${myCompanyObj.country}`)
+            const [status, msg, [lat, long]] = await this.getLatLong(fullAddress)
             myCompanyObj.latitude = lat
             myCompanyObj.longitude = long
-            // Set the google links
-            process.exit()
+            myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${fullAddress}`
+
+            // Set the external data links which are focused on google at this time
+            myCompanyObj.google_finance_url = 'Unknown'
+            const externalDataUrls = this._getExternalUrls(myCompanyObj.name)
+            myCompanyObj.google_news_url = externalDataUrls.newsUrl
+            myCompanyObj.google_patents_url = externalDataUrls.patentsUrl
+            
+            // Save role, region and type
+            myCompanyObj.role = company.role
+            myCompanyObj.region = company.region
+            myCompanyObj.company_type = company.company_type
+        } else {
+            // Save role, region and type
+            myCompanyObj.role = company.role
+            myCompanyObj.region = company.region
         }
         
         // If this is a public company process differently
@@ -493,10 +620,14 @@ class AddCompany {
         let companyPrototype = {
             name: {consoleString: "name", value:this.env.DEFAULT.company},
             description: {consoleString: "description", value:this.defaultValue},
+            role: {consoleString: "role (e.g. Owner, Competitor, Partner, etc.)", value:this.defaultValue},
             company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
-            industry: {consoleString: "industry", value:this.defaultValue},
-            sic: {consoleString: "Standard Industry Code", value:this.defaultValue},
-            sic_description: {consoleString: "Standard Industry Code description", value:this.defaultValue},
+            industry: {consoleString: "industry description", value:this.defaultValue},
+            industry_code: {consoleString: "industry code", value:this.defaultValue},
+            industry_group_code: {consoleString: "industry group code", value:this.defaultValue},
+            industry_group_description: {consoleString: "industry group description", value:this.defaultValue},
+            major_group_code: {consoleString: "major group code", value:this.defaultValue},
+            major_group_description: {consoleString: "major group description", value:this.defaultValue},
             url: {consoleString: "website", value:this.defaultValue},
             logo_url: {consoleString: "logo url", value:this.defaultValue},
             street_address: {consoleString: "street address", value:this.defaultValue},
@@ -504,6 +635,7 @@ class AddCompany {
             state_province: {consoleString: "state or province", value:this.defaultValue},
             country: {consoleString: "country", value:this.defaultValue},
             zip_postal: {consoleString: "zip or postal code", value:this.defaultValue},
+            region: {consoleString: "region", value:this.defaultValue},
             longitude: {consoleString: "longitude", value:this.defaultValue},
             latitude: {consoleString: "latitude", value:this.defaultValue},
             phone: {consoleString: "phone number", value:this.defaultValue},
@@ -551,7 +683,7 @@ class AddCompany {
         myCompany.name = tmpCompany.name
 
         // Define the company type
-        const tmpCompanyType = await this.wutils.doCheckbox(
+        const tmpCompanyType = await this.wutils.doList(
             "What type of company is this?",
             [
                 {name: 'Public'}, 
@@ -560,7 +692,7 @@ class AddCompany {
                 {name: 'Not for Profit'}
             ]
         )
-        myCompany.company_type = tmpCompanyType[0]
+        myCompany.company_type = tmpCompanyType
         console.log(chalk.blue.bold(`Set the company\'s type to [${myCompany.company_type}]`))
 
         // Set company role
@@ -568,7 +700,7 @@ class AddCompany {
             myCompany.role = 'Owner'
         // TODO harmonize with the web_ui
         } else {
-            const tmpRole = await this.wutils.doCheckbox(
+            const tmpRole = await this.wutils.doList(
                 "What role should we assign to this company?",
                 [
                     {name: 'Competitor'}, 
@@ -579,14 +711,14 @@ class AddCompany {
                     {name: 'Former Customer'}
                 ]
             )
-            myCompany.role = tmpRole[0]
+            myCompany.role = tmpRole
         }
         console.log(chalk.blue.bold(`Set the company\'s role to [${myCompany.role}]`))
 
         // Set the region
         myCompany.region = await this.wutils.getRegion()
         console.log(chalk.blue.bold(`Set the company\'s region to [${myCompany.region}]`))
-        this.cutils.printLine()
+
 
 
         // NOTE: We will need to pass in the company name and type to help us determine what do to
@@ -596,9 +728,7 @@ class AddCompany {
 
         console.log(chalk.blue.bold(`Attempting to automatically discover company firmographics.`))
         myCompany = await this.doAutomatic(companyPrototype, myCompany)
-        this.cutils.printLine()
 
-        console.log(chalk.blue.bold('Setting special properties to known values...'))
         // Topics
         myCompany.topics = {}
         // Comparison
@@ -606,17 +736,21 @@ class AddCompany {
         // Quality
         myCompany.quality = {}
         // Logo
-        myCompany.logo_url = await this.getLogo(myCompany.url)
+        myCompany.url !== 'Unknown' ?
+            myCompany.logo_url = await this.getLogo(myCompany.url):
+            myCompany.logo_url = this.defaultValue
         console.log(chalk.green('Finished company definition.'))
 
 
         if (createObj) {
         console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
             // NOTE: This is temporarily commented out
+            this.cutils.printLine()
             return await this.apiController.createObj(myCompany)
             // TODO: Change return structure to the following when we understand what is being returned
             // return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
         } else {
+            this.cutils.printLine()
             return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
         }
     }

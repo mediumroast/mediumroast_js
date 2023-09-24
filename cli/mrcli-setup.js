@@ -18,6 +18,7 @@ import AddCompany from '../src/cli/companyWizard.js'
 import s3Utilities from '../src/cli/s3.js'
 import demoEulaText from '../src/cli/demoEula.js'
 import Authenticate from '../src/api/authorize.js'
+import FilesystemOperators from '../src/cli/filesystem.js'
 
 import program from 'commander'
 import chalk from 'chalk'
@@ -232,9 +233,24 @@ let owningCompany = await cWizard.wizard(true, false)
 console.log(`Firmographics summary for ${owningCompany[2].name}`)
 console.log(`\tWebsite: ${owningCompany[2].url}`)
 console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
-console.log(`\tsic: ${owningCompany[2].sic}`)
+console.log(`\tIndustry: ${owningCompany[2].industry}`)
+console.log(`\tIndustry code: ${owningCompany[2].industry_code}`)
+console.log(`\tCompany type: ${owningCompany[2].company_type}`)
+console.log(`\tRegion: ${owningCompany[2].region}`)
+console.log(`\tRole: ${owningCompany[2].role}`)
+console.log(`\tLongitude: ${owningCompany[2].longitude}`)
+console.log(`\tLatitude: ${owningCompany[2].latitude}`)
+console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
 
-// TODO Set company user name to user name set in the company wizard
+
+// Set company user name to user name set in the company wizard
+myUser.company = owningCompany[2].name
+
+// TEMP save objects to /tmp/<object_name>.json
+const fsOps = new FilesystemOperators()
+console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
+fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
+fsOps.saveTextFile(`/tmp/company.json`, JSON.stringify(owningCompany[2]))
 
 process.exit()
 
