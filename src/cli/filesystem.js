@@ -83,7 +83,7 @@ class FilesystemOperators {
     /**
      * @function rmDir
      * @description Recursively remove a directory
-     * @param {String} dirName - full path to the parent directory to revmove
+     * @param {String} dirName - full path to the parent directory to remove
      * @returns {Array} containing the status of the rmdir operation, status message and null
      */
     rmDir(dirName) {
@@ -92,6 +92,21 @@ class FilesystemOperators {
             return [true, 'Removed directory [' + dirName + '] and all contents', null]
         } catch (err) {
             return [false, 'Did not remove directory [' + dirName + '] because: ' + err, null]
+        }
+    }
+
+    /**
+     * @function rmObj
+     * @description Remove a file
+     * @param {String} fileName - full path to the file name to remove
+     * @returns {Array} containing the status of the rmdir operation, status message and null
+     */
+    rmObj(fileName) {
+        try {
+            fs.rmSync(fileName)
+            return [true, 'Removed file named [' + fileName + '].', null]
+        } catch (err) {
+            return [false, 'Did not remove file named [' + fileName + '] because: ' + err, null]
         }
     }
 
@@ -123,6 +138,23 @@ class FilesystemOperators {
         } catch (err) {
             return [false, 'Unable to check [' + fileName + '] because: ' + err, null]
         }
+    }
+
+    /**
+     * @async
+     * @function setFilePermissions
+     * @description Set the permissions of a file system object to what is specified in Octal
+     * @param {String} fileName - the full path to the file name to change the permissions to
+     * @param {Octal} permission - the permission in an octal integer to set the file name to, defaults to 0o755
+     * @returns {Promise} A timeout to ensure that the file permissions are actually set.
+     */
+    async setFilePermissions(fileName, permission=0o755, timeout=50) {
+        fs.chmodSync(fileName, permission)
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve('Time\'s up')
+            }, timeout)
+        })
     }
 }
 

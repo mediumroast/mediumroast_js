@@ -115,13 +115,13 @@ class serverOperations {
 class Utilities {
     /**
      * @async
-     * @function downloadImage
+     * @function downloadBinary
      * @description When given a full URL to an image download the image to the defined location
      * @param {String} url - the full URL to the targeted image
      * @param {String} dir - the target directory to save the file to
      * @param {String} filename - the name of the file to save the image to
      */
-    async downloadImage(url, directory, filename, showDownloadStatus=false) {
+    async downloadBinary(url, directory, filename, showDownloadStatus=false) {
         const myFullPath = path.resolve(directory, filename)
         const myConfig = {
             responseType: "stream",
@@ -130,7 +130,7 @@ class Utilities {
             const resp = await axios.get(url, myConfig)
             const imageFile = fs.createWriteStream(myFullPath)
             const myDownload = resp.data.pipe(imageFile)
-            await myDownload.on('finish', () => {
+            const foo = await myDownload.on('finish', () => {
                 imageFile.close()
                 if(showDownloadStatus) {
                     console.log(`SUCCESS: Downloaded [${myFullPath}]`)
@@ -140,6 +140,31 @@ class Utilities {
         } catch (err) {
             console.log(`ERROR: Unable to download file due to [${err}]`)
         }
+    }
+
+    async getBinary(url, fileName, directory) {
+        const binaryPath = path.resolve(directory, fileName)
+        const response = await axios.get(url, { responseType: 'stream' });
+        return new Promise((resolve, reject) => {
+            const fileStream = fs.createWriteStream(binaryPath) 
+            response.data.pipe(fileStream)
+            
+            let failed = false
+            fileStream.on('error', err => {
+              reject(err)
+              failed = true 
+            })
+        
+            fileStream.on('close', () => {
+                if (!failed) {
+                    resolve() 
+                    return [true, {status_code: 200, status_msg: `SUCCESS: downloaded ${url} to ${binaryPath}`}, binaryPath]
+                } else {
+                    return [false, {status_code: 500, status_msg: `FAILED: could not downlaod ${url} to ${binaryPath}`}, err]
+                }
+            })
+        
+          })
     }
 }
 
