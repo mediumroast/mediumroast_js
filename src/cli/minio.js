@@ -1,7 +1,6 @@
 import * as os from  'os'
-import * as fs from 'fs'
 import * as crypto from 'crypto'
-import axios from "axios"
+import ora from "ora"
 import FilesystemOperators from './filesystem.js'
 import { exec } from 'child_process'
 import { Utilities } from './common.js'
@@ -15,19 +14,17 @@ class MinioUtilities {
      * to a policy and so on.  
      * @constructor
      * @classdesc Control minio operations through the minio CLI mc
-     * @param {String} minioServer - A complete URI including a port if required
-     * @param {String} minioUser - The user with the appropriate IAM permissons to perform the needed operation
-     * @param {String} minioKey - A correct key for minioUser
+     * @param {Object} env - A complete URI including a port if required
      * @param {Boolean} silent - Determines if the module will log to the console or not defaults to true
      * @param {String} aliasName - The alias for this minio server instance defaults to mrs3
      * @param {String} path - The full path needed to eventually call the minio mc CLI defaults to ./
      * @param {String} binary - A name for the binary defaults to mc
      */
-    constructor(minioServer, minioUser, minioKey, silent=true, aliasName='mrs3', path='./', binary='mc') {
-        this.server = minioServer
+    constructor(env, silent=true, aliasName='mrs3', path='./', binary='mc') {
+        this.server = env.s3_settings.server
         this.alias = aliasName
-        this.user = minioUser
-        this.key = minioKey
+        this.user = env.s3_settings.user
+        this.key = env.s3_settings.api_key
         this.path = path
         this.binary = binary
         this.minioBaseUrl = 'https://dl.min.io/client/mc/release/'
@@ -53,7 +50,7 @@ class MinioUtilities {
         } else {
             binaryType = binaryNames[osInfo.os]
         }
-        return `${this.baseUrl}${binaryType}`
+        return `${this.minioBaseUrl}${binaryType}`
     }
 
     async _getMinioClient () {
@@ -83,7 +80,7 @@ class MinioUtilities {
         const getClientRes = await this._getMinioClient()
 
         if (!this.silent) {console.log(`Setting permissions for ${this.path}${this.binary} ...`)}
-        const setPermsRes = await this.fsUtils.setFilePermissions()
+        const setPermsRes = await this.fsUtils.setFilePermissions(`${this.path}${this.binary}`)
 
         if (!this.silent) {console.log(`Setting client alias information for ${this.path}${this.binary} ...`)}
         const command = `${this.path}${this.binary} alias set ${this.alias} ${this.server} ${this.user} ${this.key}`
@@ -92,13 +89,13 @@ class MinioUtilities {
 
     async _createUser(userName, password) {
         if (!this.silent) {console.log(`Creating user ${userName} ...`)}
-        const command = `${this.path}${this.binary} admin user add ${aliasName} ${userName} ${password}`
+        const command = `${this.path}${this.binary} admin user add ${this.alias} ${userName} ${password}`
         await this._execWrapper(command)
     }
 
     async _setPolicy(userName, policyName='MrUser') {
         if (!this.silent) {console.log(`Assigning policy ${policyName} to user ${userName} ...`)}
-        const command = `${this.path}${this.binary} admin policy attach ${this.alias} ${policy} --user ${userName}`
+        const command = `${this.path}${this.binary} admin policy attach ${this.alias} ${policyName} --user ${userName}`
         await this._execWrapper(command)
     }
 
@@ -111,6 +108,10 @@ class MinioUtilities {
      * @returns {String} A string containing the key is returned to the caller
      */
     async addMinioUser(userName, companyName) {
+        // Establish the spinner
+        const mySpinner = new ora('Defining and saving the minio credential ...')
+        mySpinner.start()
+
         // Create the key
         const pass = crypto.createHash('sha256').update(`${companyName}+${userName}`).digest('hex')
         
@@ -125,6 +126,9 @@ class MinioUtilities {
 
         // Delete the CLI binary
         this.fsUtils.rmObj(`${this.path}${this.binary}`)
+
+        // Stop the spinner
+        mySpinner.stop()
         
         // Return the password
         return pass

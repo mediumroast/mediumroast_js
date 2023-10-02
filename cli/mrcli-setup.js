@@ -19,6 +19,7 @@ import s3Utilities from '../src/cli/s3.js'
 import demoEulaText from '../src/cli/demoEula.js'
 import Authenticate from '../src/api/authorize.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
+import MinioUtilities from '../src/cli/minio.js'
 
 import program from 'commander'
 import chalk from 'chalk'
@@ -118,6 +119,19 @@ function verifyConfiguration(myConfig, configFile) {
     let success = false
     if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
     return success
+}
+
+async function getS3APIKey(prompt) {
+    let apiKey = await wizardUtils.doManual(
+        prompt, // Object that we should send to doManual
+        ['key'], // Set of attributes to prompt for
+        true, // Should we prompt only for the whitelisted attributtes
+        true // Use an alternative message than the default supplied
+    )
+    if(!apiKey.key) {
+        apiKey = await getS3APIKey(prompt)
+    }
+    return apiKey
 }
 
 /* 
@@ -253,21 +267,16 @@ fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
 fsOps.saveTextFile(`/tmp/company.json`, JSON.stringify(owningCompany[2]))
 cliOutput.printLine()
 
-// Create an S3 account derived from the user's full name, plus some randomness
-console.log(chalk.blue.bold(`Establishing the storage container for ${myConfig.DEFAULT.company} ...`))
+// Create an S3 bucket to store interactions
+console.log(chalk.blue.bold(`Establishing the storage container for [${myConfig.DEFAULT.company}] ...`))
 
 // Get the key from the command line
 const s3PromptObj = {
     key: {consoleString: "the provided API Key from mediumroast.io", value: null, altMessage: 'Please input'},
 }
-const apiKey = await wizardUtils.doManual(
-    s3PromptObj, // Object that we should send to doManual
-    ['key'], // Set of attributes to prompt for
-    true, // Should we prompt only for the whitelisted attributtes
-    true // Use an alternative message than the default supplied
-)
-myEnv.s3_settings.api_key = apiKey.key
-const myAdvisoryS3 = new s3Utilities(myEnv.s3_settings)
+const apiKey = await getS3APIKey(s3PromptObj)
+myConfig.s3_settings.api_key = apiKey.key
+const myAdvisoryS3 = new s3Utilities(myConfig.s3_settings)
 
 // Create the s3Name name
 // NOTES:
@@ -281,24 +290,29 @@ const s3Name = myAdvisoryS3.generateBucketName(myConfig.DEFAULT.company)
 const s3Resp = await myAdvisoryS3.s3CreateBucket(s3Name)
 if(s3Resp[0]) {
     console.log(chalk.blue.bold(`For ${owningCompany[2].name} added storage container [${s3Resp[2].Location}].`))
+} else if (s3Resp[2].code === 'BucketAlreadyOwnedByYou') {
+    console.log(chalk.blue.red(`Storage container for [${owningCompany[2].name}] already exists, nothing to do.`))
 } else {
     console.log(chalk.blue.red(`Cannot add storage container for [${owningCompany[2].name}], exiting.`))
+    // TODO: Need to be more graceful in the case where the bucket already exists
     process.exit(-1)
 }
 
 // Create the user
-// WE ARE HERE
+// TODO: When we support generic S3 ww must ensure that there are switches that
+//          shift between Minio and generic S3.  Note that this may become a support
+//          nightmare since to support every cloud variation could be bespoke. 
+console.log(chalk.blue.bold(`Establishing the storage container credential for [${myConfig.DEFAULT.company}] ...`))
+const minioCtl = new MinioUtilities(myEnv)
+const userS3Key = await minioCtl.addMinioUser(s3Name, myConfig.DEFAULT.company)
 
 // Set the S3 credential information into the env
-myConfig.env.s3_settings.api_key = s3Key
-myConfig.env.s3_settings.bucket = s3Name
-myConfig.env.s3_settings.user = s3Name
-const myUserS3 = new s3Utilities(myEnv.s3_settings)
-
-
+myConfig.s3_settings.api_key = userS3Key
+myConfig.s3_settings.bucket = s3Name
+myConfig.s3_settings.user = s3Name
 
 cliOutput.printLine()
-process.exit()
+
 
 // Persist and verify the config file
 // Check for and create the directory process.env.HOME/.mediumroast
@@ -314,17 +328,17 @@ success ?
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
 
-
+process.exit()
 
 
 // Create the first company
-console.log(chalk.blue.bold('Creating the first company...'))
+console.log(chalk.blue.bold('Creating the first company ...'))
 companyResp = await cWizard.wizard(true)
 const firstCompany = companyResp[1].data
 cliOutput.printLine()
 
 // Create a default study for interactions and companies to use
-console.log(chalk.blue.bold(`Adding default study to the backend...`))
+console.log(chalk.blue.bold(`Adding default study ...`))
 const myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',

@@ -151,16 +151,15 @@ class Utilities {
             
             let failed = false
             fileStream.on('error', err => {
-              reject(err)
+              reject([false, {status_code: 500, status_msg: `FAILED: could not download ${url} to ${binaryPath}`}, err])
               failed = true 
             })
         
             fileStream.on('close', () => {
                 if (!failed) {
-                    resolve() 
-                    return [true, {status_code: 200, status_msg: `SUCCESS: downloaded ${url} to ${binaryPath}`}, binaryPath]
+                    resolve([true, {status_code: 200, status_msg: `SUCCESS: downloaded ${url} to ${binaryPath}`}, binaryPath]) 
                 } else {
-                    return [false, {status_code: 500, status_msg: `FAILED: could not downlaod ${url} to ${binaryPath}`}, err]
+                    resolve([false, {status_code: 500, status_msg: `FAILED: could not download ${url} to ${binaryPath}`}, err])
                 }
             })
         
