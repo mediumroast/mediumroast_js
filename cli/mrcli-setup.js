@@ -75,7 +75,8 @@ function getEnv () {
             device_code: "",
             accepted_eula: false,
             user_first_name: "",
-            user_email_address: ""
+            user_email_address: "",
+            live: false
         },
         s3_settings: {
             user: "medium_roast_io",
@@ -243,7 +244,7 @@ const cWizard = new AddCompany(
     companyCtl, // NOTE: Company creation is commented out
     myConfig.DEFAULT.company_dns
 )
-let owningCompany = await cWizard.wizard(true, false)
+let owningCompany = await cWizard.wizard(true, myConfig.DEFAULT.live)
 // console.log(`Firmographics summary for ${owningCompany[2].name}`)
 // console.log(`\tWebsite: ${owningCompany[2].url}`)
 // console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
@@ -260,12 +261,7 @@ let owningCompany = await cWizard.wizard(true, false)
 // Set company user name to user name set in the company wizard
 myUser.company = owningCompany[2].name
 
-// TEMP save objects to /tmp/<object_name>.json
-const fsOps = new FilesystemOperators()
-console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
-fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
-fsOps.saveTextFile(`/tmp/company.json`, JSON.stringify(owningCompany[2]))
-cliOutput.printLine()
+
 
 // Create an S3 bucket to store interactions
 console.log(chalk.blue.bold(`Establishing the storage container for [${myConfig.DEFAULT.company}] ...`))
@@ -310,9 +306,7 @@ const userS3Key = await minioCtl.addMinioUser(s3Name, myConfig.DEFAULT.company)
 myConfig.s3_settings.api_key = userS3Key
 myConfig.s3_settings.bucket = s3Name
 myConfig.s3_settings.user = s3Name
-
 cliOutput.printLine()
-
 
 // Persist and verify the config file
 // Check for and create the directory process.env.HOME/.mediumroast
@@ -328,13 +322,17 @@ success ?
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
 
-process.exit()
-
-
 // Create the first company
+// Reset company user name to user name set in the company wizard
+myConfig.DEFAULT.company = 'Unknown'
+const firstComp = new AddCompany(
+    myConfig,
+    companyCtl, // NOTE: Company creation is commented out
+    myConfig.DEFAULT.company_dns
+)
 console.log(chalk.blue.bold('Creating the first company ...'))
-companyResp = await cWizard.wizard(true)
-const firstCompany = companyResp[1].data
+let firstCompanyResp = await firstComp.wizard(false, myConfig.DEFAULT.live)
+const firstCompany = firstCompanyResp[1].data
 cliOutput.printLine()
 
 // Create a default study for interactions and companies to use
@@ -346,7 +344,7 @@ const myStudy = {
     groups: 'default:default',
     document: {}
 }
-const studyResp = await studyCtl.createObj(myStudy)
+// const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
 
 // TODO perform linkages between company and study objects
@@ -354,14 +352,22 @@ cliOutput.printLine()
 
 
 // List all created objects to the console
-console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
-console.log(chalk.blue.bold(`Default study:`))
-const myStudies = await studyCtl.getAll()
-cliOutput.outputCLI(myStudies[2])
-cliOutput.printLine()
-console.log(chalk.blue.bold(`Owning and first companies:`))
-const myCompanies = await companyCtl.getAll()
-cliOutput.outputCLI(myCompanies[2])
+// console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
+// console.log(chalk.blue.bold(`Default study:`))
+// const myStudies = await studyCtl.getAll()
+// cliOutput.outputCLI(myStudies[2])
+// cliOutput.printLine()
+// console.log(chalk.blue.bold(`Owning and first companies:`))
+// const myCompanies = await companyCtl.getAll()
+// cliOutput.outputCLI(myCompanies[2])
+// cliOutput.printLine()
+
+// TEMP save objects to /tmp/<object_name>.json
+const fsOps = new FilesystemOperators()
+console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
+fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
+fsOps.saveTextFile(`/tmp/owning_company.json`, JSON.stringify(owningCompany[2]))
+fsOps.saveTextFile(`/tmp/first_company.json`, JSON.stringify(firstCompany))
 cliOutput.printLine()
 
 // Print out the next steps

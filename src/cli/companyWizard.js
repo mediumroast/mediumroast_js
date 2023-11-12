@@ -106,9 +106,9 @@ class AddCompany {
     }
 
     async getIndustries() {
-        let sics = null
-        let sicResult = null
-        let myInustries = null
+        let sics
+        let sicResult
+        let myInustries
 
         // Obtain the sic search string
         const SICPrototype = {sicDescription: {consoleString: "industry search string", value: null, altMessage: 'What\'s your'}}
@@ -131,10 +131,13 @@ class AddCompany {
                 console.log(chalk.blue.bold('No matching industry found, trying again.'))
                 sicResult = await this.getIndustries()
             }
-            
+
             const sicChoices = sicNames.map(
                 (choice) => {
-                    const item = {name: choice}
+                    // NOTE: For some reason this makes a bug that causes the wizard to crash
+                    const theChoice = choice
+                    
+                    const item = {name: theChoice}
                     return item
                 }
             )
@@ -464,6 +467,29 @@ class AddCompany {
         return prototype
     }
 
+    async redoAutomatic (company) {
+        typeof company === 'object' ? company = company.name : null
+        let myCompanyObj = await this.getCompany(company)
+        if (!myCompanyObj[0]){
+            const answer = await this.wutils.operationOrNot(`No company matching [${company}] found, try again?`)
+            
+            if(answer) {
+                let tmpCompany = await this.wutils.doManual(
+                    {name: {
+                        consoleString: "name is", 
+                        value: company,
+                        altMessage: "Your company\'s"
+                    }},
+                    [],
+                    false,
+                    true
+                )
+                myCompanyObj = await this.redoAutomatic(tmpCompany)
+            }
+        } 
+        return myCompanyObj
+    }
+
 
     async  doAutomatic(prototype, company){
         // Set up white lists which match to the prototype keys
@@ -499,7 +525,8 @@ class AddCompany {
         if (company.company_type === 'Public') {myWhiteList = publicCompanyWhiteList}
 
         // Attempt to search company_dns, but if there is no answer then ask if try again or do manual
-        let myCompanyObj = await this.getCompany(company.name)
+        // TODO we need to prompt to try again
+        let myCompanyObj = await this.redoAutomatic(company.name)
         let usedCompanyDNS = true
         
         // If we don't get a response from the company_dns we need to do a manual entry
