@@ -23,5 +23,6 @@ program
   .command('company', 'manage and report on mediumroast.io company objects').alias('c')
   .command('study', 'manage and report on mediumroast.io study objects').alias('s')
   .command('users', 'manage and report on mediumroast.io users').alias('u')
+  .command('github', 'test code to interoperate with GitHub').alias('g')
 
 program.parse(process.argv)
