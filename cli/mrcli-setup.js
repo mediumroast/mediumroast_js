@@ -19,6 +19,7 @@ import s3Utilities from '../src/cli/s3.js'
 import demoEulaText from '../src/cli/demoEula.js'
 import Authenticate from '../src/api/authorize.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
+import MinioUtilities from '../src/cli/minio.js'
 
 import program from 'commander'
 import chalk from 'chalk'
@@ -74,15 +75,16 @@ function getEnv () {
             device_code: "",
             accepted_eula: false,
             user_first_name: "",
-            user_email_address: ""
+            user_email_address: "",
+            live: false
         },
         s3_settings: {
             user: "medium_roast_io",
             // api_key: "b7d1ac5ec5c2193a7d6dd61e7a8a76451885da5bd754b2b776632afd413d53e7",
             api_key: "",
             server: "https://s3.mediumroast.io:9000",
-            region: "leo-dc",
-            source: "Unknown" // TODO this is deprecated remove after testing
+            region: "scripps-dc",
+            // source: "Unknown" // TODO this is deprecated remove after testing
         }
     }
 }
@@ -118,6 +120,19 @@ function verifyConfiguration(myConfig, configFile) {
     let success = false
     if(newRestServer === myConfig.DEFAULT.rest_server) { success = true }
     return success
+}
+
+async function getS3APIKey(prompt) {
+    let apiKey = await wizardUtils.doManual(
+        prompt, // Object that we should send to doManual
+        ['key'], // Set of attributes to prompt for
+        true, // Should we prompt only for the whitelisted attributtes
+        true // Use an alternative message than the default supplied
+    )
+    if(!apiKey.key) {
+        apiKey = await getS3APIKey(prompt)
+    }
+    return apiKey
 }
 
 /* 
@@ -229,44 +244,35 @@ const cWizard = new AddCompany(
     companyCtl, // NOTE: Company creation is commented out
     myConfig.DEFAULT.company_dns
 )
-let owningCompany = await cWizard.wizard(true, false)
-console.log(`Firmographics summary for ${owningCompany[2].name}`)
-console.log(`\tWebsite: ${owningCompany[2].url}`)
-console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
-console.log(`\tIndustry: ${owningCompany[2].industry}`)
-console.log(`\tIndustry code: ${owningCompany[2].industry_code}`)
-console.log(`\tCompany type: ${owningCompany[2].company_type}`)
-console.log(`\tRegion: ${owningCompany[2].region}`)
-console.log(`\tRole: ${owningCompany[2].role}`)
-console.log(`\tLongitude: ${owningCompany[2].longitude}`)
-console.log(`\tLatitude: ${owningCompany[2].latitude}`)
-console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
+let owningCompany = await cWizard.wizard(true, myConfig.DEFAULT.live)
+// console.log(`Firmographics summary for ${owningCompany[2].name}`)
+// console.log(`\tWebsite: ${owningCompany[2].url}`)
+// console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
+// console.log(`\tIndustry: ${owningCompany[2].industry}`)
+// console.log(`\tIndustry code: ${owningCompany[2].industry_code}`)
+// console.log(`\tCompany type: ${owningCompany[2].company_type}`)
+// console.log(`\tRegion: ${owningCompany[2].region}`)
+// console.log(`\tRole: ${owningCompany[2].role}`)
+// console.log(`\tLongitude: ${owningCompany[2].longitude}`)
+// console.log(`\tLatitude: ${owningCompany[2].latitude}`)
+// console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
 
 
 // Set company user name to user name set in the company wizard
 myUser.company = owningCompany[2].name
 
-// TEMP save objects to /tmp/<object_name>.json
-const fsOps = new FilesystemOperators()
-console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
-fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
-fsOps.saveTextFile(`/tmp/company.json`, JSON.stringify(owningCompany[2]))
 
-process.exit()
 
-// Create an S3 account derived from the user's full name, plus some randomness
-console.log(chalk.blue.bold(`Establishing the storage container for ${myConfig.DEFAULT.company}...`))
-const myS3 = new s3Utilities(myEnv.s3_settings)
+// Create an S3 bucket to store interactions
+console.log(chalk.blue.bold(`Establishing the storage container for [${myConfig.DEFAULT.company}] ...`))
+
 // Get the key from the command line
 const s3PromptObj = {
-    key: {consoleString: "the provided API Key for the storage container", value: null, altMessage: 'Please input'},
+    key: {consoleString: "the provided API Key from mediumroast.io", value: null, altMessage: 'Please input'},
 }
-const apiKey = await wizardUtils.doManual(
-    s3PromptObj, // Object that we should send to doManual
-    ['key'], // Set of attributes to prompt for
-    true, // Should we prompt only for the whitelisted attributtes
-    true // Use an alternative message than the default supplied
-)
+const apiKey = await getS3APIKey(s3PromptObj)
+myConfig.s3_settings.api_key = apiKey.key
+const myAdvisoryS3 = new s3Utilities(myConfig.s3_settings)
 
 // Create the s3Name name
 // NOTES:
@@ -274,24 +280,32 @@ const apiKey = await wizardUtils.doManual(
 // 2. userName can only access a container named userName
 // 3. Permissions for the container are GET, PUT and LIST, others may be added over time
 // 4. 
-const s3Name = myS3.generateBucketName(myConfig.DEFAULT.company)
-
-// Call the API to create the user
-const [s3User, s3Key] = await myS3.s3AddUser(s3Name)
-
-// Set the S3 credential information into the env
-myConfig.DEFAULT.s3_settings.api_key = s3Key
-myConfig.DEFAULT.s3_settings.bucket = s3Name
-myConfig.DEFAULT.s3_settings.user = s3Name
+const s3Name = myAdvisoryS3.generateBucketName(myConfig.DEFAULT.company)
 
 // Create the bucket
-const s3Resp = await myS3.s3CreateBucket(s3Name)
+const s3Resp = await myAdvisoryS3.s3CreateBucket(s3Name)
 if(s3Resp[0]) {
-    console.log(chalk.blue.bold(`Added interaction storage space for ${owningCompany.name}.`))
+    console.log(chalk.blue.bold(`For ${owningCompany[2].name} added storage container [${s3Resp[2].Location}].`))
+} else if (s3Resp[2].code === 'BucketAlreadyOwnedByYou') {
+    console.log(chalk.blue.red(`Storage container for [${owningCompany[2].name}] already exists, nothing to do.`))
 } else {
-    console.log(chalk.blue.red(`Unable to add interaction storage space for ${owningCompany.name}.`))
+    console.log(chalk.blue.red(`Cannot add storage container for [${owningCompany[2].name}], exiting.`))
+    // TODO: Need to be more graceful in the case where the bucket already exists
     process.exit(-1)
 }
+
+// Create the user
+// TODO: When we support generic S3 ww must ensure that there are switches that
+//          shift between Minio and generic S3.  Note that this may become a support
+//          nightmare since to support every cloud variation could be bespoke. 
+console.log(chalk.blue.bold(`Establishing the storage container credential for [${myConfig.DEFAULT.company}] ...`))
+const minioCtl = new MinioUtilities(myEnv)
+const userS3Key = await minioCtl.addMinioUser(s3Name, myConfig.DEFAULT.company)
+
+// Set the S3 credential information into the env
+myConfig.s3_settings.api_key = userS3Key
+myConfig.s3_settings.bucket = s3Name
+myConfig.s3_settings.user = s3Name
 cliOutput.printLine()
 
 // Persist and verify the config file
@@ -308,17 +322,21 @@ success ?
     console.log(chalk.red.bold('ERROR: Unable to verify configuration file [' + configFile + '].'))
 cliOutput.printLine()
 
-process.exit()
-
-
 // Create the first company
-console.log(chalk.blue.bold('Creating the first company...'))
-companyResp = await cWizard.wizard(true)
-const firstCompany = companyResp[1].data
+// Reset company user name to user name set in the company wizard
+myConfig.DEFAULT.company = 'Unknown'
+const firstComp = new AddCompany(
+    myConfig,
+    companyCtl, // NOTE: Company creation is commented out
+    myConfig.DEFAULT.company_dns
+)
+console.log(chalk.blue.bold('Creating the first company ...'))
+let firstCompanyResp = await firstComp.wizard(false, myConfig.DEFAULT.live)
+const firstCompany = firstCompanyResp[1].data
 cliOutput.printLine()
 
 // Create a default study for interactions and companies to use
-console.log(chalk.blue.bold(`Adding default study to the backend...`))
+console.log(chalk.blue.bold(`Adding default study ...`))
 const myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',
@@ -326,7 +344,7 @@ const myStudy = {
     groups: 'default:default',
     document: {}
 }
-const studyResp = await studyCtl.createObj(myStudy)
+// const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
 
 // TODO perform linkages between company and study objects
@@ -334,14 +352,22 @@ cliOutput.printLine()
 
 
 // List all created objects to the console
-console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
-console.log(chalk.blue.bold(`Default study:`))
-const myStudies = await studyCtl.getAll()
-cliOutput.outputCLI(myStudies[2])
-cliOutput.printLine()
-console.log(chalk.blue.bold(`Owning and first companies:`))
-const myCompanies = await companyCtl.getAll()
-cliOutput.outputCLI(myCompanies[2])
+// console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
+// console.log(chalk.blue.bold(`Default study:`))
+// const myStudies = await studyCtl.getAll()
+// cliOutput.outputCLI(myStudies[2])
+// cliOutput.printLine()
+// console.log(chalk.blue.bold(`Owning and first companies:`))
+// const myCompanies = await companyCtl.getAll()
+// cliOutput.outputCLI(myCompanies[2])
+// cliOutput.printLine()
+
+// TEMP save objects to /tmp/<object_name>.json
+const fsOps = new FilesystemOperators()
+console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
+fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
+fsOps.saveTextFile(`/tmp/owning_company.json`, JSON.stringify(owningCompany[2]))
+fsOps.saveTextFile(`/tmp/first_company.json`, JSON.stringify(firstCompany))
 cliOutput.printLine()
 
 // Print out the next steps
