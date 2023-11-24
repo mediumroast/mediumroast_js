@@ -1,64 +1,20 @@
 #!/usr/bin/env node
 
-import axios from "axios"
-import chalk from 'chalk'
-import Authenticate from '../src/api/authorize.js'
-import WizardUtils from '../src/cli/commonWizard.js'
+import { Octokit } from "octokit"
+import Environmentals from '../src/cli/env.js'
+import { GitHubAuth } from '../src/api/authorize.js'
+
 
 
     function getConfig () {
         return {
-            clientId:'Iv1.eb16133ca33b9509',
-            appId: '628777',
+            clientId:'Iv1.f5c0a4eb1f0606f8',
+            appId: '650476',
             deviceCodeUrl: 'https://github.com/login/device/code',
             accessTokenUrl: 'https://github.com/login/oauth/access_token',
             contentType:  'application/json',
             grantType: 'urn:ietf:params:oauth:grant-type:device_code',
-        }
-    }
-
-    async function getDeviceCode(config) {
-        const options = {
-            method: 'POST',
-            url: config.deviceCodeUrl,
-            headers: {
-                'Accept': config.contentType
-            },
-            data: new URLSearchParams({
-                client_id: config.clientId,
-            })
-        }
-        let deviceCode
-        try {
-            deviceCode = await axios.request(options)
-            return [true, deviceCode.data]
-        } catch (err) {
-            return [false, err]
-        }
-    }
-
-    async function getAccessToken(config, deviceCode) {
-        const options = {
-            method: 'POST',
-            url: config.accessTokenUrl,
-            // Defines the headers to call GitHub for authentication
-            headers: {
-                'Accept': config.contentType
-            },
-            // Setup the URL string parameters which will be fed to the call
-            data: new URLSearchParams({
-                client_id: config.clientId,
-                device_code: deviceCode,
-                grant_type: config.grantType
-
-            })
-        }
-        let accessToken
-        try {
-            accessToken = await axios.request(options)
-            return [true, accessToken.data]
-        } catch (err) {
-            return [false, err]
+            clientType: 'github-app',
         }
     }
 
@@ -70,46 +26,75 @@ import WizardUtils from '../src/cli/commonWizard.js'
     ----------------------------------------------------------------------- 
 */
 
+// Construct the authorization object
+const githubAuth = new GitHubAuth()
+
 // Obtain key configuration data to be used for getting device codes and access tokens
-const config = getConfig()
+let config = getConfig()
 
-// Construct the authenticator object
-const authenticator = new Authenticate()
+// Get configuration information from the config file
+const environment = new Environmentals('1.0.0', 'github', 'functions to test GitHub operations', 'all')
+const configFile = environment.checkConfigDir()
+let env = environment.readConfig(configFile)
 
-// Pull in wizard utilities
-const wizardUtils = new WizardUtils('all')
+// Check to see if the GitHub section is available
+let accessToken
+let updateConfig = false
+if (env.hasSection('GitHub')) {
+    // Convert the access and refresh token expirations into Date objects
+    const accessExpiry = new Date(env.get('GitHub', 'expiresAt'))
+    const now = new Date()
 
-// Request the device code which will be used to get the access token
-const deviceCodeResp = await getDeviceCode(config)
-// If we got a device code then proceed to get the access token
-if(deviceCodeResp[0]) {
-    const deviceCodeData = deviceCodeResp[1]
-    // Authorize the devide
-    console.log(
-        chalk.blue.bold(`Opening your browser to authorize this client, copy or type this code in your browser [${deviceCodeData.user_code}].`)
-    )
-    // Open the browser
-    await authenticator.verifyClientAuth(deviceCodeData.verification_uri)
-    let authorized = null
-    // Prompt the user and await their login and approval
-    while (!authorized) {
-        authorized = await wizardUtils.operationOrNot('Has the web authorization completed?')
+    // Check to see if the access token is valid
+    if (accessExpiry < now) {
+        accessToken = await githubAuth.getAccessToken(config)
+        env = environment.updateConfigSetting(env, 'GitHub', 'token', accessToken.token)
+        env = environment.updateConfigSetting(env[1], 'GitHub', 'expiresAt', accessToken.expiresAt)
+        env = environment.updateConfigSetting(env[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
+        updateConfig = true
+        env = env[1]
     }
-    // Get the access token
-    const accessTokenResp = await getAccessToken(config, deviceCodeData.device_code)
-    if(accessTokenResp[0]) {
-        const accessTokenData = accessTokenResp[1]
-        // Log the access token to the console
-        console.log(accessTokenData)
-        // console.log(
-        //     chalk.blue.bold(`Generated the access token as [${accessTokenData}].`)
-        // )
-    } else {
-        console.log(chalk.red(`Failed to generate a access token with [${accessTokenResp[1]}]`))
-        process.exit()
-    }
-    
 } else {
-    console.log(chalk.red(`Failed to generate a device code with [${deviceCodeResp[1]}]`))
-    process.exit()
+    // Section GitHub not available perform complete authorization flow
+    // Get the access token and add a GitHub section to the env
+    accessToken = await githubAuth.getAccessToken(config)
+    // Create the GitHub section
+    env = environment.addConfigSection(env, 'GitHub', accessToken)
+    env = environment.removeConfigSetting(env[1], 'GitHub', 'contentType')
+    env = environment.removeConfigSetting(env[1], 'GitHub', 'grantType')
+    env = environment.removeConfigSetting(env[1], 'GitHub', 'clientType')
+    updateConfig = true
+    env = env[1]
 }
+
+// Save the config file
+if (updateConfig) {
+    console.log(env)
+    env.write(configFile)
+}
+
+// Pull out the token
+accessToken = environment.getConfigSetting(env, 'GitHub', 'token')
+
+// Construct Octokit
+const octokit = new Octokit({auth: accessToken[1]})
+
+// Test the creation of a repository
+const myOrgName = 'mediumroast'
+const myOrg = await octokit.rest.orgs.get({org: myOrgName})
+console.log(myOrg.data)
+
+const myRepoName = `${myOrgName}_mediumroast_app_repo`
+try {
+    const response = await octokit.rest.repos.createInOrg({
+      org: myOrgName,
+      name: myRepoName,
+      description: 'A sample repository to test with the mediumroast app',
+    })
+
+    const createdRepoInfo = response.data
+    console.log('Created Repository Information:', createdRepoInfo);
+  } catch (error) {
+    console.error('Error creating repository:', error.message);
+  }
+

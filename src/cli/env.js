@@ -10,6 +10,7 @@
 // Import required modules
 import program from 'commander'
 import ConfigParser from 'configparser'
+import FilesystemOperators from './filesystem.js'
 
 
 class Environmentals {
@@ -29,6 +30,7 @@ class Environmentals {
         this.name = name
         this.description = description
         this.objectType = objectType
+        this.fsUtils = new FilesystemOperators()
     }
 
     /**
@@ -128,15 +130,128 @@ class Environmentals {
     }
 
     /**
-     * @function getConfig
-     * @description Using the confFile argument read, parse and return the contents of a configuration file
-     * @param {String} confFile - a fully qualified path to the configuration file
+     * @function readConfig
+     * @description Using the configFile argument read, parse and return the contents of a configuration file
+     * @param {String} configFile - a fully qualified path to the configuration file
      * @returns {Object} The object containing the parsed configuration file results
      */
-    getConfig(confFile) {
-        const config = new ConfigParser()
-        config.read(confFile)
-        return config
+    readConfig(configFile) {
+        const configurator = new ConfigParser()
+        configurator.read(configFile)
+        return configurator
+    }
+
+    /**
+     * @function checkConfigDir
+     * @description
+     * @param {*} configDir - the directory to the configuration file
+     * @param {*} configFile - the name of the configuration file
+     * @returns {String} The full path to the configuration file
+     */
+    checkConfigDir(configDir='/.mediumroast', configFile='config.ini') {
+        this.fsUtils.safeMakedir(process.env.HOME + configDir)
+        return process.env.HOME + configDir + '/' + configFile
+    }
+
+    /**
+     * @function removeConfigSetting
+     * @description Remove a setting from a configuration
+     * @param {Object} configurator - A configurator object that can be used to operate on a configuration
+     * @param {String} sectionName - The name of the section to add 
+     * @param {String} setting - The name of the setting to update
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the configurator object or error message
+     */
+    removeConfigSetting(configurator, sectionName, setting) {
+        try {
+            configurator.removeKey(sectionName, setting)
+        } catch (err) {
+            return [false, err]
+        }
+
+        return [true, configurator]
+    }
+
+    /**
+     * @function addConfigSection
+     * @description Add a section named sectionName to a configuration
+     * @param {Object} configurator - A configurator object that can be used to operate on a configuration
+     * @param {String} sectionName - The name of the section to add
+     * @param {Object} config - The contents for the section to add
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being null/err
+     */
+    addConfigSection(configurator, sectionName, config) {
+        try {
+            configurator.addSection(sectionName)
+        } catch (err) {
+            return [false, err]
+        }
+
+        for(const setting in config){
+            configurator.set(sectionName, setting, config[setting])
+        }
+
+        return [true, configurator]
+    }
+
+    /**
+     * @function getConfigSetting
+     * @description Safely retrieve the value of setting in sectionName
+     * @param {Object} configurator - A constructed instance of ConfigParser
+     * @param {String} sectionName - The name of the section the setting resides in
+     * @param {String} setting - The name of the setting to update
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the setting's value
+     */
+    getConfigSetting(configurator, sectionName, setting) {
+        // Check if it exists
+        const keyExists = configurator.hasKey(sectionName, setting)
+        if (keyExists) {
+            // Get and return the setting
+            
+            return [true, configurator.get(sectionName, setting)] 
+        } else {
+            return [false, `Error: [${sectionName}: ${setting}] doesn't exist.`]
+        }
+    }
+
+    /**
+     * @function updateConfigSetting
+     * @description Remove and replace an existing configuration setting in sectionName with value.
+     * @param {Object} configurator - A constructed instance of ConfigParser
+     * @param {String} sectionName - The name of the section the setting resides in
+     * @param {String} setting - The name of the setting to update
+     * @param {String} value - The value for the setting
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the configurator object
+     */
+    updateConfigSetting(configurator, sectionName, setting, value) {
+        // Check if it exists
+        const keyExists = configurator.hasKey(sectionName, setting)
+        if (keyExists) {
+            // Remove the setting
+            configurator.removeKey(sectionName, setting)
+            // Add it back
+            configurator.set(sectionName, setting, value)
+            return [true, configurator] 
+        } else {
+            return [false, configurator]
+        }
+    }
+
+    /**
+     * @function writeConfig
+     * @description Write a configuration file to configFile from the configuration config
+     * @param {*} config - a object with various sections to be written to a config file
+     * @param {*} configFile - the fully qualified path to the configuration file
+     */
+    writeConfig(configurator, configFile) {
+        // Write the config file
+        for(const section in config){
+            configurator.addSection(section)
+            for(const setting in config[section]){
+                configurator.set(section, setting, config[section][setting])
+            }
+        }
+        // This won't return anything so we'll need to see if we can find another way to determine success/failure
+        configurator.write(configFile)
     }
 
 

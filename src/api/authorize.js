@@ -1,8 +1,10 @@
 import axios from "axios"
 import crypto from "node:crypto"
 import open from "open"
+import * as octoDevAuth from '@octokit/auth-oauth-device'
+import chalk from 'chalk'
 
-class Authenticate {
+class Auth0Auth {
     /**
      * The present development is very simple and largely a placeholder.  After the object is constructed
      * the user would issue a login to generate the credential for usage in the API to talk to the 
@@ -209,6 +211,56 @@ class Authenticate {
         }
         return null
     }
+
+    
 }
 
-export default Authenticate
+class GitHubAuth {
+    async getAccessToken(env) {
+        // Construct the oAuth device flow object which starts the browser
+        let deviceCode // Provide a place for the device code to be captured
+        const deviceauth = octoDevAuth.createOAuthDeviceAuth({
+            clientType: env.clientType,
+            clientId: env.clientId,
+            onVerification(verifier) {
+                deviceCode = verifier.device_code
+                console.log(
+                    chalk.blue.bold(
+                        `Type this code into your browser [${verifier.user_code}] and follow the prompts to authorize this client.\nOpening your browser ...`
+                    )
+                )
+                open(verifier.verification_uri)
+            }
+        })
+
+        // Call GitHub to obtain the token
+        let accessToken = await deviceauth({type: 'oauth'})
+        accessToken.deviceCode = deviceCode
+        return accessToken
+    }
+    
+    
+    /**
+     * @function refreshAccessToken
+     * @description Assuming device flow authorization, generate a new access token from a valid refresh token
+     * @param {String} clientId - The clientId for the device
+     * @param {String} refreshToken - A valid unexpired refresh token
+     * @param {String} accessTokenUrl - Url needed to obtain the access token using a refresh token
+     * @param {String} contentType - Accepted content type defaults to 'application/json'
+     * @param {String} grantType - Targeted grant type defaults to 'refresh_token'
+     * @returns {Array} An array with position 0 being boolean to signify sucess/failure and position 1 being token data/err string
+     */
+    async refreshAccessToken(clientId, refreshToken, accessTokenUrl, contentType='application/json', grantType='refresh_token'){
+        try {
+            const resp = await axios.post(accessTokenUrl, null, {
+              params: {grant_type: grantType, refresh_token: refreshToken,client_id: clientId},
+              headers: {Accept: contentType},
+            })
+            return [true, resp.data]
+        } catch (err) {
+            return [false, err.message]
+        }
+    }
+}
+
+export {Auth0Auth, GitHubAuth}
