@@ -3,6 +3,7 @@
 import { Octokit } from "octokit"
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
+import GitHubFunctions from "../src/api/github.js"
 
 
 
@@ -69,7 +70,6 @@ if (env.hasSection('GitHub')) {
 
 // Save the config file
 if (updateConfig) {
-    console.log(env)
     env.write(configFile)
 }
 
@@ -77,24 +77,17 @@ if (updateConfig) {
 accessToken = environment.getConfigSetting(env, 'GitHub', 'token')
 
 // Construct Octokit
-const octokit = new Octokit({auth: accessToken[1]})
+// const octokit = new Octokit({auth: accessToken[1]})
 
 // Test the creation of a repository
 const myOrgName = 'mediumroast'
-const myOrg = await octokit.rest.orgs.get({org: myOrgName})
-console.log(myOrg.data)
+// const myOrg = await octokit.rest.orgs.get({org: myOrgName})
 
-const myRepoName = `${myOrgName}_mediumroast_app_repo`
-try {
-    const response = await octokit.rest.repos.createInOrg({
-      org: myOrgName,
-      name: myRepoName,
-      description: 'A sample repository to test with the mediumroast app',
-    })
+// Construct the GitHub API object
+const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName)
+let gitHubResp
 
-    const createdRepoInfo = response.data
-    console.log('Created Repository Information:', createdRepoInfo);
-  } catch (error) {
-    console.error('Error creating repository:', error.message);
-  }
+gitHubResp = await gitHubCtl.createContainers()
+console.log(gitHubResp[1])
+
 

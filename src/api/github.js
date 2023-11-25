@@ -51,21 +51,23 @@ class GitHubFunctions {
      * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the responses or error messages.
      */
     async createContainers (containers = ['Studies', 'Companies', 'Interactions']) {
-        const gitKeep = '.gitkeep'
+        let responses = []
+        let emptyJson = Buffer.from(JSON.stringify({})).toString('base64')
         for (const containerName in containers) {
             try {
                 const response = await this.octCtl.rest.repos.createOrUpdateFileContents({
-                    owner: this.orgName,
+                    owner: 'mediumroast',
                     repo: this.repoName,
-                    path: `${containers[containerName]}/${gitKeep}`,
+                    path: `${containers[containerName]}/${containers[containerName]}.json`,
                     message: `Create container [${containers[containerName]}]`,
-                    content: Buffer.from(''), // Content can be empty for a placeholder file
+                    content: emptyJson, // Create a valid empty JSON file, but this must be Base64 encoded
                 })
-                return [true, response.data]
+                responses.push(response)
             } catch (err) {
-                return[false, err.message]
+                return[false, err]
             }
         }
+        return [true, responses]
     }
 }
 
