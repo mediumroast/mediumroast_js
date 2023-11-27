@@ -11,11 +11,7 @@
 // Import required modules
 import inquirer from "inquirer"
 import node_geocoder from "node-geocoder"
-import wrap from 'wrap-ansi'
-import { clear } from 'console'
-import readline from 'readline';
 import chalk from 'chalk'
-import { EOL } from 'os'
 
 class WizardUtils {
     /**
@@ -267,6 +263,54 @@ class WizardUtils {
                 // If the user doesn't type "I AGREE" then try again
                 } else {
                     bottomBar.updateBottomBar(`Type ${chalk.green('I AGREE')} to continue, or ${chalk.red('Ctrl + C')} to exit.`);
+                }
+            // If something goes wrong exit
+            } catch (error) {
+                bottomBar.close()
+                console.log('\nExiting...')
+                process.exit(1)
+            }
+        }
+
+    }
+
+    /**
+     * 
+     * @param {String} installText 
+     * @returns 
+     */
+    async doInstallInstructions (installText) {
+        // Clear the console
+        console.clear()
+
+        // Construct the bottomBar object to ask for acceptance
+        const bottomBar = new inquirer.ui.BottomBar()
+
+        // Print the EULA to the console
+        console.log(installText)
+
+        // Add acceptance language to the bottomBar
+        bottomBar.updateBottomBar(`Type ${chalk.green('YES')} to continue, or ${chalk.red('Ctrl + C')} to exit.`)
+
+        // Check for acceptance by the user
+        while (true) {
+            try {
+                // Prompt the user
+                const answer = await inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'isInstalled',
+                        message: 'Is the Mediumroast GitHub application installed?',
+                    },
+                ])
+
+                // If the user agrees return true
+                if (answer.isInstalled.trim().toUpperCase() === 'YES') {
+                    bottomBar.close()
+                    return true
+                // If the user doesn't type "INSTALLED" then try again
+                } else {
+                    bottomBar.updateBottomBar(`Type ${chalk.green('YES')} to continue, or ${chalk.red('Ctrl + C')} to exit.`);
                 }
             // If something goes wrong exit
             } catch (error) {

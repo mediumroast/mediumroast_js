@@ -60,7 +60,7 @@
     "@json2csv/plainjs": "^7.0.3",
     "adm-zip": "^0.5.9",
     "asciiart-logo": "^0.2.7",
-    "aws-sdk": "^2.1096.0",
+    "aws-sdk": "^2.1502.0",
     "axios": "^1.4.0",
     "box-plot": "^1.0.0",
     "cli-progress": "^3.11.2",

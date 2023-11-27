@@ -242,7 +242,7 @@ class Environmentals {
      * @param {*} config - a object with various sections to be written to a config file
      * @param {*} configFile - the fully qualified path to the configuration file
      */
-    writeConfig(configurator, configFile) {
+    writeConfig(configurator, config, configFile) {
         // Write the config file
         for(const section in config){
             configurator.addSection(section)

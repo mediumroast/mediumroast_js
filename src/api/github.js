@@ -29,20 +29,19 @@ class GitHubFunctions {
     }
 
     /**
-     * @function deleteRepository
-     * @description Deletes a repository, at the organization level, that keeps track of all mediumroast.io assets
-     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the deleted repo or error message.
+     * @function getGitHubOrg
+     * @description If the GitHub organization exists retrieves the detail about it and returns to the caller
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the org or error message.
      */
-    async deleteRepository () {
+    async getGitHubOrg () {
         try {
-            const response = await this.octCtl.rest.repos.delete({
-              owner: this.orgName,
-              repo: this.repoName,
+            const response = await this.octCtl.rest.orgs.get({
+                org: this.orgName
             })
-            return [true, response.data]
-          } catch (err) {
+            return[true, response.data]
+        } catch (err) {
             return[false, err.message]
-          }
+        }
     }
 
     /**
