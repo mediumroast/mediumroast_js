@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { Octokit } from "octokit"
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
 import GitHubFunctions from "../src/api/github.js"
+import WizardUtils from '../src/cli/commonWizard.js'
 
 
 
@@ -84,10 +84,26 @@ const myOrgName = 'mediumroast'
 // const myOrg = await octokit.rest.orgs.get({org: myOrgName})
 
 // Construct the GitHub API object
-const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName)
+const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName, 'mr-cli-setup')
 let gitHubResp
 
-gitHubResp = await gitHubCtl.createContainers()
-console.log(gitHubResp[1])
+const containerName = 'Studies'
+const shas = {
+    content: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
+    commit: 'a38e44b965a966c232bad3ba6c9adde9b3703903',
+    commitTree: '7e9937a4b9852d8a55aa983abdda423d8cd8f750'
+}
+
+const wizardUtils = new WizardUtils('all')
+
+gitHubResp = await gitHubCtl.lockContainer(containerName)
+console.log(gitHubResp[2].data)
+
+const doSetup = await wizardUtils.operationOrNot(
+    `Is the lock finished?`
+)
+
+gitHubResp = await gitHubCtl.unlockContainer(containerName, shas.content)
+console.log(gitHubResp[2].data)
 
 

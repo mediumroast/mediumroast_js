@@ -335,7 +335,7 @@ cliOutput.printLine()
 /* ----------------------------------------- */
 /* --------- Create the repository --------- */
 process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
-gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org)
+gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
 const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
 if(repoResp[0]) {
     console.log(chalk.bold.green('Ok'))
@@ -366,18 +366,16 @@ cliOutput.printLine()
 
 
 
-process.exit()
-
-
-// Create the owning company for the initial user
+// Create the owning company
 console.log(chalk.blue.bold('Creating your owning company...'))
+myConfig.DEFAULT.company = myConfig.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(
     myConfig,
     companyCtl, // NOTE: Company creation is commented out
     myConfig.DEFAULT.company_dns
 )
-let owningCompany = await cWizard.wizard(true, myConfig.DEFAULT.live)
+let owningCompany = await cWizard.wizard(true)
 // console.log(`Firmographics summary for ${owningCompany[2].name}`)
 // console.log(`\tWebsite: ${owningCompany[2].url}`)
 // console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
@@ -390,9 +388,6 @@ let owningCompany = await cWizard.wizard(true, myConfig.DEFAULT.live)
 // console.log(`\tLatitude: ${owningCompany[2].latitude}`)
 // console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
 
-
-// Set company user name to user name set in the company wizard
-myUser.company = owningCompany[2].name
 
 
 // Create the first company

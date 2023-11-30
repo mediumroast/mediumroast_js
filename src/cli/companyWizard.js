@@ -746,8 +746,6 @@ class AddCompany {
         myCompany.region = await this.wutils.getRegion()
         console.log(chalk.blue.bold(`Set the company\'s region to [${myCompany.region}]`))
 
-
-
         // NOTE: We will need to pass in the company name and type to help us determine what do to
         // If anything other than public we don't need to fill out the full set
         // General flow should be to try and discover the company attributes, and fallback to manual.
@@ -770,7 +768,8 @@ class AddCompany {
 
 
         if (createObj) {
-        console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
+            // TODO we need a mode that can return a single object when there are expected to be many objects created
+            console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
             // NOTE: This is temporarily commented out
             this.cutils.printLine()
             return await this.apiController.createObj(myCompany)
