@@ -208,8 +208,6 @@ class GitHubFunctions {
             ref: latestCommit.data.sha,
             path: containerName
         })
-
-        console.log(mainContents)
         
         const lockExists = mainContents.data.some(
             item => item.path === `${containerName}/${this.lockFileName}`
@@ -273,8 +271,6 @@ class GitHubFunctions {
         // Define the full path to the lockfile
         const lockFile = `${containerName}/${this.lockFileName}`
         const lockExists = await this.checkForLock(containerName)
-
-        console.log(lockExists)
 
         // TODO: Change to try and catch
         if(lockExists[0]) {

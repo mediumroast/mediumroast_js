@@ -145,12 +145,15 @@ doSetup = await wizardUtils.operationOrNot(
 
 // Merge branch into main
 gitHubResp = await gitHubCtl.mergeBranchToMain(branchName, branchSha)
+console.log(gitHubResp[2])
 
 
 doSetup = await wizardUtils.operationOrNot(
     `Did the Branch merge?`
 )
 
+gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha, branchName)
+console.log(gitHubResp[2])
 gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha)
 console.log(gitHubResp[2])
 
