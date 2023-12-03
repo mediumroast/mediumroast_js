@@ -4,6 +4,7 @@ import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
 import GitHubFunctions from "../src/api/github.js"
 import WizardUtils from '../src/cli/commonWizard.js'
+import FilesystemOperators from '../src/cli/filesystem.js'
 
 
 
@@ -78,6 +79,7 @@ accessToken = environment.getConfigSetting(env, 'GitHub', 'token')
 
 // Construct Octokit
 // const octokit = new Octokit({auth: accessToken[1]})
+console.clear()
 
 // Test the creation of a repository
 const myOrgName = 'mediumroast'
@@ -86,24 +88,74 @@ const myOrgName = 'mediumroast'
 // Construct the GitHub API object
 const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName, 'mr-cli-setup')
 let gitHubResp
+let doSetup
 
-const containerName = 'Studies'
-const shas = {
-    content: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
-    commit: 'a38e44b965a966c232bad3ba6c9adde9b3703903',
-    commitTree: '7e9937a4b9852d8a55aa983abdda423d8cd8f750'
-}
+const containerName = 'Companies'
 
 const wizardUtils = new WizardUtils('all')
 
+gitHubResp = await gitHubCtl.checkForLock(containerName)
+if(gitHubResp[0]) {
+    console.log(`The ${containerName} container is locked, please remove the lock and try again.`)
+    process.exit(1)
+}
+
+
 gitHubResp = await gitHubCtl.lockContainer(containerName)
 console.log(gitHubResp[2].data)
+// Save the sha for the unlock
+const lockSha = gitHubResp[2].data.content.sha
 
-const doSetup = await wizardUtils.operationOrNot(
-    `Is the lock finished?`
+doSetup = await wizardUtils.operationOrNot(
+    `Did the lock occur?`
 )
 
-gitHubResp = await gitHubCtl.unlockContainer(containerName, shas.content)
+// Create a new Branch
+gitHubResp = await gitHubCtl.createBranchFromMain()
+
 console.log(gitHubResp[2].data)
+
+doSetup = await wizardUtils.operationOrNot(
+    `Did the Branch create?`
+)
+
+const branchName = gitHubResp[2].data.ref
+const branchSha = gitHubResp[2].data.object.sha 
+
+// Construct filesystem operators
+const filesystem = new FilesystemOperators()
+
+
+// Read the file companies.json in the current directory, using the filesystem operators, and convert to JSON
+const companies = await filesystem.readJSONFile('./companies.json')
+
+// Read objects from the repository
+gitHubResp = await gitHubCtl.readObjects(containerName)
+console.log(gitHubResp[2])
+doSetup = await wizardUtils.operationOrNot(
+    `Objects read?`
+)
+const objectSha = gitHubResp[2].data.sha
+gitHubResp = await gitHubCtl.writeObject(containerName, companies[2], branchName, objectSha)
+console.log(gitHubResp[2])
+
+doSetup = await wizardUtils.operationOrNot(
+    `Objects write?`
+)
+
+// Merge branch into main
+gitHubResp = await gitHubCtl.mergeBranchToMain(branchName, branchSha)
+
+
+doSetup = await wizardUtils.operationOrNot(
+    `Did the Branch merge?`
+)
+
+gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha)
+console.log(gitHubResp[2])
+
+doSetup = await wizardUtils.operationOrNot(
+    `Did the repo unlock merge?`
+)
 
 

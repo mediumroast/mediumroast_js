@@ -2,6 +2,30 @@ import { Octokit } from "octokit"
 
 
 class GitHubFunctions {
+    /**
+     * @constructor
+     * @classdesc Core functions needed to interact with the GitHub API for mediumroast.io.
+     * @param {String} token - the GitHub token for the mediumroast.io application
+     * @param {String} org - the GitHub organization for the mediumroast.io application
+     * @param {String} processName - the name of the process that is using the GitHub API
+     * @todo Evolve as the backend improves authentication and authorization
+     * @todo Add a check to see if the repo exists and if so return an error
+     * @todo Add a check to see if the repo is private and if not return an error
+     * 
+     * @example
+     * const gitHubCtl = new GitHubFunctions(accessToken, myOrgName, 'mr-cli-setup')
+     * const createRepoResp = await gitHubCtl.createRepository()
+     * const createContainersResp = await gitHubCtl.createContainers()
+     * const createBranchResp = await gitHubCtl.createBranchFromMain()
+     * const mergeBranchResp = await gitHubCtl.mergeBranchToMain(createBranchResp[2].data.ref, createBranchResp[2].data.object.sha)
+     * const lockContainerResp = await gitHubCtl.lockContainer('Studies')
+     * const unlockContainerResp = await gitHubCtl.unlockContainer('Studies', lockContainerResp[2].data.commit.sha)
+     * const writeObjectResp = await gitHubCtl.writeObject('Studies', studies, mergeBranchResp[2].data.ref)
+     * const readObjectsResp = await gitHubCtl.readObjects('Studies')
+     * const updateObjectResp = await gitHubCtl.updateObject('Studies', '1', 'name', 'Updated Study Name')
+     * const createObjectsResp = await gitHubCtl.createObjects('Studies', studies)
+     * 
+    */
     constructor (token, org, processName) {
         this.token = token
         this.orgName = org
@@ -60,7 +84,7 @@ class GitHubFunctions {
      */
     async createContainers (containers = ['Studies', 'Companies', 'Interactions']) {
         let responses = []
-        let emptyJson = Buffer.from(JSON.stringify({})).toString('base64')
+        let emptyJson = Buffer.from(JSON.stringify([])).toString('base64')
         for (const containerName in containers) {
             try {
                 const response = await this.octCtl.rest.repos.createOrUpdateFileContents({
@@ -78,6 +102,14 @@ class GitHubFunctions {
         return [true, responses]
     }
 
+    /**
+     * @description Creates a new branch from the main branch.
+     * @function createBranchFromMain
+     * @async
+     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @throws {Error} If an error occurs while getting the main branch reference or creating the new branch.
+     * @memberof GitHubFunctions
+     */
     async createBranchFromMain() {
         // Define the branch name
         const branchName = Date.now().toString()
@@ -104,18 +136,31 @@ class GitHubFunctions {
 
     }
 
+    /**
+     * @description Merges a specified branch into the main branch by creating a pull request.
+     * @function mergeBranchToMain
+     * @async
+     * @param {string} branchName - The name of the branch to merge into main.
+     * @param {string} mySha - The SHA of the commit to use as the head of the pull request.
+     * @param {string} [commitDescription='Performed CRUD operation on objects.'] - The description of the commit.
+     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @throws {Error} If an error occurs while creating the branch or the pull request.
+     * @memberof GitHubFunctions
+     */
     async mergeBranchToMain(branchName, mySha, commitDescription='Performed CRUD operation on objects.') {
         try {
             // Create a new branch
-            const createBranchResponse = await this.octCtl.rest.git.createRef({
-              owner: this.orgName,
-              repo: this.repoName,
-              ref: `refs/heads/${branchName}`,
-              sha: mySha,
-            })
+            // const createBranchResponse = await this.octCtl.rest.git.createRef({
+            //   owner: this.orgName,
+            //   repo: this.repoName,
+            //   ref: branchName,
+            //   sha: mySha,
+            // })
+
+            // console.log(createBranchResponse.data)
         
             // Create a pull request
-            const createPullRequestResponse = await octokit.rest.pulls.create({
+            const createPullRequestResponse = await this.octCtl.rest.pulls.create({
               owner: this.orgName,
               repo: this.repoName,
               title: commitDescription,
@@ -125,7 +170,7 @@ class GitHubFunctions {
             })
         
             // Merge the pull request
-            const mergeResponse = await octokit.rest.pulls.merge({
+            const mergeResponse = await this.octCtl.rest.pulls.merge({
               owner: this.orgName,
               repo: this.repoName,
               pull_number: createPullRequestResponse.data.number,
@@ -134,28 +179,40 @@ class GitHubFunctions {
         
             return [true, 'SUCCESS: Pull request created and merged successfully', mergeResponse]
           } catch (error) {
-            return [false, `FAILED: Pull request not created or merged successfully due to [${error.message}]`, mergeResponse]
+            return [false, `FAILED: Pull request not created or merged successfully due to [${error.message}]`, null]
           }
     }
 
+    /**
+     * @description Checks to see if a container is locked.
+     * @function checkForLock
+     * @async
+     * @param {string} containerName - The name of the container to check for a lock.
+     * @returns {Promise<[boolean, string]>} A promise that resolves to an array containing a boolean indicating success and a message.
+     * @throws {Error} If an error occurs while getting the latest commit or the contents of the container.
+     * @memberof GitHubFunctions
+     * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
+    */
     async checkForLock(containerName) {
         // Get the latest commit
-        const {data: latestCommit} = await this.octCtl.rest.repos.getCommit({
+        const latestCommit = await this.octCtl.rest.repos.getCommit({
             owner: this.orgName,
             repo: this.repoName,
             ref: this.mainBranchName,
         })
 
         // Check to see if the lock file exists
-        const {data: mainContents} = await this.octCtl.rest.repos.getContent({
+        const mainContents = await this.octCtl.rest.repos.getContent({
             owner: this.orgName,
             repo: this.repoName,
-            ref: latestCommit.sha,
+            ref: latestCommit.data.sha,
             path: containerName
         })
+
+        console.log(mainContents)
         
-        const lockExists = mainContents.some(
-            item => item.path === this.lockFileName
+        const lockExists = mainContents.data.some(
+            item => item.path === `${containerName}/${this.lockFileName}`
         )
 
         if (lockExists) {
@@ -165,6 +222,15 @@ class GitHubFunctions {
         }
     }
 
+    /**
+     * @description Locks a container by creating a lock file in the container.
+     * @function lockContainer
+     * @async
+     * @param {string} containerName - The name of the container to lock.
+     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @throws {Error} If an error occurs while getting the latest commit or creating the lock file.
+     * @memberof GitHubFunctions
+    */
     async lockContainer(containerName) {
         // Define the full path to the lockfile
         const lockFile = `${containerName}/${this.lockFileName}`
@@ -193,63 +259,225 @@ class GitHubFunctions {
         }
     }
 
-    async unlockContainer(containerName, commitSha) {
+    /**
+     * @description Unlocks a container by deleting the lock file in the container.
+     * @function unlockContainer
+     * @async
+     * @param {string} containerName - The name of the container to unlock.
+     * @param {string} commitSha - The SHA of the commit to use as the head of the pull request.
+     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @throws {Error} If an error occurs while getting the latest commit or deleting the lock file.
+     * @memberof GitHubFunctions
+    */
+    async unlockContainer(containerName, commitSha, branchName = this.mainBranchName) {
         // Define the full path to the lockfile
         const lockFile = `${containerName}/${this.lockFileName}`
-        const lockExists = this.checkForLock(containerName)
+        const lockExists = await this.checkForLock(containerName)
 
-        // Get the latest commit
-        const {data: latestCommit} = await this.octCtl.rest.repos.getCommit({
-            owner: this.orgName,
-            repo: this.repoName,
-            ref: this.mainBranchName,
-        })
+        console.log(lockExists)
 
-        console.log(latestCommit.sha)
-
-        if(lockExists) {
-            // TODO: DON'T USE DELETE AS THIS COMPLETELY REMOVES THE REPOSITORY WITHOUT MUCH WARNING
+        // TODO: Change to try and catch
+        if(lockExists[0]) {
+            // NOTICE: DON'T USE DELETE AS THIS COMPLETELY REMOVES THE REPOSITORY WITHOUT MUCH WARNING
             const unlockResponse = await this.octCtl.rest.repos.deleteFile({
                 owner: this.orgName,
                 repo: this.repoName,
                 path: lockFile,
-                branch: this.mainBranchName,
+                branch: branchName,
                 message: `Unlocking container [${containerName}]`,
                 sha: commitSha
-
             })
             return [true, `SUCCESS: Unlocked the container [${containerName}]`, unlockResponse]
         } else {
-            return [false, `FAILED: Unable to unlock the container [${containerName}]`, unlockResponse]
+            return [false, `FAILED: Unable to unlock the container [${containerName}]`, null]
         }
     }
 
+    /**
+     * @function writeObject
+     * @description Writes an object to a specified container using the GitHub API.
+     * @async
+     * @param {string} containerName - The name of the container to write the object to.
+     * @param {object} obj - The object to write to the container.
+     * @param {string} ref - The reference to use when writing the object.
+     * @returns {Promise<string>} A promise that resolves to the response from the GitHub API.
+     * @throws {Error} If an error occurs while writing the object.
+     * @memberof GitHubFunctions
+     * @todo Add a check to see if the container is locked and if so return an error.
+    */
+    async writeObject(containerName, obj, ref, mySha) {
+        // Using the github API write a file to the container
+        try {
+            const writeResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
+                owner: this.orgName,
+                repo: this.repoName,
+                path: `${containerName}/${this.objectFiles[containerName]}`,
+                message: `Create object [${this.objectFiles[containerName]}]`,
+                content: Buffer.from(JSON.stringify(obj)).toString('base64'),
+                branch: ref,
+                sha: mySha
+            })
+            // Return the write response if the write was successful or an error if not
+            return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to [${containerName}/${this.objectFiles[containerName]}]`, writeResponse]
+        } catch (err) { 
+            // Return the error
+            return [false, `ERROR: unable to write object [${obj.id}] to [${containerName}/${this.objectFiles[containerName]}]`, err]
+        }
+    }
+
+    
+    /**
+     * @function readObjects
+     * @description Reads objects from a specified container using the GitHub API.
+     * @async
+     * @param {string} containerName - The name of the container to read objects from.
+     * @returns {Promise<string>} A promise that resolves to the decoded contents of the objects.
+     * @throws {Error} If an error occurs while getting the content or parsing it.
+     * @memberof GitHubFunctions
+     */
     async readObjects(containerName) {
+        // Using the GitHub API get the contents of a file
+        try {
+            let objectContents = await this.octCtl.rest.repos.getContent({
+                owner: this.orgName,
+                repo: this.repoName,
+                ref: this.mainBranchName,
+                path: `${containerName}/${this.objectFiles[containerName]}`
+            })
 
+            // console.log(objectContents)
+
+            // Decode the contents
+            const decodedContents = Buffer.from(objectContents.data.content, 'base64').toString()
+
+            // Parse the contents
+            objectContents.mrJson = JSON.parse(decodedContents)
+
+            // Return the contents
+            return [true, `SUCCESS: read and returned [${containerName}/${this.objectFiles[containerName]}]`, objectContents]
+        } catch (err) {
+            // Return the error
+            return [false, `ERROR: unable to read [${containerName}/${this.objectFiles[containerName]}]`, err]
+        }
     }
 
-    async deleteObjects (containerName, objs) {
 
-    }
-
+    /**
+     * @function updateObject
+     * @description Reads an object from a specified container using the GitHub API.
+     * @async
+     * @param {string} containerName - The name of the container to read the object from.
+     * @param {string} objId - The id of the object to read.
+     * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
+     * @throws {Error} If an error occurs while getting the content or parsing it.
+     * @memberof GitHubFunctions
+     * @todo Add a check to see if the container is locked and if so return an error.
+     */
     async updateObject(containerName, objId, key, value) {
+        // Using the method above read the objects
+        const readResponse = await this.readObjects(containerName)
+
+        // Check to see if the read was successful
+        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
+
+        // using objId, key and value update the object
+        const updatedObj = readResponse[2][objId]
+        updatedObj[key] = value
+
+        // Call the method above to lock the container
+        const locked = await this.lockContainer(containerName)
+        // Check to see if the container was locked
+        if(!locked[0]) { return [true, `ERROR: Unable to lock the container`, locked] }
+
+        // Call the method above createBranchFromMain to create a new branch
+        const branchCreated = await this.createBranchFromMain()
+        // Check to see if the branch was created
+        if(!branchCreated[0]) { return [true, `ERROR: Unable to create new branch`, branchCreated] }
+
+        // Merge the objects with the updated object
+        let mergedObjects = {...readResponse[2], ...updatedObj}
+        // TODO: Test this conversion to see if it works
+        // Convert the objects to and array of objects
+        mergedObjects = Object.values(mergedObjects)
+        // Call the method above to write the object
+        const writeResponse = await this.writeObject(containerName, mergedObjects, branchCreated[2].data.ref)
+        // Check to see if the write was successful and return the error if not
+        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects.`, writeResponse] }
+
+        // Call the method above to merge the branch to main
+        const mergeResponse = await this.mergeBranchToMain(branchCreated[2].data.ref, writeResponse[2].data.commit.sha)
+        // Check to see if the merge was successful and return the error if not
+        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
+
+        // Call the method above to unlock the container
+        const unlocked = await this.unlockContainer(containerName, writeResponse[2].data.commit.sha)
+        if(!unlocked[0]) { return unlocked }
 
     }
 
+
+    /**
+     * @function createObjects
+     * @description Creates objects in a specified container using the GitHub API.
+     * @async
+     * @param {string} containerName - The name of the container to create the objects in.
+     * @param {object} objs - The objects to create in the container.
+     * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
+     * @throws {Error} If an error occurs while getting the content or parsing it.
+     * @memberof GitHubFunctions
+     * @todo Add a check to see if the container is locked and if so return an error.
+     * @todo Add a check to see if the branch was created and if not return an error.
+     * @todo Add a check to see if the read was successful and if not return an error.
+     * @todo Add a check to see if the write was successful and if not return an error.
+     * @todo Add a check to see if the merge was successful and if not return an error.
+     * @todo Add a check to see if the unlock was successful and if not return an error.
+     */
     async createObjects(containerName, objs) {
         // Lock the container
         const locked = await this.lockContainer(containerName)
         if(!locked[0]) { return locked }
         const contentSha = locked[3].data.content.sha // NOTE: This sha is needed to perform a delete
         
-        // Create a new branch
+        // Call the method above createBranchFromMain to create a new branch
+        const branchCreated = await this.createBranchFromMain()
 
+        // Check to see if the branch was created
+        if(!branchCreated[0]) { return [true, `ERROR: Unable to create new branch`, branchCreated] }
 
-        // Get existing objects
-        // Find the latest object id
-        // Add N+M to the latest object id for each new object by appending on the end
-        // Write objects
+        // Call the method above to read the objects
+        const readResponse = await this.readObjects(containerName)
+
+        // Check to see if the read was successful
+        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
+
+        // Find the highest object Id from the objects
+        let highestObjId = 0
+        for (const obj in readResponse[2]) {
+            if (obj.id > highestObjId) {
+                highestObjId = obj.id
+            }
+        }
+
+        // For the new objects add the highest object id to the id
+        for (const obj in objs) {
+            obj.id = highestObjId++
+        }
+
+        // Merge the new objects with the existing objects
+        let mergedObjects = {...readResponse[2], ...objs}
+        // TODO: Test this conversion to see if it works
+        // Convert the objects to and array of objects
+        mergedObjects = Object.values(mergedObjects)
+
+        // Write the objects to the new branch
+        const writeResponse = await this.writeObject(containerName, mergedObjects, branchCreated[2].data.ref)
+        // Check to see if the write was successful and return the error if not
+        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects.`, writeResponse] }
+
         // Merge the branch to main
+        const mergeResponse = await this.mergeBranchToMain(branchCreated[2].data.ref, writeResponse[2].data.commit.sha)
+        // Check to see if the merge was successful and return the error if not
+        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
 
         // Unlock the container
         const unlocked = await this.unlockContainer(containerName, contentSha)

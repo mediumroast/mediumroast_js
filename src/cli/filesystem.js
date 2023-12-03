@@ -47,6 +47,23 @@ class FilesystemOperators {
         }
     }
 
+
+    /**
+     * @function readJSONFile
+     * @description Safely read a JSON file
+     * @param {String} fileName - name of the file to read
+     * @returns {Array} containing the status of the read operation, status message and data read
+     */
+    readJSONFile(fileName) {
+        try {
+            const fileData = fs.readFileSync(fileName, 'utf8')
+            const jsonData = JSON.parse(fileData)
+            return [true, 'Read file [' + fileName + ']', jsonData]
+        } catch (err) {
+            return [false, 'Unable to read file [' + fileName + '] because: ' + err, null]
+        }
+    }
+
     /**
      * @function checkFilesystemObject
      * @description Check to see if a file system object exists or not
