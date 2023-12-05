@@ -69,16 +69,18 @@ class CLIOutput {
                 ])
             }
         // Study, Company and Interaction objects output
-        } else {
+        } else if (this.objectType === 'Companies') {
             table = new Table({
-                head: ['Id', 'Name', 'Description'],
-                colWidths: [5, 40, 90]
+                head: ['Name', 'Role', 'Region', 'Description'],
+                colWidths: [35, 15, 10, 70]
             })
             for (const myObj in objects) {
                 table.push([
-                    objects[myObj].id,
                     objects[myObj].name,
+                    objects[myObj].role,
+                    objects[myObj].region,
                     objects[myObj].description
+
                 ])
             }
         }

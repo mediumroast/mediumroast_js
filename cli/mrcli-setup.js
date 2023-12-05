@@ -67,7 +67,6 @@ function getEnv () {
             company_logos: "https://logo-server.mediumroast.io:7000/allicons.json?url=",
             echarts: "https://chart-server.mediumroast.io:11000",
             nominatim: 'https://nominatim.openstreetmap.org/search?addressdetails=1&q=',
-            user_agent: 'mediumroast-cli',
             working_directory: "working",
             report_output_dir: "Documents",
             theme: "coffee",
@@ -77,8 +76,8 @@ function getEnv () {
             appId: '650476',
             deviceCodeUrl: 'https://github.com/login/device/code',
             accessTokenUrl: 'https://github.com/login/oauth/access_token',
-            contentType:  'application/json',
-            grantType: 'urn:ietf:params:oauth:grant-type:device_code',
+            // contentType:  'application/json',
+            // grantType: 'urn:ietf:params:oauth:grant-type:device_code',
             clientType: 'github-app',
         }
 

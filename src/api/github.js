@@ -341,8 +341,6 @@ class GitHubFunctions {
                 path: `${containerName}/${this.objectFiles[containerName]}`
             })
 
-            // console.log(objectContents)
-
             // Decode the contents
             const decodedContents = Buffer.from(objectContents.data.content, 'base64').toString()
 

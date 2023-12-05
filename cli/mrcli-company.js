@@ -11,23 +11,22 @@
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
+import { Companies } from '../src/api/gitHubServer.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
-import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import { serverOperations } from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
 import chalk from 'chalk'
 
 // Related object type
-const objectType = 'company'
+const objectType = 'Companies'
 
 // Environmentals object
 const environment = new Environmentals(
-   '2.0',
+   '3.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -38,35 +37,21 @@ const fileSystem = new FilesystemOperators()
 
 // Create the environmental settings
 const myArgs = environment.parseCLIArgs()
-const myConfig = environment.getConfig(myArgs.conf_file)
+const myConfig = environment.readConfig(myArgs.conf_file)
 const myEnv = environment.getEnv(myArgs, myConfig)
+const accessToken = await environment.verifyAccessToken()
+const processName = 'mrcli-company'
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
 
-// S3 object
-const s3 = new s3Utilities(myEnv)
+// Construct the controller objects
+const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
+// const interactionCtl = serverReady[2].interactionCtl
+// const studyCtl = serverReady[2].studyCtl
 
-// Common server ops and also check the server
-const serverOps = new serverOperations(myEnv)
-// Checking to see if the server is ready for operations
-const serverReady = await serverOps.checkServer()
-if(serverReady[0]) {
-   console.log(
-      chalk.red.bold(
-         `No objects detected on your mediumroast.io server [${myEnv.restServer}].\n` +
-         `Perhaps you should try to run mr_setup first to create the owning company, exiting.`
-      )
-   )
-   process.exit(-1)
-}
-
-// Assign the controllers based upon the available server
-const companyCtl = serverReady[2].companyCtl
-const interactionCtl = serverReady[2].interactionCtl
-const studyCtl = serverReady[2].studyCtl
-const owningCompany = await serverOps.getOwningCompany(companyCtl)
-const sourceBucket = s3.generateBucketName(owningCompany[2])
+// TODO: We need to create a higher level abstraction for capturing the owning company
+// const owningCompany = await serverOps.getOwningCompany(companyCtl)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
@@ -163,7 +148,9 @@ if (myArgs.report) {
          */
       // Append the competitive interactions on the list and download all
          interactions = [...interactions, ...competitiveInteractions]
-         await s3.s3DownloadObjs(interactions, baseDir + '/interactions', sourceBucket)
+         // TODO: We need to rewrite the logic for obtaining the interactions as they are from GitHub
+         // await s3.s3DownloadObjs(interactions, baseDir + '/interactions', sourceBucket)
+         null
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -202,16 +189,19 @@ if (myArgs.report) {
       console.error(report_stat, -1)
       process.exit(-1)
    }
-} else if (myArgs.find_by_id) {
-   [success, stat, results] = await companyCtl.findById(myArgs.find_by_id)
+// NOTICE: For Now we won't have any ids available for companies, so we'll need to use names
+/* } else if (myArgs.find_by_id) {
+   [success, stat, results] = await companyCtl.findById(myArgs.find_by_id) */
 } else if (myArgs.find_by_name) {
    [success, stat, results] = await companyCtl.findByName(myArgs.find_by_name)
+// TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.find_by_x) {
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
    const foundObjects = await companyCtl.findByX(myKey, myValue)
    success = foundObjects[0]
    stat = foundObjects[1]
    results = foundObjects[2]
+// TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.update) {
    const myCLIObj = JSON.parse(myArgs.update)
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
@@ -222,6 +212,7 @@ if (myArgs.report) {
       console.error('ERROR (%d): Unable to update company object.', -1)
       process.exit(-1)
    }
+// TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
    // Delete an object
    const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete)
@@ -233,7 +224,6 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
-   // pass in credential, companyCtl
    const newCompany = new AddCompany(myEnv, companyCtl)
    const result = await newCompany.wizard()
    if(result[0]) {
@@ -246,8 +236,10 @@ if (myArgs.report) {
 } else if (myArgs.reset_by_type) {
    console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
    process.exit(-1)
+// TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
 } else {
    [success, stat, results] = await companyCtl.getAll()
+   results = results.mrJson
 }
 
 // Emit the output
