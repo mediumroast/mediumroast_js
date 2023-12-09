@@ -1,8 +1,8 @@
 {
   "name": "mediumroast_js",
-  "version": "0.3.27",
+  "version": "0.4.0",
   "description": "A Javascript SDK to interact with mediumroast.io including command line interfaces.",
-  "main": "src/api/mrServer.js",
+  "main": "cli/mrcli.js",
   "scripts": {
     "docs": "jsdoc -R ./README.md -c ./docs_config.json -P ./package.json ./src"
   },
@@ -60,7 +60,7 @@
     "@json2csv/plainjs": "^7.0.3",
     "adm-zip": "^0.5.9",
     "asciiart-logo": "^0.2.7",
-    "aws-sdk": "^2.1096.0",
+    "aws-sdk": "^2.1502.0",
     "axios": "^1.4.0",
     "box-plot": "^1.0.0",
     "cli-progress": "^3.11.2",
@@ -74,6 +74,7 @@
     "node-fetch": "^3.2.10",
     "node-geocoder": "^4.2.0",
     "node-macaddress": "^0.2.4",
+    "octokit": "^3.1.2",
     "open": "^9.1.0",
     "opn": "^6.0.0",
     "ora": "^6.1.2",

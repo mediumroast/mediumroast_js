@@ -9,6 +9,8 @@
  * @version 1.5.0
  */
 
+
+
 // Import required modules
 import ConfigParser from 'configparser'
 import program from 'commander'
@@ -20,6 +22,9 @@ import WizardUtils from '../src/cli/commonWizard.js'
 import {serverOperations} from '../src/cli/common.js'
 
 import * as fs from 'fs'
+
+console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
+process.exit(0)
 
 /* 
     -----------------------------------------------------------------------

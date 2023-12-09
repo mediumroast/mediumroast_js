@@ -59,6 +59,7 @@ class CLIOutput {
                 head: ['Id', 'First Name', 'Last Name', 'Roles', 'Company'],
                 colWidths: [5, 15, 15, 20, 30]
             })
+            // NOTE: In this alpha version users aren't yet operable
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].id,
@@ -69,14 +70,27 @@ class CLIOutput {
                 ])
             }
         // Study, Company and Interaction objects output
-        } else {
+        } else if (this.objectType === 'Companies') {
             table = new Table({
-                head: ['Id', 'Name', 'Description'],
-                colWidths: [5, 40, 90]
+                head: ['Name', 'Role', 'Region', 'Description'],
+                colWidths: [35, 15, 10, 70]
             })
             for (const myObj in objects) {
                 table.push([
-                    objects[myObj].id,
+                    objects[myObj].name,
+                    objects[myObj].role,
+                    objects[myObj].region,
+                    objects[myObj].description
+
+                ])
+            }
+        } else {
+            table = new Table({
+                head: ['Name', 'Description'],
+                colWidths: [35, 70]
+            })
+            for (const myObj in objects) {
+                table.push([
                     objects[myObj].name,
                     objects[myObj].description
                 ])

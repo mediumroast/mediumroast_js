@@ -9,6 +9,8 @@
  * @version 2.2.0
  */
 
+
+
 // Import required modules
 import { InteractionStandalone } from '../src/report/interactions.js'
 import AddInteraction from '../src/cli/interactionWizard.js'
@@ -21,6 +23,9 @@ import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
 import chalk from 'chalk'
+
+console.log(chalk.bold.yellow('NOTICE: This CLI is presently a work in progress and will not operate, exiting.'))
+process.exit(0)
 
 // Reset the status of objects for caffiene reprocessing
 async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
@@ -49,6 +54,7 @@ async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
       ]
    }
 }
+
 
 // Related object type
 const objectType = 'interaction'

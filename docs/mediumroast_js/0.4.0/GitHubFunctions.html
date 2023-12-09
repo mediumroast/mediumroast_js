@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> GitHubFunctions</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="AddCompany.html">AddCompany</a></li><li><a href="AddInteraction.html">AddInteraction</a></li><li><a href="ArchivePackage.html">ArchivePackage</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Auth0Auth.html">Auth0Auth</a></li><li><a href="baseObjects.html">baseObjects</a></li><li><a href="CLIOutput.html">CLIOutput</a></li><li><a href="CLIUtilities.html">CLIUtilities</a></li><li><a href="Companies.html">Companies</a></li><li><a href="CompanyDashbord.html">CompanyDashbord</a></li><li><a href="CompanySection.html">CompanySection</a></li><li><a href="CompanyStandalone.html">CompanyStandalone</a></li><li><a href="DOCXUtilities.html">DOCXUtilities</a></li><li><a href="Environmentals.html">Environmentals</a></li><li><a href="GitHubFunctions.html">GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="InteractionSection.html">InteractionSection</a></li><li><a href="InteractionStandalone.html">InteractionStandalone</a></li><li><a href="MinioUtilities.html">MinioUtilities</a></li><li><a href="mrRest.html">mrRest</a></li><li><a href="s3Utilities.html">s3Utilities</a></li><li><a href="serverOperations.html">serverOperations</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li><li><a href="Utilities.html">Utilities</a></li><li><a href="WizardUtils.html">WizardUtils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addConfigSection">addConfigSection</a></li><li><a href="global.html#addMinioUser">addMinioUser</a></li><li><a href="global.html#basicComparisonRow">basicComparisonRow</a></li><li><a href="global.html#basicRow">basicRow</a></li><li><a href="global.html#basicTopicRow">basicTopicRow</a></li><li><a href="global.html#bubbleChart">bubbleChart</a></li><li><a href="global.html#checkConfigDir">checkConfigDir</a></li><li><a href="global.html#checkFilesystemObject">checkFilesystemObject</a></li><li><a href="global.html#checkFilesystemObjectType">checkFilesystemObjectType</a></li><li><a href="global.html#checkServer">checkServer</a></li><li><a href="global.html#cleanWorkingDirs">cleanWorkingDirs</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#createRepository">createRepository</a></li><li><a href="global.html#createZIPArchive">createZIPArchive</a></li><li><a href="global.html#decodeJWT">decodeJWT</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#descriptionRow">descriptionRow</a></li><li><a href="global.html#doManual">doManual</a></li><li><a href="global.html#downloadBinary">downloadBinary</a></li><li><a href="global.html#extractZIPArchive">extractZIPArchive</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#getConfig">getConfig</a></li><li><a href="global.html#getConfigSetting">getConfigSetting</a></li><li><a href="global.html#getEnv">getEnv</a></li><li><a href="global.html#getGitHubOrg">getGitHubOrg</a></li><li><a href="global.html#getMostSimilarCompany">getMostSimilarCompany</a></li><li><a href="global.html#getObj">getObj</a></li><li><a href="global.html#getOwningCompany">getOwningCompany</a></li><li><a href="global.html#initWorkingDirs">initWorkingDirs</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#listAllFiles">listAllFiles</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#makeBookmark">makeBookmark</a></li><li><a href="global.html#makeBullet">makeBullet</a></li><li><a href="global.html#makeComparisonDOCX">makeComparisonDOCX</a></li><li><a href="global.html#makeDescriptionsDOCX">makeDescriptionsDOCX</a></li><li><a href="global.html#makeDocx">makeDocx</a></li><li><a href="global.html#makeDOCX">makeDOCX</a></li><li><a href="global.html#makeExternalHyperLink">makeExternalHyperLink</a></li><li><a href="global.html#makeFirmographicsDOCX">makeFirmographicsDOCX</a></li><li><a href="global.html#makeHeader">makeHeader</a></li><li><a href="global.html#makeHeading1">makeHeading1</a></li><li><a href="global.html#makeHeading2">makeHeading2</a></li><li><a href="global.html#makeHeading3">makeHeading3</a></li><li><a href="global.html#makeHeadingBookmark1">makeHeadingBookmark1</a></li><li><a href="global.html#makeHeadingBookmark2">makeHeadingBookmark2</a></li><li><a href="global.html#makeInternalHyperLink">makeInternalHyperLink</a></li><li><a href="global.html#makeIntro">makeIntro</a></li><li><a href="global.html#makeParagraph">makeParagraph</a></li><li><a href="global.html#makeReferencesDOCX">makeReferencesDOCX</a></li><li><a href="global.html#makeTextrun">makeTextrun</a></li><li><a href="global.html#operationOrNot">operationOrNot</a></li><li><a href="global.html#outputCLI">outputCLI</a></li><li><a href="global.html#pageBreak">pageBreak</a></li><li><a href="global.html#parseCLIArgs">parseCLIArgs</a></li><li><a href="global.html#postObj">postObj</a></li><li><a href="global.html#printLine">printLine</a></li><li><a href="global.html#rankTags">rankTags</a></li><li><a href="global.html#readConfig">readConfig</a></li><li><a href="global.html#readJSONFile">readJSONFile</a></li><li><a href="global.html#readTextFile">readTextFile</a></li><li><a href="global.html#refreshAccessToken">refreshAccessToken</a></li><li><a href="global.html#removeConfigSetting">removeConfigSetting</a></li><li><a href="global.html#rmDir">rmDir</a></li><li><a href="global.html#rmObj">rmObj</a></li><li><a href="global.html#s3ArchiveBucket">s3ArchiveBucket</a></li><li><a href="global.html#s3CreateBucket">s3CreateBucket</a></li><li><a href="global.html#s3DeleteBucket">s3DeleteBucket</a></li><li><a href="global.html#s3DownloadObjs">s3DownloadObjs</a></li><li><a href="global.html#s3UploadObjs">s3UploadObjs</a></li><li><a href="global.html#safeMakedir">safeMakedir</a></li><li><a href="global.html#saveTextFile">saveTextFile</a></li><li><a href="global.html#setFilePermissions">setFilePermissions</a></li><li><a href="global.html#splashScreen">splashScreen</a></li><li><a href="global.html#topicTable">topicTable</a></li><li><a href="global.html#updateConfigSetting">updateConfigSetting</a></li><li><a href="global.html#updateObj">updateObj</a></li><li><a href="global.html#urlRow">urlRow</a></li><li><a href="global.html#verifyAccessToken">verifyAccessToken</a></li><li><a href="global.html#wizard">wizard</a></li><li><a href="global.html#writeConfig">writeConfig</a></li><li><a href="global.html#writeReport">writeReport</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Class</p>
+                    <h1>GitHubFunctions</h1>
+                </header>
+                
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>GitHubFunctions<span class="signature">(token, org, processName)</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description"><p>Core functions needed to interact with the GitHub API for mediumroast.io.</p></div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class='vertical-section'>
+                <div class="members">
+                    <div class="member">
+                        <div class=name>
+                            <span class="tag">Constructor</span>
+                        </div>
+                        
+
+
+    
+    <h4 class="name" id="GitHubFunctions">
+        <a class="href-link" href="#GitHubFunctions">#</a>
+        
+        <span class="code-name">
+            
+                new GitHubFunctions<span class="signature">(token, org, processName)</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>token</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">String</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>the GitHub token for the mediumroast.io application</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>org</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">String</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>the GitHub organization for the mediumroast.io application</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>processName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">String</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>the name of the process that is using the GitHub API</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Evolve as the backend improves authentication and authorization</li>
+        
+            <li>Add a check to see if the repo exists and if so return an error</li>
+        
+            <li>Add a check to see if the repo is private and if not return an error</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line29">line 29</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    
+        <pre class="prettyprint"><code>const gitHubCtl = new GitHubFunctions(accessToken, myOrgName, 'mr-cli-setup')
+const createRepoResp = await gitHubCtl.createRepository()
+const createContainersResp = await gitHubCtl.createContainers()
+const createBranchResp = await gitHubCtl.createBranchFromMain()
+const mergeBranchResp = await gitHubCtl.mergeBranchToMain(createBranchResp[2].data.ref, createBranchResp[2].data.object.sha)
+const lockContainerResp = await gitHubCtl.lockContainer('Studies')
+const unlockContainerResp = await gitHubCtl.unlockContainer('Studies', lockContainerResp[2].data.commit.sha)
+const writeObjectResp = await gitHubCtl.writeObject('Studies', studies, mergeBranchResp[2].data.ref)
+const readObjectsResp = await gitHubCtl.readObjects('Studies')
+const updateObjectResp = await gitHubCtl.updateObject('Studies', '1', 'name', 'Updated Study Name')
+const createObjectsResp = await gitHubCtl.createObjects('Studies', studies)</code></pre>
+    
+
+
+
+                    </div>
+                </div>
+            </div>
+        
+    
+    </div>
+    
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <div class='vertical-section'>
+            <h1>Methods</h1>
+            <div class="members">
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".checkForLock">
+        <a class="href-link" href="#.checkForLock">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                checkForLock<span class="signature">(containerName)</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Checks to see if a container is locked.</p>
+    
+    
+    <div class="description">
+        <p>Checks to see if a container is locked.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to check for a lock.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Add a check to see if the lock file is older than 24 hours and if so delete it.</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line186">line 186</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the latest commit or the contents of the container.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".createBranchFromMain">
+        <a class="href-link" href="#.createBranchFromMain">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                createBranchFromMain<span class="signature">()</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Creates a new branch from the main branch.</p>
+    
+    
+    <div class="description">
+        <p>Creates a new branch from the main branch.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line105">line 105</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the main branch reference or creating the new branch.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".createObjects">
+        <a class="href-link" href="#.createObjects">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                createObjects<span class="signature">(containerName, objs)</span><span class="type-signature"> &rarr; {Promise.&lt;string>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Creates objects in a specified container using the GitHub API.</p>
+    
+    
+    <div class="description">
+        <p>Creates objects in a specified container using the GitHub API.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to create the objects in.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>objs</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">object</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The objects to create in the container.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line413">line 413</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the content or parsing it.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>A promise that resolves to the decoded contents of the object.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type">Promise.&lt;string></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".lockContainer">
+        <a class="href-link" href="#.lockContainer">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                lockContainer<span class="signature">(containerName)</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Locks a container by creating a lock file in the container.</p>
+    
+    
+    <div class="description">
+        <p>Locks a container by creating a lock file in the container.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to lock.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line223">line 223</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the latest commit or creating the lock file.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".mergeBranchToMain">
+        <a class="href-link" href="#.mergeBranchToMain">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                mergeBranchToMain<span class="signature">(branchName, mySha, commitDescription<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Merges a specified branch into the main branch by creating a pull request.</p>
+    
+    
+    <div class="description">
+        <p>Merges a specified branch into the main branch by creating a pull request.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>branchName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>The name of the branch to merge into main.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>mySha</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>The SHA of the commit to use as the head of the pull request.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>commitDescription</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+          &lt;optional><br>
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+          'Performed CRUD operation on objects.'
+      
+      </td>
+  
+
+  <td class="description last"><p>The description of the commit.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line139">line 139</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while creating the branch or the pull request.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".readObjects">
+        <a class="href-link" href="#.readObjects">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                readObjects<span class="signature">(containerName)</span><span class="type-signature"> &rarr; {Promise.&lt;string>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Reads objects from a specified container using the GitHub API.</p>
+    
+    
+    <div class="description">
+        <p>Reads objects from a specified container using the GitHub API.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to read objects from.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line325">line 325</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the content or parsing it.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>A promise that resolves to the decoded contents of the objects.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type">Promise.&lt;string></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".unlockContainer">
+        <a class="href-link" href="#.unlockContainer">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                unlockContainer<span class="signature">(containerName, commitSha)</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Unlocks a container by deleting the lock file in the container.</p>
+    
+    
+    <div class="description">
+        <p>Unlocks a container by deleting the lock file in the container.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to unlock.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>commitSha</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The SHA of the commit to use as the head of the pull request.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line260">line 260</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the latest commit or deleting the lock file.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".updateObject">
+        <a class="href-link" href="#.updateObject">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                updateObject<span class="signature">(containerName, objId)</span><span class="type-signature"> &rarr; {Promise.&lt;string>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Reads an object from a specified container using the GitHub API.</p>
+    
+    
+    <div class="description">
+        <p>Reads an object from a specified container using the GitHub API.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to read the object from.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>objId</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The id of the object to read.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Add a check to see if the container is locked and if so return an error.</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line359">line 359</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while getting the content or parsing it.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>A promise that resolves to the decoded contents of the object.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type">Promise.&lt;string></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id=".writeObject">
+        <a class="href-link" href="#.writeObject">#</a>
+        
+            
+                <span class='tag'>async</span>
+            
+                <span class='tag'>static</span>
+            
+        
+        <span class="code-name">
+            
+                writeObject<span class="signature">(containerName, obj, ref)</span><span class="type-signature"> &rarr; {Promise.&lt;string>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    <p class="summary">Writes an object to a specified container using the GitHub API.</p>
+    
+    
+    <div class="description">
+        <p>Writes an object to a specified container using the GitHub API.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>containerName</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The name of the container to write the object to.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>obj</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">object</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The object to write to the container.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>ref</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>The reference to use when writing the object.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Add a check to see if the container is locked and if so return an error.</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="api_github.js.html" class="button">View Source</a>
+            <span>
+                <a href="api_github.js.html">api/github.js</a>, <a href="api_github.js.html#line292">line 292</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Throws:</label></div>
+        <div class="column is-10">
+            
+                    
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>If an error occurs while writing the object.</p></div>
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+<code class="param-type">Error</code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>A promise that resolves to the response from the GitHub API.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type">Promise.&lt;string></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+            </div>
+        </div>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>
