@@ -78,7 +78,6 @@ class WizardUtils {
             altMessage ?
                 myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`:
                 myMessage = `What\'s the ${prototype[setting].consoleString}?`
-                
 
             await inquirer
                 .prompt([

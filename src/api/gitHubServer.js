@@ -8,7 +8,8 @@
  */
 
 // Import required modules
-import GitHubFunctions from "./github.js"
+import GitHubFunctions from './github.js'
+import { createHash } from 'crypto'
 
 
 class baseObjects {
@@ -85,14 +86,11 @@ class baseObjects {
      * @async
      * @function createObj
      * @description Create objects in the mediumroast.io application
-     * @param {Object} obj - the object to create in the backend
-     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @param {Array} objs - the objects to create in the backend
      * @returns {Array} the results from the called function mrRest class
-     * @todo reimplement for GitHub
      */
-    async createObj(obj, endpoint='register') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return this.rest.postObj(fullEndpoint, obj)
+    async createObj(objs) {
+        return this.serverCtl.createObjects(this.objType, objs)
     }
     
     /**
@@ -121,16 +119,35 @@ class baseObjects {
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
         return this.rest.deleteObj(fullEndpoint, {"id": id}) 
     }
+
+    /**
+     * @async
+     * @function linkObj
+     * @description Link objects in the mediumroast.io application
+     * @param {Array} objs - the objects to link in the backend
+     * @returns {Array} the results from the called function mrRest class
+    */
+    linkObj(objs) {
+        let linkedObjs = {}
+        for(const obj in objs) {
+            const objName = objs[obj].name
+            const sha256Hash = createHash('sha256').update(objName).digest('hex')
+            linkedObjs[objName] = sha256Hash
+        }
+        return linkedObjs
+    }
 }
 
 class Studies extends baseObjects {
     /**
      * @constructor
      * @classdesc A subclass of baseObjects that construct the study objects
-     * @param {Object} credential - the credential object returned from Auth.login()
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
      */
-    constructor (credential) {
-        super(credential, 'studies')
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Studies')
     }
 }
 
@@ -152,10 +169,12 @@ class Interactions extends baseObjects {
     /**
      * @constructor
      * @classdesc A subclass of baseObjects that construct the interaction objects
-     * @param {Object} credential - the credential object returned from Auth.login()
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
      */
-    constructor (credential) {
-        super(credential, 'interactions')
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Companies')
     }
 }
 

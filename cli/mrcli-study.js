@@ -4,87 +4,68 @@
  * A CLI utility used for accessing and reporting on mediumroast.io study objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file study.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @verstion 2.0.0
+ * @verstion 3.0.0
  */
 
-// TODO: This needs to be reimplemented using the right structure as the other CLIs
-console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
-process.exit(0)
 
 // Import required modules
-import { Auth, Studies } from '../src/api/mrServer.js'
-import { Utilities } from '../src/helpers.js'
-import { CLIUtilities } from '../src/cli.js'
+import { Studies } from '../src/api/gitHubServer.js'
+// NOTE: When we have a study wizard, we will need to import it here
+// import AddStudy from '../src/cli/studyWizard.js'
+import Environmentals from '../src/cli/env.js'
+import CLIOutput from '../src/cli/output.js'
 
 // Globals
 const objectType = 'Studies'
 
 // Construct the CLI object
-const myCLI = new CLIUtilities (
-   '2.0',
-   'study',
-   'Command line interface for mediumroast.io Study objects.',
+const environment = new Environmentals (
+   '3.0',
+   `${objectType}`,
+   `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
 )
 
-// Construct the utilities object
-const utils = new Utilities(objectType)
-
 // Create the environmental settings
-const myArgs = myCLI.parseCLIArgs()
-const myConfig = myCLI.getConfig(myArgs.conf_file)
-const myEnv = myCLI.getEnv(myArgs, myConfig)
+const myArgs = environment.parseCLIArgs()
+const myConfig = environment.readConfig(myArgs.conf_file)
+const myEnv = environment.getEnv(myArgs, myConfig)
+const accessToken = await environment.verifyAccessToken()
+const processName = 'mrcli-study'
 
-// Generate the credential & construct the API Controller
-const myAuth = new Auth(
-   myEnv.restServer,
-   myEnv.apiKey,
-   myEnv.user,
-   myEnv.secret
-)
-const myCredential = myAuth.login()
-const apiController = new Studies(myCredential)
+// Output object
+const output = new CLIOutput(myEnv, objectType)
+
+// Construct the controller objects
+const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
 
 // Process the cli options
 if (myArgs.find_by_id) {
-   [success, stat, results] = await apiController.findById(myArgs.find_by_id)
+   console.error('ERROR (%d): Find by id not implemented.', -1)
+   process.exit(-1)
 } else if (myArgs.find_by_name) {
-   [success, stat, results] = await apiController.findByName(myArgs.find_by_name)
+   [success, stat, results] = await studyCtl.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
    const myCLIObj = JSON.parse(myArgs.find_by_x)
    const toFind = Object.entries(myCLIObj)[0]
-   [success, stat, results] = await apiController.findByX(toFind[0], toFind[1])
+   [success, stat, results] = await studyCtl.findByX(toFind[0], toFind[1])
 } else if (myArgs.create) {
-   const [success, msg, rawData] = myCLI.readTextFile(myArgs.create)
-   if (success) {
-      const jsonData = JSON.parse(rawData)
-      const toRegister = jsonData.map(async element => {
-         const [success, stat, resp] = await apiController.createObj(element)
-         if (await stat.status_code == 200) {
-            console.log(`SUCCESS: Created new [${objectType}] object in the mediumroast.io backend.`)
-         } else {
-            console.error('ERROR (%d): ' + stat.status_msg, stat.status_code)
-         }
-      })
-      const registered = await Promise.all(toRegister)
-      console.log(`SUCCESS: Loaded [${jsonData.length}] objects from file [${myArgs.create}].`)
-      process.exit(0)
-   } else {
-      console.error("ERROR (%d): " + msg, -1)
-      process.exit(-1)
-   }
-} else if (myArgs.delete) {
-   console.error('ERROR (%d): Delete not implemented on the backend.', -1)
+   console.error('ERROR (%d): Create not yet implemented.', -1)
    process.exit(-1)
-   //results = await apiController.delete(myArgs.delete)
+   //results = await studyCtl.delete(myArgs.delete)
+} else if (myArgs.delete) {
+   console.error('ERROR (%d): Delete not implemented.', -1)
+   process.exit(-1)
+   //results = await studyCtl.delete(myArgs.delete)
 } else {
-   [success, stat, results] = await apiController.getAll()
+   [success, stat, results] = await studyCtl.getAll()
+   results = results.mrJson
 }
 
 // Emit the output
-myCLI.outputCLI(myArgs.output, results, myEnv, objectType)
+output.outputCLI(results, myArgs.output)

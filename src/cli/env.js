@@ -294,7 +294,7 @@ class Environmentals {
      * @description Verify the access token is valid and if not get a new one
      * @todo there is a bug in the persistence of the expiresAt value in the config file
      */
-    async verifyAccessToken () {
+    async verifyAccessToken (fromSetup=false) {
         // Get configuration information from the config file
         const configFile = this.checkConfigDir()
         let env = this.readConfig(configFile)
@@ -305,11 +305,17 @@ class Environmentals {
         // Define needed variables to housekeep the accessToken and the config file
         let accessToken = env.get('GitHub', 'token')
         let updateConfig = false
+        let deviceCode
+        let expiresAt
 
         // Check to see if the GitHub section is available
         if (env.hasSection('GitHub')) {
-            // Convert the access and refresh token expirations into Date objects
-            const accessExpiry = new Date(env.get('GitHub', 'expiresAt'))
+            // Check to see if the expiration date is available
+            env.hasKey('GitHub', 'expiresAt') ? expiresAt = env.get('GitHub', 'expiresAt') : expiresAt = 0
+
+            // Convert the access token expirations into Date objects
+            let accessExpiry 
+            expiresAt === 'undefined' ? accessExpiry = 0 : accessExpiry = new Date(expiresAt)
             const now = new Date()
         
             // Check to see if the access token is valid
@@ -324,6 +330,9 @@ class Environmentals {
                 env = this.updateConfigSetting(env[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
                 updateConfig = true
                 env = env[1]
+                accessToken = accessToken.token
+                expiresAt = accessToken.expiresAt
+                deviceCode = accessToken.deviceCode
             }
         } else {
             // Section GitHub not available perform complete authorization flow
@@ -333,16 +342,18 @@ class Environmentals {
             env = this.addConfigSection(env, 'GitHub', accessToken)
             env = this.removeConfigSetting(env[1], 'GitHub', 'contentType')
             env = this.removeConfigSetting(env[1], 'GitHub', 'grantType')
-            env = this.removeConfigSetting(env[1], 'GitHub', 'clientType')
             updateConfig = true
             env = env[1]
         }
 
         // Save the config file if needed
         if (updateConfig) {
-            env.write(configFile)
+            await env.write(configFile)
         }
 
+        if (fromSetup) {
+            return {token: accessToken, expiry: expiresAt ,device: deviceCode}
+        }
         return accessToken
     }
 }

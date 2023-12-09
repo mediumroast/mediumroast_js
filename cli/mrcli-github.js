@@ -95,17 +95,17 @@ const containerName = 'Companies'
 
 const wizardUtils = new WizardUtils('all')
 
-// gitHubResp = await gitHubCtl.checkForLock(containerName)
-// if(gitHubResp[0]) {
-//     console.log(`The ${containerName} container is locked, please remove the lock and try again.`)
-//     process.exit(1)
-// }
+gitHubResp = await gitHubCtl.checkForLock(containerName)
+if(gitHubResp[0]) {
+    console.log(`The ${containerName} container is locked, please remove the lock and try again.`)
+    process.exit(1)
+}
 
 
-// gitHubResp = await gitHubCtl.lockContainer(containerName)
-// console.log(gitHubResp[2].data)
-// // Save the sha for the unlock
-// const lockSha = gitHubResp[2].data.content.sha
+gitHubResp = await gitHubCtl.lockContainer(containerName)
+console.log(gitHubResp[2].data)
+// Save the sha for the unlock
+const lockSha = gitHubResp[2].data.content.sha
 
 // doSetup = await wizardUtils.operationOrNot(
 //     `Did the lock occur?`

@@ -217,12 +217,12 @@ class Auth0Auth {
 }
 
 class GitHubAuth {
-    async getAccessToken(env) {
+    async getAccessToken(env, clientType='github-app') {
 
         // Construct the oAuth device flow object which starts the browser
         let deviceCode // Provide a place for the device code to be captured
         const deviceauth = octoDevAuth.createOAuthDeviceAuth({
-            clientType: env.clientType,
+            clientType: clientType,
             clientId: env.clientId,
             onVerification(verifier) {
                 deviceCode = verifier.device_code
@@ -237,6 +237,12 @@ class GitHubAuth {
 
         // Call GitHub to obtain the token
         let accessToken = await deviceauth({type: 'oauth'})
+
+        // NOTE: The token is not returned with the expires_in and expires_at fields, this is a workaround
+        let now = new Date()
+        now.setHours(now.getHours() + 8)
+        accessToken.expiresAt = now.toUTCString()
+        // Add the device code to the accessToken object
         accessToken.deviceCode = deviceCode
         return accessToken
     }

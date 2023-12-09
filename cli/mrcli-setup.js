@@ -19,15 +19,14 @@ import demoEulaText from '../src/cli/demoEula.js'
 import installText from '../src/cli/installInstructions.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 
-
 import program from 'commander'
 import chalk from 'chalk'
 import ConfigParser from 'configparser'
 import inquirer from "inquirer"
 
-
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
+import  { Studies, Companies, Interactions } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
 import Table from 'cli-table'
 
@@ -74,13 +73,7 @@ function getEnv () {
         GitHub: {
             clientId:'Iv1.f5c0a4eb1f0606f8',
             appId: '650476',
-            deviceCodeUrl: 'https://github.com/login/device/code',
-            accessTokenUrl: 'https://github.com/login/oauth/access_token',
-            // contentType:  'application/json',
-            // grantType: 'urn:ietf:params:oauth:grant-type:device_code',
-            clientType: 'github-app',
         }
-
     }
 }
 
@@ -100,6 +93,7 @@ async function simplePrompt(message) {
     return myObj.data
 }
 
+// TODO: Move to output.js
 function printOrgTable(gitHubOrg) {
     const table = new Table({
         head: ['Id', 'Name', 'GitHub Url', 'Description'],
@@ -207,8 +201,6 @@ let myConfig = {
 myConfig.DEFAULT = myEnv.DEFAULT
 myConfig.GitHub = myEnv.GitHub
 
-
-
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
 const wizardUtils = new WizardUtils('all')
@@ -257,15 +249,23 @@ cliOutput.printLine()
 /* ----------------------------------------- */
 /* ---- Begin device flow authorization ---- */
 
-// Obtain the access token
-const accessToken = await githubAuth.getAccessToken(myConfig.GitHub)
+// If the GitHub section exists in the config file then we can skip the device flow authorization
+let accessToken
+if(configExists[0]) {
+    accessToken = await environment.verifyAccessToken(true)
+    myConfig.GitHub.token = accessToken.token
+    myConfig.GitHub.expiresAt = accessToken.expiry
+    myConfig.GitHub.deviceCode = accessToken.device
+} else {
+    // Obtain the access token
+    accessToken = await githubAuth.getAccessToken(myConfig.GitHub)
+    // Pull in only necessary settings from the access token
+    myConfig.GitHub.token = accessToken.token
+    myConfig.GitHub.expiresAt = accessToken.expiresAt
+    myConfig.GitHub.deviceCode = accessToken.deviceCode
+    cliOutput.printLine()
+}
 
-// Pull in only necessary settings from the access token
-myConfig.GitHub.token = accessToken.token
-myConfig.GitHub.expiresAt = accessToken.expiresAt
-myConfig.GitHub.deviceCode = accessToken.deviceCode
-
-cliOutput.printLine()
 /* ----- End device flow authorization ----- */
 /* ----------------------------------------- */
 
@@ -273,15 +273,16 @@ cliOutput.printLine()
     Below are the anticipated steps to create initial companies and the default study
 
     WORKING ON THE BELOW
-    
-
-    UNSTARTED 
     2.0 Start the company wizard for the user's company
     3.0 Start the company wizard for the first company
     4.0 Save the companies to GitHub
     5.0 Create the default study
     6.0 Save the default study to GitHub
     7.0 Link Companies <-> Default Study
+    
+
+    UNSTARTED 
+    
 
     DONE
     1.0 Prompt for the user's GitHub organization, which may be different than their company, ask to associate and store in config
@@ -304,66 +305,73 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* ----------- Save config file ------------ */
-// Prune unneeded settings
-delete myConfig.GitHub.clientType
-delete myConfig.GitHub.contentType
-delete myConfig.GitHub.grantType
+// Confirm that the configuration directory exists only if we don't already have one
+if(!configExists[0]) { 
+    const configFile = environment.checkConfigDir()
+    process.stdout.write(chalk.bold.blue(`Saving configuration to file [${configFile}] ... `))
 
-// Confirm that the configuration directory exists
-const configFile = environment.checkConfigDir()
-process.stdout.write(chalk.bold.blue(`Saving configuration to file [${configFile}] ... `))
+    // Write the config file
+    const configurator = new ConfigParser()
+    environment.writeConfig(configurator, myConfig, configFile)
 
-// Write the config file
-const configurator = new ConfigParser()
-environment.writeConfig(configurator, myConfig, configFile)
+    // Verify configuration
+    const verifyConfig = verifyConfiguration(myConfig, configFile)
+    if(verifyConfig) {
+        console.log(chalk.bold.green('Ok'))
+    } else {
+        console.log(chalk.bold.red(`Failed, configuration file written incorrectly.`))
+        process.exit(-1)
+    }
 
-// Verify configuration
-const verifyConfig = verifyConfiguration(myConfig, configFile)
-if(verifyConfig) {
-    console.log(chalk.bold.green('Ok'))
-} else {
-    console.log(chalk.bold.red(`Failed, configuration file written incorrectly.`))
-    process.exit(-1)
+    cliOutput.printLine()
 }
-
-cliOutput.printLine()
 /* --------- End save config file ---------- */
 /* ----------------------------------------- */
 
 
 /* ----------------------------------------- */
 /* --------- Create the repository --------- */
-process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
-gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
-const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
-if(repoResp[0]) {
-    console.log(chalk.bold.green('Ok'))
-} else {
-    console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
-    process.exit(-1)
-}
+// process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
+// gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
+// const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
+// if(repoResp[0]) {
+//     console.log(chalk.bold.green('Ok'))
+// } else {
+//     console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
+//     process.exit(-1)
+// }
 
-cliOutput.printLine()
+// cliOutput.printLine()
 /* --------- End create repository --------- */
 /* ----------------------------------------- */
 
 
 /* ----------------------------------------- */
 /* --------- Create the containers --------- */
-process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
-const containerResp = await gitHubCtl.createContainers()
-if(containerResp[0]) {
-    console.log(chalk.bold.green('Ok'))
-} else {
-    console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
-    process.exit(-1)
-}
+// process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
+// const containerResp = await gitHubCtl.createContainers()
+// if(containerResp[0]) {
+//     console.log(chalk.bold.green('Ok'))
+// } else {
+//     console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
+//     process.exit(-1)
+// }
 
-cliOutput.printLine()
+// cliOutput.printLine()
 /* --------- End create containers --------- */
 /* ----------------------------------------- */
 
 
+/* ----------------------------------------- */
+/* ---- Begin initial objects creation ----- */
+
+// Construct the controller objects
+const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+
+// Create needed objects
+let companies = []
+let studies = []
 
 // Create the owning company
 console.log(chalk.blue.bold('Creating your owning company...'))
@@ -371,23 +379,11 @@ myConfig.DEFAULT.company = myConfig.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(
     myConfig,
-    companyCtl, // NOTE: Company creation is commented out
+    companyCtl,
     myConfig.DEFAULT.company_dns
 )
-let owningCompany = await cWizard.wizard(true)
-// console.log(`Firmographics summary for ${owningCompany[2].name}`)
-// console.log(`\tWebsite: ${owningCompany[2].url}`)
-// console.log(`\tLogo URL: ${owningCompany[2].logo_url}`)
-// console.log(`\tIndustry: ${owningCompany[2].industry}`)
-// console.log(`\tIndustry code: ${owningCompany[2].industry_code}`)
-// console.log(`\tCompany type: ${owningCompany[2].company_type}`)
-// console.log(`\tRegion: ${owningCompany[2].region}`)
-// console.log(`\tRole: ${owningCompany[2].role}`)
-// console.log(`\tLongitude: ${owningCompany[2].longitude}`)
-// console.log(`\tLatitude: ${owningCompany[2].latitude}`)
-// console.log(`\tMaps URL: ${owningCompany[2].google_maps_url}`)
-
-
+const owningCompanyResp = await cWizard.wizard(true, false)
+let owningCompany = owningCompanyResp[2]
 
 // Create the first company
 // Reset company user name to user name set in the company wizard
@@ -398,43 +394,77 @@ const firstComp = new AddCompany(
     myConfig.DEFAULT.company_dns
 )
 console.log(chalk.blue.bold('Creating the first company ...'))
-let firstCompanyResp = await firstComp.wizard(false, myConfig.DEFAULT.live)
-const firstCompany = firstCompanyResp[1].data
-cliOutput.printLine()
+let firstCompanyResp = await firstComp.wizard(false, false)
+const firstCompany = firstCompanyResp[2]
+const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
 
 // Create a default study for interactions and companies to use
 console.log(chalk.blue.bold(`Adding default study ...`))
-const myStudy = {
+let myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',
     public: false,
     groups: 'default:default',
-    document: {}
+    document: {},
+    linked_companies: linkedCompanies,
+    linked_interactions: {}
 }
+
+// Assign the study to the studies array
+studies = [myStudy]
+
+// Obtain the link object for studies
+const linkedStudies = studyCtl.linkObj(studies)
+
+// Link the study to the companies
+owningCompany.linked_studies = linkedStudies
+firstCompany.linked_studies = linkedStudies
+companies = [owningCompany, firstCompany]
+
+// Save the companies to GitHub
+process.stdout.write(chalk.blue.bold(`Saving companies to GitHub ...`))
+const companyResp = await companyCtl.createObj(companies)
+// If the company creation failed then exit
+if(!companyResp[0]) {
+    console.log(chalk.red.bold(`Failed to create companies, exiting with: [${companyResp[1]}], you may need to clean up the repo.`))
+    process.exit(-1)
+} else {
+    console.log(chalk.bold.green('OK'))
+}
+
+// Save the default study to GitHub
+process.stdout.write(chalk.blue.bold(`Saving default study to GitHub ...`))
+const studyResp = await studyCtl.createObj(studies)
+// If the study creation failed then exit
+if(!studyResp[0]) {
+    console.log(chalk.red.bold(`Failed to create study, exiting with: [${studyResp[1]}], you may need to clean up the repo.`))
+    process.exit(-1)
+} else {
+    console.log(chalk.bold.green('OK'))
+}
+
 // const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
-
-// TODO perform linkages between company and study objects
-// cliOutput.printLine()
-
+/* ------ End initial objects creation ----- */
+/* ----------------------------------------- */
 
 // List all created objects to the console
-// console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
-// console.log(chalk.blue.bold(`Default study:`))
-// const myStudies = await studyCtl.getAll()
-// cliOutput.outputCLI(myStudies[2])
-// cliOutput.printLine()
-// console.log(chalk.blue.bold(`Owning and first companies:`))
-// const myCompanies = await companyCtl.getAll()
-// cliOutput.outputCLI(myCompanies[2])
-// cliOutput.printLine()
+let results
 
-// TEMP save objects to /tmp/<object_name>.json
-const fsOps = new FilesystemOperators()
-console.log(chalk.blue.bold(`Saving user and company information to /tmp...`))
-fsOps.saveTextFile(`/tmp/user.json`, JSON.stringify(myUser))
-fsOps.saveTextFile(`/tmp/owning_company.json`, JSON.stringify(owningCompany[2]))
-fsOps.saveTextFile(`/tmp/first_company.json`, JSON.stringify(firstCompany))
+// Studies output
+console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
+cliOutput.printLine()
+console.log(chalk.blue.bold(`Default study:`))
+results = await studyCtl.getAll()
+cliOutput.outputCLI(results[2].mrJson)
+cliOutput.printLine()
+
+// Companies output
+console.log(chalk.blue.bold(`Owning and first companies:`))
+cliOutput.printLine()
+results = await companyCtl.getAll()
+cliOutput.outputCLI(results[2].mrJson)
+cliOutput.printLine()
 cliOutput.printLine()
 
 // Print out the next steps

@@ -59,6 +59,7 @@ class CLIOutput {
                 head: ['Id', 'First Name', 'Last Name', 'Roles', 'Company'],
                 colWidths: [5, 15, 15, 20, 30]
             })
+            // NOTE: In this alpha version users aren't yet operable
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].id,
@@ -81,6 +82,17 @@ class CLIOutput {
                     objects[myObj].region,
                     objects[myObj].description
 
+                ])
+            }
+        } else {
+            table = new Table({
+                head: ['Name', 'Description'],
+                colWidths: [35, 70]
+            })
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].name,
+                    objects[myObj].description
                 ])
             }
         }

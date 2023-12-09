@@ -419,66 +419,53 @@ class GitHubFunctions {
      * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
      * @throws {Error} If an error occurs while getting the content or parsing it.
      * @memberof GitHubFunctions
-     * @todo Add a check to see if the container is locked and if so return an error.
-     * @todo Add a check to see if the branch was created and if not return an error.
-     * @todo Add a check to see if the read was successful and if not return an error.
-     * @todo Add a check to see if the write was successful and if not return an error.
-     * @todo Add a check to see if the merge was successful and if not return an error.
-     * @todo Add a check to see if the unlock was successful and if not return an error.
      */
     async createObjects(containerName, objs) {
+        // Call the method above to check for a lock
+        const lockExists = await this.checkForLock(containerName)
+        // If the lock exists return an error
+        if(lockExists[0]) { return [false, `ERROR: The container [${containerName}] is locked unable to create objects.`] }
+
+
         // Lock the container
         const locked = await this.lockContainer(containerName)
-        if(!locked[0]) { return locked }
-        const contentSha = locked[3].data.content.sha // NOTE: This sha is needed to perform a delete
+        // Check to see if the container was locked and return the error if not
+        if(!locked[0]) { return [false, `ERROR: Unable to lock [${containerName}] cannot create new objects.`, locked] }
+        const lockSha = locked[2].data.content.sha
         
         // Call the method above createBranchFromMain to create a new branch
         const branchCreated = await this.createBranchFromMain()
-
         // Check to see if the branch was created
-        if(!branchCreated[0]) { return [true, `ERROR: Unable to create new branch`, branchCreated] }
+        if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
+        const branchSha = branchCreated[2].data.object.sha
+        const branchName = branchCreated[2].data.ref
 
         // Call the method above to read the objects
         const readResponse = await this.readObjects(containerName)
-
         // Check to see if the read was successful
-        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
+        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects [${containerName}/${this.objectFiles[containerName]}].`, readResponse] }
+        const objectSha = readResponse[2].data.sha
 
-        // Find the highest object Id from the objects
-        let highestObjId = 0
-        for (const obj in readResponse[2]) {
-            if (obj.id > highestObjId) {
-                highestObjId = obj.id
-            }
-        }
+        // Merge the objects with the updated object which are an array of objects
+        let mergedObjects = [...readResponse[2].mrJson, ...objs]
 
-        // For the new objects add the highest object id to the id
-        for (const obj in objs) {
-            obj.id = highestObjId++
-        }
-
-        // Merge the new objects with the existing objects
-        let mergedObjects = {...readResponse[2], ...objs}
-        // TODO: Test this conversion to see if it works
-        // Convert the objects to and array of objects
-        mergedObjects = Object.values(mergedObjects)
 
         // Write the objects to the new branch
-        const writeResponse = await this.writeObject(containerName, mergedObjects, branchCreated[2].data.ref)
+        const writeResponse = await this.writeObject(containerName, mergedObjects, branchName, objectSha)
         // Check to see if the write was successful and return the error if not
-        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects.`, writeResponse] }
+        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects to [${containerName}/${this.objectFiles[containerName]}].`, writeResponse] }
 
         // Merge the branch to main
-        const mergeResponse = await this.mergeBranchToMain(branchCreated[2].data.ref, writeResponse[2].data.commit.sha)
+        const mergeResponse = await this.mergeBranchToMain(branchName, branchSha)
         // Check to see if the merge was successful and return the error if not
         if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
 
         // Unlock the container
-        const unlocked = await this.unlockContainer(containerName, contentSha)
-        if(!unlocked[0]) { return unlocked }
+        const unlocked = await this.unlockContainer(containerName, lockSha)
+        if(!unlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${containerName}] for objects and the lock file.`, unlocked] }
         
         // Return success with number of objects written
-        return [true, null]
+        return [true, `SUCCESS: [${objs.length}] object(s) written to [${containerName}/${this.objectFiles[containerName]}].`, null]
     }
 }
 

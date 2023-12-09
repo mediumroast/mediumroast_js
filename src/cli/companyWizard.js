@@ -9,7 +9,6 @@
 
 
 // Import required modules
-import inquirer from "inquirer"
 import chalk from 'chalk'
 import ora from "ora"
 import mrRest from "../api/scaffold.js"
@@ -72,7 +71,7 @@ class AddCompany {
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
-        this.version = "version 1.1.0"
+        this.version = "version 2.0.0"
         this.description = "Prompt based company object creation for the mediumroast.io."
 
         // Class globals
@@ -209,12 +208,6 @@ class AddCompany {
         // Company role
         'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
-        // Company industry
-        // TODO given the changes in the company_dns this is no longer right need to review this
-        let myIndustry = this.defaultValue
-        'industry' in myCompany ? myIndustry = this._joinIndustry(myCompany.industry) : myIndustry = this.defaultValue
-        prototype.industry.value = myIndustry
-
         // Company website
         'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
 
@@ -232,7 +225,7 @@ class AddCompany {
         'country' in myCompany ? prototype.region.value = myCompany.region : prototype.region.value = prototype.region.value
 
         // Company region
-        'region' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
+        'region' in myCompany ? prototype.region.value = myCompany.region : prototype.region.value = prototype.region.value
 
         // Company phone
         'phone' in myCompany ? prototype.phone.value = myCompany.phone : prototype.phone.value = prototype.phone.value
@@ -276,26 +269,26 @@ class AddCompany {
             prototype.wikipedia_url.value = prototype.wikipedia_url.value
         
         // Company industry description
-        'industry' in myCompany ? prototype.industry.value = myCompany.industry : prototype.industry.value = prototype.industry.value
+        'sicDescription' in myCompany ? prototype.industry.value = myCompany.sicDescription : prototype.industry.value = prototype.industry.value
 
         // Company industry code
-        'industry_code' in myCompany ? prototype.industry_code.value = myCompany.industry_code : 
+        'sic' in myCompany ? prototype.industry_code.value = myCompany.sic : 
             prototype.industry_code.value = prototype.industry_code.value
 
         // Company industry group description
-        'industry_group_description' in myCompany ? prototype.industry_group_description.value = myCompany.industry_group_description : 
+        'industryGroupDescription' in myCompany ? prototype.industry_group_description.value = myCompany.industryGroupDescription : 
             prototype.industry_group_description.value = prototype.industry_group_description.value
 
         // Company industry group code
-        'major_group_code' in myCompany ? prototype.industry_group_code.value = myCompany.industry_group_code : 
+        'industryGroup' in myCompany ? prototype.industry_group_code.value = myCompany.industryGroup : 
             prototype.industry_group_code.value = prototype.industry_group_code.value
 
         // Company major group description
-        'major_group_description' in myCompany ? prototype.major_group_description.value = myCompany.major_group_description : 
+        'majorGroupDescription' in myCompany ? prototype.major_group_description.value = myCompany.majorGroupDescription : 
             prototype.major_group_description.value = prototype.major_group_description.value
 
         // Company major group code
-        'major_group_code' in myCompany ? prototype.major_group_code.value = myCompany.major_group_code : 
+        'majorGroup' in myCompany ? prototype.major_group_code.value = myCompany.majorGroup : 
             prototype.major_group_code.value = prototype.major_group_code.value
         
         // Company type
@@ -525,7 +518,6 @@ class AddCompany {
         if (company.company_type === 'Public') {myWhiteList = publicCompanyWhiteList}
 
         // Attempt to search company_dns, but if there is no answer then ask if try again or do manual
-        // TODO we need to prompt to try again
         let myCompanyObj = await this.redoAutomatic(company.name)
         let usedCompanyDNS = true
         
@@ -543,6 +535,9 @@ class AddCompany {
                 //      if company_dns worked or not.  This is likely the best case.
                 // TODO Need a test case documented to show if this does or doesn't work, I think this is resolved.
                 myCompanyObj = await this.wutils.doManual(prototype)
+                // Save role, region and type
+                myCompanyObj.role = company.role
+                myCompanyObj.region = company.region
             } else {
                 // Since this is not a confirmation we want to prompt for items that we only need inputs for
                 myCompanyObj = await this.wutils.doManual(
@@ -604,6 +599,9 @@ class AddCompany {
             usedCompanyDNS ?  
                 prototype = this._setPublicCompany(myCompanyObj, prototype) :
                 prototype = this._setGeneralCompany(myCompanyObj, prototype, true)
+                // Saving the role and region
+                prototype.role.value = company.role
+                prototype.region.value = company.region
         } else {
             // This is for all non-public companies
             prototype = this._setGeneralCompany(myCompanyObj, prototype)
@@ -648,6 +646,7 @@ class AddCompany {
             name: {consoleString: "name", value:this.env.DEFAULT.company},
             description: {consoleString: "description", value:this.defaultValue},
             role: {consoleString: "role (e.g. Owner, Competitor, Partner, etc.)", value:this.defaultValue},
+            region: {consoleString: "region (AMER, EMEA or APAC)", value:this.defaultValue},
             company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             industry: {consoleString: "industry description", value:this.defaultValue},
             industry_code: {consoleString: "industry code", value:this.defaultValue},
@@ -756,6 +755,10 @@ class AddCompany {
 
         // Topics
         myCompany.topics = {}
+        // Linked Companies
+        myCompany.linked_interactions = {}
+        // Linked Studies
+        myCompany.linked_studies = {}
         // Comparison
         myCompany.comparison = {}
         // Quality
@@ -766,15 +769,11 @@ class AddCompany {
             myCompany.logo_url = this.defaultValue
         console.log(chalk.green('Finished company definition.'))
 
-
+        // Either return the company object or create it
         if (createObj) {
-            // TODO we need a mode that can return a single object when there are expected to be many objects created
             console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-            // NOTE: This is temporarily commented out
             this.cutils.printLine()
-            return await this.apiController.createObj(myCompany)
-            // TODO: Change return structure to the following when we understand what is being returned
-            // return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
+            return await this.apiController.createObj([myCompany])
         } else {
             this.cutils.printLine()
             return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
