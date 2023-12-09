@@ -33,7 +33,8 @@ class AddCompany {
      * @param {Object} env - contains key items needed to interact with the mediumroast.io application
      * @param {Object} apiController - an object used to interact with the backend for companies
      * @param {String} companyDNSUrl - the url to the company DNS service
-     * @todo replace the company_DNS url with the proper item in the config file
+     * @todo There is a bug in how the initial company object is created, specifically the name of the company isn't set correctly
+     * @todo When polling for the GitHub organization check to see what other metadata could be useful like desc, website, etc.
      */
     constructor(env, apiController, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
         this.env = env

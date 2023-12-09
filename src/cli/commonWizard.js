@@ -307,7 +307,7 @@ class WizardUtils {
                 if (answer.isInstalled.trim().toUpperCase() === 'YES') {
                     bottomBar.close()
                     return true
-                // If the user doesn't type "INSTALLED" then try again
+                // If the user doesn't type "YES" then try again
                 } else {
                     bottomBar.updateBottomBar(`Type ${chalk.green('YES')} to continue, or ${chalk.red('Ctrl + C')} to exit.`);
                 }

@@ -5,8 +5,10 @@ import { GitHubAuth } from '../src/api/authorize.js'
 import GitHubFunctions from "../src/api/github.js"
 import WizardUtils from '../src/cli/commonWizard.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
+import chalk from 'chalk'
 
-
+console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
+process.exit(0)
 
     function getConfig () {
         return {

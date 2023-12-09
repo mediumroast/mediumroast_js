@@ -59,6 +59,8 @@ let [success, stat, results] = [null, null, null]
 // Process the cli options
 // TODO consider moving this out into at least a separate function to make main clean
 if (myArgs.report) {
+   console.error('ERROR (%d): Report not implemented.', -1)
+   process.exit(-1)
    // Retrive the interaction by Id
    const [comp_success, comp_stat, comp_results] = await companyCtl.findById(myArgs.report)
    // Retrive the company by Name
@@ -191,9 +193,13 @@ if (myArgs.report) {
 /* } else if (myArgs.find_by_id) {
    [success, stat, results] = await companyCtl.findById(myArgs.find_by_id) */
 } else if (myArgs.find_by_name) {
+   console.error('ERROR (%d): Find by name not implemented.', -1)
+   process.exit(-1)
    [success, stat, results] = await companyCtl.findByName(myArgs.find_by_name)
 // TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.find_by_x) {
+   console.error('ERROR (%d): Find by X not implemented.', -1)
+   process.exit(-1)
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
    const foundObjects = await companyCtl.findByX(myKey, myValue)
    success = foundObjects[0]
@@ -201,6 +207,8 @@ if (myArgs.report) {
    results = foundObjects[2]
 // TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.update) {
+   console.error('ERROR (%d): Update not implemented.', -1)
+   process.exit(-1)
    const myCLIObj = JSON.parse(myArgs.update)
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
    if(success) {
@@ -212,6 +220,8 @@ if (myArgs.report) {
    }
 // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
+   console.error('ERROR (%d): Delete not implemented.', -1)
+   process.exit(-1)
    // Delete an object
    const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete)
    if(success) {

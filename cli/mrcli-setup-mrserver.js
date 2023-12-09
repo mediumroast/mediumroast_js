@@ -9,6 +9,9 @@
  * @version 2.1.0
  */
 
+console.log(chalk.bold.yellow('NOTICE: This CLI is presently a work in progress and will not operate, exiting.'))
+process.exit(0)
+
 // Import required modules
 import { Utilities } from '../src/helpers.js'
 import { Auth, Companies, Studies } from '../src/api/mrServer.js'

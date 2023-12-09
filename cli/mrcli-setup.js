@@ -10,7 +10,6 @@
  */
 
 // Import required modules
-import { Utilities } from '../src/helpers.js'
 import CLIOutput from '../src/cli/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
@@ -29,6 +28,7 @@ import { GitHubAuth } from '../src/api/authorize.js'
 import  { Studies, Companies, Interactions } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
 import Table from 'cli-table'
+import ora from "ora"
 
 /* 
     -----------------------------------------------------------------------
@@ -91,6 +91,15 @@ async function simplePrompt(message) {
             myObj = await answer
         })
     return myObj.data
+}
+
+function printNextSteps() {
+    // Print out the next steps
+    console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
+    console.log(chalk.blue.bold(`\t1. Create and register additional companies with mrcli company --add_wizard.`))
+    console.log(chalk.blue.bold(`\t2. Register and add interactions with mrcli interaction --add_wizard.`))
+    console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic company comparisons.')
+    cliOutput.printLine()
 }
 
 // TODO: Move to output.js
@@ -204,7 +213,6 @@ myConfig.GitHub = myEnv.GitHub
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
 const wizardUtils = new WizardUtils('all')
-const utils = new Utilities("all")
 
 // Unless we suppress this print out the splash screen.
 if (myArgs.splash === 'yes') {
@@ -232,14 +240,12 @@ if(configExists[0]) {
 
 // Ask the user ensure that the installation has been performed, if not performed then exit
 const installed = await wizardUtils.doInstallInstructions(installText)
-// TODO determine if we can exit here
 cliOutput.printLine()
 
-// TODO Uncomment after we're in more of a production footing
-// // Ask the user to accept the EULA, if they do not the function will exit
-// const acceptEula = await wizardUtils.doEula(demoEulaText)
-// myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
-// cliOutput.printLine()
+// Ask the user to accept the EULA, if they do not the function will exit
+const acceptEula = await wizardUtils.doEula(demoEulaText)
+myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
+cliOutput.printLine()
 
 /* --------- End check start setup --------- */
 /* ----------------------------------------- */
@@ -269,26 +275,6 @@ if(configExists[0]) {
 /* ----- End device flow authorization ----- */
 /* ----------------------------------------- */
 
-/*
-    Below are the anticipated steps to create initial companies and the default study
-
-    WORKING ON THE BELOW
-    2.0 Start the company wizard for the user's company
-    3.0 Start the company wizard for the first company
-    4.0 Save the companies to GitHub
-    5.0 Create the default study
-    6.0 Save the default study to GitHub
-    7.0 Link Companies <-> Default Study
-    
-
-    UNSTARTED 
-    
-
-    DONE
-    1.0 Prompt for the user's GitHub organization, which may be different than their company, ask to associate and store in config
-    1.1 Create the top level repository
-    1.2 Create the top level Studies, Interactions and Companies containers
-*/
 
 /* ----------------------------------------- */
 /* ----- Begin GitHub org confirmation ----- */
@@ -300,6 +286,23 @@ myConfig.GitHub.org = gitHubCtl.orgName
 
 cliOutput.printLine()
 /* ------ End GitHub org confirmation ------ */
+/* ----------------------------------------- */
+
+
+/* ----------------------------------------- */
+/* -------- Check for prev install --------- */
+// Set the flag to false initially to indicate that we have not installed
+let prevInstall = false
+// Construct the controller objects
+const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+
+// Check to see if the company and study objects exist
+const prevInstallComp = await companyCtl.getAll()
+if(prevInstallComp[0]) {
+    prevInstall = prevInstallComp[2].mrJson.length > 0 ? true : false
+}
+/* ------- End check for prev install ------ */
 /* ----------------------------------------- */
 
 
@@ -328,36 +331,48 @@ if(!configExists[0]) {
 /* --------- End save config file ---------- */
 /* ----------------------------------------- */
 
+/* ----------------------------------------- */
+/* --------- Inform prev install ----------- */
+// If we have a previous installation then we need to exit and let the user know
+if(prevInstall) {
+    console.log(chalk.bold.yellow(`WARNING: Previous installation detected, skipping initial object creation.`))
+    printNextSteps()
+    process.exit()
+}
+/* ------- End inform prev install --------- */
+/* ----------------------------------------- */
+
+
 
 /* ----------------------------------------- */
 /* --------- Create the repository --------- */
-// process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
-// gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
-// const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
-// if(repoResp[0]) {
-//     console.log(chalk.bold.green('Ok'))
-// } else {
-//     console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
-//     process.exit(-1)
-// }
+process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
+gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
+const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
+if(repoResp[0]) {
+    console.log(chalk.bold.green('Ok'))
+} else {
+    console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
+    process.exit(-1)
+}
 
-// cliOutput.printLine()
+cliOutput.printLine()
 /* --------- End create repository --------- */
 /* ----------------------------------------- */
 
 
 /* ----------------------------------------- */
 /* --------- Create the containers --------- */
-// process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
-// const containerResp = await gitHubCtl.createContainers()
-// if(containerResp[0]) {
-//     console.log(chalk.bold.green('Ok'))
-// } else {
-//     console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
-//     process.exit(-1)
-// }
+process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
+const containerResp = await gitHubCtl.createContainers()
+if(containerResp[0]) {
+    console.log(chalk.bold.green('Ok'))
+} else {
+    console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
+    process.exit(-1)
+}
 
-// cliOutput.printLine()
+cliOutput.printLine()
 /* --------- End create containers --------- */
 /* ----------------------------------------- */
 
@@ -365,16 +380,12 @@ if(!configExists[0]) {
 /* ----------------------------------------- */
 /* ---- Begin initial objects creation ----- */
 
-// Construct the controller objects
-const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
-const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
-
 // Create needed objects
 let companies = []
 let studies = []
 
 // Create the owning company
-console.log(chalk.blue.bold('Creating your owning company...'))
+console.log(chalk.blue.bold('Creating your owning company'))
 myConfig.DEFAULT.company = myConfig.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(
@@ -399,7 +410,7 @@ const firstCompany = firstCompanyResp[2]
 const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
 
 // Create a default study for interactions and companies to use
-console.log(chalk.blue.bold(`Adding default study ...`))
+process.stdout.write(chalk.blue.bold(`Creating default study ... `))
 let myStudy = {
     name: 'Default Study',
     description: 'A placeholder study to ensure that interactions are able to have something to link to',
@@ -409,6 +420,7 @@ let myStudy = {
     linked_companies: linkedCompanies,
     linked_interactions: {}
 }
+console.log(chalk.bold.green('Ok'))
 
 // Assign the study to the studies array
 studies = [myStudy]
@@ -421,29 +433,35 @@ owningCompany.linked_studies = linkedStudies
 firstCompany.linked_studies = linkedStudies
 companies = [owningCompany, firstCompany]
 
+// Set up the spinner
+let spinner
+
 // Save the companies to GitHub
-process.stdout.write(chalk.blue.bold(`Saving companies to GitHub ...`))
-const companyResp = await companyCtl.createObj(companies)
+spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
+spinner.start() // Start the spinner
+    const companyResp = await companyCtl.createObj(companies)
+spinner.stop() // Stop the spinner
 // If the company creation failed then exit
 if(!companyResp[0]) {
     console.log(chalk.red.bold(`Failed to create companies, exiting with: [${companyResp[1]}], you may need to clean up the repo.`))
     process.exit(-1)
 } else {
-    console.log(chalk.bold.green('OK'))
+    console.log(chalk.bold.green('\tCompanies saved to GitHub.'))
 }
 
 // Save the default study to GitHub
-process.stdout.write(chalk.blue.bold(`Saving default study to GitHub ...`))
-const studyResp = await studyCtl.createObj(studies)
+spinner = ora(chalk.bold.blue('Saving study to GitHub ... '))
+spinner.start() // Start the spinner
+    const studyResp = await studyCtl.createObj(studies)
+spinner.stop() // Stop the spinner
 // If the study creation failed then exit
 if(!studyResp[0]) {
     console.log(chalk.red.bold(`Failed to create study, exiting with: [${studyResp[1]}], you may need to clean up the repo.`))
     process.exit(-1)
 } else {
-    console.log(chalk.bold.green('OK'))
+    console.log(chalk.bold.green('\tDefault study saved to GitHub.'))
 }
 
-// const studyResp = await studyCtl.createObj(myStudy)
 cliOutput.printLine()
 /* ------ End initial objects creation ----- */
 /* ----------------------------------------- */
@@ -452,7 +470,7 @@ cliOutput.printLine()
 let results
 
 // Studies output
-console.log(chalk.blue.bold(`Fetching and listing all created objects...`))
+console.log(chalk.blue.bold(`Fetching and listing all created objects`))
 cliOutput.printLine()
 console.log(chalk.blue.bold(`Default study:`))
 results = await studyCtl.getAll()
@@ -461,18 +479,13 @@ cliOutput.printLine()
 
 // Companies output
 console.log(chalk.blue.bold(`Owning and first companies:`))
-cliOutput.printLine()
 results = await companyCtl.getAll()
 cliOutput.outputCLI(results[2].mrJson)
 cliOutput.printLine()
 cliOutput.printLine()
 
 // Print out the next steps
-console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
-console.log(chalk.blue.bold(`\t1. Create and register additional companies with mrcli company --add_wizard.`))
-console.log(chalk.blue.bold(`\t2. Register and add interactions with mrcli interaction --add_wizard.`))
-console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic company comparisons.')
-cliOutput.printLine()
+printNextSteps()
 
 
 
