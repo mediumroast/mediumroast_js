@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> cli.js</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="AddCompany.html">AddCompany</a></li><li><a href="AddInteraction.html">AddInteraction</a></li><li><a href="ArchivePackage.html">ArchivePackage</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Auth0Auth.html">Auth0Auth</a></li><li><a href="baseObjects.html">baseObjects</a></li><li><a href="CLIOutput.html">CLIOutput</a></li><li><a href="CLIUtilities.html">CLIUtilities</a></li><li><a href="Companies.html">Companies</a></li><li><a href="CompanyDashbord.html">CompanyDashbord</a></li><li><a href="CompanySection.html">CompanySection</a></li><li><a href="CompanyStandalone.html">CompanyStandalone</a></li><li><a href="DOCXUtilities.html">DOCXUtilities</a></li><li><a href="Environmentals.html">Environmentals</a></li><li><a href="GitHubFunctions.html">GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="InteractionSection.html">InteractionSection</a></li><li><a href="InteractionStandalone.html">InteractionStandalone</a></li><li><a href="MinioUtilities.html">MinioUtilities</a></li><li><a href="mrRest.html">mrRest</a></li><li><a href="s3Utilities.html">s3Utilities</a></li><li><a href="serverOperations.html">serverOperations</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li><li><a href="Utilities.html">Utilities</a></li><li><a href="WizardUtils.html">WizardUtils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addConfigSection">addConfigSection</a></li><li><a href="global.html#addMinioUser">addMinioUser</a></li><li><a href="global.html#basicComparisonRow">basicComparisonRow</a></li><li><a href="global.html#basicRow">basicRow</a></li><li><a href="global.html#basicTopicRow">basicTopicRow</a></li><li><a href="global.html#bubbleChart">bubbleChart</a></li><li><a href="global.html#checkConfigDir">checkConfigDir</a></li><li><a href="global.html#checkFilesystemObject">checkFilesystemObject</a></li><li><a href="global.html#checkFilesystemObjectType">checkFilesystemObjectType</a></li><li><a href="global.html#checkServer">checkServer</a></li><li><a href="global.html#cleanWorkingDirs">cleanWorkingDirs</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#createRepository">createRepository</a></li><li><a href="global.html#createZIPArchive">createZIPArchive</a></li><li><a href="global.html#decodeJWT">decodeJWT</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#descriptionRow">descriptionRow</a></li><li><a href="global.html#doManual">doManual</a></li><li><a href="global.html#downloadBinary">downloadBinary</a></li><li><a href="global.html#extractZIPArchive">extractZIPArchive</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#getConfig">getConfig</a></li><li><a href="global.html#getConfigSetting">getConfigSetting</a></li><li><a href="global.html#getEnv">getEnv</a></li><li><a href="global.html#getGitHubOrg">getGitHubOrg</a></li><li><a href="global.html#getMostSimilarCompany">getMostSimilarCompany</a></li><li><a href="global.html#getObj">getObj</a></li><li><a href="global.html#getOwningCompany">getOwningCompany</a></li><li><a href="global.html#initWorkingDirs">initWorkingDirs</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#listAllFiles">listAllFiles</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#makeBookmark">makeBookmark</a></li><li><a href="global.html#makeBullet">makeBullet</a></li><li><a href="global.html#makeComparisonDOCX">makeComparisonDOCX</a></li><li><a href="global.html#makeDescriptionsDOCX">makeDescriptionsDOCX</a></li><li><a href="global.html#makeDocx">makeDocx</a></li><li><a href="global.html#makeDOCX">makeDOCX</a></li><li><a href="global.html#makeExternalHyperLink">makeExternalHyperLink</a></li><li><a href="global.html#makeFirmographicsDOCX">makeFirmographicsDOCX</a></li><li><a href="global.html#makeHeader">makeHeader</a></li><li><a href="global.html#makeHeading1">makeHeading1</a></li><li><a href="global.html#makeHeading2">makeHeading2</a></li><li><a href="global.html#makeHeading3">makeHeading3</a></li><li><a href="global.html#makeHeadingBookmark1">makeHeadingBookmark1</a></li><li><a href="global.html#makeHeadingBookmark2">makeHeadingBookmark2</a></li><li><a href="global.html#makeInternalHyperLink">makeInternalHyperLink</a></li><li><a href="global.html#makeIntro">makeIntro</a></li><li><a href="global.html#makeParagraph">makeParagraph</a></li><li><a href="global.html#makeReferencesDOCX">makeReferencesDOCX</a></li><li><a href="global.html#makeTextrun">makeTextrun</a></li><li><a href="global.html#operationOrNot">operationOrNot</a></li><li><a href="global.html#outputCLI">outputCLI</a></li><li><a href="global.html#pageBreak">pageBreak</a></li><li><a href="global.html#parseCLIArgs">parseCLIArgs</a></li><li><a href="global.html#postObj">postObj</a></li><li><a href="global.html#printLine">printLine</a></li><li><a href="global.html#rankTags">rankTags</a></li><li><a href="global.html#readConfig">readConfig</a></li><li><a href="global.html#readJSONFile">readJSONFile</a></li><li><a href="global.html#readTextFile">readTextFile</a></li><li><a href="global.html#refreshAccessToken">refreshAccessToken</a></li><li><a href="global.html#removeConfigSetting">removeConfigSetting</a></li><li><a href="global.html#rmDir">rmDir</a></li><li><a href="global.html#rmObj">rmObj</a></li><li><a href="global.html#s3ArchiveBucket">s3ArchiveBucket</a></li><li><a href="global.html#s3CreateBucket">s3CreateBucket</a></li><li><a href="global.html#s3DeleteBucket">s3DeleteBucket</a></li><li><a href="global.html#s3DownloadObjs">s3DownloadObjs</a></li><li><a href="global.html#s3UploadObjs">s3UploadObjs</a></li><li><a href="global.html#safeMakedir">safeMakedir</a></li><li><a href="global.html#saveTextFile">saveTextFile</a></li><li><a href="global.html#setFilePermissions">setFilePermissions</a></li><li><a href="global.html#splashScreen">splashScreen</a></li><li><a href="global.html#topicTable">topicTable</a></li><li><a href="global.html#updateConfigSetting">updateConfigSetting</a></li><li><a href="global.html#updateObj">updateObj</a></li><li><a href="global.html#urlRow">urlRow</a></li><li><a href="global.html#verifyAccessToken">verifyAccessToken</a></li><li><a href="global.html#wizard">wizard</a></li><li><a href="global.html#writeConfig">writeConfig</a></li><li><a href="global.html#writeReport">writeReport</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>cli.js</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * A class used to build CLIs for accessing and reporting on mediumroast.io objects
+ * @author Michael Hay &lt;michael.hay@mediumroast.io>
+ * @file cli.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
+// Import required modules
+import program from 'commander'
+import ConfigParser from 'configparser'
+import Table from 'cli-table'
+import Parser from 'json2csv'
+import * as XLSX from 'xlsx'
+import logo from 'asciiart-logo'
+import { Utilities } from './helpers.js'
+
+
+class CLIUtilities {
+    /**
+     * A class to create consistent CLI operations for mediumroast.io objects like
+     * interactions, studies, companies and users.  The functions within help with environmental
+     * settings, command line switches and output formatting.
+     * @constructor
+     * @classdesc Construct a CLI object with key parameters
+     * @param {String} version - the version for the CLI
+     * @param {String} name - name for the CLI
+     * @param {String} description - a description for the CLI
+     * @param {String} objectType - the type of objects the CLI manages
+     */
+    constructor(version, name, description, objectType) {
+        this.version = version
+        this.name = name
+        this.description = description
+        this.objectType = objectType
+        this.utils = new Utilities(objectType)
+    }
+
+    /**
+     * @function parseCLIArgs
+     * @description Consistently parse the CLI for options and switches
+     * @returns {Object} - an object containing all CLI options and switches
+     */
+    parseCLIArgs() {
+        // Define commandline options
+        program
+            .name(this.name)
+            .version(this.version)
+            .description(this.description)
+
+        program
+            // System command line switches
+            .requiredOption(
+                '-c --conf_file &lt;file>',
+                'Path to the configuration file',
+                process.env.HOME + '/.mediumroast/config.ini'
+            )
+            .option(
+                '-r --rest_server &lt;http://server:port>',
+                'The URL of the target mediumroast.io server'
+            )
+            .option(
+                '-a --api_key &lt;key>',
+                'The API key needed to talk to the mediumroast.io server'
+            )
+            .option(
+                '-u --user &lt;user name>',
+                'Your user name for the mediumroast.io server'
+            )
+            .option(
+                '-s --secret &lt;user secret or password>',
+                'Your user secret or password for the mediumroast.io server'
+            )
+            .option(
+                '-o --output &lt;choose the output type to emit>',
+                'Select output type: table, json, xls or csv. xls &amp; csv will save to a file.',
+                'table',
+                'json',
+                'xls',
+                'csv'
+            )
+            .option(
+                '-s --splash &lt;yes | no>',
+                'Whether or not to include the splash screen at startup.',
+                'yes',
+                'no'
+            )
+
+            // Operational command line switches
+            .option(
+                '--find_by_name &lt;name>',
+                'Find an individual Interaction by name'
+            )
+            .option(
+                '--find_by_id &lt;ID>',
+                'Find an individual Interaction by ID'
+            )
+            .option(
+                '--find_by_x &lt;JSON>',
+                'Find object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
+            )
+            .option(
+                '--create &lt;file.json>',
+                'Add objects to the backend by specifying a JSON file'
+            )
+            .option(
+                '--update &lt;JSON>',
+                'Update an object from the backend by specifying the object\'s id and value to update in JSON'
+            )
+            .option(
+                '--delete &lt;ID>',
+                'Delete an object from the backend by specifying the object\'s id'
+            )
+            .option(
+                '--report &lt;ID>',
+                'Create an MS word document for an object by specifying the object\'s id'
+            )
+            .option(
+                '--package',
+                'An additional switch used with --report to generate a ZIP package that includes the interaction'
+            )
+            .option(
+                '--add_wizard',
+                `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
+            )
+
+            // Ending arguments
+            // .argument(
+            //     '[string]',
+            //     'A fully qualified path to the resource in file system to include, exclusively used for interactions'
+            // )
+
+        program.parse(process.argv)
+        return program.opts()//, program.args
+    }
+
+    /**
+     * @function getConfig
+     * @description Using the confFile argument read, parse and return the contents of a configuration file
+     * @param {String} confFile - a fully qualified path to the configuration file
+     * @returns {Object} The object containing the parsed configuration file results
+     */
+    getConfig(confFile) {
+        const config = new ConfigParser()
+        config.read(confFile)
+        return config
+    }
+
+
+    /**
+     * @function getEnv
+     * @description With the CLI arguments as the priority create an environmentals object to be used in the CLI
+     * @param {Object} cliArgs - should contain the results of parseCLIArgs() above
+     * @param {Object} config - should contain the results of getConfig() above
+     * @returns {Object} after merging cliArgs and config an Object containing the final environmental settings 
+     */
+    getEnv(cliArgs, config) {
+        let env = {
+            "restServer": null,
+            "apiKey": null,
+            "user": null,
+            "secret": null,
+            "workDir": null,
+            "outputDir": null,
+            "s3Server": null,
+            "s3User": null,
+            "s3APIKey": null,
+            "s3Region": null,
+            "s3Source": null,
+            "splash": null
+        }
+
+        // With the cli options as the priority set up the environment for the cli
+        cliArgs.rest_server ? env.restServer = cliArgs.rest_server : env.restServer = config.get('DEFAULT', 'rest_server')
+        cliArgs.api_key ? env.apiKey = cliArgs.api_key : env.apiKey = config.get('DEFAULT', 'api_key')
+        cliArgs.user ? env.user = cliArgs.user : env.user = config.get('DEFAULT', 'user')
+        cliArgs.secret ? env.secret = cliArgs.secret : env.secret = config.get('DEFAULT', 'secret')
+
+        // Set up additional parameters from config file
+        env.workDir = config.get('DEFAULT', 'working_dir')
+        env.owningCompany = config.get('DEFAULT', 'owning_company')
+        env.outputDir = process.env.HOME + '/' + config.get('document_settings', 'output_dir')
+        env.s3Server = config.get('s3_settings', 'server')
+        env.s3User = config.get('s3_settings', 'user')
+        env.s3Region = config.get('s3_settings', 'region')
+        env.s3APIKey = config.get('s3_settings', 'api_key')
+        env.s3Source = config.get('s3_settings', 'source')
+
+        // Setup options with cli settings only
+        env.splash = cliArgs.splash
+
+        // Return the environmental settings needed for the CLI to operate
+        return env
+    }
+
+
+    /**
+     * @function outputCLI
+     * @description An output router enabling users to pick their output format of choice for a CLI
+     * @param  {String} outputType Type of output to produce/route to: table, json, csv, xls
+     * @param  {Object} results Data objects to be output
+     * @param  {Object} env Environmental variables from the CLI
+     * @param  {String} objType The object type: Interactions, Studies or Companies
+     */
+    outputCLI(outputType, results, env, objType) {
+        // Emit the output as per the cli options
+        if (outputType === 'table') {
+            this.outputTable(results)
+        } else if (outputType === 'json') {
+            console.dir(results)
+        } else if (outputType === 'csv') {
+            this.outputCSV(results, env)
+        } else if (outputType === 'xls') {
+            this.outputXLS(results, env, objType)
+        }
+    }
+
+    outputTable(objects) {
+        let table = new Table({
+            head: ['Id', 'Name', 'Description'],
+            colWidths: [5, 40, 90]
+        })
+
+        for (const myObj in objects) {
+            table.push([
+                objects[myObj].id,
+                objects[myObj].name,
+                objects[myObj].description
+            ])
+        }
+        console.log(table.toString())
+    }
+
+    outputCSV(objects, env) {
+        const fileName = 'Mr_' + this.objectType + '.csv'
+        const myFile = env['outputDir'] + '/' + fileName
+        const csv = Parser.parse(objects)
+        this.utils.saveTextFile(myFile, csv)
+    }
+
+    // TODO add error checking via try catch
+    outputXLS(objects, env) {
+        const fileName = 'Mr_' + this.objectType + '.xlsx'
+        const myFile = env['outputDir'] + '/' + fileName
+        const mySheet = XLSX.utils.json_to_sheet(objects)
+        const myWorkbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
+        XLSX.writeFile(myWorkbook, myFile)
+    }
+
+    /**
+     * @function splashScreen
+     * @description print a splash screen with using name as the big title, description as the subtitle and a version declaration
+     * @param {String} name Used for the big title on the splash screen.
+     * @param {String} description Forms the subtitle on the splash screen.
+     * @param {String} description Defines the version number on the splash screen.
+     */
+    splashScreen (name, description, version) {
+        const logoConfig = {
+            name: name,
+            // font: 'Speed',
+            lineChars: 10,
+            padding: 3,
+            margin: 3,
+            borderColor: 'bold-gray',
+            logoColor: 'bold-orange',
+            textColor: 'orange',
+        }
+        // Print out the splash screen
+        console.log(
+            logo(logoConfig)
+            .emptyLine()
+            .right(version)
+            .emptyLine()
+            .center(description)
+            .render()
+        )
+    }
+}
+
+export { CLIUtilities }</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>
