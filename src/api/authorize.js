@@ -2,7 +2,8 @@ import axios from "axios"
 import crypto from "node:crypto"
 import open from "open"
 import * as octoDevAuth from '@octokit/auth-oauth-device'
-import chalk from 'chalk'
+import chalk from "chalk"
+
 
 class Auth0Auth {
     /**
@@ -216,11 +217,12 @@ class Auth0Auth {
 }
 
 class GitHubAuth {
-    async getAccessToken(env) {
+    async getAccessToken(env, clientType='github-app') {
+
         // Construct the oAuth device flow object which starts the browser
         let deviceCode // Provide a place for the device code to be captured
         const deviceauth = octoDevAuth.createOAuthDeviceAuth({
-            clientType: env.clientType,
+            clientType: clientType,
             clientId: env.clientId,
             onVerification(verifier) {
                 deviceCode = verifier.device_code
@@ -235,6 +237,12 @@ class GitHubAuth {
 
         // Call GitHub to obtain the token
         let accessToken = await deviceauth({type: 'oauth'})
+
+        // NOTE: The token is not returned with the expires_in and expires_at fields, this is a workaround
+        let now = new Date()
+        now.setHours(now.getHours() + 8)
+        accessToken.expiresAt = now.toUTCString()
+        // Add the device code to the accessToken object
         accessToken.deviceCode = deviceCode
         return accessToken
     }
@@ -251,6 +259,7 @@ class GitHubAuth {
      * @returns {Array} An array with position 0 being boolean to signify sucess/failure and position 1 being token data/err string
      */
     async refreshAccessToken(clientId, refreshToken, accessTokenUrl, contentType='application/json', grantType='refresh_token'){
+        
         try {
             const resp = await axios.post(accessTokenUrl, null, {
               params: {grant_type: grantType, refresh_token: refreshToken,client_id: clientId},

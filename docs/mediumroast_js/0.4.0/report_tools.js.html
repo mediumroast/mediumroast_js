@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> report/tools.js</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="AddCompany.html">AddCompany</a></li><li><a href="AddInteraction.html">AddInteraction</a></li><li><a href="ArchivePackage.html">ArchivePackage</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Auth0Auth.html">Auth0Auth</a></li><li><a href="baseObjects.html">baseObjects</a></li><li><a href="CLIOutput.html">CLIOutput</a></li><li><a href="CLIUtilities.html">CLIUtilities</a></li><li><a href="Companies.html">Companies</a></li><li><a href="CompanyDashbord.html">CompanyDashbord</a></li><li><a href="CompanySection.html">CompanySection</a></li><li><a href="CompanyStandalone.html">CompanyStandalone</a></li><li><a href="DOCXUtilities.html">DOCXUtilities</a></li><li><a href="Environmentals.html">Environmentals</a></li><li><a href="GitHubFunctions.html">GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="InteractionSection.html">InteractionSection</a></li><li><a href="InteractionStandalone.html">InteractionStandalone</a></li><li><a href="MinioUtilities.html">MinioUtilities</a></li><li><a href="mrRest.html">mrRest</a></li><li><a href="s3Utilities.html">s3Utilities</a></li><li><a href="serverOperations.html">serverOperations</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li><li><a href="Utilities.html">Utilities</a></li><li><a href="WizardUtils.html">WizardUtils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addConfigSection">addConfigSection</a></li><li><a href="global.html#addMinioUser">addMinioUser</a></li><li><a href="global.html#basicComparisonRow">basicComparisonRow</a></li><li><a href="global.html#basicRow">basicRow</a></li><li><a href="global.html#basicTopicRow">basicTopicRow</a></li><li><a href="global.html#bubbleChart">bubbleChart</a></li><li><a href="global.html#checkConfigDir">checkConfigDir</a></li><li><a href="global.html#checkFilesystemObject">checkFilesystemObject</a></li><li><a href="global.html#checkFilesystemObjectType">checkFilesystemObjectType</a></li><li><a href="global.html#checkServer">checkServer</a></li><li><a href="global.html#cleanWorkingDirs">cleanWorkingDirs</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#createRepository">createRepository</a></li><li><a href="global.html#createZIPArchive">createZIPArchive</a></li><li><a href="global.html#decodeJWT">decodeJWT</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#descriptionRow">descriptionRow</a></li><li><a href="global.html#doManual">doManual</a></li><li><a href="global.html#downloadBinary">downloadBinary</a></li><li><a href="global.html#extractZIPArchive">extractZIPArchive</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#getConfig">getConfig</a></li><li><a href="global.html#getConfigSetting">getConfigSetting</a></li><li><a href="global.html#getEnv">getEnv</a></li><li><a href="global.html#getGitHubOrg">getGitHubOrg</a></li><li><a href="global.html#getMostSimilarCompany">getMostSimilarCompany</a></li><li><a href="global.html#getObj">getObj</a></li><li><a href="global.html#getOwningCompany">getOwningCompany</a></li><li><a href="global.html#initWorkingDirs">initWorkingDirs</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#listAllFiles">listAllFiles</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#makeBookmark">makeBookmark</a></li><li><a href="global.html#makeBullet">makeBullet</a></li><li><a href="global.html#makeComparisonDOCX">makeComparisonDOCX</a></li><li><a href="global.html#makeDescriptionsDOCX">makeDescriptionsDOCX</a></li><li><a href="global.html#makeDocx">makeDocx</a></li><li><a href="global.html#makeDOCX">makeDOCX</a></li><li><a href="global.html#makeExternalHyperLink">makeExternalHyperLink</a></li><li><a href="global.html#makeFirmographicsDOCX">makeFirmographicsDOCX</a></li><li><a href="global.html#makeHeader">makeHeader</a></li><li><a href="global.html#makeHeading1">makeHeading1</a></li><li><a href="global.html#makeHeading2">makeHeading2</a></li><li><a href="global.html#makeHeading3">makeHeading3</a></li><li><a href="global.html#makeHeadingBookmark1">makeHeadingBookmark1</a></li><li><a href="global.html#makeHeadingBookmark2">makeHeadingBookmark2</a></li><li><a href="global.html#makeInternalHyperLink">makeInternalHyperLink</a></li><li><a href="global.html#makeIntro">makeIntro</a></li><li><a href="global.html#makeParagraph">makeParagraph</a></li><li><a href="global.html#makeReferencesDOCX">makeReferencesDOCX</a></li><li><a href="global.html#makeTextrun">makeTextrun</a></li><li><a href="global.html#operationOrNot">operationOrNot</a></li><li><a href="global.html#outputCLI">outputCLI</a></li><li><a href="global.html#pageBreak">pageBreak</a></li><li><a href="global.html#parseCLIArgs">parseCLIArgs</a></li><li><a href="global.html#postObj">postObj</a></li><li><a href="global.html#printLine">printLine</a></li><li><a href="global.html#rankTags">rankTags</a></li><li><a href="global.html#readConfig">readConfig</a></li><li><a href="global.html#readJSONFile">readJSONFile</a></li><li><a href="global.html#readTextFile">readTextFile</a></li><li><a href="global.html#refreshAccessToken">refreshAccessToken</a></li><li><a href="global.html#removeConfigSetting">removeConfigSetting</a></li><li><a href="global.html#rmDir">rmDir</a></li><li><a href="global.html#rmObj">rmObj</a></li><li><a href="global.html#s3ArchiveBucket">s3ArchiveBucket</a></li><li><a href="global.html#s3CreateBucket">s3CreateBucket</a></li><li><a href="global.html#s3DeleteBucket">s3DeleteBucket</a></li><li><a href="global.html#s3DownloadObjs">s3DownloadObjs</a></li><li><a href="global.html#s3UploadObjs">s3UploadObjs</a></li><li><a href="global.html#safeMakedir">safeMakedir</a></li><li><a href="global.html#saveTextFile">saveTextFile</a></li><li><a href="global.html#setFilePermissions">setFilePermissions</a></li><li><a href="global.html#splashScreen">splashScreen</a></li><li><a href="global.html#topicTable">topicTable</a></li><li><a href="global.html#updateConfigSetting">updateConfigSetting</a></li><li><a href="global.html#updateObj">updateObj</a></li><li><a href="global.html#urlRow">urlRow</a></li><li><a href="global.html#verifyAccessToken">verifyAccessToken</a></li><li><a href="global.html#wizard">wizard</a></li><li><a href="global.html#writeConfig">writeConfig</a></li><li><a href="global.html#writeReport">writeReport</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>report/tools.js</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Common functions and tools used for report processing
+ * @author Michael Hay &lt;michael.hay@mediumroast.io>
+ * @file tools.js
+ * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
+import FilesystemOperators from '../cli/filesystem.js'
+
+/**
+ * @function getMostSimilarCompany 
+ * @description Find the closest competitor using the Euclidean distance
+ * @param {Object} comparisons - the comparisons from a company object
+ * @returns {Object} An array containing a section description and a table of interaction descriptions
+ */
+export function getMostSimilarCompany(comparisons, companies) {
+    // x1 = 1 and y1 = 1 because this the equivalent of comparing a company to itself
+    const x1 = 1 
+    const y1 = 1
+    let distanceToCompany = {}
+    let companyToDistance = {}
+    for(const companyId in comparisons) {
+        // Compute the distance using d = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+        const myDistance = Math.sqrt(
+                (comparisons[companyId].most_similar.score - x1) ** 2 + 
+                (comparisons[companyId].least_similar.score - y1) ** 2
+            )
+        distanceToCompany[myDistance] = companyId
+        companyToDistance[companyId] = myDistance
+    }
+    // Obtain the closest company using max, note min returns the least similar
+    const mostSimilarId = distanceToCompany[Math.max(...Object.keys(distanceToCompany))]
+    // Get the id for the most similar company
+    const mostSimilarCompany = companies.filter(company => {
+        if (parseInt(company.company.id) === parseInt(mostSimilarId)) {
+            return company
+        }
+    })
+    // Transform the strings into floats prior to return
+    const allDistances = Object.keys(distanceToCompany).map (
+        (distance) => {
+            return parseFloat(distance)
+        }
+    )
+    // return both the most similar id and all computed distanceToCompany
+    return {mostSimilarCompany: mostSimilarCompany[0], distances: allDistances, companyMap: companyToDistance}
+}
+
+
+/**
+ * @function initWorkingDirs 
+ * @description Prepare working directories for report and package creation
+ * @param {String} baseDir - full path to the directory to initialize with key working directories
+ */
+export function initWorkingDirs(baseDir) {
+    const fileSystem = new FilesystemOperators()
+    const subdirs = ['interactions', 'images']
+    for(const myDir in subdirs) {
+        fileSystem.safeMakedir(baseDir + '/' + subdirs[myDir])
+    }
+}
+
+/**
+ * @function cleanWorkingDirs 
+ * @description Clean up working directories after report and/or package creation
+ * @param {String} baseDir - full path to the directory to initialize with key working directories
+ * @returns {Array} containing the status of the rmdir operation, status message and null
+ */
+export function cleanWorkingDirs(baseDir) {
+    const fileSystem = new FilesystemOperators()
+    return fileSystem.rmDir(baseDir)
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>

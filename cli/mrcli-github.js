@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
-import { Octokit } from "octokit"
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
 import GitHubFunctions from "../src/api/github.js"
+import WizardUtils from '../src/cli/commonWizard.js'
+import FilesystemOperators from '../src/cli/filesystem.js'
+import chalk from 'chalk'
 
-
+console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
+process.exit(0)
 
     function getConfig () {
         return {
@@ -48,6 +51,7 @@ if (env.hasSection('GitHub')) {
 
     // Check to see if the access token is valid
     if (accessExpiry < now) {
+    // if (true) {
         accessToken = await githubAuth.getAccessToken(config)
         env = environment.updateConfigSetting(env, 'GitHub', 'token', accessToken.token)
         env = environment.updateConfigSetting(env[1], 'GitHub', 'expiresAt', accessToken.expiresAt)
@@ -78,16 +82,86 @@ accessToken = environment.getConfigSetting(env, 'GitHub', 'token')
 
 // Construct Octokit
 // const octokit = new Octokit({auth: accessToken[1]})
+console.clear()
 
 // Test the creation of a repository
 const myOrgName = 'mediumroast'
 // const myOrg = await octokit.rest.orgs.get({org: myOrgName})
 
 // Construct the GitHub API object
-const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName)
+const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName, 'mr-cli-setup')
 let gitHubResp
+let doSetup
 
-gitHubResp = await gitHubCtl.createContainers()
-console.log(gitHubResp[1])
+const containerName = 'Companies'
+
+const wizardUtils = new WizardUtils('all')
+
+gitHubResp = await gitHubCtl.checkForLock(containerName)
+if(gitHubResp[0]) {
+    console.log(`The ${containerName} container is locked, please remove the lock and try again.`)
+    process.exit(1)
+}
+
+
+gitHubResp = await gitHubCtl.lockContainer(containerName)
+console.log(gitHubResp[2].data)
+// Save the sha for the unlock
+const lockSha = gitHubResp[2].data.content.sha
+
+// doSetup = await wizardUtils.operationOrNot(
+//     `Did the lock occur?`
+// )
+
+// // Create a new Branch
+// gitHubResp = await gitHubCtl.createBranchFromMain()
+
+// console.log(gitHubResp[2].data)
+
+// doSetup = await wizardUtils.operationOrNot(
+//     `Did the Branch create?`
+// )
+
+// const branchName = gitHubResp[2].data.ref
+// const branchSha = gitHubResp[2].data.object.sha 
+
+// // Construct filesystem operators
+// const filesystem = new FilesystemOperators()
+
+
+// // Read the file companies.json in the current directory, using the filesystem operators, and convert to JSON
+// const companies = await filesystem.readJSONFile('./companies.json')
+
+// Read objects from the repository
+gitHubResp = await gitHubCtl.readObjects(containerName)
+console.log(gitHubResp[2].mrJson)
+doSetup = await wizardUtils.operationOrNot(
+    `Objects read?`
+)
+// const objectSha = gitHubResp[2].data.sha
+// gitHubResp = await gitHubCtl.writeObject(containerName, companies[2], branchName, objectSha)
+// console.log(gitHubResp[2])
+
+// doSetup = await wizardUtils.operationOrNot(
+//     `Objects write?`
+// )
+
+// Merge branch into main
+// gitHubResp = await gitHubCtl.mergeBranchToMain(branchName, branchSha)
+// console.log(gitHubResp[2])
+
+
+// doSetup = await wizardUtils.operationOrNot(
+//     `Did the Branch merge?`
+// )
+
+// gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha, branchName)
+// console.log(gitHubResp[2])
+// gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha)
+// console.log(gitHubResp[2])
+
+// doSetup = await wizardUtils.operationOrNot(
+//     `Did the repo unlock merge?`
+// )
 
 

@@ -22,7 +22,7 @@ program
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')
   .command('company', 'manage and report on mediumroast.io company objects').alias('c')
   .command('study', 'manage and report on mediumroast.io study objects').alias('s')
-  .command('users', 'manage and report on mediumroast.io users').alias('u')
+  .command('user', 'manage and report on mediumroast.io users').alias('u')
   .command('github', 'test code to interoperate with GitHub').alias('g')
 
 program.parse(process.argv)

@@ -9,16 +9,18 @@
  * @version 2.2.0
  */
 
+
+
 // Import required modules
 import ConfigParser from 'configparser'
 import program from 'commander'
 import chalk from 'chalk'
 import FilesystemOperators from '../src/cli/filesystem.js' 
-import serverOperations from '../src/cli/common.js'
 import s3Utilities from '../src/cli/s3.js'
 
-// console.log('NOTICE: This CLI is presently a work in progress and will not operate, exiting.')
-// process.exit(0)
+console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
+process.exit(0)
+
 
 /* 
     -----------------------------------------------------------------------

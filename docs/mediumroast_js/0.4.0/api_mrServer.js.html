@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> api/mrServer.js</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="AddCompany.html">AddCompany</a></li><li><a href="AddInteraction.html">AddInteraction</a></li><li><a href="ArchivePackage.html">ArchivePackage</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Auth0Auth.html">Auth0Auth</a></li><li><a href="baseObjects.html">baseObjects</a></li><li><a href="CLIOutput.html">CLIOutput</a></li><li><a href="CLIUtilities.html">CLIUtilities</a></li><li><a href="Companies.html">Companies</a></li><li><a href="CompanyDashbord.html">CompanyDashbord</a></li><li><a href="CompanySection.html">CompanySection</a></li><li><a href="CompanyStandalone.html">CompanyStandalone</a></li><li><a href="DOCXUtilities.html">DOCXUtilities</a></li><li><a href="Environmentals.html">Environmentals</a></li><li><a href="GitHubFunctions.html">GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="InteractionSection.html">InteractionSection</a></li><li><a href="InteractionStandalone.html">InteractionStandalone</a></li><li><a href="MinioUtilities.html">MinioUtilities</a></li><li><a href="mrRest.html">mrRest</a></li><li><a href="s3Utilities.html">s3Utilities</a></li><li><a href="serverOperations.html">serverOperations</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li><li><a href="Utilities.html">Utilities</a></li><li><a href="WizardUtils.html">WizardUtils</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addConfigSection">addConfigSection</a></li><li><a href="global.html#addMinioUser">addMinioUser</a></li><li><a href="global.html#basicComparisonRow">basicComparisonRow</a></li><li><a href="global.html#basicRow">basicRow</a></li><li><a href="global.html#basicTopicRow">basicTopicRow</a></li><li><a href="global.html#bubbleChart">bubbleChart</a></li><li><a href="global.html#checkConfigDir">checkConfigDir</a></li><li><a href="global.html#checkFilesystemObject">checkFilesystemObject</a></li><li><a href="global.html#checkFilesystemObjectType">checkFilesystemObjectType</a></li><li><a href="global.html#checkServer">checkServer</a></li><li><a href="global.html#cleanWorkingDirs">cleanWorkingDirs</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#createRepository">createRepository</a></li><li><a href="global.html#createZIPArchive">createZIPArchive</a></li><li><a href="global.html#decodeJWT">decodeJWT</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#descriptionRow">descriptionRow</a></li><li><a href="global.html#doManual">doManual</a></li><li><a href="global.html#downloadBinary">downloadBinary</a></li><li><a href="global.html#extractZIPArchive">extractZIPArchive</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#getConfig">getConfig</a></li><li><a href="global.html#getConfigSetting">getConfigSetting</a></li><li><a href="global.html#getEnv">getEnv</a></li><li><a href="global.html#getGitHubOrg">getGitHubOrg</a></li><li><a href="global.html#getMostSimilarCompany">getMostSimilarCompany</a></li><li><a href="global.html#getObj">getObj</a></li><li><a href="global.html#getOwningCompany">getOwningCompany</a></li><li><a href="global.html#initWorkingDirs">initWorkingDirs</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#listAllFiles">listAllFiles</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#makeBookmark">makeBookmark</a></li><li><a href="global.html#makeBullet">makeBullet</a></li><li><a href="global.html#makeComparisonDOCX">makeComparisonDOCX</a></li><li><a href="global.html#makeDescriptionsDOCX">makeDescriptionsDOCX</a></li><li><a href="global.html#makeDocx">makeDocx</a></li><li><a href="global.html#makeDOCX">makeDOCX</a></li><li><a href="global.html#makeExternalHyperLink">makeExternalHyperLink</a></li><li><a href="global.html#makeFirmographicsDOCX">makeFirmographicsDOCX</a></li><li><a href="global.html#makeHeader">makeHeader</a></li><li><a href="global.html#makeHeading1">makeHeading1</a></li><li><a href="global.html#makeHeading2">makeHeading2</a></li><li><a href="global.html#makeHeading3">makeHeading3</a></li><li><a href="global.html#makeHeadingBookmark1">makeHeadingBookmark1</a></li><li><a href="global.html#makeHeadingBookmark2">makeHeadingBookmark2</a></li><li><a href="global.html#makeInternalHyperLink">makeInternalHyperLink</a></li><li><a href="global.html#makeIntro">makeIntro</a></li><li><a href="global.html#makeParagraph">makeParagraph</a></li><li><a href="global.html#makeReferencesDOCX">makeReferencesDOCX</a></li><li><a href="global.html#makeTextrun">makeTextrun</a></li><li><a href="global.html#operationOrNot">operationOrNot</a></li><li><a href="global.html#outputCLI">outputCLI</a></li><li><a href="global.html#pageBreak">pageBreak</a></li><li><a href="global.html#parseCLIArgs">parseCLIArgs</a></li><li><a href="global.html#postObj">postObj</a></li><li><a href="global.html#printLine">printLine</a></li><li><a href="global.html#rankTags">rankTags</a></li><li><a href="global.html#readConfig">readConfig</a></li><li><a href="global.html#readJSONFile">readJSONFile</a></li><li><a href="global.html#readTextFile">readTextFile</a></li><li><a href="global.html#refreshAccessToken">refreshAccessToken</a></li><li><a href="global.html#removeConfigSetting">removeConfigSetting</a></li><li><a href="global.html#rmDir">rmDir</a></li><li><a href="global.html#rmObj">rmObj</a></li><li><a href="global.html#s3ArchiveBucket">s3ArchiveBucket</a></li><li><a href="global.html#s3CreateBucket">s3CreateBucket</a></li><li><a href="global.html#s3DeleteBucket">s3DeleteBucket</a></li><li><a href="global.html#s3DownloadObjs">s3DownloadObjs</a></li><li><a href="global.html#s3UploadObjs">s3UploadObjs</a></li><li><a href="global.html#safeMakedir">safeMakedir</a></li><li><a href="global.html#saveTextFile">saveTextFile</a></li><li><a href="global.html#setFilePermissions">setFilePermissions</a></li><li><a href="global.html#splashScreen">splashScreen</a></li><li><a href="global.html#topicTable">topicTable</a></li><li><a href="global.html#updateConfigSetting">updateConfigSetting</a></li><li><a href="global.html#updateObj">updateObj</a></li><li><a href="global.html#urlRow">urlRow</a></li><li><a href="global.html#verifyAccessToken">verifyAccessToken</a></li><li><a href="global.html#wizard">wizard</a></li><li><a href="global.html#writeConfig">writeConfig</a></li><li><a href="global.html#writeReport">writeReport</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>api/mrServer.js</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * A class for authenticating and talking to the mediumroast.io backend 
+ * @author Michael Hay &lt;michael.hay@mediumroast.io>
+ * @file mrServer.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
+// Import required modules
+import mrRest from './scaffold.js'
+
+class Auth {
+    /**
+     * The present development is very simple and largely a placeholder.  After the object is constructed
+     * the user would issue a login to generate the credential for usage in the API to talk to the 
+     * mediumroast.io application and gather create, read, deleted and update various objects.
+     * @constructor
+     * @classdesc An implementation for authenticating into the mediumroast.io application. 
+     * @param {String} restServer - the full URL and TCP/IP port for the mediumroast.io application
+     * @param {String} apiKey - the API key for the mediumroast.io application
+     * @param {String} user - your username for the mediumroast.io application
+     * @param {String} secret - your secret for the mediumroast.io application
+     * @todo Evolve as the backend improves authentication and authorization
+     */
+    constructor(restServer, apiKey, user, secret) {
+        this.apiKey = apiKey
+        this.user = user
+        this.secret = secret
+        this.restServer = restServer
+    }
+
+    /**
+     * @function login
+     * @description Initiate a login to the mediumroast.io application
+     * @returns {Object} the credential object needed to perform API calls to mediumroast.io
+     */
+    login() {
+        return {
+            'apiKey': this.apiKey,
+            'restServer': this.restServer,
+            'user': this.user,
+            'secret': this.secret
+        }
+    }
+
+    /**
+     * @function logout
+     * @description While not yet implemented meant to enable a logout of a session for the mediumroast.io
+     * @returns {Boolean} true for logout at this time
+     */
+    logout() {
+        return true
+    }
+}
+
+class baseObjects {
+    /**
+     * This class contains all of the core operations which make it easier to interact with
+     * the mediumroast.io application.  Access to the RESTful endpoints is wrapped in a series
+     * of Javascript functions to enable SDK users to not have to manage the details.
+     * 
+     * Discrete objects are subclasses of this baseObjects class and are defined below. These
+     * subclasses specify additional information like the objType, etc. and as needed can
+     * implement their own additional functions as needed.
+     * @constructor
+     * @classdesc Store and setup key variables needed to operate the SDK
+     * @param {Object} credential - the credential object returned from Auth.login()
+     * @param {String} objType - the type of object for the API session which could be users, studies, interactions or companies
+     * @param {String} apiVersion - the version of the API
+     */
+    constructor(credential, objType, apiVersion = 'v1') {
+        this.cred = credential
+        this.rest = new mrRest(credential)
+        this.objType = objType
+        this.apiVersion = apiVersion
+    }
+
+    /**
+     * @async
+     * @function getAll
+     * @description Get all objects from the mediumroast.io application
+     * @param {String} endpoint - defaults to getall and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async getAll(endpoint='getall') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        return this.rest.getObj(fullEndpoint)
+    }
+
+    /**
+     * @async
+     * @function findByName
+     * @description Find all objects by name from the mediumroast.io application
+     * @param {String} name - the name of the object to find
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async findByName(name, endpoint='findbyx') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        const my_obj = {findByX: 'name', xEquals: name}
+        return this.rest.postObj(fullEndpoint, my_obj)
+    }
+
+    /**
+     * @async
+     * @function findById
+     * @description Find all objects by id from the mediumroast.io application
+     * @param {String} id - the id of the object to find
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async findById(id, endpoint='findbyx') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        const my_obj = {findByX: "id", xEquals: id}
+        return this.rest.postObj(fullEndpoint, my_obj)
+    }
+
+    /**
+     * @async
+     * @function findByX
+     * @description Find all objects by attribute and value pair from the mediumroast.io application
+     * @param {String} attribute - the attribute used to find objects
+     * @param {String} value - the value for the defined attribute
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async findByX(attribute, value, endpoint='findbyx') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        const my_obj = {findByX: attribute, xEquals: value} 
+        return this.rest.postObj(fullEndpoint, my_obj)
+    }
+
+    /**
+     * @async
+     * @function createObj
+     * @description Create objects in the mediumroast.io application
+     * @param {Object} obj - the object to create in the backend
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async createObj(obj, endpoint='register') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        return this.rest.postObj(fullEndpoint, obj)
+    }
+    
+    /**
+     * @async
+     * @function updateObj
+     * @description Update an object in the mediumroast.io application
+     * @param {Object} obj - the object to update in the backend which includes the id and, the attribute and value to be updated
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     */
+    async updateObj(obj, endpoint='update') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        return this.rest.postObj(fullEndpoint, obj)
+    }
+
+    /**
+     * @async
+     * @function deleteObj
+     * @description Delete an object in the mediumroast.io application
+     * @param {String} id - the object to be deleted in the mediumroast.io application
+     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
+     * @returns {Array} the results from the called function mrRest class
+     * @todo implment when available in the backend
+     */
+    async deleteObj(id, endpoint='delete') {
+        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
+        return this.rest.deleteObj(fullEndpoint, {"id": id}) 
+    }
+}
+
+
+class Users extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the user objects
+     * @param {Object} credential - the credential object returned from Auth.login()
+     */
+    constructor (credential) {
+        super(credential, 'users')
+    }
+}
+
+class Studies extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the study objects
+     * @param {Object} credential - the credential object returned from Auth.login()
+     */
+    constructor (credential) {
+        super(credential, 'studies')
+    }
+}
+
+class Companies extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the company objects
+     * @param {Object} credential - the credential object returned from Auth.login()
+     */
+    constructor (credential) {
+        super(credential, 'companies')
+    }
+}
+
+
+class Interactions extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the interaction objects
+     * @param {Object} credential - the credential object returned from Auth.login()
+     */
+    constructor (credential) {
+        super(credential, 'interactions')
+    }
+}
+
+// Export classes for consumers
+export { Auth, Users, Studies, Companies, Interactions }</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>
