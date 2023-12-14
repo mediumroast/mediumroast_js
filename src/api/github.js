@@ -1,5 +1,13 @@
-import { Octokit } from "octokit"
+/**
+ * A class for authenticating and talking to the mediumroast.io backend 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrServer.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
 
+import { Octokit } from "octokit"
 
 class GitHubFunctions {
     /**
@@ -289,6 +297,30 @@ class GitHubFunctions {
         }
     }
 
+    // Create a method using the octokit to write a file to the repo
+    async writeBlob(containerName, fileName, blob, branchName, sha) {
+        // Only pull in the file name
+        const fileBits = fileName.split('/')
+        const shortFilename = fileBits[fileBits.length - 1]
+        // Using the github API write a file to the container
+        try {
+            const writeResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
+                owner: this.orgName,
+                repo: this.repoName,
+                path: `${containerName}/${shortFilename}`,
+                message: `Create object [${shortFilename}]`,
+                content: blob,
+                branch: branchName,
+                sha: sha
+            })
+            // Return the write response if the write was successful or an error if not
+            return [true, `SUCCESS: wrote object [${fileName}] to [${containerName}/${fileName}]`, writeResponse]
+        } catch (err) { 
+            // Return the error
+            return [false, `ERROR: unable to write object [${fileName}] to [${containerName}]`, err]
+        }
+    }
+
     /**
      * @function writeObject
      * @description Writes an object to a specified container using the GitHub API.
@@ -314,10 +346,10 @@ class GitHubFunctions {
                 sha: mySha
             })
             // Return the write response if the write was successful or an error if not
-            return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to [${containerName}/${this.objectFiles[containerName]}]`, writeResponse]
+            return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to [${containerName}]`, writeResponse]
         } catch (err) { 
             // Return the error
-            return [false, `ERROR: unable to write object [${obj.id}] to [${containerName}/${this.objectFiles[containerName]}]`, err]
+            return [false, `ERROR: unable to write object [${this.objectFiles[containerName]}] to [${containerName}]`, err]
         }
     }
 

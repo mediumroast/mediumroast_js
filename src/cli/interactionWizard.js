@@ -6,22 +6,20 @@
  * @file interactionCLIwizard.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.2.0
+ * @version 2.0.0
  */
 
 
 // Import required modules
-import { Auth, Companies } from "../api/mrServer.js"
 import chalk from 'chalk'
-import path from "node:path"
 import crypto from "node:crypto"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
-
 import CLIOutput from "./output.js"
-import {serverOperations} from "./common.js"
-import s3Utilities from "./s3.js"
+import GitHubFunctions from '../api/github.js'
+
 import FilesystemOperators from "./filesystem.js"
+import * as progress from 'cli-progress'
 
 class AddInteraction {
     /**
@@ -41,22 +39,30 @@ class AddInteraction {
      * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
      * @param {Object} cli - the already constructed CLI object
      */
-    constructor(env){
+    constructor(env, controllers){
         this.env = env
 
         // Splash screen elements
         this.name = "mediumroast.io Interaction Wizard"
-        this.version = "version 1.0.0"
+        this.version = "version 2.0.0"
         this.description = "Prompt based interaction object creation for the mediumroast.io."
+        this.processName = "mrcli-interaction-wizard"
 
         // Class globals
         this.defaultValue = "Unknown"
-        this.objectType = "interaction"
+        this.objectType = "Interactions"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
         this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
-        this.s3Ops = new s3Utilities(this.env)
         this.fileSystem = new FilesystemOperators()
+        this.progressBar = new progress.SingleBar(
+            {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+            progress.Presets.rect
+        )
+        this.companyCtl = controllers.company
+        this.interactionCtl = controllers.interaction
+        this.studyCtl = controllers.study
+        this.githubCtl = new GitHubFunctions(this.env.token, this.env.org, this.processName)
     }
 
     _makeChoices(myObjs) {
@@ -127,6 +133,7 @@ class AddInteraction {
         return objs[myObjId]
     }
 
+    // TODO this should be replaced with a generic linkObj function
     async _linkInteractionToCompany (myCompany, myInteraction, companyCtl) {
         // Hash the names
         const intHash = crypto.createHash('sha256', myInteraction.name).digest('hex')
@@ -167,6 +174,7 @@ class AddInteraction {
         }
     }
 
+    // TODO deprecate this function 
     _linkObj(name) {
         // Hash the names
         // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
@@ -323,88 +331,94 @@ class AddInteraction {
                 study: myStudy
             }
         ]
-
+ 
     }
 
-    async _uploadFile (fileName, targetBucket, protocol='s3') {
+
+    async uploadFile (fileName, branchName, sha, fileData) {
         let fileBits = fileName.split('/')
         const shortFilename = fileBits[fileBits.length - 1]
-        const myName = shortFilename.split('.')[0]
-        let myURL = this.env.s3Server + `/${targetBucket}/${shortFilename}`
-        myURL = myURL.replace('http', protocol)
-        const myContents = {
-            name: myName,
-            file: fileName,
-            url: myURL
-        }
+
         const myObjectType = this.fileSystem.checkFilesystemObjectType(fileName)
         if(myObjectType[2].isFile()) {
-            process.stdout.write(chalk.blue.bold(`\tUploading -> `))
-            console.log(chalk.blue.underline(`${fileName.slice(0, 72)}...`))
-            const [returnedFileName, s3Results] = await this.s3Ops.s3UploadObjs([fileName], targetBucket)
-            return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'}, myContents]
+            try{ 
+                const writeResp = await this.githubCtl.writeBlob(this.objectType, shortFilename, fileData, branchName, sha)
+                return [true, {status_code: 200, status_msg: `SUCCESS: uploaded file [${myName}] to GitHub`}, writeResp]
+            } catch (err) {
+                return [false, {status_code: 503, status_msg: `ERROR: unable to upload file [${myName}] to GitHub`}, err]
+            }
         } else {
-            myContents.url = this.defaultValue
-            return [false, {status_code: 503, status_msg: 'the source is not a file that can be uploaded'}, myContents]
+            return [false, {status_code: 503, status_msg: `WARNING: file [${myName}] is not of a type that can be uploaded`}, myObjectType[2]]
         }
         
     }
 
-    async getFiles(targetBucket) {
+
+    async ingestInteractions(branchName, branchSha, fileName=null) {
         // Pre-define the final object
         let myFiles = []
 
         // Prompt the user to see if they want to perform multi-file ingestion
-        const multiFile = await this.wutils.operationOrNot('Would you like to perform multi-file ingestion?')
+        const multiFile = await this.wutils.operationOrNot('Will you upload an entire directory?')
 
         // Execute multi-file ingestion
         if(multiFile) {
             // Prompt the user for the target directory
             const dirPrototype = {
-                dir_name: {consoleString: "target directory with path (typically, /parent_dir/company_name)", value:this.defaultValue}
+                dirName: {consoleString: "target directory with path (typically, /parent_dir/company_name)", value:this.defaultValue}
             }
             let myDir = await this.wutils.doManual(dirPrototype)
-            const [success, message, result] = this.fileSystem.checkFilesystemObject(myDir.dir_name)
+            const [success, message, result] = this.fileSystem.checkFilesystemObject(myDir.dirName)
 
             // Try again if the check of the file system object fails
             if (!success) {
                 console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
-                myFiles = await this.getFiles(targetBucket) // TODO test this
+                myFiles = await this.ingestInteractions() // TODO test this
             }
 
             
             // List all files in the directory and process them one at a time
-            const allFiles = this.fileSystem.listAllFiles(myDir.dir_name)
+            const allFiles = this.fileSystem.listAllFiles(myDir.dirName)
+            // Start the progress bar
+            this.progressBar.start(allFiles.length - 1, 0)
+            // Iterate through each file in the directory
             for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
                 const fileName = allFiles[2][myIdx]
                 // Skip files that start with . including present and parent working directories 
                 if(fileName.indexOf('.') === 0) { continue }
-                const myContents = await this._uploadFile(myDir.dir_name + '/' + fileName, targetBucket) 
+                // Read the blob and return contents base64 encoded
+                const fileData = fileSystem.readBlobFile(`${myDir.dirName}/${fileName}`)
+                // Upload the file to GitHub
+                const myContents = await this.uploadFile(fileName, fileData[2], branchName, branchSha) 
+                // Save the results
                 myFiles.push(myContents[2])
+                // Increment the progress bar
+                this.progressBar.increment()
             }
         // Execute single file ingestion
         } else {
             // Prompt the user for the target file
             const filePrototype = {
-                file_name: {consoleString: "target file with path (typically, /parent_dir/sub_dir/file_name.ext)", 
+                fileName: {consoleString: "target file with path (typically, /parent_dir/sub_dir/file_name.ext)", 
                 value:this.defaultValue}
             }
             let myFile = await this.wutils.doManual(filePrototype)
-            const [success, message, result] = this.fileSystem.checkFilesystemObject(myFile.file_name)
+            const [success, message, result] = this.fileSystem.checkFilesystemObject(myFile.fileName)
             
             // Try again if the check of the file system object fails
             if (!success) {
                 console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
-                myFiles = await this.getFiles(targetBucket) // TODO test this
+                myFiles = await this.ingestInteractions(targetBucket) // TODO test this
             }
 
             // Upload the file
-            const myContents = await this._uploadFile(myFile.fileName, targetBucket)
+            const myContents = await this.uploadFile(fileName, fileData[2], branchName, branchSha)
             myFiles.push(myContents[2])
         }
 
         // An end separator
+        // TODO do we need this?
         this.output.printLine()
 
         // Return the result of uploaded files
@@ -443,7 +457,7 @@ class AddInteraction {
             console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
             myFiles = await this.createInteraction(myInteraction)
         } 
-        const myContents = await this._uploadFile(myFile.file_name, targetBucket)
+        const myContents = await this.uploadFile(myFile.file_name, targetBucket)
         myFiles.push(myContents[2])
         return myFiles
     }
@@ -591,9 +605,10 @@ class AddInteraction {
         // prototype below contains strings that are easier to read.  Additionally, should 
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
+
+        // TODO review with the current backend implementation
         let interactionPrototype = {
             name: {consoleString: "name", value:this.defaultValue},
-            // TODO this has to come out
             interaction_type: {consoleString: "interaction type (e.g. whitepaper, interview, etc.)", value:this.defaultValue},
             street_address: {consoleString: "street address (i.e., where interaction takes place)", value:this.defaultValue},
             city: {consoleString: "city (i.e., where interaction takes place)", value:this.defaultValue},
@@ -608,7 +623,7 @@ class AddInteraction {
             contact_twitter: {consoleString: "contact\'s Twitter handle", value:this.defaultValue},
         }
 
-        // Define an empty objects
+        // Define empty objects
         let myInteraction = {}
         let myCompany = {}
         let myStudy = {}
@@ -624,34 +639,14 @@ class AddInteraction {
         // TODO the below can be moved to commonWizard
 
         // Checking to see if the server is ready for adding interactions
-        process.stdout.write(chalk.blue.bold('\tPerforming checks to see if the server is ready to ingest interactions. '))
-        const serverChecks = new serverOperations(this.env)
-        const serverReady = await serverChecks.checkServer()
-        if(!serverReady[0]) { // NOTE: We are looking for a false return here because it means there are objects which we need to proceeed
-            console.log(chalk.green.bold('[Ready]'))
-        } else {
-            console.log(chalk.red.bold('[No objects detected, exiting]'))
+        process.stdout.write(chalk.blue.bold('Checking if the mediumroast appplication is ready to ingest interactions ... '))
+        const companies = this.companyCtl.getAll()
+        const studies = this.studyCtl.getAll()
+        if(companies[2].length === 0 || studies[2].length === 0) {
+            console.log(chalk.red.bold('Company and study objects not detected, try running [mrcli setup]'))
             process.exit(-1)
-        }
-
-        // Assign the controllers based upon the available server
-        const companyCtl = serverReady[2].companyCtl
-        const interactionCtl = serverReady[2].interactionCtl
-        const studyCtl = serverReady[2].studyCtl
-
-        // Detect owning company and generate the target bucket name
-        let owningCompanyName = null
-        let targetBucket = null // We'll use this for storing interactions
-        process.stdout.write(chalk.blue.bold('\tDetecting the owning company for this mediumroast.io server. '))
-        const owningCompany = await serverChecks.getOwningCompany(companyCtl)
-        if(owningCompany[0]){
-            owningCompanyName = owningCompany[2]
-            targetBucket = this.s3Ops.generateBucketName(owningCompanyName)
-            console.log(chalk.green.bold(`[${owningCompanyName}]`))
-            this.output.printLine()
         } else {
-            console.log(chalk.red.bold('[No owning company detected, exiting]'))
-            process.exit(-1)
+            console.log(chalk.green.bold('Ready'))
         }
         
         // Perform automated Company and Study object discovery
@@ -663,7 +658,7 @@ class AddInteraction {
             myCompany = myObjs.company
             myStudy = myObjs.study
             // Get the individual files which will be transformed into interactions
-            myFiles = await this.getFiles(targetBucket)
+            myFiles = await this.ingestInteractions(targetBucket)
         
         // Fallback to manual setup for creating the interaction since discovery failed
         } else {

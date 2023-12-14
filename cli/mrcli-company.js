@@ -11,15 +11,12 @@
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
-import { Companies } from '../src/api/gitHubServer.js'
+import { Companies, Studies } from '../src/api/gitHubServer.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
-
-// External modules
-import chalk from 'chalk'
 
 // Related object type
 const objectType = 'Companies'
@@ -38,7 +35,7 @@ const fileSystem = new FilesystemOperators()
 // Create the environmental settings
 const myArgs = environment.parseCLIArgs()
 const myConfig = environment.readConfig(myArgs.conf_file)
-const myEnv = environment.getEnv(myArgs, myConfig)
+let myEnv = environment.getEnv(myArgs, myConfig)
 const accessToken = await environment.verifyAccessToken()
 const processName = 'mrcli-company'
 
@@ -47,8 +44,7 @@ const output = new CLIOutput(myEnv, objectType)
 
 // Construct the controller objects
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
-// const interactionCtl = serverReady[2].interactionCtl
-// const studyCtl = serverReady[2].studyCtl
+// const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
 
 // TODO: We need to create a higher level abstraction for capturing the owning company
 // const owningCompany = await serverOps.getOwningCompany(companyCtl)
@@ -232,13 +228,14 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
+   myEnv.DEFAULT = {company: 'Unknown'}
    const newCompany = new AddCompany(myEnv, companyCtl)
    const result = await newCompany.wizard()
    if(result[0]) {
       console.log('SUCCESS: Created new company in the backend')
       process.exit(0)
    } else {
-      console.error('ERROR: Failed to create company object with %d', result[1].status_code)
+      console.log(`ERROR: Failed to create company object with:, ${result[2]}`)
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {

@@ -328,6 +328,13 @@ if(!configExists[0]) {
 
     cliOutput.printLine()
 }
+// Confirm that Document directory exists and if not create it
+const docDir = myConfig.DEFAULT.report_output_dir
+const reportDirExists = fsUtils.safeMakedir(docDir)
+if(reportDirExists[0]) {
+    console.log(chalk.bold.yellow(`WARNING: Report output directory [${docDir}] not detected, created.`))
+}
+
 /* --------- End save config file ---------- */
 /* ----------------------------------------- */
 

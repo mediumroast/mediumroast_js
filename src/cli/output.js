@@ -9,7 +9,7 @@
 
 // Import required modules
 import Table from 'cli-table'
-import Parser from 'json2csv'
+import {Parser} from '@json2csv/plainjs'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
 import FilesystemOperators from './filesystem.js'
@@ -104,8 +104,9 @@ class CLIOutput {
     outputCSV(objects) {
         const fileName = 'Mr_' + this.objectType + '.csv'
         const myFile = this.env.outputDir + '/' + fileName
+        const csvParser = new Parser()
         try {
-            const csv = Parser.parse(objects)
+            const csv = csvParser.parse(objects)
             this.fileSystem.saveTextFile(myFile, csv)
             return [true, null]
         } catch (err) {

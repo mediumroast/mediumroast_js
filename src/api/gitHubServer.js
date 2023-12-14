@@ -90,7 +90,7 @@ class baseObjects {
      * @returns {Array} the results from the called function mrRest class
      */
     async createObj(objs) {
-        return this.serverCtl.createObjects(this.objType, objs)
+        return await this.serverCtl.createObjects(this.objType, objs)
     }
     
     /**
@@ -174,7 +174,20 @@ class Interactions extends baseObjects {
      * @param {String} processName - the process name for the GitHub application
      */
     constructor (token, org, processName) {
-        super(token, org, processName, 'Companies')
+        super(token, org, processName, 'Interactions')
+    }
+
+    async createObj(objs) {
+        // NOTE: This is an interesting way to do this, but it may not be correct.
+        const linkedCompanies = this.linkObj(objs)
+        const linkedStudies = this.linkObj(objs)
+        const linkedInteractions = this.linkObj(objs)
+        const linkedObjs = {
+            linked_companies: linkedCompanies,
+            linked_studies: linkedStudies,
+            linked_interactions: linkedInteractions
+        }
+        return await this.serverCtl.createObjects(this.objType, objs, linkedObjs)
     }
 }
 
