@@ -1,7 +1,7 @@
 {
   "name": "mediumroast_js",
   "version": "0.4.13",
-  "description": "A Javascript SDK to interact with mediumroast.io including command line interfaces.",
+  "description": "A Javascript SDK and command line interface to interact with mediumroast.io.",
   "main": "cli/mrcli.js",
   "scripts": {
     "docs": "jsdoc -R ./README.md -c ./docs_config.json -P ./package.json ./src"

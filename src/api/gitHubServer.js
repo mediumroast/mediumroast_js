@@ -151,6 +151,32 @@ class Studies extends baseObjects {
     }
 }
 
+// Create a subclass called Users that inherits from baseObjects
+class Users extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the user objects
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
+     */
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Users')
+    }
+
+    // Create a new method for getAll that is specific to the Users class using getUser() in github.js
+    async getAll() {
+        return await this.serverCtl.getAllUsers()
+    }
+
+    // Create a new method for findMyself that is specific to the Users class using getUser() in github.js
+    async getMyself() {
+        return await this.serverCtl.getUser()
+    }
+
+
+}
+
 class Companies extends baseObjects {
     /**
      * @constructor
@@ -192,4 +218,4 @@ class Interactions extends baseObjects {
 }
 
 // Export classes for consumers
-export { Studies, Companies, Interactions }
+export { Studies, Companies, Interactions, Users }

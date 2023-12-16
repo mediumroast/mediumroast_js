@@ -54,19 +54,34 @@ class CLIOutput {
         // Note: The separation between User and other objects is due to their structure. Pointedly 
         //          user objects do not contain name and description fields.
         let table
-        if (isUserObject) {
+        if (this.objectType === 'Users') {
             table = new Table({
-                head: ['Id', 'First Name', 'Last Name', 'Roles', 'Company'],
-                colWidths: [5, 15, 15, 20, 30]
+                head: ['GitHub Id', 'Login', 'User Type', 'Role Name', 'Site Admin'],
+                colWidths: [12, 20, 15, 20, 30]
             })
             // NOTE: In this alpha version users aren't yet operable
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].id,
-                    objects[myObj].first_name,
-                    objects[myObj].last_name,
-                    objects[myObj].roles,
-                    objects[myObj].company
+                    objects[myObj].login,
+                    objects[myObj].type,
+                    objects[myObj].role_name,
+                    objects[myObj].site_admin
+                ])
+            }
+        } else if (this.objectType === 'MyUser') {
+            table = new Table({
+                head: ['GitHub Id', 'Login', 'Name', 'Type', 'Company', 'GitHub Website'],
+                colWidths: [12, 20, 30, 10, 25, 50]
+            })
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].id,
+                    objects[myObj].login,
+                    objects[myObj].name,
+                    objects[myObj].type,
+                    objects[myObj].company,
+                    objects[myObj].html_url
                 ])
             }
         // Study, Company and Interaction objects output

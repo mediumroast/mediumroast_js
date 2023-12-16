@@ -45,7 +45,46 @@ class GitHubFunctions {
         this.objectFiles = {
             Studies: 'Studies.json',
             Companies: 'Companies.json',
-            Interactions: 'Interactions.json'
+            Interactions: 'Interactions.json',
+            Users: null
+        }
+    }
+
+    /**
+    * @async 
+    * @function getUser
+    * @description Gets the authenticated user from the GitHub API
+    * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+    * @todo Add a check to see if the user is a member of the organization
+    * @todo Add a check to see if the user has admin rights to the organization
+    */
+    async getUser() {
+        // using try and catch to handle errors get user info
+        try {
+            const response = await this.octCtl.rest.users.getAuthenticated()
+            return [true, `SUCCESS: able to capture current user info`, response.data]
+        } catch (err) {
+            return [false, `ERROR: unable to capture current user info due to [${err}]`, err.message]
+        }
+    }
+
+    /**
+     * @async
+     * @function getAllUsers
+     * @description Gets all of the users from the GitHub API
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+     */
+    async getAllUsers() {
+        // using try and catch to handle errors get info for all users
+        try {
+            const response = await this.octCtl.rest.repos.listCollaborators({
+                owner: this.orgName,
+                repo: this.repoName,
+                affiliation: 'all'
+            })
+            return [true, `SUCCESS: able to capture info for all users`, response.data]
+        } catch (err) {
+            return [false, `ERROR: unable to capture info for all users due to [${err}]`, err.message]
         }
     }
 
@@ -352,6 +391,7 @@ class GitHubFunctions {
             return [false, `ERROR: unable to write object [${this.objectFiles[containerName]}] to [${containerName}]`, err]
         }
     }
+
 
     
     /**

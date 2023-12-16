@@ -432,7 +432,7 @@ class AddInteraction {
         myCompany = await this.wutils.doManual(interactionPrototype)
         this.output.printLine()
         
-        console.log(chalk.blue.bold('Setting location properties...'))
+        console.log(chalk.blue.bold('Setting location properties ... '))
         // Set the region
         myInteraction.region = this.wutils.getRegion()
 
@@ -532,9 +532,7 @@ class AddInteraction {
             myInteraction.creation_date = myDate.toISOString()
             myInteraction.modification_date = myDate.toISOString()
             myInteraction.date_time = myDate.toISOString()
-            // Creator and Owner ID
-            myInteraction.creator_id = 1 // we will need to change this to be determined from the environment
-            myInteraction.owner_id = 1 // we will need to change this to be determined from the environment
+
             // File metadata
             myInteraction.content_type = this.defaultValue
             myInteraction.file_size = this.defaultValue
@@ -605,6 +603,52 @@ class AddInteraction {
         // prototype below contains strings that are easier to read.  Additionally, should 
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
+        let properties = [
+            "creator_id", // int
+            "created_by", //  character varying NOT NULL
+            "owner_id", //  int
+            "public", //  boolean NOT NULL
+            "groups", //  character varying NOT NULL
+            "organization", // character varying NOT NULL
+            "name", //  character varying NOT NULL
+            "description", //  character varying
+            "interaction_type", //  character varying
+            "reference_type", //  character varying
+            "abstract", //  character varying
+            "tags", //  json
+            "topics", //  json
+            "source_author", //  json
+            "isbn", //  character varying
+            "doi", //  character varying
+            "publisher", //  character varying
+            "publication", //  character varying
+            "volume", //  character varying
+            "issue", //  character varying
+            "referenced_pages", // 
+            "creation_date", //  timestamp without time zone NOT NULL
+            "modification_date", //  timestamp without time zone
+            "year", //  int varying
+            "month", //  int varying
+            "day", //  int varying
+            "date_time", //  timestamp without time zone NOT NULL
+            "date_accessed", //  timestamp without time zone NOT NULL
+            "stored_url", //  character varying
+            "source_url", //  character varying
+            "street_address", //  character varying
+            "city", //  character varying
+            "state_province", //  character varying
+            "zip_postal", //  character varying
+            "country", //  character varying
+            "latitude", //  double precision
+            "longitude", //  double precision
+            "region", //  character varying
+            "status", //  smallint NOT NULL
+            "content_type", //  character varying
+            "file_size", //  character varying
+            "reading_time", //  int varying
+            "word_count", //  int varying
+            "page_count" //  int varying
+        ]
 
         // TODO review with the current backend implementation
         let interactionPrototype = {
