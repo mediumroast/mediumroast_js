@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.4.13",
+  "version": "0.4.15",
   "description": "A Javascript SDK and command line interface to interact with mediumroast.io.",
   "main": "cli/mrcli.js",
   "scripts": {
@@ -77,6 +77,7 @@
     "ora": "^6.1.2",
     "prompt-sync": "^4.2.0",
     "terminal-link": "^3.0.0",
+    "uninstall": "^0.0.0",
     "wrap-ansi": "^8.1.0",
     "xlsx": "^0.18.5"
   }

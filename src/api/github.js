@@ -241,6 +241,7 @@ class GitHubFunctions {
      * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
     */
     async checkForLock(containerName) {
+
         // Get the latest commit
         const latestCommit = await this.octCtl.rest.repos.getCommit({
             owner: this.orgName,
@@ -255,7 +256,7 @@ class GitHubFunctions {
             ref: latestCommit.data.sha,
             path: containerName
         })
-        
+
         const lockExists = mainContents.data.some(
             item => item.path === `${containerName}/${this.lockFileName}`
         )
@@ -266,6 +267,7 @@ class GitHubFunctions {
             return [false, `FAILED: container [${containerName}] is not locked with lock file [${this.lockFileName}]`]
         }
     }
+
 
     /**
      * @description Locks a container by creating a lock file in the container.
@@ -287,9 +289,9 @@ class GitHubFunctions {
             repo: this.repoName,
             ref: this.mainBranchName,
         })
-
+        let lockResponse
         if(!lockExists[0]) {
-            const lockResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
+            lockResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
                 owner: this.orgName,
                 repo: this.repoName,
                 path: lockFile,
@@ -479,6 +481,59 @@ class GitHubFunctions {
         const unlocked = await this.unlockContainer(containerName, writeResponse[2].data.commit.sha)
         if(!unlocked[0]) { return unlocked }
 
+    }
+
+    async catchContainer(containerName) {
+        // Call the method above to check for a lock
+        // const lockExists = await this.checkForLock(containerName)
+        // // If the lock exists return an error
+        // if(lockExists[0]) { return [false, `ERROR: The container [${containerName}] is locked unable to create objects.`] }
+
+        // Lock the container
+        const locked = await this.lockContainer(containerName)
+        // Check to see if the container was locked and return the error if not
+        if(!locked[0]) { return [false, `ERROR: Unable to lock [${containerName}] cannot create new objects.`, locked] }
+        const lockSha = locked[2].data.content.sha
+        
+        // Call the method above createBranchFromMain to create a new branch
+        const branchCreated = await this.createBranchFromMain()
+        // Check to see if the branch was created
+        if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
+        const branchSha = branchCreated[2].data.object.sha
+        const branchName = branchCreated[2].data.ref
+
+        // Call the method above to read the objects
+        const readResponse = await this.readObjects(containerName)
+        // Check to see if the read was successful
+        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects [${containerName}/${this.objectFiles[containerName]}].`, readResponse] }
+        const objectSha = readResponse[2].data.sha
+
+        return [
+            true,
+            `SUCCESS: [${containerName}] is ready to be updated.`,
+            {
+                containerName: containerName,
+                lockSha: lockSha,
+                branchSha: branchSha,
+                branchName: branchName,
+                objectSha: objectSha,
+                objects: readResponse[2]
+            }
+        ]
+    }
+
+    async releaseContainer(containerDetails) {
+        // Merge the branch to main
+        const mergeResponse = await this.mergeBranchToMain(containerDetails.branchName, containerDetails.branchSha)
+        // Check to see if the merge was successful and return the error if not
+        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
+
+        // Unlock the container
+        const unlocked = await this.unlockContainer(containerDetails.containerName, containerDetails.lockSha)
+        if(!unlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${containerDetails.containerName}] for objects and the lock file.`, unlocked] }
+        
+        // Return success with number of objects written
+        return [true, `SUCCESS: Wrote object(s) to [${containerDetails.containerName}/${this.objectFiles[containerDetails.containerName]}].`, null]
     }
 
 

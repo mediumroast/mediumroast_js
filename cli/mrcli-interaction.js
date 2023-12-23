@@ -13,7 +13,8 @@
 
 // Import required modules
 import { InteractionStandalone } from '../src/report/interactions.js'
-import { Interactions, Companies, Studies } from '../src/api/gitHubServer.js'
+import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import GitHubFunctions from '../src/api/github.js'
 import AddInteraction from '../src/cli/interactionWizard.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
@@ -79,7 +80,10 @@ const output = new CLIOutput(myEnv, objectType)
 // Construct the controller objects
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
 const interactionCtl = new Interactions(accessToken, myEnv.gitHubOrg, processName)
-const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
+
+// const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
 // Predefine the results variable
 let success = Boolean()
@@ -168,13 +172,9 @@ if (myArgs.report) {
    // Retrive the interaction by Id
    [success, stat, results] = await interactionCtl.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
-   console.error('ERROR (%d): Find by name not implemented.', -1)
-   process.exit(-1)
    // Retrive the interaction by Name
    [success, stat, results] = await interactionCtl.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
-   console.error('ERROR (%d): Find by X not implemented.', -1)
-   process.exit(-1)
    // Retrive the interaction by attribute as specified by X
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
    const foundObjects = await interactionCtl.findByX(myKey, myValue)
@@ -206,7 +206,7 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
-   const newInteraction = new AddInteraction(myEnv, {interaction: interactionCtl, study: studyCtl, company: companyCtl})
+   const newInteraction = new AddInteraction(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newInteraction.wizard()
    if(result[0]) {
       console.log('SUCCESS: Created new interactions in the backend')

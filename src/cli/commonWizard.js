@@ -213,9 +213,9 @@ class WizardUtils {
      * 
      * @returns 
      */
-    async getRegion () {
+    async getRegion (objType='company') {
         const tmpRegion = await this.doList(
-            "Which region is this company associated to?",
+            `What region is this ${objType} in?`,
             [
                 {name: 'North, Meso and South America (AMER)', value: "AMER"}, 
                 {name: 'Europe, Middle East, and Africa (EMEA)', value: "EMEA"},

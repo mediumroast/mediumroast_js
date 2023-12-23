@@ -181,7 +181,7 @@ class FilesystemOperators {
     /**
      * @function checkFilesystemObjectType
      * @description Check the type of file system object 
-     * @param {*} fileName - name of the file system object to check
+     * @param {String} fileName - name of the file system object to check
      * @returns {Array} containing the status of the function, status message and either the file system object type or null
      */
     checkFilesystemObjectType(fileName) {

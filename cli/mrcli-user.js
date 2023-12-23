@@ -75,22 +75,17 @@ let [success, stat, results] = [null, null, null]
 if (myArgs.report) {
    console.log(chalk.bold.yellow(`WARNING: Generating a report for users is not yet implemented in this CLI.`))
    process.exit()
-} else if (myArgs.find_by_id) {
-   console.log(chalk.bold.yellow(`WARNING: Finding users by id is not yet implemented in this CLI.`))
-   process.exit()
-   [success, stat, results] = await userCtl.findById(myArgs.find_by_id)
 } else if (myArgs.my_user) {
    [success, stat, results] = await userCtl.getMyself()
    const myUserOutput = new CLIOutput(myEnv, 'MyUser')
    myUserOutput.outputCLI([results], myArgs.output)
    process.exit()
 } else if (myArgs.find_by_name) {
-   console.log(chalk.bold.yellow(`WARNING: Finding users by name is not yet implemented in this CLI.`))
-   process.exit()
-   [success, stat, results] = await userCtl.findByName(myArgs.find_by_name)
+   const foundObjects = await userCtl.findByName(myArgs.find_by_name)
+   success = foundObjects[0]
+   stat = foundObjects[1]
+   results = foundObjects[2]
 } else if (myArgs.find_by_x) {
-   console.log(chalk.bold.yellow(`WARNING: Finding users by attribute is not yet implemented in this CLI.`))
-   process.exit()
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
    const foundObjects = await userCtl.findByX(myKey, myValue)
    success = foundObjects[0]
