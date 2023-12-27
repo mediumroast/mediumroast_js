@@ -100,6 +100,19 @@ class FilesystemOperators {
         }
     }
 
+    importJSONFile(fileName) {
+        try {
+            const fileData = fs.readFileSync(
+                new URL(fileName, import.meta.url), 
+                'utf8'
+            )
+            const jsonData = JSON.parse(fileData)
+            return [true, 'Read file [' + fileName + ']', jsonData]
+        } catch (err) {
+            return [false, 'Unable to read file [' + fileName + '] because: ' + err, null]
+        }
+    }
+
     /**
      * @function checkFilesystemObject
      * @description Check to see if a file system object exists or not

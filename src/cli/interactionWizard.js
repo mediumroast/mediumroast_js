@@ -17,6 +17,7 @@ import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
 import FilesystemOperators from "./filesystem.js"
 import * as progress from 'cli-progress'
+import ora from 'ora'
 
 class AddInteraction {
     /**
@@ -63,7 +64,8 @@ class AddInteraction {
 
         // NOTE: These follow the APA style guide for references. These will be used to dynamically create
         //       the interaction_type attribute for the interaction object.
-        this.interationTypes = this.fileSystem.readJSONFile('./src/cli/interactionTypes.json')
+        // this.interactionTypes = this.fileSystem.readJSONFile('./interactionTypes.json')[2]
+        this.interactionTypes = this.fileSystem.importJSONFile('./interactionTypes.json')[2]
     }
 
 
@@ -135,11 +137,11 @@ class AddInteraction {
             // List all files in the directory and process them one at a time
             const allFiles = this.fileSystem.listAllFiles(myPath)
             // Start the progress bar
-            this.progressBar.start(allFiles[2].length, 0)
+            this.progressBar.start(allFiles[2].length-1, 0)
             // Iterate through each file in the directory
             for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
-                const fileName = allFiles[2][myIdx]
+                let fileName = allFiles[2][myIdx]
                 // Skip files that start with . including present and parent working directories
                 if(fileName.indexOf('.') === 0) { continue }
                 // Read the blob and return contents base64 encoded
@@ -165,37 +167,20 @@ class AddInteraction {
     }
 
     async getInteractionType () {
+        // Take all keys of interactionTypes and turn them into a list of objects like {name: 
+        const myInteractionTypes = Object.keys(this.interactionTypes).map(key => ({ 
+            name: key })
+        )
         let interactionType = this.defaultValue
         const tmpType = await this.wutils.doList(
             "What kind of interaction is this?",
-            [
-                { name: 'Book' },
-                { name: 'Journal Article' },
-                { name: 'Webpage' },
-                { name: 'Conference Proceedings' },
-                { name: 'Report' },
-                { name: 'Thesis/Dissertation' },
-                { name: 'Magazine Article' },
-                { name: 'Newspaper Article' },
-                { name: 'Online Forum or Discussion Board Post' },
-                { name: 'Blog Post' },
-                { name: 'Social Media Post' },
-                { name: 'Legal Material' },
-                { name: 'Government Report' },
-                { name: 'Patent' },
-                { name: 'General Notes' }, // Becomes general
-                { name: 'Frequently Asked Questions' }, // Becomes faq
-                { name: 'White Paper' }, // Becomes article
-                { name: 'Case Study' }, // Becomes article
-                { name: 'Public Company Filing' },
-                { name: 'Press Release' }, // Becomes article
-                { name: 'Product/Service Document' }, // Becomes product/service
-                { name: 'Transcript' },
-                { name: 'About the company' }, // Becomes about company
-            ]
+            myInteractionTypes
         )
-        interactionType = tmpType[0]
-        return {interaction: interactionType, interactionDetail: this.interationTypes[interactionType]}
+        interactionType = tmpType
+        return {
+            interactionType: interactionType, 
+            interactionDetail: this.interactionTypes[interactionType]
+        }
     }
 
     async discoverCompany() {
@@ -224,94 +209,38 @@ class AddInteraction {
         return companiesObjects[companyChoice]
     }
 
-    // TODO: This needs to be updated in the following ways:
-    // 1. Pass in the interation prototype object
-    // 2. Pass in the files list
-    // 3. Pass in previously read interactions
-    // Additionally, we will want to prompt for the interaction type and then use that to
-    // determine the interactionDetail prototype object. We will then prompt for each of the
-    // attributes in the interactionDetail object using doManual.
-    async _mergeResults(controller, interaction, files, company, companyCtl) {
-        let interactionResults = {}
-
-        for (const myFile in files) {
-            process.stdout.write(chalk.blue.bold(`\tCreating interaction -> `))
-            console.log(chalk.blue.underline(`${files[myFile].name.slice(0, 72)}...`))
-            let myInteraction = interaction
-
-            // Set the interaction_type property
-            myInteraction.interaction_type = await this.getInteractionType()
-
-            // Name
-            myInteraction.name = files[myFile].name
-            // URL
-            myInteraction.url =  files[myFile].url
-            // Status
-            myInteraction.status = 0
-            // Abstract
-            myInteraction.abstract = this.defaultValue
-            // Description
-            myInteraction.description = this.defaultValue
-            // Public
-            myInteraction.public = false
-            // Topics
-            myInteraction.topics = {}
-            // Groups
-            myInteraction.groups = `${this.env.user}:${this.env.user}`
-            // Current time
-            const myDate = new Date()
-            myInteraction.creation_date = myDate.toISOString()
-            myInteraction.modification_date = myDate.toISOString()
-            myInteraction.date_time = myDate.toISOString()
-
-            // File metadata
-            myInteraction.content_type = this.defaultValue
-            myInteraction.file_size = this.defaultValue
-            myInteraction.reading_time = this.defaultValue
-            myInteraction.word_count = this.defaultValue
-            myInteraction.page_count = this.defaultValue
-            console.log(chalk.blue(`\t\tSaving interaction...`))
-            const [createSuccess, createMessage, createResults] = await controller.createObj(myInteraction)
-            let linkResults = []
-            if (createSuccess) {
-                // TODO revist the linking of studies and companies, these are placeholders for now
-                console.log(chalk.blue(`\t\tLinking interaction to company -> ${company.name}`))
-                linkResults = await this._linkInteractionToCompany(company, myInteraction, companyCtl)
-                // const [success, msg, intLinkStudy] = this._linkInteractionToStudy(myStudy, interaction) 
+    async createInteractionObject(interactionPrototype, myFiles, myCompany) {
+        this.output.printLine()
+        // Loop through each file and create an interaction object
+        let myInteractions = []
+        let linkedInteractions = {}
+        for(const myFile in myFiles) {
+            // Assign each value from the prototype to the interaction object
+            let myInteraction = {}
+            // Loop through each attribute in the prototype and assign the value to the interaction object
+            for(const attribute in interactionPrototype) {
+                myInteraction[attribute] = interactionPrototype[attribute].value
             }
+            // Set the name of the interaction to the file name
+            myInteraction.name = myFiles[myFile].interactionName
+            console.log(chalk.blue.bold(`Setting details for [${myInteraction.name}]`))
+            // Set the interaction type
+            const interactionType = await this.getInteractionType()
+            myInteraction.interaction_type = interactionType.interactionType
+            // Set the interaction type details
+            const interactionDetails = await this.wutils.doManual(interactionType.interactionDetail)
+            myInteraction.interaction_type_detail = interactionDetails
+            // Set the stored_url
+            myInteraction.url = `Interactions/${myFiles[myFile].fileName}`
+            // Set the company
+            myInteraction.linked_companies = this.companyCtl.linkObj([myCompany])
+            // Add the interaction to the list of interactions
+            myInteractions.push(myInteraction)
+            // Create an interaction link from the company to the interaction and spread it into the linkedInteractions object
+            linkedInteractions = {...linkedInteractions, ...this.interactionCtl.linkObj([myInteraction])}
             this.output.printLine()
-            const linkSuccess = linkResults[0]
-            if(createSuccess && linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 200, status_msg: `successfully created and linked ${myInteraction.name}`},
-                    null
-                ]
-            } else if(createSuccess && !linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 503, status_msg: `successfully created but could not link ${myInteraction.name}`},
-                    null
-                ]
-            } else if(!createSuccess && linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 503, status_msg: `successfully linked but could not create ${myInteraction.name}`},
-                    null
-                ]
-            } else {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 404, status_msg: `unable to create or link ${myInteraction.name}`},
-                    null
-                ]
-            }
         }
-        return [
-            true,
-            {status_code: 200, status_msg: `performed create and link operations on ${interactionResults.length}`},
-            interactionResults
-        ]
+        return [myInteractions, linkedInteractions]
     }
 
     /**
@@ -400,18 +329,74 @@ class AddInteraction {
             modification_date: {consoleString: "", value: myDateString}, // Set to the current date
         }
 
-        // Catch the container for update
-        // const lockExists = await this.githubCtl.checkForLock('Interactions')
-        const caught = await this.githubCtl.catchContainer(this.objectType)
+        // Catch the container for updates
+        let repoMetadata = {
+            containers: {
+                'Interactions': {},
+                'Companies': {},
+                /* 'Studies': {}, Not needed at this time, will enable later*/
+            }, 
+            branch: {}
+        }
+
+        let mySpinner = new ora('Preparing the repository to ingest interactions ...')
+        mySpinner.start()
+        const caught = await this.githubCtl.catchContainer(repoMetadata)
+        mySpinner.stop()
 
         // Prompt the user to ingest one or more files
-        const files = await this.ingestInteractions(caught[2].branchName, caught[2].branchSha)
+        const files = await this.ingestInteractions(caught[2].branch.name, caught[2].branch.sha)
+        
+        // Create the interaction object
+        const [myInteractions, linkedInteractions] = await this.createInteractionObject(
+            interactionPrototype, 
+            files, 
+            myCompany
+        )
 
-        // Merge the file names with the interaction prototype to create the interactions
-        // return await this._mergeResults(interactionCtl, myInteraction, myFiles, myCompany, companyCtl)
+        // Update the company object with linkedInteractions and updateObject
+        const updatedCompany = await this.companyCtl.updateObj(
+            myCompany.name, 
+            'linked_interactions', 
+            linkedInteractions, 
+            true
+        )
+
+        mySpinner = new ora('Writing interaction objects ...')
+        mySpinner.start()
+        // Write the interaction object to the backend
+        const createdInteractions = await this.githubCtl.writeObject(
+            this.objectType, 
+            myInteractions,
+            caught[2].branch.name,
+            caught[2].containers.Interactions.objectSha
+        )
+        // Check to see if createdInteractions was successful and return an error if not
+        if(!createdInteractions[0]) {
+            return createdInteractions
+        }
+        mySpinner.stop()
+
+        mySpinner = new ora(`Updating company [${myCompany.name}] object ...`)
+        mySpinner.start()
+        // Write the updated company object to the backend
+        const updatedCompanies = await this.githubCtl.writeObject(
+            'Companies',
+            updatedCompany[2], 
+            caught[2].branch.name,
+            caught[2].containers.Companies.objectSha
+        )
+        // Check to see if updatedCompanies was successful and return an error if not
+        if(!updatedCompanies[0]) {
+            return updatedCompanies
+        }
+        mySpinner.stop()
 
         // Release the container
+        mySpinner = new ora('Releasing the repository ...')
+        mySpinner.start()
         const released = await this.githubCtl.releaseContainer(caught[2])
+        mySpinner.stop()
         return released
     }
 

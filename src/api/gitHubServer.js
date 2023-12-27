@@ -104,9 +104,8 @@ class baseObjects {
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
      */
-    async updateObj(obj, endpoint='update') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return this.rest.postObj(fullEndpoint, obj)
+    async updateObj(objName, key, value, dontWrite=false) {
+        return await this.serverCtl.updateObject(this.objType, objName, key, value, dontWrite)
     }
 
     /**

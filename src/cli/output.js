@@ -87,15 +87,35 @@ class CLIOutput {
         // Study, Company and Interaction objects output
         } else if (this.objectType === 'Companies') {
             table = new Table({
-                head: ['Name', 'Role', 'Region', 'Description'],
-                colWidths: [35, 15, 10, 70]
+                head: ['Name', 'Role', 'Interaction No.', 'Region', 'Description'],
+                colWidths: [27, 15, 17, 8, 60]
+            })
+            
+            for (const myObj in objects) {
+                let totalInteractions = 0
+                if (Object.keys(objects[myObj].linked_interactions).length) {
+                    totalInteractions = Object.keys(objects[myObj].linked_interactions).length
+                }
+                table.push([
+                    objects[myObj].name,
+                    objects[myObj].role,
+                    totalInteractions,
+                    objects[myObj].region,
+                    objects[myObj].description
+
+                ])
+            }
+        } else if (this.objectType === 'Interactions') {
+            table = new Table({
+                head: ['Name', 'Creator Name', 'Region', 'Linked Company'],
+                colWidths: [80, 15, 10, 25]
             })
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].name,
-                    objects[myObj].role,
+                    objects[myObj].creator_name,
                     objects[myObj].region,
-                    objects[myObj].description
+                    Object.keys(objects[myObj].linked_companies)[0]
 
                 ])
             }

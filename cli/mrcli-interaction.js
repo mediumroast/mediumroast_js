@@ -208,13 +208,8 @@ if (myArgs.report) {
 } else if (myArgs.add_wizard) {
    const newInteraction = new AddInteraction(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newInteraction.wizard()
-   if(result[0]) {
-      console.log('SUCCESS: Created new interactions in the backend')
-      process.exit(0)
-   } else {
-      console.error('ERROR: Failed to create interaction objects with %d', result[1].status_code)
-      process.exit(-1)
-   }
+   console.log(result[1])
+   result[0] ? process.exit(0) : process.exit(-1)
 } else if (myArgs.reset_by_type) {
    console.error('ERROR (%d): Reset by type not implemented.', -1)
    process.exit(-1)
