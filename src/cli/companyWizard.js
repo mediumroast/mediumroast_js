@@ -43,7 +43,7 @@ class AddCompany {
         this.sicEndpoint = "/V2.0/sic/description/"
         
         
-        this.env.DEFAULT.company_dns ? this.companyDNS = this.env.DEFAULT.company_dns : this.companyDNS = companyDNSUrl
+        this.env.companyDNS ? this.companyDNS = this.env.companyDNS: this.companyDNS = companyDNSUrl
         this.companyDNSCred = {
             apiKey: "Not Applicable",
             restServer: this.companyDNS,
@@ -52,7 +52,7 @@ class AddCompany {
         }
         this.companyDNSRest = new mrRest(this.companyDNSCred)
 
-        this.env.DEFAULT.company_logos ? this.companyLogos = this.env.DEFAULT.company_logos : this.companyDNS = companyLogoUrl
+        this.env.companyLogos ? this.companyLogos = this.env.companyLogos : this.companyDNS = companyLogoUrl
         this.companyLogosCred = {
             apiKey: "Not Applicable",
             restServer: this.companyLogos,
@@ -61,7 +61,7 @@ class AddCompany {
         }
         this.companyLogosRest = new mrRest(this.companyLogosCred)
 
-        this.env.DEFAULT.nominatim ? this.nominatim = this.env.DEFAULT.nominatim : this.nominatim = nominatimUrl
+        this.env.nominatim ? this.nominatim = this.env.nominatim : this.nominatim = nominatimUrl
         this.nominatimCred = this.companyDNSCred = {
             apiKey: "Not Applicable",
             restServer: this.nominatim,

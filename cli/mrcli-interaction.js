@@ -6,26 +6,23 @@
  * @file interactions.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.2.0
+ * @version 3.0.0
  */
 
 
 
 // Import required modules
 import { InteractionStandalone } from '../src/report/interactions.js'
+import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import GitHubFunctions from '../src/api/github.js'
 import AddInteraction from '../src/cli/interactionWizard.js'
 import Environmentals from '../src/cli/env.js'
-import s3Utilities from '../src/cli/s3.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
-import {serverOperations} from '../src/cli/common.js'
 import ArchivePackage from '../src/cli/archive.js'
 
 // External modules
 import chalk from 'chalk'
-
-console.log(chalk.bold.yellow('NOTICE: This CLI is presently a work in progress and will not operate, exiting.'))
-process.exit(0)
 
 // Reset the status of objects for caffiene reprocessing
 async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
@@ -57,11 +54,11 @@ async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
 
 
 // Related object type
-const objectType = 'interaction'
+const objectType = 'Interactions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '2.0',
+   '3.0.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -72,35 +69,21 @@ const fileSystem = new FilesystemOperators()
 
 // Create the environmental settings
 const myArgs = environment.parseCLIArgs()
-const myConfig = environment.getConfig(myArgs.conf_file)
+const myConfig = environment.readConfig(myArgs.conf_file)
 const myEnv = environment.getEnv(myArgs, myConfig)
+const accessToken = await environment.verifyAccessToken()
+const processName = 'mrcli-interaction'
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
 
-// S3 object
-const s3 = new s3Utilities(myEnv)
+// Construct the controller objects
+const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
+const interactionCtl = new Interactions(accessToken, myEnv.gitHubOrg, processName)
+const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
 
-// Common server ops and also check the server
-const serverOps = new serverOperations(myEnv)
-// Checking to see if the server is ready for operations
-const serverReady = await serverOps.checkServer()
-if(serverReady[0]) {
-   console.log(
-      chalk.red.bold(
-         `No objects detected on your mediumroast.io server [${myEnv.restServer}].\n` +
-         `Perhaps you should try to run mr_setup first to create the owning company, exiting.`
-      )
-   )
-   process.exit(-1)
-}
-
-// Assign the controllers based upon the available server
-const companyCtl = serverReady[2].companyCtl
-const interactionCtl = serverReady[2].interactionCtl
-const studyCtl = serverReady[2].studyCtl
-const owningCompany = await serverOps.getOwningCompany(companyCtl)
-const sourceBucket = s3.generateBucketName(owningCompany[2])
+// const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
 // Predefine the results variable
 let success = Boolean()
@@ -109,6 +92,8 @@ let results = Array() || []
 
 // Process the cli options
 if (myArgs.report) {
+   console.error('ERROR (%d): Report not implemented.', -1)
+   process.exit(-1)
    // Retrive the interaction by Id
    const [int_success, int_stat, int_results] = await interactionCtl.findById(myArgs.report)
    // Retrive the company by Name
@@ -145,7 +130,7 @@ if (myArgs.report) {
              access points, but the tradeoff would be that caffeine would need to run on a
              system with file system access to these objects.
          */
-         await s3.s3DownloadObjs(int_results, baseDir + '/interactions', sourceBucket)
+         // await s3.s3DownloadObjs(int_results, baseDir + '/interactions', sourceBucket)
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -182,6 +167,8 @@ if (myArgs.report) {
    }
    
 } else if (myArgs.find_by_id) {
+   console.error('ERROR (%d): Find by name not implemented.', -1)
+   process.exit(-1)
    // Retrive the interaction by Id
    [success, stat, results] = await interactionCtl.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
@@ -195,6 +182,8 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
+   console.error('ERROR (%d): Update not implemented.', -1)
+   process.exit(-1)
    const myCLIObj = JSON.parse(myArgs.update)
    const [success, stat, resp] = await interactionCtl.updateObj(myCLIObj)
    if(success) {
@@ -205,6 +194,8 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
+   console.error('ERROR (%d): Delete not implemented.', -1)
+   process.exit(-1)
    // Delete an object
    const [success, stat, resp] = await interactionCtl.deleteObj(myArgs.delete)
    if(success) {
@@ -215,16 +206,18 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
-   const newInteraction = new AddInteraction(myEnv)
+   const newInteraction = new AddInteraction(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newInteraction.wizard()
    if(result[0]) {
-      console.log('SUCCESS: Created new interactions in the backend')
+      console.log(`SUCCESS: Added new interaction object(s).`)
       process.exit(0)
    } else {
-      console.error('ERROR: Failed to create interaction objects with %d', result[1].status_code)
+      console.log(`ERROR: Unable to add interaction object due to [${result[1].status_msg}].`)
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {
+   console.error('ERROR (%d): Reset by type not implemented.', -1)
+   process.exit(-1)
    const resetResponses = await resetStatuses(myArgs.reset_by_type, interactionCtl)
    if(resetResponses[0]) {
       console.log(`SUCCESS: Reset status of ${resetResponses[2].successful.length} interactions.`)
@@ -236,6 +229,7 @@ if (myArgs.report) {
 } else {
    // Get all objects
    [success, stat, results] = await interactionCtl.getAll()
+   results = results.mrJson
 }
 
 // Emit the output

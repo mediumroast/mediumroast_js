@@ -1,0 +1,203 @@
+{
+    "Book": {
+        "author": {"consoleString": "Book's author", "value": "Unknown"},
+        "year": {"consoleString": "Book's published year", "value": "Unknown"},
+        "month": {"consoleString": "Book's published month", "value": "Unknown"},
+        "day": {"consoleString": "Book's published day", "value": "Unknown"},
+        "title": {"consoleString": "Book's title", "value": "Unknown"},
+        "publisher": {"consoleString": "Book's publisher", "value": "Unknown"}
+      },
+      "Journal Article": {
+        "author": {"consoleString": "Journal Article's author", "value": "Unknown"},
+        "year": {"consoleString": "Journal Article's published year", "value": "Unknown"},
+        "month": {"consoleString": "Journal Article's published month", "value": "Unknown"},
+        "day": {"consoleString": "Journal Article's published day", "value": "Unknown"},
+        "title": {"consoleString": "Journal Article's title", "value": "Unknown"},
+        "journal": {"consoleString": "Journal Article's journal name", "value": "Unknown"},
+        "volume": {"consoleString": "Journal Article's volume number", "value": "Unknown"},
+        "issue": {"consoleString": "Journal Article's issue number", "value": "Unknown"},
+        "pageRange": {"consoleString": "Journal Article's page range", "value": "Unknown"},
+        "url": {"consoleString": "Journal Article's URL", "value": "Unknown"}
+      },
+      "Webpage": {
+        "author": {"consoleString": "Webpage's author", "value": "Unknown"},
+        "year": {"consoleString": "Webpage's published year", "value": "Unknown"},
+        "month": {"consoleString": "Webpage's published month", "value": "Unknown"},
+        "day": {"consoleString": "Webpage's published day", "value": "Unknown"},
+        "title": {"consoleString": "Webpage's title", "value": "Unknown"},
+        "url": {"consoleString": "Webpage's URL", "value": "Unknown"}
+      },
+      "About the company": {
+        "author": {"consoleString": "page's author", "value": "Unknown"},
+        "year": {"consoleString": "page's copyright year", "value": "Unknown"},
+        "month": {"consoleString": "page's copyright month", "value": "Unknown"},
+        "day": {"consoleString": "page's copyright day", "value": "Unknown"},
+        "title": {"consoleString": "page's title", "value": "Unknown"},
+        "url": {"consoleString": "page's URL", "value": "Unknown"}
+      },
+      "Conference Proceedings": {
+        "author": {"consoleString": "Conference Proceedings' author", "value": "Unknown"},
+        "year": {"consoleString": "Conference Proceedings' year", "value": "Unknown"},
+        "month": {"consoleString": "Conference Proceedings' month", "value": "Unknown"},
+        "day": {"consoleString": "Conference Proceedings' day", "value": "Unknown"},
+        "title": {"consoleString": "Conference Proceedings' title", "value": "Unknown"},
+        "editors": {"consoleString": "Conference Proceedings' editors", "value": "Unknown"},
+        "conference": {"consoleString": "Conference Proceedings' conference", "value": "Unknown"},
+        "location": {"consoleString": "Conference Proceedings' location", "value": "Unknown"},
+        "publisher": {"consoleString": "Conference Proceedings' publisher", "value": "Unknown"},
+        "pageRange": {"consoleString": "Conference Proceedings' page range", "value": "Unknown"},
+        "url": {"consoleString": "Conference Proceedings' URL", "value": "Unknown"}
+      },
+      "Report": {
+        "author": {"consoleString": "Report's author", "value": "Unknown"},
+        "year": {"consoleString": "Report's year", "value": "Unknown"},
+        "month": {"consoleString": "Report's month", "value": "Unknown"},
+        "day": {"consoleString": "Report's day", "value": "Unknown"},
+        "title": {"consoleString": "Report's title", "value": "Unknown"},
+        "institution": {"consoleString": "Report's institution", "value": "Unknown"},
+        "url": {"consoleString": "Report's URL", "value": "Unknown"}
+      },
+      "Thesis/Dissertation": {
+        "author": {"consoleString": "Thesis/Dissertation's author", "value": "Unknown"},
+        "year": {"consoleString": "Thesis/Dissertation's year", "value": "Unknown"},
+        "month": {"consoleString": "Thesis/Dissertation's month", "value": "Unknown"},
+        "day": {"consoleString": "Thesis/Dissertation's day", "value": "Unknown"},
+        "title": {"consoleString": "Thesis/Dissertation's title", "value": "Unknown"},
+        "institution": {"consoleString": "Thesis/Dissertation's institution", "value": "Unknown"},
+        "url": {"consoleString": "Thesis/Dissertation's URL", "value": "Unknown"}
+      },
+    "Magazine Article": {
+        "author": {"consoleString": "Magazine Article's author", "value": "Unknown"},
+        "year": {"consoleString": "Magazine Article's published year", "value": "Unknown"},
+        "month": {"consoleString": "Magazine Article's published month", "value": "Unknown"},
+        "day": {"consoleString": "Magazine Article's published day", "value": "Unknown"},
+        "title": {"consoleString": "Magazine Article's title", "value": "Unknown"},
+        "magazine": {"consoleString": "Magazine Article's name", "value": "Unknown"},
+        "volume": {"consoleString": "Magazine Article's volume number", "value": "Unknown"},
+        "issue": {"consoleString": "Magazine Article's issue number", "value": "Unknown"},
+        "pageRange": {"consoleString": "Magazine Article's used page range", "value": "Unknown"}
+    },
+    "Newspaper Article": {
+        "author": {"consoleString": "Newspaper Article's author", "value": "Unknown"},
+        "year": {"consoleString": "Newspaper Article's published year", "value": "Unknown"},
+        "month": {"consoleString": "Newspaper Article's published month", "value": "Unknown"},
+        "day": {"consoleString": "Newspaper Article's published day", "value": "Unknown"},
+        "title": {"consoleString": "Newspaper Article's title", "value": "Unknown"},
+        "newspaper": {"consoleString": "Newspaper Article's name", "value": "Unknown"},
+        "pageRange": {"consoleString": "Newspaper Article's used page range", "value": "Unknown"}
+    },
+    "Online Forum or Discussion Board Post": {
+        "author": {"consoleString": "Post's author", "value": "Unknown"},
+        "year": {"consoleString": "Post's published year", "value": "Unknown"},
+        "month": {"consoleString": "Post's published month", "value": "Unknown"},
+        "day": {"consoleString": "Post's published day", "value": "Unknown"},
+        "title": {"consoleString": "Post's title", "value": "Unknown"},
+        "site": {"consoleString": "Forum or Discussion Board's name", "value": "Unknown"},
+        "url": {"consoleString": "Post's URL", "value": "Unknown"}
+      },
+      "Blog Post": {
+        "author": {"consoleString": "Blog Post's author", "value": "Unknown"},
+        "year": {"consoleString": "Blog Post's published year", "value": "Unknown"},
+        "month": {"consoleString": "Blog Post's published month", "value": "Unknown"},
+        "day": {"consoleString": "Blog Post's published day", "value": "Unknown"},
+        "title": {"consoleString": "Blog Post's title", "value": "Unknown"},
+        "blog": {"consoleString": "Blog's name", "value": "Unknown"},
+        "url": {"consoleString": "Blog Post's URL", "value": "Unknown"}
+      },
+      "Social Media Post": {
+        "author": {"consoleString": "Social Media Post's author", "value": "Unknown"},
+        "year": {"consoleString": "Social Media Post's published year", "value": "Unknown"},
+        "month": {"consoleString": "Social Media Post's published month", "value": "Unknown"},
+        "day": {"consoleString": "Social Media Post's published day", "value": "Unknown"},
+        "title": {"consoleString": "Social Media Post's title", "value": "Unknown"},
+        "platform": {"consoleString": "Social Media platform's name", "value": "Unknown"},
+        "url": {"consoleString": "Social Media Post's URL", "value": "Unknown"}
+      },
+      "Legal Material": {
+        "name": {"consoleString": "Legal Material's name", "value": "Unknown"},
+        "year": {"consoleString": "Legal Material's published year", "value": "Unknown"},
+        "month": {"consoleString": "Legal Material's published month", "value": "Unknown"},
+        "day": {"consoleString": "Legal Material's published day", "value": "Unknown"},
+        "url": {"consoleString": "Legal Material's URL", "value": "Unknown"}
+      },
+      "Government Report": {
+        "agency": {"consoleString": "Government agency's name", "value": "Unknown"},
+        "year": {"consoleString": "Report's published year", "value": "Unknown"},
+        "month": {"consoleString": "Report's published month", "value": "Unknown"},
+        "day": {"consoleString": "Report's published day", "value": "Unknown"},
+        "title": {"consoleString": "Report's title", "value": "Unknown"},
+        "url": {"consoleString": "Report's URL", "value": "Unknown"}
+      },
+      "Patent": {
+        "inventor": {"consoleString": "Inventor's name", "value": "Unknown"},
+        "year": {"consoleString": "Patent's issued year", "value": "Unknown"},
+        "month": {"consoleString": "Patent's issued month", "value": "Unknown"},
+        "day": {"consoleString": "Patent's issued day", "value": "Unknown"},
+        "title": {"consoleString": "Patent's title", "value": "Unknown"},
+        "patentNumber": {"consoleString": "Patent number", "value": "Unknown"}
+      },
+      "General Notes": {
+        "author": {"consoleString": "General Notes's author", "value": "Unknown"},
+        "year": {"consoleString": "General Notes's published year", "value": "Unknown"},
+        "month": {"consoleString": "General Notes's published month", "value": "Unknown"},
+        "day": {"consoleString": "General Notes's published day", "value": "Unknown"},
+        "title": {"consoleString": "General Notes's title", "value": "Unknown"},
+        "url": {"consoleString": "General Notes's URL", "value": "Unknown"}
+      },
+      "Frequently Asked Questions": {
+        "author": {"consoleString": "FAQ's author", "value": "Unknown"},
+        "year": {"consoleString": "FAQ's published year", "value": "Unknown"},
+        "month": {"consoleString": "FAQ's published month", "value": "Unknown"},
+        "day": {"consoleString": "FAQ's published day", "value": "Unknown"},
+        "title": {"consoleString": "FAQ's title", "value": "Unknown"},
+        "url": {"consoleString": "FAQ's URL", "value": "Unknown"}
+      },
+      "White Paper": {
+        "author": {"consoleString": "White Paper's author", "value": "Unknown"},
+        "year": {"consoleString": "White Paper's published year", "value": "Unknown"},
+        "month": {"consoleString": "White Paper's published month", "value": "Unknown"},
+        "day": {"consoleString": "White Paper's published day", "value": "Unknown"},
+        "title": {"consoleString": "White Paper's title", "value": "Unknown"},
+        "url": {"consoleString": "White Paper's URL", "value": "Unknown"}
+      },
+      "Case Study": {
+        "author": {"consoleString": "Case Study's author", "value": "Unknown"},
+        "year": {"consoleString": "Case Study's published year", "value": "Unknown"},
+        "month": {"consoleString": "Case Study's published month", "value": "Unknown"},
+        "day": {"consoleString": "Case Study's published day", "value": "Unknown"},
+        "title": {"consoleString": "Case Study's title", "value": "Unknown"},
+        "url": {"consoleString": "Case Study's URL", "value": "Unknown"}
+      },
+      "Public Company Filing": {
+        "author": {"consoleString": "Filing's author", "value": "Unknown"},
+        "year": {"consoleString": "Filing's year", "value": "Unknown"},
+        "month": {"consoleString": "Filing's month", "value": "Unknown"},
+        "day": {"consoleString": "Filing's day", "value": "Unknown"},
+        "title": {"consoleString": "Filing's title", "value": "Unknown"},
+        "url": {"consoleString": "Filing's URL", "value": "Unknown"}
+      },
+      "Press Release": {
+        "author": {"consoleString": "Press Release's author", "value": "Unknown"},
+        "year": {"consoleString": "Press Release's published year", "value": "Unknown"},
+        "month": {"consoleString": "Press Release's published month", "value": "Unknown"},
+        "day": {"consoleString": "Press Release's published day", "value": "Unknown"},
+        "title": {"consoleString": "Press Release's title", "value": "Unknown"},
+        "url": {"consoleString": "Press Release's URL", "value": "Unknown"}
+      },
+      "Product/Service Document": {
+        "author": {"consoleString": "Document's author", "value": "Unknown"},
+        "year": {"consoleString": "Document's published year", "value": "Unknown"},
+        "month": {"consoleString": "Document's published month", "value": "Unknown"},
+        "day": {"consoleString": "Document's published day", "value": "Unknown"},
+        "title": {"consoleString": "Document's title", "value": "Unknown"},
+        "url": {"consoleString": "Document's URL", "value": "Unknown"}
+      },
+      "Transcript": {
+        "author": {"consoleString": "Transcript's author", "value": "Unknown"},
+        "year": {"consoleString": "Transcript's published year", "value": "Unknown"},
+        "month": {"consoleString": "Transcript's published month", "value": "Unknown"},
+        "day": {"consoleString": "Transcript's published day", "value": "Unknown"},
+        "title": {"consoleString": "Transcript's title", "value": "Unknown"},
+        "url": {"consoleString": "Transcript's URL", "value": "Unknown"}
+      }
+}

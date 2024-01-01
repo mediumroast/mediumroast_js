@@ -6,22 +6,18 @@
  * @file interactionCLIwizard.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.2.0
+ * @version 2.0.0
  */
 
 
 // Import required modules
-import { Auth, Companies } from "../api/mrServer.js"
 import chalk from 'chalk'
-import path from "node:path"
-import crypto from "node:crypto"
 import WizardUtils from "./commonWizard.js"
 import { Utilities } from "../helpers.js"
-
 import CLIOutput from "./output.js"
-import {serverOperations} from "./common.js"
-import s3Utilities from "./s3.js"
 import FilesystemOperators from "./filesystem.js"
+import * as progress from 'cli-progress'
+import ora from 'ora'
 
 class AddInteraction {
     /**
@@ -41,534 +37,212 @@ class AddInteraction {
      * @param {Object} credential - a credential needed to talk to a RESTful service which is the company_dns in this case
      * @param {Object} cli - the already constructed CLI object
      */
-    constructor(env){
+    constructor(env, controllers){
         this.env = env
 
         // Splash screen elements
         this.name = "mediumroast.io Interaction Wizard"
-        this.version = "version 1.0.0"
+        this.version = "version 2.0.0"
         this.description = "Prompt based interaction object creation for the mediumroast.io."
+        this.processName = "mrcli-interaction-wizard"
 
         // Class globals
         this.defaultValue = "Unknown"
-        this.objectType = "interaction"
+        this.objectType = "Interactions"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
         this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
-        this.s3Ops = new s3Utilities(this.env)
         this.fileSystem = new FilesystemOperators()
-    }
-
-    _makeChoices(myObjs) {
-        let choices = []
-        let objsById = {}
-        for (const myObj in myObjs) {
-            choices.push({name: myObjs[myObj].name + ` [Id: ${myObjs[myObj].id}]`})
-            objsById[myObjs[myObj].id] = myObjs[myObj]
-        }
-        return [choices, objsById]
-    }
-
-    async _getCompaniesStudies(companyCtl, studyCtl) {
-        
-        // Predefine all variables 
-        let state = 0
-        let msg = {}
-
-        // Success has 4 states
-        // 0 - no objects were fetched
-        // 1 - only company objects were fetched
-        // 2 - only study objects were fetched
-        // 3 - all objects fetched
-        
-        // Get all companies
-        const companyResult = await companyCtl.getAll()
-        
-        if(!companyResult[0]){
-            msg.status_code = 204
-            msg.status_msg = "mediumroast.io did not return company content due to: " + msg
-        } else {
-            msg.status_code = 200
-            msg.status_msg = "successfully fetched company objects"
-            state = 1
-        }
-
-        // Get all studies
-        const studyResult = await studyCtl.getAll()
-        if(!studyResult[0]){
-            if(msg.status_code === 200){
-                msg.status_code = 206
-                msg.status_msg = "successfully fetched company objects failed to fetch study objects"
-            } else {
-                msg.status_msg = "unable to fetch objects from mediumroast.io"
-            }
-        } else {
-            if(msg.status_code > 200){
-                msg.status_code = 206
-                msg.status_msg = "successfully fetched study objects failed to fetch company objects"
-                state = 2
-            } else {
-                msg.status_msg = "successfully fetched all objects"
-                state = 3
-            }
-        }
-
-        // Return the results to doAutomatic
-        return [state, msg, {companies: companyResult[2], studies: studyResult[2]}]
-    }
-
-    async _discoverObj(myObjs, myType) {
-        const [choices, objs] = this._makeChoices(myObjs)
-        const objChoice = await this.wutils.doCheckbox(
-            `Which ${myType} is this ${this.objectType} associated to?`,
-            choices
+        this.progressBar = new progress.SingleBar(
+            {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+            progress.Presets.rect
         )
-        const myObjId = parseInt(objChoice[0].split('Id:')[1].replace(']', ''))
-        return objs[myObjId]
+        this.companyCtl = controllers.company
+        this.interactionCtl = controllers.interaction
+        this.userCtl = controllers.user
+        this.githubCtl = controllers.github
+
+        // NOTE: These follow the APA style guide for references. These will be used to dynamically create
+        //       the interaction_type attribute for the interaction object.
+        // this.interactionTypes = this.fileSystem.readJSONFile('./interactionTypes.json')[2]
+        this.interactionTypes = this.fileSystem.importJSONFile('./interactionTypes.json')[2]
     }
 
-    async _linkInteractionToCompany (myCompany, myInteraction, companyCtl) {
-        // Hash the names
-        const intHash = crypto.createHash('sha256', myInteraction.name).digest('hex')
-        let myCurrentCompany = {}
-        // Get the most recent copy of the company from the backend before we proceed
-        const currentCompany = await companyCtl.findById(myCompany.id)
-        if(currentCompany[0]) {
-            myCurrentCompany = currentCompany[2][0]
-        } else {
-            return [
-                false,
-                {status_code: 204, status_msg: "unable to link interaction to company"},
-                null
-            ]
+
+    async getCompany(companies) {
+        let companyChoices = []
+        for(const company in companies) {
+            companyChoices.push({name: companies[company].name})
         }
-        
-        // Create and update the object link
-        myCurrentCompany.linked_interactions[myInteraction.name] = intHash
-        const linkStatus = await companyCtl.updateObj(
-            {
-                id: myCompany.id, 
-                linked_interactions: myCurrentCompany.linked_interactions
-            }
+        // Define the company type
+        const companyChoice = await this.wutils.doList(
+            "Which company are these interaction(s) associated to?", companyChoices
         )
-
-        if(linkStatus[0]) {
-            return [
-                true, 
-                {status_code: 200, status_msg: "successfully linked interaction to company"},
-                null
-            ]
-        } else {
-            return [
-                false,
-                {status_code: 204, status_msg: "unable to link interaction to company"},
-                null
-            ]
-        }
+        return companyChoice
     }
 
-    _linkObj(name) {
-        // Hash the names
-        // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
-        const objHash = crypto.createHash('sha256', name).digest('hex')
-
-        // Create the object Link
-        let objLink = {} 
-        objLink[name] = objHash
-        return objLink
-    }
-
-    async _populateInteraction(prototype, myCompany={}, myLinks={}) {
-
-        // Set the interaction to blank
-        let myInteraction = {}
-
-        // Define the white listed properties to prompt the user for
-        // TODO removed interaction_type and name as they will come later on
-        const whiteList = [
-            'street_address', 
-            'city',
-            'state_province', 
-            'zip_postal', 
-            'country',
-            'region',
-            'phone', 
-        ]
-        
-        // Study link
-        'study' in myLinks ? 
-            prototype['linked_studies'] = {value: myLinks.study, consoleString: "associated study or studies"} : 
-            prototype['linked_studies'] = {value: {}, consoleString: "associated study or studies"}
-        'company' in myLinks ?
-            prototype['linked_companies'] = {value: myLinks.company, consoleString: "associated company or companies"} : 
-            prototype['linked_companies'] = {value: {}, consoleString: "associated company or companies"}
-        
-
-        // Address
-        'street_address' in myCompany ? 
-            prototype.street_address.value = myCompany.street_address : 
-            prototype.street_address.value = prototype.street_address.value
-            
-        // City
-        'city' in myCompany ? 
-            prototype.city.value = myCompany.city : 
-            prototype.city.value = prototype.city.value
-
-        // State/Province
-        'state_province' in myCompany ? 
-            prototype.state_province.value = myCompany.state_province : 
-            prototype.state_province.value = prototype.state_province.value
-
-        // State/Province
-        'zip_postal' in myCompany ? 
-            prototype.zip_postal.value = myCompany.zip_postal : 
-            prototype.zip_postal.value = prototype.zip_postal.value
-
-        // Country
-        'country' in myCompany ? 
-            prototype.country.value = myCompany.country : 
-            prototype.country.value = prototype.country.value
-
-        // Country
-        'region' in myCompany ? 
-            prototype.region.value = myCompany.region : 
-            prototype.region.value = prototype.region.value
-
-        // Phone
-        'phone' in myCompany ? 
-            prototype.phone.value = myCompany.phone : 
-            prototype.phone.value = prototype.phone.value
-
-
-        // After assignments is successful then ask if we want a summary review or detailed review
-        const doSummary = await this.wutils.operationOrNot (`Would you like to do a summary review of attributes for your interaction(s)?`)
-        if (await doSummary) {
-            const tmpInteraction = await this.wutils.doManual(
-                prototype, 
-                whiteList,
-                true
-            )
-            myInteraction = await tmpInteraction
-        } else {
-            const tmpInteraction = await this.wutils.doManual(
-                prototype,
-                [],
-                true
-            )
-            myInteraction = await tmpInteraction
-        }
-
-        // Geospatial coordinates
-        'longitude' in myCompany ?
-            myInteraction.longitude = myCompany.longitude :
-            myInteraction.longitude = this.defaultValue
-
-        'latitude' in myCompany ?
-            myInteraction.latitude = myCompany.latitude :
-            myInteraction.latitude = this.defaultValue
-
-        return myInteraction
-    }
-
-    async discoverObjects(prototype, companyCtl, studyCtl){
-        let myCompany = {}
-        let myStudy = {}
-        let myInteraction = {}
-        // First fetch key objects
-        const [state, msg, myObjs] = await this._getCompaniesStudies(companyCtl, studyCtl)
-
-        // Able to fetch companies so we can at least enable this automated step
-        if(state === 1){
-            // Transform the returned data into choices and an object keyed by Ids
-            myCompany = await this._discoverObj(myObjs.companies, 'company')
-            const compLink = this._linkObj(myCompany.name)
-            myInteraction = this._populateInteraction(prototype, myCompany, {company: compLink})
-        // Able to fetch studies so we can at least enable this automated step
-        } else if(state === 2){
-            myStudy = await this._discoverObj(myObjs.studies, 'study')
-            const studyLink = this._linkObj(myStudy.name)
-            myInteraction = this._populateInteraction(prototype, {}, {study: studyLink})
-        // All objects fetched
-        } else if(state === 3) {
-            myCompany = await this._discoverObj(myObjs.companies, 'company')
-            const compLink = this._linkObj(myCompany.name)
-            myStudy = await this._discoverObj(myObjs.studies, 'study')
-            const studyLink = this._linkObj(myStudy.name)
-            myInteraction = await this._populateInteraction(
-                prototype, 
-                myCompany, 
-                {
-                    study: studyLink,
-                    company: compLink
-                }
-            )
-             
-        // Nothing was fetched do manual
-        } else {
-            // Return and perform manual
-            return [
-                false,
-                {status_code: 422, status_msg: "unable to perform the automatic process for interaction creation"},
-                null
-            ]
-        }
-
-        // Return after all processing
-        return [
-            true,
-            {status_code: 200, status_msg: "generated and retrieved object definitions"},
-            {
-                interaction: myInteraction, 
-                company: myCompany, 
-                study: myStudy
-            }
-        ]
-
-    }
-
-    async _uploadFile (fileName, targetBucket, protocol='s3') {
+    async uploadFile (fileName, fileData, branchName, sha) {
         let fileBits = fileName.split('/')
         const shortFilename = fileBits[fileBits.length - 1]
-        const myName = shortFilename.split('.')[0]
-        let myURL = this.env.s3Server + `/${targetBucket}/${shortFilename}`
-        myURL = myURL.replace('http', protocol)
-        const myContents = {
-            name: myName,
-            file: fileName,
-            url: myURL
-        }
+
         const myObjectType = this.fileSystem.checkFilesystemObjectType(fileName)
         if(myObjectType[2].isFile()) {
-            process.stdout.write(chalk.blue.bold(`\tUploading -> `))
-            console.log(chalk.blue.underline(`${fileName.slice(0, 72)}...`))
-            const [returnedFileName, s3Results] = await this.s3Ops.s3UploadObjs([fileName], targetBucket)
-            return [true, {status_code: 200, status_msg: 'successfully upladed file to storage space'}, myContents]
+            try{ 
+                const writeResp = await this.githubCtl.writeBlob(this.objectType, fileName, fileData, branchName, sha)
+                return [true, {status_code: 200, status_msg: `SUCCESS: uploaded file [${fileName}] to GitHub`}, writeResp]
+            } catch (err) {
+                return [false, {status_code: 503, status_msg: `ERROR: unable to upload file [${fileName}] to GitHub`}, err]
+            }
         } else {
-            myContents.url = this.defaultValue
-            return [false, {status_code: 503, status_msg: 'the source is not a file that can be uploaded'}, myContents]
+            return [false, {status_code: 503, status_msg: `WARNING: file [${fileName}] is not of a type that can be uploaded`}, myObjectType[2]]
         }
         
     }
 
-    async getFiles(targetBucket) {
+    async getValidPath() {
+        const pathPrototype = {
+            path: {consoleString: 'full path to the file or directory (e.g., /dir/subdir or /dir/file.ext)', value:this.defaultValue}
+        }
+        let myPath = await this.wutils.doManual(pathPrototype)
+        const [success, message, result] = this.fileSystem.checkFilesystemObject(myPath.path)
+        if(!success) {
+            console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
+            myPath = await this.getValidPath()
+        }
+        console.log(myPath.path)
+        return myPath.path
+    }
+
+    async ingestInteractions(branchName, branchSha) {
         // Pre-define the final object
         let myFiles = []
 
-        // Prompt the user to see if they want to perform multi-file ingestion
-        const multiFile = await this.wutils.operationOrNot('Would you like to perform multi-file ingestion?')
+        // Get a valid path
+        const myPath = await this.getValidPath()
 
-        // Execute multi-file ingestion
-        if(multiFile) {
-            // Prompt the user for the target directory
-            const dirPrototype = {
-                dir_name: {consoleString: "target directory with path (typically, /parent_dir/company_name)", value:this.defaultValue}
-            }
-            let myDir = await this.wutils.doManual(dirPrototype)
-            const [success, message, result] = this.fileSystem.checkFilesystemObject(myDir.dir_name)
-
-            // Try again if the check of the file system object fails
-            if (!success) {
-                console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
-                myFiles = await this.getFiles(targetBucket) // TODO test this
-            }
-
-            
+        // Check to see if this is a file or a directory using the file system object
+        const myObjectType = this.fileSystem.checkFilesystemObjectType(myPath)
+        if(myObjectType[2].isFile()) {
+            // Set up the progress bar
+            this.progressBar.start(1, 0)
+            // Read the blob and return contents base64 encoded
+            const fileData = fileSystem.readBlobFile(myPath)
+            // Upload the file to GitHub
+            const myContents = await this.uploadFile(myPath, fileData[2], branchName, branchSha)
+            // Save the results
+            myFiles.push(myContents[2])
+            // Increment the progress bar
+            this.progressBar.increment()
+        } else {
             // List all files in the directory and process them one at a time
-            const allFiles = this.fileSystem.listAllFiles(myDir.dir_name)
+            const allFiles = this.fileSystem.listAllFiles(myPath)
+            // Start the progress bar
+            this.progressBar.start(allFiles[2].length-1, 0)
+            // Iterate through each file in the directory
             for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
-                const fileName = allFiles[2][myIdx]
-                // Skip files that start with . including present and parent working directories 
+                let fileName = allFiles[2][myIdx]
+                // Skip files that start with . including present and parent working directories
                 if(fileName.indexOf('.') === 0) { continue }
-                const myContents = await this._uploadFile(myDir.dir_name + '/' + fileName, targetBucket) 
-                myFiles.push(myContents[2])
+                // Read the blob and return contents base64 encoded
+                const fileData = this.fileSystem.readBlobFile(`${myPath}/${fileName}`)
+                // Upload the file to GitHub
+                const myContents = await this.uploadFile(`${myPath}/${fileName}`, fileData[2], branchName, branchSha)
+                // Remove the extesion from the file name and save the file name to the myFiles array
+                const fullFileName = fileName
+                const fileBits = fileName.split('.')
+                const shortFilename = fileBits[fileBits.length - 1]
+                fileName = fileName.replace(`.${shortFilename}`, '')
+                // We need to same the object name and the actual file name for later retrieval
+                myFiles.push({interactionName: fileName, fileName: fullFileName})
+                // Increment the progress bar
+                this.progressBar.increment()
             }
-        // Execute single file ingestion
-        } else {
-            // Prompt the user for the target file
-            const filePrototype = {
-                file_name: {consoleString: "target file with path (typically, /parent_dir/sub_dir/file_name.ext)", 
-                value:this.defaultValue}
-            }
-            let myFile = await this.wutils.doManual(filePrototype)
-            const [success, message, result] = this.fileSystem.checkFilesystemObject(myFile.file_name)
-            
-            // Try again if the check of the file system object fails
-            if (!success) {
-                console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
-                myFiles = await this.getFiles(targetBucket) // TODO test this
-            }
+            // Stop the progress bar
+            this.progressBar.stop()
 
-            // Upload the file
-            const myContents = await this._uploadFile(myFile.fileName, targetBucket)
-            myFiles.push(myContents[2])
+            // Return the result of uploaded files
+            return myFiles
         }
-
-        // An end separator
-        this.output.printLine()
-
-        // Return the result of uploaded files
-        return myFiles
     }
 
-    async createInteraction(myInteraction, targetBucket) {
-        let myFiles = []
-        
-        // Perform basic definitional work
-        myCompany = await this.wutils.doManual(interactionPrototype)
-        this.output.printLine()
-        
-        console.log(chalk.blue.bold('Setting location properties...'))
-        // Set the region
-        myInteraction.region = this.wutils.getRegion()
-
-        // Set lat, long and address
-        const myLocation = await this.wutils.getLatLong(myInteraction) // Based upon entered data discover the location(s)
-        myInteraction.latitude = myLocation.latitude // Set to discovered value
-        myInteraction.longitude = myLocation.longitude // Set to discovered value
-        myInteraction.street_address = myLocation.formattedAddress // Set to discovered value
-        this.output.printLine()
-
-        console.log(chalk.blue.bold('Preparing to ingest interaction file.'))
-        const filePrototype = {
-            file_name: {
-                consoleString: "file name with path (typically, /parent_dir/sub_dir/file_name.ext)", 
-                value: this.defaultValue
-            }
-        }
-        let myFile = await this.wutils.doManual(filePrototype)
-        const [success, message, result] = this.fileSystem.checkFilesystemObject(myFile.file_name)
-        // Try again if we don't actually see the file exists
-        if(!success) {
-            console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
-            myFiles = await this.createInteraction(myInteraction)
-        } 
-        const myContents = await this._uploadFile(myFile.file_name, targetBucket)
-        myFiles.push(myContents[2])
-        return myFiles
-    }
-
-    async _chooseInteractionType () {
-        let interactionType = this.defaultValue
-        const tmpType = await this.wutils.doCheckbox(
-            "What kind of interaction is this?",
-            [
-                {name: 'General Notes'}, // Becomes general
-                {name: 'Frequently Asked Questions'}, // Becomes faq
-                {name: 'White Paper'}, // Becomes article
-                {name: 'Case Study'}, // Becomes article
-                {name: 'Public Company Filing'},
-                {name: 'Patent'},
-                {name: 'Press Release'}, // Becomes article
-                {name: 'Blog Post'}, // Becomes social
-                {name: 'Social Media Post(s)'}, // Becomes social
-                {name: 'Product Document'}, // Becomes product/service
-                {name: 'Service Document'}, // Becomes product/service
-                {name: 'Transcript'},
-                {name: 'Article'}, // Becomes article
-                {name: 'About the company'}, // Becomes about company
-                {name: 'Research Paper'}, // Becomes article
-                {name: 'Other'},
-            ]
+    async getInteractionType () {
+        // Take all keys of interactionTypes and turn them into a list of objects like {name: 
+        const myInteractionTypes = Object.keys(this.interactionTypes).map(key => ({ 
+            name: key })
         )
-        // TODO we need to debug other
-        if(tmpType[0] === 'Other') {
-            const typePrototype = {
-                type_name: {
-                    consoleString: "type?", 
-                    value: interactionType
-                }
-            }
-            interactionType = await this.wutils.doManual(typePrototype)
-        } else {
-            interactionType = tmpType[0]
+        let interactionType = this.defaultValue
+        const tmpType = await this.wutils.doList(
+            "What kind of interaction is this?",
+            myInteractionTypes
+        )
+        interactionType = tmpType
+        return {
+            interactionType: interactionType, 
+            interactionDetail: this.interactionTypes[interactionType]
         }
-        return interactionType
     }
 
-    async _mergeResults(controller, interaction, files, company, companyCtl) {
-        let interactionResults = {}
+    async discoverCompany() {
+        // Checking to see if the server is ready for adding interactions
+        process.stdout.write(chalk.blue.bold('Checking if the mediumroast.io app is ready to add interactions ... '))
+        const companiesResp = await this.companyCtl.getAll()
+        if(!companiesResp[0]) {
+            console.log(chalk.red.bold('No companies detected, run [mrcli setup] to add a company'))
+            process.exit(-1)
+        } else {
+            console.log(chalk.green.bold('Ok'))
+        }
 
-        for (const myFile in files) {
-            process.stdout.write(chalk.blue.bold(`\tCreating interaction -> `))
-            console.log(chalk.blue.underline(`${files[myFile].name.slice(0, 72)}...`))
-            let myInteraction = interaction
+        // Convert companies[2] into an object that is keyed by the company name
+        const companiesArray = companiesResp[2].mrJson
 
-            // Set the interaction_type property
-            myInteraction.interaction_type = await this._chooseInteractionType()
+        const companiesObjects = companiesArray.reduce((obj, item) => {
+            obj[item.name] = item
+            return obj
+        }, {})
 
-            // Name
-            myInteraction.name = files[myFile].name
-            // URL
-            myInteraction.url =  files[myFile].url
-            // Status
-            myInteraction.status = 0
-            // Abstract
-            myInteraction.abstract = this.defaultValue
-            // Description
-            myInteraction.description = this.defaultValue
-            // Public
-            myInteraction.public = false
-            // Topics
-            myInteraction.topics = {}
-            // Groups
-            myInteraction.groups = `${this.env.user}:${this.env.user}`
-            // Current time
-            const myDate = new Date()
-            myInteraction.creation_date = myDate.toISOString()
-            myInteraction.modification_date = myDate.toISOString()
-            myInteraction.date_time = myDate.toISOString()
-            // Creator and Owner ID
-            myInteraction.creator_id = 1 // we will need to change this to be determined from the environment
-            myInteraction.owner_id = 1 // we will need to change this to be determined from the environment
-            // File metadata
-            myInteraction.content_type = this.defaultValue
-            myInteraction.file_size = this.defaultValue
-            myInteraction.reading_time = this.defaultValue
-            myInteraction.word_count = this.defaultValue
-            myInteraction.page_count = this.defaultValue
-            console.log(chalk.blue(`\t\tSaving interaction...`))
-            const [createSuccess, createMessage, createResults] = await controller.createObj(myInteraction)
-            let linkResults = []
-            if (createSuccess) {
-                // TODO revist the linking of studies and companies, these are placeholders for now
-                console.log(chalk.blue(`\t\tLinking interaction to company -> ${company.name}`))
-                linkResults = await this._linkInteractionToCompany(company, myInteraction, companyCtl)
-                // const [success, msg, intLinkStudy] = this._linkInteractionToStudy(myStudy, interaction) 
+        // Call getCompany to get the company object of interest
+        const companyChoice = await this.getCompany(companiesObjects)
+
+        // Get the company object
+        return companiesObjects[companyChoice]
+    }
+
+    async createInteractionObject(interactionPrototype, myFiles, myCompany) {
+        this.output.printLine()
+        // Loop through each file and create an interaction object
+        let myInteractions = []
+        for(const myFile in myFiles) {
+            // Assign each value from the prototype to the interaction object
+            let myInteraction = {}
+            // Loop through each attribute in the prototype and assign the value to the interaction object
+            for(const attribute in interactionPrototype) {
+                myInteraction[attribute] = interactionPrototype[attribute].value
+            }
+            // Set the name of the interaction to the file name
+            myInteraction.name = myFiles[myFile].interactionName
+            console.log(chalk.blue.bold(`Setting details for [${myInteraction.name}]`))
+            // Set the interaction type
+            const interactionType = await this.getInteractionType()
+            myInteraction.interaction_type = interactionType.interactionType
+            // Set the interaction type details
+            const interactionDetails = await this.wutils.doManual(interactionType.interactionDetail)
+            myInteraction.interaction_type_detail = interactionDetails
+            // Set the stored_url
+            myInteraction.url = `Interactions/${myFiles[myFile].fileName}`
+            // Set the company
+            myInteraction.linked_companies = this.companyCtl.linkObj([myCompany])
+            // Add the interaction to the list of interactions
+            myInteractions.push(myInteraction)
+            // Create an interaction link from the company to the interaction and spread it into the linkedInteractions object
+            myCompany.linked_interactions = {
+                ...myCompany.linked_interactions, 
+                ...this.interactionCtl.linkObj([myInteraction])
             }
             this.output.printLine()
-            const linkSuccess = linkResults[0]
-            if(createSuccess && linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 200, status_msg: `successfully created and linked ${myInteraction.name}`},
-                    null
-                ]
-            } else if(createSuccess && !linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 503, status_msg: `successfully created but could not link ${myInteraction.name}`},
-                    null
-                ]
-            } else if(!createSuccess && linkSuccess) {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 503, status_msg: `successfully linked but could not create ${myInteraction.name}`},
-                    null
-                ]
-            } else {
-                interactionResults[myInteraction.name] = [
-                    createSuccess,
-                    {status_code: 404, status_msg: `unable to create or link ${myInteraction.name}`},
-                    null
-                ]
-            }
         }
-        return [
-            true,
-            {status_code: 200, status_msg: `performed create and link operations on ${interactionResults.length}`},
-            interactionResults
-        ]
+        return [myInteractions, myCompany.linked_interactions]
     }
 
     /**
@@ -586,34 +260,6 @@ class AddInteraction {
             )
         }
 
-        // Set the prototype object which can be used for creating a real object.
-        // Since the backend expects certain attributes that may not be human readable, the 
-        // prototype below contains strings that are easier to read.  Additionally, should 
-        // we wish to set some defaults for each one it is also feasible within this 
-        // prototype object to do so.
-        let interactionPrototype = {
-            name: {consoleString: "name", value:this.defaultValue},
-            // TODO this has to come out
-            interaction_type: {consoleString: "interaction type (e.g. whitepaper, interview, etc.)", value:this.defaultValue},
-            street_address: {consoleString: "street address (i.e., where interaction takes place)", value:this.defaultValue},
-            city: {consoleString: "city (i.e., where interaction takes place)", value:this.defaultValue},
-            state_province: {consoleString: "state/province (i.e., where interaction takes place)", value:this.defaultValue},
-            zip_postal: {consoleString: "zip or postal code", value:this.defaultValue},
-            country: {consoleString: "country (i.e., where interaction takes place)", value:this.defaultValue},
-            region: {consoleString: "region (i.e., where interaction takes place)", value:this.defaultValue},
-            phone: {consoleString: "phone number", value:this.defaultValue},
-            contact_name: {consoleString: "contact\'s name", value:this.defaultValue},
-            contact_email: {consoleString: "contact\'s email address", value:this.defaultValue},
-            contact_linkedin: {consoleString: "contact\'s LinkedIn URL", value:this.defaultValue},
-            contact_twitter: {consoleString: "contact\'s Twitter handle", value:this.defaultValue},
-        }
-
-        // Define an empty objects
-        let myInteraction = {}
-        let myCompany = {}
-        let myStudy = {}
-        let myFiles = []
-
         // Choose if we want to run the setup or not, and it not exit the program
         const doSetup = await this.wutils.operationOrNot('It appears you\'d like to create a new interaction, right?')
         if (!doSetup) {
@@ -621,62 +267,143 @@ class AddInteraction {
             process.exit()
         }
 
-        // TODO the below can be moved to commonWizard
+        // Capture the current user
+        const myUserResp = await this.userCtl.getMyself()
+        const myUser = myUserResp[2]
 
-        // Checking to see if the server is ready for adding interactions
-        process.stdout.write(chalk.blue.bold('\tPerforming checks to see if the server is ready to ingest interactions. '))
-        const serverChecks = new serverOperations(this.env)
-        const serverReady = await serverChecks.checkServer()
-        if(!serverReady[0]) { // NOTE: We are looking for a false return here because it means there are objects which we need to proceeed
-            console.log(chalk.green.bold('[Ready]'))
-        } else {
-            console.log(chalk.red.bold('[No objects detected, exiting]'))
-            process.exit(-1)
-        }
+        // Capture the current company
+        const myCompany = await this.discoverCompany()
 
-        // Assign the controllers based upon the available server
-        const companyCtl = serverReady[2].companyCtl
-        const interactionCtl = serverReady[2].interactionCtl
-        const studyCtl = serverReady[2].studyCtl
+        // Set the prototype object which can be used for creating a real object.
+        // Since the backend expects certain attributes that may not be human readable, the 
+        // prototype below contains strings that are easier to read.  Additionally, should 
+        // we wish to set some defaults for each one it is also feasible within this 
+        // prototype object to do so.
+        let properties = [
+            "organization_id", //
 
-        // Detect owning company and generate the target bucket name
-        let owningCompanyName = null
-        let targetBucket = null // We'll use this for storing interactions
-        process.stdout.write(chalk.blue.bold('\tDetecting the owning company for this mediumroast.io server. '))
-        const owningCompany = await serverChecks.getOwningCompany(companyCtl)
-        if(owningCompany[0]){
-            owningCompanyName = owningCompany[2]
-            targetBucket = this.s3Ops.generateBucketName(owningCompanyName)
-            console.log(chalk.green.bold(`[${owningCompanyName}]`))
-            this.output.printLine()
-        } else {
-            console.log(chalk.red.bold('[No owning company detected, exiting]'))
-            process.exit(-1)
-        }
+        ]
+
         
-        // Perform automated Company and Study object discovery
-        console.log(chalk.blue.bold('Discovering relevant mediumroast.io objects.'))
-        const [autoSuccess, autoMsg, myObjs] = await this.discoverObjects(interactionPrototype, companyCtl, studyCtl)
-        if(autoSuccess) {
-            // Assign results if automatic discovery was successful
-            myInteraction = myObjs.interaction
-            myCompany = myObjs.company
-            myStudy = myObjs.study
-            // Get the individual files which will be transformed into interactions
-            myFiles = await this.getFiles(targetBucket)
-        
-        // Fallback to manual setup for creating the interaction since discovery failed
-        } else {
-            console.log(chalk.orange.bold('Object discovery failed, falling back to manual processing.'))
-            const myObjs = await this.createInteraction(myInteraction)
-            myInteraction = myObjs.interaction
-            myCompany = myObjs.company
-            myStudy = myObjs.study
-            myFiles = myObjs.files
+
+        // Capture the current data and converto to an ISO string
+        const myDate = new Date()
+        const myDateString = myDate.toISOString()
+
+        // NOTE: Define the interaction prototype to be used for establishing default values. Notes are provided for
+        // each attribute to help the user understand what the attribute is for. Only those attributes that are
+        // either 'Unknown' or have a derived default value are included in the prototype. Where the user assigns
+        // the attribute is excluded from the prototype. The prototype is used to create the interaction object and
+        // then the user is prompted to assign the attributes that are not derived or unknown. The prototype and
+        // the user assigned attributes are then merged to create the final interaction object.
+        let interactionPrototype = {
+            tags: {consoleString: "", value: {}}, // Empty, but assigned by caffeine
+            topics: {consoleString: "", value: {}}, // Empty, but assigned by caffeine
+            status: {consoleString: "", value: 0}, // Set to zero, changed by caffeine
+            organization: {consoleString: "", value: this.env.gitHubOrg}, // Set the organization to the GitHub organization
+            content_type: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            file_size: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            reading_time: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            word_count: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            page_count: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine 
+            description: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            abstract: {consoleString: "", value: this.defaultValue}, // Unknown assigned by caffeine
+            creator: {consoleString: "", value: myUser.login}, // Set the creator to the GitHub user
+            creator_id: {consoleString: "", value: myUser.id}, // Set the creator to the GitHub user
+            creator_name: {consoleString: "", value: myUser.name}, // Set the creator to the GitHub user
+            linked_companies: {consoleString: "", value: this.companyCtl.linkObj([myCompany])}, // Assigned to the user selected company
+            linked_studies: {consoleString: "", value: {}}, // Blank for now
+            street_address: {consoleString: "", value: myCompany.street_address}, // Set to the company street address
+            zip_postal: {consoleString: "", value: myCompany.zip_postal}, // Set to the company zip code
+            city: {consoleString: "", value: myCompany.city}, // Set to the company city
+            state_province: {consoleString: "", value: myCompany.state_province}, // Set to the company state
+            country: {consoleString: "", value: myCompany.country}, // Set to the company country
+            latitude: {consoleString: "", value: myCompany.latitude}, // Set to the company latitude
+            longitude: {consoleString: "", value: myCompany.longitude}, // Set to the company longitude
+            region: {consoleString: "", value: myCompany.region}, // Set to the company region
+            public: {consoleString: "", value: true}, // Set to true
+            groups: {consoleString: "", value: `${this.env.gitHubOrg}:${myUser.login}`}, // Set to the organization and user, reserved for future use
+            creation_date: {consoleString: "", value: myDateString}, // Set to the current date
+            modification_date: {consoleString: "", value: myDateString}, // Set to the current date
         }
 
-        // Merge the file names with the interaction prototype to create the interactions
-        return await this._mergeResults(interactionCtl, myInteraction, myFiles, myCompany, companyCtl)
+        // Catch the container for updates
+        let repoMetadata = {
+            containers: {
+                'Interactions': {},
+                'Companies': {},
+                /* 'Studies': {}, Not needed at this time, will enable later*/
+            }, 
+            branch: {}
+        }
+
+        let mySpinner = new ora('Preparing the repository to ingest interactions ...')
+        mySpinner.start()
+        const caught = await this.githubCtl.catchContainer(repoMetadata)
+        mySpinner.stop()
+        // Check to see if caught was successful and return an error if not
+        if(!caught[0]) {
+            return caught
+        }
+
+        // Prompt the user to ingest one or more files
+        const files = await this.ingestInteractions(caught[2].branch.name, caught[2].branch.sha)
+        
+        // Create the interaction object
+        let [myInteractions, linkedInteractions] = await this.createInteractionObject(
+            interactionPrototype, 
+            files, 
+            myCompany
+        )
+
+        // Update the company object with linkedInteractions and updateObject
+        // NOTE: linkedInteractions is resetting everytime to the new value, this is a bug
+        const updatedCompany = await this.companyCtl.updateObj(
+            myCompany.name, 
+            'linked_interactions', 
+            linkedInteractions, 
+            true // This means do not execute a write to the backend
+        )
+        
+        // Create the new interactions
+        mySpinner = new ora('Writing interaction objects ...')
+        mySpinner.start()
+        // Append the new interactions to the existing interactions
+        myInteractions = [...myInteractions, ...caught[2].containers.Interactions.objects]
+        // Write the new interactions to the backend
+        const createdInteractions = await this.githubCtl.writeObject(
+            this.objectType, 
+            myInteractions,
+            caught[2].branch.name,
+            caught[2].containers.Interactions.objectSha
+        )
+        // Check to see if createdInteractions was successful and return an error if not
+        if(!createdInteractions[0]) {
+            return createdInteractions
+        }
+        mySpinner.stop()
+
+        mySpinner = new ora(`Updating company [${myCompany.name}] object ...`)
+        mySpinner.start()
+        // Write the updated company object to the backend
+        const updatedCompanies = await this.githubCtl.writeObject(
+            'Companies',
+            updatedCompany[2], 
+            caught[2].branch.name,
+            caught[2].containers.Companies.objectSha
+        )
+        // Check to see if updatedCompanies was successful and return an error if not
+        if(!updatedCompanies[0]) {
+            return updatedCompanies
+        }
+        mySpinner.stop()
+
+        // Release the container
+        mySpinner = new ora('Releasing the repository ...')
+        mySpinner.start()
+        const released = await this.githubCtl.releaseContainer(caught[2])
+        mySpinner.stop()
+        return released
     }
 
 }

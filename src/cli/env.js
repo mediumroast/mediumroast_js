@@ -39,7 +39,7 @@ class Environmentals {
      * @description Consistently parse the CLI for options and switches
      * @returns {Object} - an object containing all CLI options and switches
      */
-    parseCLIArgs() {
+    parseCLIArgs(returnInomplete=false) {
         // Define commandline options
         program
             .name(this.name)
@@ -52,22 +52,6 @@ class Environmentals {
                 '-c --conf_file <file>',
                 'Path to the configuration file',
                 process.env.HOME + '/.mediumroast/config.ini'
-            )
-            .option(
-                '-r --rest_server <http://server:port>',
-                'The URL of the target mediumroast.io server'
-            )
-            .option(
-                '-a --api_key <key>',
-                'The API key needed to talk to the mediumroast.io server'
-            )
-            .option(
-                '-u --user <user name>',
-                'Your user name for the mediumroast.io server'
-            )
-            .option(
-                '-s --secret <user secret or password>',
-                'Your user secret or password for the mediumroast.io server'
             )
             .option(
                 '-o --output <choose the output type to emit>',
@@ -102,20 +86,16 @@ class Environmentals {
                 'Update an object from the backend by specifying the object\'s id and value to update in JSON'
             )
             .option(
-                '--delete <ID>',
+                '--delete <NAME>',
                 'Delete an object from the backend by specifying the object\'s id'
             )
             .option(
-                '--report <ID>',
+                '--report <NAME>',
                 'Create an MS word document for an object by specifying the object\'s id'
             )
             .option(
                 '--package',
                 'An additional switch used with --report to generate a ZIP package that includes the interaction'
-            )
-            .option(
-                '--experimental',
-                'An additional switch used with --report to enable experimental charting for reporting. Requires Apache e-charts server.'
             )
             .option(
                 '--add_wizard',
@@ -125,9 +105,34 @@ class Environmentals {
                 '--reset_by_type <OBJECT_TYPE>',
                 'Reset the status of objects to reprocesses them in the caffeine service.'
             )
-
+        
+        // If returnIncomplete is set to true return the program object directly
+        if (returnInomplete) {
+            return program
+        }
         program.parse(process.argv)
-        return program.opts()//, program.args
+        return program.opts()
+    }
+
+    /**
+     * @function removeArgByName
+     * @description Remove an argument from the CLI by name
+     * @param {Object} program - the program object from the CLI
+     * @param {String} name - the name of the argument to remove
+     * @returns {Object} the program object with the argument removed
+     * @example
+     * const env = new Environmentals()
+     * const program = env.parseCLIArgs()
+     * env.removeArgByName(program, 'conf_file')
+     * 
+     * // program will now be missing the conf_file argument
+    */
+    removeArgByName(program, name) {
+        const index = program.options.findIndex(option => option.short === name || option.long === name);
+        if (index !== -1) {
+          program.options.splice(index, 1)
+        }
+        return program
     }
 
     /**

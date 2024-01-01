@@ -43,13 +43,10 @@ class baseObjects {
      * @function findByName
      * @description Find all objects by name from the mediumroast.io application
      * @param {String} name - the name of the object to find
-     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
      */
-    async findByName(name, endpoint='findbyx') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {findByX: 'name', xEquals: name}
-        return this.rest.postObj(fullEndpoint, my_obj)
+    async findByName(name) {
+        return this.findByX('name', name)
     }
 
     /**
@@ -59,8 +56,10 @@ class baseObjects {
      * @param {String} id - the id of the object to find
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
+     * @deprecated 
      */
-    async findById(id, endpoint='findbyx') {
+    async findById(id) {
+        return false
         const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
         const my_obj = {findByX: "id", xEquals: id}
         return this.rest.postObj(fullEndpoint, my_obj)
@@ -72,14 +71,18 @@ class baseObjects {
      * @description Find all objects by attribute and value pair from the mediumroast.io application
      * @param {String} attribute - the attribute used to find objects
      * @param {String} value - the value for the defined attribute
-     * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
-     * @todo Reimplement for GitHub
      */
-    async findByX(attribute, value, endpoint='findbyx') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        const my_obj = {findByX: attribute, xEquals: value} 
-        return this.rest.postObj(fullEndpoint, my_obj)
+    async findByX(attribute, value) {
+        let myObjects = []
+        const allObjectsResp = await this.serverCtl.readObjects(this.objType)
+        const allObjects = allObjectsResp[2].mrJson
+        for(const obj in allObjects) {
+            if(allObjects[obj][attribute] === value) {
+                myObjects.push(allObjects[obj])
+            }
+        }
+        return [true, `SUCCESS: found all objects where ${attribute} = ${value}`, myObjects]
     }
 
     /**
@@ -90,7 +93,7 @@ class baseObjects {
      * @returns {Array} the results from the called function mrRest class
      */
     async createObj(objs) {
-        return this.serverCtl.createObjects(this.objType, objs)
+        return await this.serverCtl.createObjects(this.objType, objs)
     }
     
     /**
@@ -101,9 +104,8 @@ class baseObjects {
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
      */
-    async updateObj(obj, endpoint='update') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return this.rest.postObj(fullEndpoint, obj)
+    async updateObj(objName, key, value, dontWrite=false) {
+        return await this.serverCtl.updateObject(this.objType, objName, key, value, dontWrite)
     }
 
     /**
@@ -151,6 +153,48 @@ class Studies extends baseObjects {
     }
 }
 
+// Create a subclass called Users that inherits from baseObjects
+class Users extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the user objects
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
+     */
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Users')
+    }
+
+    // Create a new method for getAll that is specific to the Users class using getUser() in github.js
+    async getAll() {
+        return await this.serverCtl.getAllUsers()
+    }
+
+    // Create a new method for findMyself that is specific to the Users class using getUser() in github.js
+    async getMyself() {
+        return await this.serverCtl.getUser()
+    }
+
+    async findByName(name) {
+        return this.findByX('login', name)
+    }
+
+    async findByX(attribute, value) {
+        let myUsers = []
+        const allUsersResp = await this.getAll()
+        const allUsers = allUsersResp[2]
+        for(const user in allUsers) {
+            if(allUsers[user][attribute] === value) {
+                myUsers.push(allUsers[user])
+            }
+        }
+        return [true, `SUCCESS: found all users where ${attribute} = ${value}`, myUsers]
+    }
+
+
+}
+
 class Companies extends baseObjects {
     /**
      * @constructor
@@ -174,9 +218,22 @@ class Interactions extends baseObjects {
      * @param {String} processName - the process name for the GitHub application
      */
     constructor (token, org, processName) {
-        super(token, org, processName, 'Companies')
+        super(token, org, processName, 'Interactions')
+    }
+
+    async createObj(objs) {
+        // NOTE: This is an interesting way to do this, but it may not be correct.
+        const linkedCompanies = this.linkObj(objs)
+        const linkedStudies = this.linkObj(objs)
+        const linkedInteractions = this.linkObj(objs)
+        const linkedObjs = {
+            linked_companies: linkedCompanies,
+            linked_studies: linkedStudies,
+            linked_interactions: linkedInteractions
+        }
+        return await this.serverCtl.createObjects(this.objType, objs, linkedObjs)
     }
 }
 
 // Export classes for consumers
-export { Studies, Companies, Interactions }
+export { Studies, Companies, Interactions, Users }
