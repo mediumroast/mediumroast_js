@@ -389,7 +389,6 @@ class GitHubFunctions {
             // Return the write response if the write was successful or an error if not
             return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to container [${containerName}]`, writeResponse]
         } catch (err) { 
-            console.log(err)
             // Return the error
             return [false, `ERROR: unable to write object [${this.objectFiles[containerName]}] to container [${containerName}]`, err]
         }
@@ -448,31 +447,27 @@ class GitHubFunctions {
         // Check to see if the read was successful
         if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
 
-        // Catch the container
+        // Catch the container if needed
         let repoMetadata = {
             containers: {}, 
             branch: {}
         }
-        repoMetadata.containers[containerName] = {}
-        const caught = await this.catchContainer(repoMetadata)
 
-        // Create a list of objects to update
-        let objectsToUpdate = []
-        // Loop through the objects and find the objects matching the name
+        // If dontWrite is true then don't catch the container
+        let caught = {}
+        if(!dontWrite) {
+            repoMetadata.containers[containerName] = {}
+            await this.catchContainer(repoMetadata)
+        }
+
+        // Loop through the objects, find and update the objects matching the name
         for (const obj in readResponse[2].mrJson) {
             if(readResponse[2].mrJson[obj].name === objName) {
-                objectsToUpdate.push(readResponse[2].mrJson[obj])
+                readResponse[2].mrJson[obj][key] = value
             }
         }
 
-        // Loop through the objects to update and update the key/value pair
-        for (const obj in objectsToUpdate) {
-            objectsToUpdate[obj][key] = value
-        }
-
-        // Merge objectsToUpdate with readResponse[2].mrJson
-        const mergedObjects = readResponse[2].mrJson.concat(objectsToUpdate)
-        if (dontWrite) { return [true, `SUCCESS: merged objects with [${containerName}/${this.objectFiles[containerName]}]`, mergedObjects] }
+        if (dontWrite) { return [true, `SUCCESS: merged objects with [${containerName}/${this.objectFiles[containerName]}]`, readResponse[2].mrJson] }
 
         // Call the method above to write the object
         const writeResponse = await this.writeObject(containerName, mergedObjects, caught.branch.name)
@@ -519,11 +514,11 @@ class GitHubFunctions {
             // Call the method above to read the objects
             const readResponse = await this.readObjects(container)
             // Check to see if the read was successful
-            if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects [${container}/${this.objectFiles[container]}].`, readResponse] }
+            if(!readResponse[0]) { return [false, {status_code: 503, status_msg: `Unable to read the source objects [${container}/${this.objectFiles[container]}].`}, readResponse] }
             // Save the object sha into containers as a separate object
             repoMetadata.containers[container].objectSha = readResponse[2].data.sha
             // Save the objects into containers as a separate object
-            repoMetadata.containers[container].objects = readResponse[2]
+            repoMetadata.containers[container].objects = readResponse[2].mrJson
         }
 
         return [true,`SUCCESS: ${repoMetadata.containers.length} containers are ready for use.`, repoMetadata]
@@ -534,24 +529,26 @@ class GitHubFunctions {
         // Merge the branch to main
         const mergeResponse = await this.mergeBranchToMain(repoMetadata.branch.name, repoMetadata.branch.sha)
         // Check to see if the merge was successful and return the error if not
-        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
+        if(!mergeResponse[0]) { return [false,{status_code:503, status_msg: `Unable to merge the branch to main.`}, mergeResponse] }
 
-        // Unlock the containers by looping through the containers
+        // Unlock the containers by looping through them
         for (const container in repoMetadata.containers) {
             // Call the method above to unlock the container
             const branchUnlocked = await this.unlockContainer(
                 container, 
                 repoMetadata.containers[container].lockSha,
-                repoMetadata.containers[container].branch.name)
-            if(!branchUnlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`, branchUnlocked] }
+                repoMetadata.branch.name)
+            if(!branchUnlocked[0]) { return [false, {status_code: 503, status_msg: `Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`}, branchUnlocked] }
+            // Unlock main
             const mainUnlocked = await this.unlockContainer(
                 container, 
-                repoMetadata.branch.sha)
-            if(!mainUnlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`, mainUnlocked] }
+                repoMetadata.containers[container].lockSha
+            )
+            if(!mainUnlocked[0]) { return [false, {status_code: 503, status_msg: `Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`}, mainUnlocked] }
         }
-        
+    
         // Return success with number of objects written
-        return [true, `SUCCESS: Released [${repoMetadata.containers.length}] containers.`, null]
+        return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
     }
 
 

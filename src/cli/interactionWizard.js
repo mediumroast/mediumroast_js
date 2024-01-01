@@ -213,7 +213,6 @@ class AddInteraction {
         this.output.printLine()
         // Loop through each file and create an interaction object
         let myInteractions = []
-        let linkedInteractions = {}
         for(const myFile in myFiles) {
             // Assign each value from the prototype to the interaction object
             let myInteraction = {}
@@ -237,10 +236,13 @@ class AddInteraction {
             // Add the interaction to the list of interactions
             myInteractions.push(myInteraction)
             // Create an interaction link from the company to the interaction and spread it into the linkedInteractions object
-            linkedInteractions = {...linkedInteractions, ...this.interactionCtl.linkObj([myInteraction])}
+            myCompany.linked_interactions = {
+                ...myCompany.linked_interactions, 
+                ...this.interactionCtl.linkObj([myInteraction])
+            }
             this.output.printLine()
         }
-        return [myInteractions, linkedInteractions]
+        return [myInteractions, myCompany.linked_interactions]
     }
 
     /**
@@ -278,11 +280,7 @@ class AddInteraction {
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
         let properties = [
-            "organization_id", //  int
-            "name", //  assigned from the file system
-            "interaction_type", //  Assigned by user choice
-
-            "stored_url", //  character varying, assigned programatically by this wizard and the location in GitHub
+            "organization_id", //
 
         ]
 
@@ -343,28 +341,36 @@ class AddInteraction {
         mySpinner.start()
         const caught = await this.githubCtl.catchContainer(repoMetadata)
         mySpinner.stop()
+        // Check to see if caught was successful and return an error if not
+        if(!caught[0]) {
+            return caught
+        }
 
         // Prompt the user to ingest one or more files
         const files = await this.ingestInteractions(caught[2].branch.name, caught[2].branch.sha)
         
         // Create the interaction object
-        const [myInteractions, linkedInteractions] = await this.createInteractionObject(
+        let [myInteractions, linkedInteractions] = await this.createInteractionObject(
             interactionPrototype, 
             files, 
             myCompany
         )
 
         // Update the company object with linkedInteractions and updateObject
+        // NOTE: linkedInteractions is resetting everytime to the new value, this is a bug
         const updatedCompany = await this.companyCtl.updateObj(
             myCompany.name, 
             'linked_interactions', 
             linkedInteractions, 
-            true
+            true // This means do not execute a write to the backend
         )
-
+        
+        // Create the new interactions
         mySpinner = new ora('Writing interaction objects ...')
         mySpinner.start()
-        // Write the interaction object to the backend
+        // Append the new interactions to the existing interactions
+        myInteractions = [...myInteractions, ...caught[2].containers.Interactions.objects]
+        // Write the new interactions to the backend
         const createdInteractions = await this.githubCtl.writeObject(
             this.objectType, 
             myInteractions,

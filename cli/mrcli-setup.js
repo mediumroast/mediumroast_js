@@ -25,7 +25,7 @@ import inquirer from "inquirer"
 
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
-import  { Studies, Companies, Interactions } from '../src/api/gitHubServer.js'
+import  { Companies } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
 import Table from 'cli-table'
 import ora from "ora"
@@ -102,22 +102,24 @@ function printNextSteps() {
     cliOutput.printLine()
 }
 
-// TODO: Move to output.js
-function printOrgTable(gitHubOrg) {
-    const table = new Table({
-        head: ['Id', 'Name', 'GitHub Url', 'Description'],
-        // colWidths: [10, 20, 35, 90]
-    })
-    table.push([
-        gitHubOrg.id,
-        gitHubOrg.name,
-        gitHubOrg.html_url,
-        gitHubOrg.description,
-    ])  
-    console.log(table.toString())
-}
+// NOTE: Commented out until we can confirm it is no longer needed
+// function printOrgTable(gitHubOrg) {
+//     const table = new Table({
+//         head: ['Id', 'Name', 'GitHub Url', 'Description'],
+//         // colWidths: [10, 20, 35, 90]
+//     })
+//     table.push([
+//         gitHubOrg.id,
+//         gitHubOrg.name,
+//         gitHubOrg.html_url,
+//         gitHubOrg.description,
+//     ])  
+//     console.log(table.toString())
+// }
 
-async function confirmGitHubOrg(token) {
+async function confirmGitHubOrg(token, env) {
+    // 
+    const output = new CLIOutput(env, 'Org')
     // Prompt and confirm user's the GitHub organization
     const gitHubOrgName = await simplePrompt('Please enter your GitHub organization.')
     
@@ -141,7 +143,7 @@ async function confirmGitHubOrg(token) {
         }
     }
     // Only print the table if we're not trying again
-    if (!tryAgain) {printOrgTable(gitHubOrg[1])}
+    if (!tryAgain) {cliOutput.outputCLI([gitHubOrg[1]])}
 
     // Confirm that the organization is correct
     tryAgain = await wizardUtils.operationOrNot(
@@ -279,7 +281,7 @@ if(configExists[0]) {
 /* ----------------------------------------- */
 /* ----- Begin GitHub org confirmation ----- */
 // Gather and confirm the GitHub organization
-let gitHubCtl = await confirmGitHubOrg(myConfig.GitHub.token)
+let gitHubCtl = await confirmGitHubOrg(myConfig.GitHub.token, myEnv)
 
 // Capture the GitHub organization name should we need it later
 myConfig.GitHub.org = gitHubCtl.orgName
@@ -295,7 +297,7 @@ cliOutput.printLine()
 let prevInstall = false
 // Construct the controller objects
 const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
-const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+// const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
 
 // Check to see if the company and study objects exist
 const prevInstallComp = await companyCtl.getAll()
@@ -414,31 +416,34 @@ const firstComp = new AddCompany(
 console.log(chalk.blue.bold('Creating the first company ...'))
 let firstCompanyResp = await firstComp.wizard(false, false)
 const firstCompany = firstCompanyResp[2]
-const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
+
+// NOTE: For the first release studies aren't needed, therefore we're commenting out anything related to them
+// const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
 
 // Create a default study for interactions and companies to use
-process.stdout.write(chalk.blue.bold(`Creating default study ... `))
-let myStudy = {
-    name: 'Default Study',
-    description: 'A placeholder study to ensure that interactions are able to have something to link to',
-    public: false,
-    groups: 'default:default',
-    document: {},
-    linked_companies: linkedCompanies,
-    linked_interactions: {}
-}
-console.log(chalk.bold.green('Ok'))
+// process.stdout.write(chalk.blue.bold(`Creating default study ... `))
+// let myStudy = {
+//     name: 'Default Study',
+//     description: 'A placeholder study to ensure that interactions are able to have something to link to',
+//     public: false,
+//     groups: 'default:default',
+//     document: {},
+//     linked_companies: linkedCompanies,
+//     linked_interactions: {}
+// }
+// console.log(chalk.bold.green('Ok'))
 
 // Assign the study to the studies array
-studies = [myStudy]
+// studies = [myStudy]
 
 // Obtain the link object for studies
-const linkedStudies = studyCtl.linkObj(studies)
+// const linkedStudies = studyCtl.linkObj(studies)
+const linkedStudies = {}
 
 // Link the study to the companies
 owningCompany.linked_studies = linkedStudies
 firstCompany.linked_studies = linkedStudies
-companies = [owningCompany, firstCompany]
+// companies = [owningCompany, firstCompany]
 
 // Set up the spinner
 let spinner
@@ -457,17 +462,17 @@ if(!companyResp[0]) {
 }
 
 // Save the default study to GitHub
-spinner = ora(chalk.bold.blue('Saving study to GitHub ... '))
-spinner.start() // Start the spinner
-    const studyResp = await studyCtl.createObj(studies)
-spinner.stop() // Stop the spinner
-// If the study creation failed then exit
-if(!studyResp[0]) {
-    console.log(chalk.red.bold(`Failed to create study, exiting with: [${studyResp[1]}], you may need to clean up the repo.`))
-    process.exit(-1)
-} else {
-    console.log(chalk.bold.green('\tDefault study saved to GitHub.'))
-}
+// spinner = ora(chalk.bold.blue('Saving study to GitHub ... '))
+// spinner.start() // Start the spinner
+//     const studyResp = await studyCtl.createObj(studies)
+// spinner.stop() // Stop the spinner
+// // If the study creation failed then exit
+// if(!studyResp[0]) {
+//     console.log(chalk.red.bold(`Failed to create study, exiting with: [${studyResp[1]}], you may need to clean up the repo.`))
+//     process.exit(-1)
+// } else {
+//     console.log(chalk.bold.green('\tDefault study saved to GitHub.'))
+// }
 
 cliOutput.printLine()
 /* ------ End initial objects creation ----- */
@@ -479,10 +484,10 @@ let results
 // Studies output
 console.log(chalk.blue.bold(`Fetching and listing all created objects`))
 cliOutput.printLine()
-console.log(chalk.blue.bold(`Default study:`))
-results = await studyCtl.getAll()
-cliOutput.outputCLI(results[2].mrJson)
-cliOutput.printLine()
+// console.log(chalk.blue.bold(`Default study:`))
+// results = await studyCtl.getAll()
+// cliOutput.outputCLI(results[2].mrJson)
+// cliOutput.printLine()
 
 // Companies output
 console.log(chalk.blue.bold(`Owning and first companies:`))

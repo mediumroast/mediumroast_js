@@ -69,6 +69,16 @@ class CLIOutput {
                     objects[myObj].site_admin
                 ])
             }
+        } else if (this.objectType === 'Org') {
+            table = new Table({
+                head: ['Id', 'Name', 'GitHub Url', 'Description'],
+            })
+            table.push([
+                gitHubOrg.id,
+                gitHubOrg.name,
+                gitHubOrg.html_url,
+                gitHubOrg.description,
+            ])
         } else if (this.objectType === 'MyUser') {
             table = new Table({
                 head: ['GitHub Id', 'Login', 'Name', 'Type', 'Company', 'GitHub Website'],
