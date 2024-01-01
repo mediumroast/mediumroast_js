@@ -3,3 +3,5 @@ node_modules/
 *.py
 test.js
 companies.json
+*.pdf
+sample_pdf/

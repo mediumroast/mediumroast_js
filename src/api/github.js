@@ -1,3 +1,12 @@
+/**
+ * A class for authenticating and talking to the mediumroast.io backend 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrServer.js
+ * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.0.0
+ */
+
 import { Octokit } from "octokit"
 
 
@@ -37,7 +46,46 @@ class GitHubFunctions {
         this.objectFiles = {
             Studies: 'Studies.json',
             Companies: 'Companies.json',
-            Interactions: 'Interactions.json'
+            Interactions: 'Interactions.json',
+            Users: null
+        }
+    }
+
+    /**
+    * @async 
+    * @function getUser
+    * @description Gets the authenticated user from the GitHub API
+    * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+    * @todo Add a check to see if the user is a member of the organization
+    * @todo Add a check to see if the user has admin rights to the organization
+    */
+    async getUser() {
+        // using try and catch to handle errors get user info
+        try {
+            const response = await this.octCtl.rest.users.getAuthenticated()
+            return [true, `SUCCESS: able to capture current user info`, response.data]
+        } catch (err) {
+            return [false, `ERROR: unable to capture current user info due to [${err}]`, err.message]
+        }
+    }
+
+    /**
+     * @async
+     * @function getAllUsers
+     * @description Gets all of the users from the GitHub API
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+     */
+    async getAllUsers() {
+        // using try and catch to handle errors get info for all users
+        try {
+            const response = await this.octCtl.rest.repos.listCollaborators({
+                owner: this.orgName,
+                repo: this.repoName,
+                affiliation: 'all'
+            })
+            return [true, `SUCCESS: able to capture info for all users`, response.data]
+        } catch (err) {
+            return [false, `ERROR: unable to capture info for all users due to [${err}]`, err.message]
         }
     }
 
@@ -194,6 +242,7 @@ class GitHubFunctions {
      * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
     */
     async checkForLock(containerName) {
+
         // Get the latest commit
         const latestCommit = await this.octCtl.rest.repos.getCommit({
             owner: this.orgName,
@@ -208,7 +257,7 @@ class GitHubFunctions {
             ref: latestCommit.data.sha,
             path: containerName
         })
-        
+
         const lockExists = mainContents.data.some(
             item => item.path === `${containerName}/${this.lockFileName}`
         )
@@ -219,6 +268,7 @@ class GitHubFunctions {
             return [false, `FAILED: container [${containerName}] is not locked with lock file [${this.lockFileName}]`]
         }
     }
+
 
     /**
      * @description Locks a container by creating a lock file in the container.
@@ -232,7 +282,6 @@ class GitHubFunctions {
     async lockContainer(containerName) {
         // Define the full path to the lockfile
         const lockFile = `${containerName}/${this.lockFileName}`
-        const lockExists = await this.checkForLock(containerName)
 
         // Get the latest commit
         const {data: latestCommit} = await this.octCtl.rest.repos.getCommit({
@@ -240,9 +289,9 @@ class GitHubFunctions {
             repo: this.repoName,
             ref: this.mainBranchName,
         })
-
-        if(!lockExists[0]) {
-            const lockResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
+        let lockResponse
+        try {
+            lockResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
                 owner: this.orgName,
                 repo: this.repoName,
                 path: lockFile,
@@ -252,8 +301,8 @@ class GitHubFunctions {
                 sha: latestCommit.sha
             })
             return [true, `SUCCESS: Locked the container [${containerName}]`, lockResponse]
-        } else {
-            return [false, `FAILED: Unable to lock the container [${containerName}]`, lockResponse]
+        } catch(err) {
+            return [false, `FAILED: Unable to lock the container [${containerName}]`, err]
         }
     }
 
@@ -289,6 +338,30 @@ class GitHubFunctions {
         }
     }
 
+    // Create a method using the octokit to write a file to the repo
+    async writeBlob(containerName, fileName, blob, branchName, sha) {
+        // Only pull in the file name
+        const fileBits = fileName.split('/')
+        const shortFilename = fileBits[fileBits.length - 1]
+        // Using the github API write a file to the container
+        try {
+            const writeResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
+                owner: this.orgName,
+                repo: this.repoName,
+                path: `${containerName}/${shortFilename}`,
+                message: `Create object [${shortFilename}]`,
+                content: blob,
+                branch: branchName,
+                sha: sha
+            })
+            // Return the write response if the write was successful or an error if not
+            return [true, `SUCCESS: wrote object [${fileName}] to container [${containerName}]`, writeResponse]
+        } catch (err) { 
+            // Return the error
+            return [false, `ERROR: unable to write object [${fileName}] to container [${containerName}]`, err]
+        }
+    }
+
     /**
      * @function writeObject
      * @description Writes an object to a specified container using the GitHub API.
@@ -314,12 +387,13 @@ class GitHubFunctions {
                 sha: mySha
             })
             // Return the write response if the write was successful or an error if not
-            return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to [${containerName}/${this.objectFiles[containerName]}]`, writeResponse]
+            return [true, `SUCCESS: wrote object [${this.objectFiles[containerName]}] to container [${containerName}]`, writeResponse]
         } catch (err) { 
             // Return the error
-            return [false, `ERROR: unable to write object [${obj.id}] to [${containerName}/${this.objectFiles[containerName]}]`, err]
+            return [false, `ERROR: unable to write object [${this.objectFiles[containerName]}] to container [${containerName}]`, err]
         }
     }
+
 
     
     /**
@@ -365,48 +439,116 @@ class GitHubFunctions {
      * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
      * @throws {Error} If an error occurs while getting the content or parsing it.
      * @memberof GitHubFunctions
-     * @todo Add a check to see if the container is locked and if so return an error.
+     * @todo Update to catchContainer and releaseContainer
      */
-    async updateObject(containerName, objId, key, value) {
+    async updateObject(containerName, objName, key, value, dontWrite=false) {
         // Using the method above read the objects
         const readResponse = await this.readObjects(containerName)
-
         // Check to see if the read was successful
         if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
 
-        // using objId, key and value update the object
-        const updatedObj = readResponse[2][objId]
-        updatedObj[key] = value
+        // Catch the container if needed
+        let repoMetadata = {
+            containers: {}, 
+            branch: {}
+        }
 
-        // Call the method above to lock the container
-        const locked = await this.lockContainer(containerName)
-        // Check to see if the container was locked
-        if(!locked[0]) { return [true, `ERROR: Unable to lock the container`, locked] }
+        // If dontWrite is true then don't catch the container
+        let caught = {}
+        if(!dontWrite) {
+            repoMetadata.containers[containerName] = {}
+            await this.catchContainer(repoMetadata)
+        }
 
-        // Call the method above createBranchFromMain to create a new branch
-        const branchCreated = await this.createBranchFromMain()
-        // Check to see if the branch was created
-        if(!branchCreated[0]) { return [true, `ERROR: Unable to create new branch`, branchCreated] }
+        // Loop through the objects, find and update the objects matching the name
+        for (const obj in readResponse[2].mrJson) {
+            if(readResponse[2].mrJson[obj].name === objName) {
+                readResponse[2].mrJson[obj][key] = value
+            }
+        }
 
-        // Merge the objects with the updated object
-        let mergedObjects = {...readResponse[2], ...updatedObj}
-        // TODO: Test this conversion to see if it works
-        // Convert the objects to and array of objects
-        mergedObjects = Object.values(mergedObjects)
+        if (dontWrite) { return [true, `SUCCESS: merged objects with [${containerName}/${this.objectFiles[containerName]}]`, readResponse[2].mrJson] }
+
         // Call the method above to write the object
-        const writeResponse = await this.writeObject(containerName, mergedObjects, branchCreated[2].data.ref)
+        const writeResponse = await this.writeObject(containerName, mergedObjects, caught.branch.name)
         // Check to see if the write was successful and return the error if not
         if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects.`, writeResponse] }
 
-        // Call the method above to merge the branch to main
-        const mergeResponse = await this.mergeBranchToMain(branchCreated[2].data.ref, writeResponse[2].data.commit.sha)
+        // Release the container
+        const released = await this.releaseContainer(repoMetadata)
+        if(!released[0]) { return [false, `ERROR: Unable to release the container, objects may have been written please check [${containerName}] for objects and the lock file.`, released] }
+    }
+
+    async catchContainer(repoMetadata) {
+        // Check to see if the containers are locked
+        for (const container in repoMetadata.containers) {
+            // Call the method above to check for a lock
+            const lockExists = await this.checkForLock(container)
+            // If the lock exists return an error
+            if(lockExists[0]) { return [false, `ERROR: The container [${container}] is locked unable to create objects.`] }
+        }
+
+        // Lock the containers
+        for (const container in repoMetadata.containers) {
+            // Call the method above to lock the container
+            const locked = await this.lockContainer(container)
+            // Check to see if the container was locked and return the error if not
+            if(!locked[0]) { return [false, `ERROR: Unable to lock [${container}] cannot create new objects.`, locked] }
+            // Save the lock sha
+            repoMetadata.containers[container].lockSha = locked[2].data.content.sha
+        }
+
+        
+        // Call the method above createBranchFromMain to create a new branch
+        const branchCreated = await this.createBranchFromMain()
+        // Check to see if the branch was created
+        if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
+        // Save the branch sha into containers as a separate object
+        repoMetadata.branch = {
+            name: branchCreated[2].data.ref,
+            sha: branchCreated[2].data.object.sha
+        }
+
+        // Read the objects from the containers
+        for (const container in repoMetadata.containers) {
+            // Call the method above to read the objects
+            const readResponse = await this.readObjects(container)
+            // Check to see if the read was successful
+            if(!readResponse[0]) { return [false, {status_code: 503, status_msg: `Unable to read the source objects [${container}/${this.objectFiles[container]}].`}, readResponse] }
+            // Save the object sha into containers as a separate object
+            repoMetadata.containers[container].objectSha = readResponse[2].data.sha
+            // Save the objects into containers as a separate object
+            repoMetadata.containers[container].objects = readResponse[2].mrJson
+        }
+
+        return [true,`SUCCESS: ${repoMetadata.containers.length} containers are ready for use.`, repoMetadata]
+    }
+
+
+    async releaseContainer(repoMetadata) {
+        // Merge the branch to main
+        const mergeResponse = await this.mergeBranchToMain(repoMetadata.branch.name, repoMetadata.branch.sha)
         // Check to see if the merge was successful and return the error if not
-        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
+        if(!mergeResponse[0]) { return [false,{status_code:503, status_msg: `Unable to merge the branch to main.`}, mergeResponse] }
 
-        // Call the method above to unlock the container
-        const unlocked = await this.unlockContainer(containerName, writeResponse[2].data.commit.sha)
-        if(!unlocked[0]) { return unlocked }
-
+        // Unlock the containers by looping through them
+        for (const container in repoMetadata.containers) {
+            // Call the method above to unlock the container
+            const branchUnlocked = await this.unlockContainer(
+                container, 
+                repoMetadata.containers[container].lockSha,
+                repoMetadata.branch.name)
+            if(!branchUnlocked[0]) { return [false, {status_code: 503, status_msg: `Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`}, branchUnlocked] }
+            // Unlock main
+            const mainUnlocked = await this.unlockContainer(
+                container, 
+                repoMetadata.containers[container].lockSha
+            )
+            if(!mainUnlocked[0]) { return [false, {status_code: 503, status_msg: `Unable to unlock the container, objects may have been written please check [${container}] for objects and the lock file.`}, mainUnlocked] }
+        }
+    
+        // Return success with number of objects written
+        return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
     }
 
 

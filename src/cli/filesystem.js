@@ -22,6 +22,16 @@ class FilesystemOperators {
      * @param {String} fileName - full path to the file and the file name to save to
      * @param {String} text - the string content to save to a file which could be JSON, XML, TXT, etc.
      * @returns {Array} containing the status of the save operation, status message and null/error
+     * 
+     * @example
+     * const myFile = new FilesystemOperators()
+     * const myFileData = await myFile.saveTextFile('myFile.txt', 'This is my file data')
+     * if(myFileData[0]) {
+     *  console.log(myFileData[1])
+     * } else {
+     * console.log(myFileData[1])
+     * }
+     * 
      */
     saveTextFile(fileName, text) {
         fs.writeFileSync(fileName, text, err => {
@@ -30,6 +40,32 @@ class FilesystemOperators {
             }
         })
         return [true, 'Saved file [' + fileName + ']', null]
+    }
+
+    /**
+     * @async
+     * @function readBlobFile
+     * @description Safely read a binary file of any kind into a base64 encoded string
+     * @param {String} fileName - the full path to the file name to read
+     * @returns {Array} containing the status of the read operation, status message and data read
+     * 
+     * @example
+     * const myFile = new FilesystemOperators()
+     * const myFileData = await myFile.readBlobFile('myFile.txt')
+     * if(myFileData[0]) {
+     *   console.log(myFileData[2])
+     * } else {
+     *  console.log(myFileData[1])
+     * }
+     * 
+     */
+    readBlobFile(fileName) {
+        try {
+            const fileData = fs.readFileSync(fileName, 'base64')
+            return [true, 'Read file [' + fileName + ']', fileData]
+        } catch (err) {
+            return [false, 'Unable to read file [' + fileName + '] because: ' + err, null]
+        }
     }
 
     /**
@@ -57,6 +93,19 @@ class FilesystemOperators {
     readJSONFile(fileName) {
         try {
             const fileData = fs.readFileSync(fileName, 'utf8')
+            const jsonData = JSON.parse(fileData)
+            return [true, 'Read file [' + fileName + ']', jsonData]
+        } catch (err) {
+            return [false, 'Unable to read file [' + fileName + '] because: ' + err, null]
+        }
+    }
+
+    importJSONFile(fileName) {
+        try {
+            const fileData = fs.readFileSync(
+                new URL(fileName, import.meta.url), 
+                'utf8'
+            )
             const jsonData = JSON.parse(fileData)
             return [true, 'Read file [' + fileName + ']', jsonData]
         } catch (err) {
@@ -145,7 +194,7 @@ class FilesystemOperators {
     /**
      * @function checkFilesystemObjectType
      * @description Check the type of file system object 
-     * @param {*} fileName - name of the file system object to check
+     * @param {String} fileName - name of the file system object to check
      * @returns {Array} containing the status of the function, status message and either the file system object type or null
      */
     checkFilesystemObjectType(fileName) {

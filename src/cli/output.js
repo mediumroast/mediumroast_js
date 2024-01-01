@@ -9,7 +9,7 @@
 
 // Import required modules
 import Table from 'cli-table'
-import Parser from 'json2csv'
+import {Parser} from '@json2csv/plainjs'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
 import FilesystemOperators from './filesystem.js'
@@ -54,33 +54,78 @@ class CLIOutput {
         // Note: The separation between User and other objects is due to their structure. Pointedly 
         //          user objects do not contain name and description fields.
         let table
-        if (isUserObject) {
+        if (this.objectType === 'Users') {
             table = new Table({
-                head: ['Id', 'First Name', 'Last Name', 'Roles', 'Company'],
-                colWidths: [5, 15, 15, 20, 30]
+                head: ['GitHub Id', 'Login', 'User Type', 'Role Name', 'Site Admin'],
+                colWidths: [12, 20, 15, 20, 30]
             })
             // NOTE: In this alpha version users aren't yet operable
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].id,
-                    objects[myObj].first_name,
-                    objects[myObj].last_name,
-                    objects[myObj].roles,
-                    objects[myObj].company
+                    objects[myObj].login,
+                    objects[myObj].type,
+                    objects[myObj].role_name,
+                    objects[myObj].site_admin
+                ])
+            }
+        } else if (this.objectType === 'Org') {
+            table = new Table({
+                head: ['Id', 'Name', 'GitHub Url', 'Description'],
+            })
+            table.push([
+                gitHubOrg.id,
+                gitHubOrg.name,
+                gitHubOrg.html_url,
+                gitHubOrg.description,
+            ])
+        } else if (this.objectType === 'MyUser') {
+            table = new Table({
+                head: ['GitHub Id', 'Login', 'Name', 'Type', 'Company', 'GitHub Website'],
+                colWidths: [12, 20, 30, 10, 25, 50]
+            })
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].id,
+                    objects[myObj].login,
+                    objects[myObj].name,
+                    objects[myObj].type,
+                    objects[myObj].company,
+                    objects[myObj].html_url
                 ])
             }
         // Study, Company and Interaction objects output
         } else if (this.objectType === 'Companies') {
             table = new Table({
-                head: ['Name', 'Role', 'Region', 'Description'],
-                colWidths: [35, 15, 10, 70]
+                head: ['Name', 'Role', 'Interaction No.', 'Region', 'Description'],
+                colWidths: [27, 15, 17, 8, 60]
+            })
+            
+            for (const myObj in objects) {
+                let totalInteractions = 0
+                if (Object.keys(objects[myObj].linked_interactions).length) {
+                    totalInteractions = Object.keys(objects[myObj].linked_interactions).length
+                }
+                table.push([
+                    objects[myObj].name,
+                    objects[myObj].role,
+                    totalInteractions,
+                    objects[myObj].region,
+                    objects[myObj].description
+
+                ])
+            }
+        } else if (this.objectType === 'Interactions') {
+            table = new Table({
+                head: ['Name', 'Creator Name', 'Region', 'Linked Company'],
+                colWidths: [80, 15, 10, 25]
             })
             for (const myObj in objects) {
                 table.push([
                     objects[myObj].name,
-                    objects[myObj].role,
+                    objects[myObj].creator_name,
                     objects[myObj].region,
-                    objects[myObj].description
+                    Object.keys(objects[myObj].linked_companies)[0]
 
                 ])
             }
@@ -104,8 +149,9 @@ class CLIOutput {
     outputCSV(objects) {
         const fileName = 'Mr_' + this.objectType + '.csv'
         const myFile = this.env.outputDir + '/' + fileName
+        const csvParser = new Parser()
         try {
-            const csv = Parser.parse(objects)
+            const csv = csvParser.parse(objects)
             this.fileSystem.saveTextFile(myFile, csv)
             return [true, null]
         } catch (err) {

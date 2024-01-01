@@ -49,12 +49,8 @@ if (myArgs.find_by_id) {
    console.error('ERROR (%d): Find by id not implemented.', -1)
    process.exit(-1)
 } else if (myArgs.find_by_name) {
-   console.error('ERROR (%d): Find by name not yet implemented.', -1)
-   process.exit(-1)
    [success, stat, results] = await studyCtl.findByName(myArgs.find_by_name)
 } else if (myArgs.find_by_x) {
-   console.error('ERROR (%d): Find by X not yet implemented.', -1)
-   process.exit(-1)
    const myCLIObj = JSON.parse(myArgs.find_by_x)
    const toFind = Object.entries(myCLIObj)[0]
    [success, stat, results] = await studyCtl.findByX(toFind[0], toFind[1])

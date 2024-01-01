@@ -1,26 +1,14 @@
 #!/usr/bin/env node
 
+import { Companies, Interactions, Studies } from '../src/api/gitHubServer.js'
 import Environmentals from '../src/cli/env.js'
-import { GitHubAuth } from '../src/api/authorize.js'
-import GitHubFunctions from "../src/api/github.js"
-import WizardUtils from '../src/cli/commonWizard.js'
+import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import chalk from 'chalk'
+import GitHubFunctions from '../src/api/github.js'
+import * as progress from 'cli-progress'
 
-console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
-process.exit(0)
-
-    function getConfig () {
-        return {
-            clientId:'Iv1.f5c0a4eb1f0606f8',
-            appId: '650476',
-            deviceCodeUrl: 'https://github.com/login/device/code',
-            accessTokenUrl: 'https://github.com/login/oauth/access_token',
-            contentType:  'application/json',
-            grantType: 'urn:ietf:params:oauth:grant-type:device_code',
-            clientType: 'github-app',
-        }
-    }
+// console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
 
 /* 
     -----------------------------------------------------------------------
@@ -30,82 +18,46 @@ process.exit(0)
     ----------------------------------------------------------------------- 
 */
 
-// Construct the authorization object
-const githubAuth = new GitHubAuth()
+// Related object type
+const objectType = 'Interactions'
 
-// Obtain key configuration data to be used for getting device codes and access tokens
-let config = getConfig()
+// Environmentals object
+const environment = new Environmentals(
+   '3.0',
+   `${objectType}`,
+   `Command line interface for mediumroast.io ${objectType} objects.`,
+   objectType
+)
 
-// Get configuration information from the config file
-const environment = new Environmentals('1.0.0', 'github', 'functions to test GitHub operations', 'all')
-const configFile = environment.checkConfigDir()
-let env = environment.readConfig(configFile)
+// Filesystem object
+const fileSystem = new FilesystemOperators()
 
-// Check to see if the GitHub section is available
-let accessToken
-let updateConfig = false
-if (env.hasSection('GitHub')) {
-    // Convert the access and refresh token expirations into Date objects
-    const accessExpiry = new Date(env.get('GitHub', 'expiresAt'))
-    const now = new Date()
+// Create the environmental settings
+const myArgs = environment.parseCLIArgs()
+const myConfig = environment.readConfig(myArgs.conf_file)
+const myEnv = environment.getEnv(myArgs, myConfig)
+const accessToken = await environment.verifyAccessToken()
+const processName = 'mrcli-interaction'
 
-    // Check to see if the access token is valid
-    if (accessExpiry < now) {
-    // if (true) {
-        accessToken = await githubAuth.getAccessToken(config)
-        env = environment.updateConfigSetting(env, 'GitHub', 'token', accessToken.token)
-        env = environment.updateConfigSetting(env[1], 'GitHub', 'expiresAt', accessToken.expiresAt)
-        env = environment.updateConfigSetting(env[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
-        updateConfig = true
-        env = env[1]
-    }
-} else {
-    // Section GitHub not available perform complete authorization flow
-    // Get the access token and add a GitHub section to the env
-    accessToken = await githubAuth.getAccessToken(config)
-    // Create the GitHub section
-    env = environment.addConfigSection(env, 'GitHub', accessToken)
-    env = environment.removeConfigSetting(env[1], 'GitHub', 'contentType')
-    env = environment.removeConfigSetting(env[1], 'GitHub', 'grantType')
-    env = environment.removeConfigSetting(env[1], 'GitHub', 'clientType')
-    updateConfig = true
-    env = env[1]
-}
+// Output object
+const output = new CLIOutput(myEnv, objectType)
 
-// Save the config file
-if (updateConfig) {
-    env.write(configFile)
-}
+// Construct the controller objects
+const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
+const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const interactionCtl = new Interactions(accessToken, myEnv.gitHubOrg, processName)
+const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
 
-// Pull out the token
-accessToken = environment.getConfigSetting(env, 'GitHub', 'token')
-
-// Construct Octokit
-// const octokit = new Octokit({auth: accessToken[1]})
-console.clear()
-
-// Test the creation of a repository
-const myOrgName = 'mediumroast'
-// const myOrg = await octokit.rest.orgs.get({org: myOrgName})
-
-// Construct the GitHub API object
-const gitHubCtl = new GitHubFunctions(accessToken[1], myOrgName, 'mr-cli-setup')
 let gitHubResp
-let doSetup
 
-const containerName = 'Companies'
-
-const wizardUtils = new WizardUtils('all')
-
-gitHubResp = await gitHubCtl.checkForLock(containerName)
+gitHubResp = await gitHubCtl.checkForLock(objectType)
 if(gitHubResp[0]) {
-    console.log(`The ${containerName} container is locked, please remove the lock and try again.`)
+    console.log(`The ${objectType} container is locked, please remove the lock and try again.`)
     process.exit(1)
 }
 
 
-gitHubResp = await gitHubCtl.lockContainer(containerName)
-console.log(gitHubResp[2].data)
+gitHubResp = await gitHubCtl.lockContainer(objectType)
 // Save the sha for the unlock
 const lockSha = gitHubResp[2].data.content.sha
 
@@ -113,8 +65,8 @@ const lockSha = gitHubResp[2].data.content.sha
 //     `Did the lock occur?`
 // )
 
-// // Create a new Branch
-// gitHubResp = await gitHubCtl.createBranchFromMain()
+// Create a new Branch
+gitHubResp = await gitHubCtl.createBranchFromMain()
 
 // console.log(gitHubResp[2].data)
 
@@ -122,24 +74,49 @@ const lockSha = gitHubResp[2].data.content.sha
 //     `Did the Branch create?`
 // )
 
-// const branchName = gitHubResp[2].data.ref
-// const branchSha = gitHubResp[2].data.object.sha 
-
-// // Construct filesystem operators
-// const filesystem = new FilesystemOperators()
+const branchName = gitHubResp[2].data.ref
+const branchSha = gitHubResp[2].data.object.sha 
 
 
-// // Read the file companies.json in the current directory, using the filesystem operators, and convert to JSON
-// const companies = await filesystem.readJSONFile('./companies.json')
+// Read the blob
+const fileName = './sample doc_one 1.pdf'
+const dirName = './sample_pdf'
+// const fileData = fileSystem.readBlobFile(fileName)
+const progressBar = new progress.SingleBar(
+    {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
+    progress.Presets.rect
+)
+
+let myFiles = []
+const allFiles = fileSystem.listAllFiles(dirName)
+progressBar.start(allFiles[2].length - 1, 0)
+for(const myIdx in allFiles[2]) {
+    // Set the file name for easier readability
+    const fileName = allFiles[2][myIdx]
+    // Skip files that start with . including present and parent working directories 
+    if(fileName.indexOf('.') === 0) { continue }
+    const fileData = fileSystem.readBlobFile(`${dirName}/${fileName}`)
+    const insteractionResp = await gitHubCtl.writeBlob(objectType, fileName, fileData[2], branchName, branchSha)
+    myFiles.push(insteractionResp[2].data.commit)
+    // Increment the progress bar
+    progressBar.increment()
+}
+progressBar.stop()
+console.log('Finished writing files to the repository.')
+
+// Create the object
+// const insteractionResp = await gitHubCtl.writeBlob(objectType, fileName, fileData[2], branchName, branchSha)
+
+// console.log(insteractionResp[2].data.commit)
 
 // Read objects from the repository
-gitHubResp = await gitHubCtl.readObjects(containerName)
-console.log(gitHubResp[2].mrJson)
-doSetup = await wizardUtils.operationOrNot(
-    `Objects read?`
-)
+// gitHubResp = await gitHubCtl.readObjects(objectType)
+// console.log(gitHubResp[2].mrJson)
+// doSetup = await wizardUtils.operationOrNot(
+//     `Objects read?`
+// )
 // const objectSha = gitHubResp[2].data.sha
-// gitHubResp = await gitHubCtl.writeObject(containerName, companies[2], branchName, objectSha)
+// gitHubResp = await gitHubCtl.writeObject(objectType, companies[2], branchName, objectSha)
 // console.log(gitHubResp[2])
 
 // doSetup = await wizardUtils.operationOrNot(
@@ -147,7 +124,7 @@ doSetup = await wizardUtils.operationOrNot(
 // )
 
 // Merge branch into main
-// gitHubResp = await gitHubCtl.mergeBranchToMain(branchName, branchSha)
+gitHubResp = await gitHubCtl.mergeBranchToMain(branchName, branchSha)
 // console.log(gitHubResp[2])
 
 
@@ -155,9 +132,9 @@ doSetup = await wizardUtils.operationOrNot(
 //     `Did the Branch merge?`
 // )
 
-// gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha, branchName)
+gitHubResp = await gitHubCtl.unlockContainer(objectType, lockSha, branchName)
 // console.log(gitHubResp[2])
-// gitHubResp = await gitHubCtl.unlockContainer(containerName, lockSha)
+gitHubResp = await gitHubCtl.unlockContainer(objectType, lockSha)
 // console.log(gitHubResp[2])
 
 // doSetup = await wizardUtils.operationOrNot(
