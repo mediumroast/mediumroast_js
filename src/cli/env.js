@@ -83,7 +83,7 @@ class Environmentals {
             )
             .option(
                 '--update <JSON>',
-                'Update an object from the backend by specifying the object\'s id and value to update in JSON'
+                'Update an object from the backend by specifying the object\'s name plus attribute and value to update in JSON'
             )
             .option(
                 '--delete <NAME>',

@@ -284,8 +284,6 @@ class AddInteraction {
 
         ]
 
-        
-
         // Capture the current data and converto to an ISO string
         const myDate = new Date()
         const myDateString = myDate.toISOString()
@@ -405,7 +403,6 @@ class AddInteraction {
         mySpinner.stop()
         return released
     }
-
 }
 
 export default AddInteraction

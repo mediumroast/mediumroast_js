@@ -17,6 +17,7 @@ import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
+import ora from 'ora'
 
 // Related object type
 const objectType = 'Companies'
@@ -197,17 +198,17 @@ if (myArgs.report) {
    success = foundObjects[0]
    stat = foundObjects[1]
    results = foundObjects[2]
-// TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.update) {
-   console.error('ERROR (%d): Update not implemented.', -1)
-   process.exit(-1)
    const myCLIObj = JSON.parse(myArgs.update)
+   const mySpinner = new ora(`Updating company [${myCLIObj.name}] object ...`)
+   mySpinner.start()
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
+   mySpinner.stop()
    if(success) {
-      console.log(`SUCCESS: processed update to company object.`)
+      console.log(`SUCCESS: ${stat.status_msg}`)
       process.exit(0)
    } else {
-      console.error('ERROR (%d): Unable to update company object.', -1)
+      console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
 // TODO: Need to reimplement the below to account for GitHub

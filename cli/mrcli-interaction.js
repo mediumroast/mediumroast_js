@@ -20,6 +20,7 @@ import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
+import ora from 'ora'
 
 // External modules
 import chalk from 'chalk'
@@ -182,15 +183,16 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
-   console.error('ERROR (%d): Update not implemented.', -1)
-   process.exit(-1)
    const myCLIObj = JSON.parse(myArgs.update)
+   const mySpinner = new ora(`Updating interaction [${myCLIObj.name}] object ...`)
+   mySpinner.start()
    const [success, stat, resp] = await interactionCtl.updateObj(myCLIObj)
+   mySpinner.stop()
    if(success) {
-      console.log(`SUCCESS: processed update to interaction object.`)
+      console.log(`SUCCESS: ${stat.status_msg}`)
       process.exit(0)
    } else {
-      console.error('ERROR (%d): Unable to update interaction object.', -1)
+      console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
 } else if (myArgs.delete) {
