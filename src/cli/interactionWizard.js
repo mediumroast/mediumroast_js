@@ -135,7 +135,7 @@ class AddInteraction {
             // List all files in the directory and process them one at a time
             const allFiles = this.fileSystem.listAllFiles(myPath)
             // Start the progress bar
-            this.progressBar.start(allFiles[2].length-1, 0)
+            this.progressBar.start(allFiles[2].length, 0)
             // Iterate through each file in the directory
             for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
@@ -355,9 +355,12 @@ class AddInteraction {
         // Update the company object with linkedInteractions and updateObject
         // NOTE: linkedInteractions is resetting everytime to the new value, this is a bug
         const updatedCompany = await this.companyCtl.updateObj(
-            myCompany.name, 
-            'linked_interactions', 
-            linkedInteractions, 
+            // NOTE: This follows the structure expected from the CLI --update switch
+            {
+                name: myCompany.name, 
+                key: 'linked_interactions', 
+                value: linkedInteractions
+            }, 
             true, // This means do not execute a write to the backend
             true // Set because this is a system update and not a user update
         )
