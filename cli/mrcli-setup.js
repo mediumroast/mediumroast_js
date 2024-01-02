@@ -285,6 +285,7 @@ let gitHubCtl = await confirmGitHubOrg(myConfig.GitHub.token, myEnv)
 
 // Capture the GitHub organization name should we need it later
 myConfig.GitHub.org = gitHubCtl.orgName
+// TODO: Add the GitHub organization Identifier to the config file
 
 cliOutput.printLine()
 /* ------ End GitHub org confirmation ------ */
@@ -391,7 +392,7 @@ cliOutput.printLine()
 
 // Create needed objects
 let companies = []
-let studies = []
+// let studies = []
 
 // Create the owning company
 console.log(chalk.blue.bold('Creating your owning company'))
@@ -420,29 +421,29 @@ const firstCompany = firstCompanyResp[2]
 // NOTE: For the first release studies aren't needed, therefore we're commenting out anything related to them
 // const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
 
-// Create a default study for interactions and companies to use
-// process.stdout.write(chalk.blue.bold(`Creating default study ... `))
-// let myStudy = {
-//     name: 'Default Study',
-//     description: 'A placeholder study to ensure that interactions are able to have something to link to',
-//     public: false,
-//     groups: 'default:default',
-//     document: {},
-//     linked_companies: linkedCompanies,
-//     linked_interactions: {}
-// }
-// console.log(chalk.bold.green('Ok'))
+// Create a default study for good housekeeping
+process.stdout.write(chalk.blue.bold(`Creating default study ... `))
+let myStudy = {
+    name: 'Default Study',
+    description: 'A placeholder study to ensure that interactions are able to have something to link to',
+    public: false,
+    groups: 'default:default',
+    document: {},
+    linked_companies: linkedCompanies,
+    linked_interactions: {}
+}
+console.log(chalk.bold.green('Ok'))
 
-// Assign the study to the studies array
-// studies = [myStudy]
-
+// NOTE: Since studies aren't needed in the alpha_2 series of releases we will comment things out related to them.
+//       Additionally, in alpha_3 we'll determine if we need to create a default study or not.  So leaving this
+//       code in place for now.
 // Obtain the link object for studies
-// const linkedStudies = studyCtl.linkObj(studies)
-const linkedStudies = {}
+// const linkedStudies = studyCtl.linkObj([myStudy])
+// const linkedStudies = {}
 
 // Link the study to the companies
-owningCompany.linked_studies = linkedStudies
-firstCompany.linked_studies = linkedStudies
+// owningCompany.linked_studies = linkedStudies
+// firstCompany.linked_studies = linkedStudies
 // companies = [owningCompany, firstCompany]
 
 // Set up the spinner
@@ -464,7 +465,7 @@ if(!companyResp[0]) {
 // Save the default study to GitHub
 // spinner = ora(chalk.bold.blue('Saving study to GitHub ... '))
 // spinner.start() // Start the spinner
-//     const studyResp = await studyCtl.createObj(studies)
+//     const studyResp = await studyCtl.createObj([myStudy])
 // spinner.stop() // Stop the spinner
 // // If the study creation failed then exit
 // if(!studyResp[0]) {

@@ -8,7 +8,7 @@ import chalk from 'chalk'
 import GitHubFunctions from '../src/api/github.js'
 import * as progress from 'cli-progress'
 
-// console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
+console.log(chalk.bold.yellow('NOTICE: This CLI is being deprecated and will be removed in a future release.'))
 
 /* 
     -----------------------------------------------------------------------

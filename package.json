@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.4.16",
+  "version": "0.4.19",
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with mediumroast.io.",
   "main": "cli/mrcli.js",
   "scripts": {
@@ -73,7 +73,6 @@
     "node-geocoder": "^4.2.0",
     "octokit": "^3.1.2",
     "open": "^9.1.0",
-    "opn": "^6.0.0",
     "ora": "^6.1.2",
     "prompt-sync": "^4.2.0",
     "terminal-link": "^3.0.0",

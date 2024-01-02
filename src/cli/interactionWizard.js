@@ -13,7 +13,6 @@
 // Import required modules
 import chalk from 'chalk'
 import WizardUtils from "./commonWizard.js"
-import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
 import FilesystemOperators from "./filesystem.js"
 import * as progress from 'cli-progress'
@@ -50,7 +49,6 @@ class AddInteraction {
         this.defaultValue = "Unknown"
         this.objectType = "Interactions"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
-        this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
         this.fileSystem = new FilesystemOperators()
         this.progressBar = new progress.SingleBar(
@@ -137,7 +135,7 @@ class AddInteraction {
             // List all files in the directory and process them one at a time
             const allFiles = this.fileSystem.listAllFiles(myPath)
             // Start the progress bar
-            this.progressBar.start(allFiles[2].length-1, 0)
+            this.progressBar.start(allFiles[2].length, 0)
             // Iterate through each file in the directory
             for(const myIdx in allFiles[2]) {
                 // Set the file name for easier readability
@@ -284,8 +282,6 @@ class AddInteraction {
 
         ]
 
-        
-
         // Capture the current data and converto to an ISO string
         const myDate = new Date()
         const myDateString = myDate.toISOString()
@@ -359,10 +355,14 @@ class AddInteraction {
         // Update the company object with linkedInteractions and updateObject
         // NOTE: linkedInteractions is resetting everytime to the new value, this is a bug
         const updatedCompany = await this.companyCtl.updateObj(
-            myCompany.name, 
-            'linked_interactions', 
-            linkedInteractions, 
-            true // This means do not execute a write to the backend
+            // NOTE: This follows the structure expected from the CLI --update switch
+            {
+                name: myCompany.name, 
+                key: 'linked_interactions', 
+                value: linkedInteractions
+            }, 
+            true, // This means do not execute a write to the backend
+            true // Set because this is a system update and not a user update
         )
         
         // Create the new interactions
@@ -405,7 +405,6 @@ class AddInteraction {
         mySpinner.stop()
         return released
     }
-
 }
 
 export default AddInteraction

@@ -441,11 +441,32 @@ class GitHubFunctions {
      * @memberof GitHubFunctions
      * @todo Update to catchContainer and releaseContainer
      */
-    async updateObject(containerName, objName, key, value, dontWrite=false) {
+    async updateObject(containerName, objName, key, value, dontWrite=false, system=false, whiteList=[]) {
+        // console.log(`Updating object [${objName}] in container [${containerName}] with key [${key}] and value [${value}]`)
+        // Check to see if this is a system call or not
+        if(!system) {
+            // Since this is not a system call check to see if the key is in the white list
+            if(!whiteList.includes(key)) { 
+                return [
+                    false, 
+                    {
+                        status_code: 403, 
+                        status_msg: `Updating the key [${key}] is not supported.`
+                    },
+                    null
+                ] 
+            }
+        }
         // Using the method above read the objects
         const readResponse = await this.readObjects(containerName)
         // Check to see if the read was successful
-        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects.`, readResponse] }
+        if(!readResponse[0]) { 
+            return [
+                false, 
+                {status_code: 500, status_msg: `Unable to read source objects from GitHub.`}, 
+                readResponse
+            ] 
+        }
 
         // Catch the container if needed
         let repoMetadata = {
@@ -457,26 +478,69 @@ class GitHubFunctions {
         let caught = {}
         if(!dontWrite) {
             repoMetadata.containers[containerName] = {}
-            await this.catchContainer(repoMetadata)
+            caught = await this.catchContainer(repoMetadata)
         }
 
         // Loop through the objects, find and update the objects matching the name
         for (const obj in readResponse[2].mrJson) {
             if(readResponse[2].mrJson[obj].name === objName) {
                 readResponse[2].mrJson[obj][key] = value
+                // Update the modified date of the object
+                const now = new Date()
+                readResponse[2].mrJson[obj].modification_date = now.toISOString()
             }
         }
+        
 
-        if (dontWrite) { return [true, `SUCCESS: merged objects with [${containerName}/${this.objectFiles[containerName]}]`, readResponse[2].mrJson] }
+        // If this flag is set merely return the modified object(s) to the caller
+        if (dontWrite) { 
+            return [
+                true, 
+                {
+                    status_code: 200, 
+                    status_msg: `Merged updates object(s) with [${containerName}] objects.`
+                }, 
+                readResponse[2].mrJson
+            ] 
+        }
 
         // Call the method above to write the object
-        const writeResponse = await this.writeObject(containerName, mergedObjects, caught.branch.name)
+        const writeResponse = await this.writeObject(
+            containerName, 
+            readResponse[2].mrJson, 
+            caught[2].branch.name,
+            caught[2].containers[containerName].objectSha)
         // Check to see if the write was successful and return the error if not
-        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects.`, writeResponse] }
+        if(!writeResponse[0]) { 
+            return [
+                false,
+                {status_code: 503, status_msg: `Unable to write the objects.`}, 
+                writeResponse
+            ] 
+        }
 
         // Release the container
-        const released = await this.releaseContainer(repoMetadata)
-        if(!released[0]) { return [false, `ERROR: Unable to release the container, objects may have been written please check [${containerName}] for objects and the lock file.`, released] }
+        const released = await this.releaseContainer(caught[2])
+        if(!released[0]) { 
+            return [
+                false, 
+                {
+                    status_code: 503,
+                    status_msg: `Cannot release the container please check [${containerName}] in GitHub.`
+                }, 
+                released
+            ] 
+        }
+
+        // Finally return success with the results of the release
+        return [
+            true, 
+            {
+                status_code: 200, 
+                status_msg: `Updated [${containerName}] object of the name [${objName}] with [${key} = ${value}].`
+            }, 
+            released
+        ]
     }
 
     async catchContainer(repoMetadata) {
