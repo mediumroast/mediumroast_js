@@ -13,7 +13,6 @@ import chalk from 'chalk'
 import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
-import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
 import crypto from "node:crypto"
 import axios from "axios"
@@ -79,7 +78,6 @@ class AddCompany {
         this.defaultValue = "Unknown"
         this.objectType = "Companies"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
-        this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
     }
 
@@ -773,10 +771,10 @@ class AddCompany {
         // Either return the company object or create it
         if (createObj) {
             console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-            this.cutils.printLine()
+            this.output.printLine()
             return await this.apiController.createObj([myCompany])
         } else {
-            this.cutils.printLine()
+            this.output.printLine()
             return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]
         }
     }

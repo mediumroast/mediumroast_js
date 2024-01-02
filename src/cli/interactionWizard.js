@@ -13,7 +13,6 @@
 // Import required modules
 import chalk from 'chalk'
 import WizardUtils from "./commonWizard.js"
-import { Utilities } from "../helpers.js"
 import CLIOutput from "./output.js"
 import FilesystemOperators from "./filesystem.js"
 import * as progress from 'cli-progress'
@@ -50,7 +49,6 @@ class AddInteraction {
         this.defaultValue = "Unknown"
         this.objectType = "Interactions"
         this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
-        this.cutils = new Utilities(this.objectType) // General package utilities
         this.output = new CLIOutput(this.env, this.objectType)
         this.fileSystem = new FilesystemOperators()
         this.progressBar = new progress.SingleBar(
@@ -360,7 +358,8 @@ class AddInteraction {
             myCompany.name, 
             'linked_interactions', 
             linkedInteractions, 
-            true // This means do not execute a write to the backend
+            true, // This means do not execute a write to the backend
+            true // Set because this is a system update and not a user update
         )
         
         // Create the new interactions
