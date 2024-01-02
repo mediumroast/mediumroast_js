@@ -104,8 +104,8 @@ class baseObjects {
      * @param {String} endpoint - defaults to findbyx and is combined with credential and version info
      * @returns {Array} the results from the called function mrRest class
      */
-    async updateObj(objName, key, value, dontWrite=false) {
-        return await this.serverCtl.updateObject(this.objType, objName, key, value, dontWrite)
+    async updateObj(objName, key, value, dontWrite, system, whiteList) {
+        return await this.serverCtl.updateObject(this.objType, objName, key, value, dontWrite, system, whiteList)
     }
 
     /**
@@ -206,6 +206,23 @@ class Companies extends baseObjects {
     constructor (token, org, processName) {
         super(token, org, processName, 'Companies')
     }
+
+    async updateObj(objToUpdate, dontWrite=false, system=false) {
+        // Destructure objToUpdate
+        const { name, key, value } = objToUpdate
+        // Define the attributes that can be updated by the user
+        const whiteList = [
+            'description', 'company_type', 'url', 'role', 'wikipedia_url', 'status',
+
+            'region', 'country', 'city', 'state_province', 'zip_postal', 'street_address', 'latitude', 'longitude','phone',
+            'google_maps_url', 'google_news_url', 'google_finance_url','google_patents_url',
+
+            'cik', 'stock_symbol', 'stock_exchange', 'recent_10k_url', 'recent_10q_url', 'firmographic_url', 'filings_url', 'owner_tranasactions',
+            
+            'industry', 'industry_code', 'industry_group_code', 'industry_group_description', 'major_group_code','major_group_description'
+        ]
+        return await super.updateObj(name, key, value, dontWrite, system, whiteList)
+    }
 }
 
 
@@ -221,17 +238,18 @@ class Interactions extends baseObjects {
         super(token, org, processName, 'Interactions')
     }
 
-    async createObj(objs) {
-        // NOTE: This is an interesting way to do this, but it may not be correct.
-        const linkedCompanies = this.linkObj(objs)
-        const linkedStudies = this.linkObj(objs)
-        const linkedInteractions = this.linkObj(objs)
-        const linkedObjs = {
-            linked_companies: linkedCompanies,
-            linked_studies: linkedStudies,
-            linked_interactions: linkedInteractions
-        }
-        return await this.serverCtl.createObjects(this.objType, objs, linkedObjs)
+    async updateObj(objToUpdate, dontWrite=false, system=false) {
+        // Destructure objToUpdate
+        const { name, key, value } = objToUpdate
+        // Define the attributes that can be updated by the user
+        const whiteList = [
+            'status', 'content_type', 'file_size', 'reading_time', 'word_count', 'page_count', 'description', 'abstract',
+
+            'region', 'country', 'city', 'state_province', 'zip_postal', 'street_address', 'latitude', 'longitude',
+            
+            'public', 'groups' 
+        ]
+        return await super.updateObj(name, key, value, dontWrite, system, whiteList)
     }
 }
 
