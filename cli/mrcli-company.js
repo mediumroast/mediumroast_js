@@ -33,8 +33,16 @@ const environment = new Environmentals(
 // Filesystem object
 const fileSystem = new FilesystemOperators()
 
-// Create the environmental settings
-const myArgs = environment.parseCLIArgs()
+// Process the command line options
+let myProgram = environment.parseCLIArgs(true)
+myProgram
+   .option('-o, --allow_orphans', 'Allow orphaned interactions to remain in the system')
+
+// Parse the command line arguments into myArgs and obtain the options
+let myArgs = myProgram.parse(process.argv)
+myArgs = myArgs.opts()
+
+// Read the environmental settings
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
 const accessToken = await environment.verifyAccessToken()
@@ -213,16 +221,25 @@ if (myArgs.report) {
    }
 // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
-   console.error('ERROR (%d): Delete not implemented.', -1)
-   process.exit(-1)
-   // Delete an object
-   const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete)
-   if(success) {
-      console.log(`SUCCESS: deleted company object.`)
-      process.exit(0)
-   } else {
-      console.error('ERROR (%d): Unable to delete company object.', -1)
-      process.exit(-1)
+   if (myArgs.allow_orphans) {
+      // Use operationOrNot to confirm the delete
+      const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
+      if(!deleteOrNot) {
+         console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
+         process.exit(0)
+      }
+      // Delete the object
+      const mySpinner = new ora(`Deleting company [${myArgs.delete}] object ...`)
+      mySpinner.start()
+      const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete)
+      mySpinner.stop()
+      if(success) {
+         console.log(`SUCCESS: ${stat.status_msg}`)
+         process.exit(0)
+      } else {
+         console.log(`ERROR: ${stat.status_msg}`)
+         process.exit(-1)
+      }
    }
 } else if (myArgs.add_wizard) {
    myEnv.DEFAULT = {company: 'Unknown'}

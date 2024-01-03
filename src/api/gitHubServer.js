@@ -117,9 +117,8 @@ class baseObjects {
      * @returns {Array} the results from the called function mrRest class
      * @todo implment when available in the backend
      */
-    async deleteObj(id, endpoint='delete') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return this.rest.deleteObj(fullEndpoint, {"id": id}) 
+    async deleteObj(objName, source) {
+        return await this.serverCtl.deleteObject(objName, source)
     }
 
     /**
@@ -223,6 +222,15 @@ class Companies extends baseObjects {
         ]
         return await super.updateObj(name, key, value, dontWrite, system, whiteList)
     }
+
+    async deleteObj(objName) {
+        const source = {
+            from: 'Companies',
+            to: ['Interactions']
+        }
+        return await super.deleteObj(objName, source)
+    }
+
 }
 
 
@@ -250,6 +258,14 @@ class Interactions extends baseObjects {
             'public', 'groups' 
         ]
         return await super.updateObj(name, key, value, dontWrite, system, whiteList)
+    }
+
+    async deleteObj(objName) {
+        const source = {
+            from: 'Interactions',
+            to: ['Companies']
+        }
+        return await super.deleteObj(objName, source)
     }
 }
 

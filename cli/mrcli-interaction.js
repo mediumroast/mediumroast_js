@@ -21,9 +21,7 @@ import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
-
-// External modules
-import chalk from 'chalk'
+import WizardUtils from "../src/cli/commonWizard.js"
 
 // Reset the status of objects for caffiene reprocessing
 async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
@@ -77,6 +75,9 @@ const processName = 'mrcli-interaction'
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
+
+// Common wizard utilities
+const wutils = new WizardUtils(objectType)
 
 // Construct the controller objects
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
@@ -196,15 +197,22 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
-   console.error('ERROR (%d): Delete not implemented.', -1)
-   process.exit(-1)
-   // Delete an object
+   // Use operationOrNot to confirm the delete
+   const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the interaction [${myArgs.delete}], are you sure?`)
+   if(!deleteOrNot) {
+      console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
+      process.exit(0)
+   }
+   // Delete the object
+   const mySpinner = new ora(`Deleting interaction [${myArgs.delete}] object ...`)
+   mySpinner.start()
    const [success, stat, resp] = await interactionCtl.deleteObj(myArgs.delete)
+   mySpinner.stop()
    if(success) {
-      console.log(`SUCCESS: deleted interaction object.`)
+      console.log(`SUCCESS: ${stat.status_msg}`)
       process.exit(0)
    } else {
-      console.error('ERROR (%d): Unable to delete interaction object.', -1)
+      console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {

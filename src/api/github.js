@@ -7,6 +7,7 @@
  * @version 1.0.0
  */
 
+import { Companies } from "mediumroast_js"
 import { Octokit } from "octokit"
 
 
@@ -435,11 +436,15 @@ class GitHubFunctions {
      * @description Reads an object from a specified container using the GitHub API.
      * @async
      * @param {string} containerName - The name of the container to read the object from.
-     * @param {string} objId - The id of the object to read.
-     * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
-     * @throws {Error} If an error occurs while getting the content or parsing it.
+     * @param {string} objName - The name of the object to update.
+     * @param {string} key - The key of the object to update.
+     * @param {string} value - The value to update the key with.
+     * @param {boolean} [dontWrite=false] - A flag to indicate if the object should be written back to the container or not.
+     * @param {boolean} [system=false] - A flag to indicate if the update is a system call or not.
+     * @param {Array} [whiteList=[]] - A list of keys that are allowed to be updated.
+     * @returns {Promise<Array>} A promise that resolves to the decoded contents of the object.
      * @memberof GitHubFunctions
-     * @todo Update to catchContainer and releaseContainer
+     * @todo As deleteObject progresses look to see if we can improve here too
      */
     async updateObject(containerName, objName, key, value, dontWrite=false, system=false, whiteList=[]) {
         // console.log(`Updating object [${objName}] in container [${containerName}] with key [${key}] and value [${value}]`)
@@ -538,6 +543,122 @@ class GitHubFunctions {
             {
                 status_code: 200, 
                 status_msg: `Updated [${containerName}] object of the name [${objName}] with [${key} = ${value}].`
+            }, 
+            released
+        ]
+    }
+
+    /**
+     * @function deleteObject
+     * @description Deletes an object from a specified container using the GitHub API.
+     * @async
+     * @param {string} objName - The name of the object to delete.
+     * @param {object} source - The source object that contains the from and to containers.
+     * @returns {Promise<Array>} A promise that resolves to the decoded contents of the object.
+     * @memberof GitHubFunctions
+     */
+    async deleteObject(objName, source) {
+        // NOTE: source has a weakness we will have to remedy later, notably from can be Studies and Companies
+        // source = {
+        //     from: 'Interactions',
+        //     to: ['Companies']
+        // }
+
+        // Create an object that maps the from object type to the to object type fields to be updated
+        const fieldMap = {
+            Interactions: {
+                Companies: 'linked_interactions',
+                // Studies: 'linked_interactions'
+            },
+            Companies: {
+                Interactions: 'linked_companies',
+                // Studies: 'linked_companies'
+            },
+            Studies: {
+                Interactions: 'linked_studies',
+                Companies: 'linked_studies'
+            }
+        }
+
+        // Catch the container if needed
+        let repoMetadata = {
+            containers: {}, 
+            branch: {}
+        }
+
+        // Catch the container(s)
+        repoMetadata.containers[source.from] = {}
+        repoMetadata.containers[source.to[0]] = {}
+        let caught = await this.catchContainer(repoMetadata)
+
+        // Loop through the from objects, find and remove the objects matching the name
+        for (const obj in caught[2].containers[source.from].objects) {
+            if(caught[2].containers[source.from].objects[obj].name === objName) {
+                // Remove the object from the array
+                caught[2].containers[source.from].objects.splice(obj, 1)
+            }
+        }
+
+        // Loop through the to objects, find and remove objName from the linked objects and update the modification date
+        for (const obj in caught[2].containers[source.to[0]].objects) {
+            if(objName in caught[2].containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]]) {
+                // Delete the object from the linked objects object
+                delete caught[2].containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]][objName]
+                // Update the modification date of the object
+                const now = new Date()
+                caught[2].containers[source.to[0]].objects[obj].modification_date = now.toISOString()
+            }
+        }
+
+        // Call the method above to write the from objects
+        const writeResponse = await this.writeObject(
+            source.from, 
+            caught[2].containers[source.from].objects, 
+            caught[2].branch.name,
+            caught[2].containers[source.from].objectSha)
+        // Check to see if the write was successful and return the error if not
+        if(!writeResponse[0]) {
+            return [
+                false,
+                {status_code: 503, status_msg: `Unable to write the [${source.from}] objects.`}, 
+                writeResponse
+            ] 
+        }
+
+        // Call the method above to write the to objects
+        const writeResponse2 = await this.writeObject(
+            source.to, 
+            caught[2].containers[source.to[0]].objects, 
+            caught[2].branch.name,
+            caught[2].containers[source.to[0]].objectSha)
+        // Check to see if the write was successful and return the error if not
+        if(!writeResponse2[0]) {
+            return [
+                false,
+                {status_code: 503, status_msg: `Unable to write the [${source.to}] objects.`}, 
+                writeResponse2
+            ] 
+        }
+
+        // Release the container
+        const released = await this.releaseContainer(caught[2])
+        if(!released[0]) { 
+            return [
+                false, 
+                {
+                    status_code: 503,
+                    status_msg: `Cannot release the container please check [${source.from}] in GitHub.`
+                }, 
+                released
+            ] 
+        }
+
+        // Finally return success with the results of the release
+        return [
+            true, 
+            {
+                status_code: 200, 
+                status_msg: `Deleted [${source.from}] object of the name [${objName}], and links in associated objects.`
             }, 
             released
         ]

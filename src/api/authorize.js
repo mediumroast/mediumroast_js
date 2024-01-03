@@ -228,12 +228,10 @@ class GitHubAuth {
                 deviceCode = verifier.device_code
                 console.log(
                     chalk.blue.bold(
-                        `
-                        If your platform supports this, opening your browser. Otherwise, navigate to the URL below in your browser.
-                        \n\tAuthorization URL: ${verifier.verification_uri}
-                        Type or paste the code below into your browser and follow the prompts to authorize this client.
-                        \n\tDevice authorization code: ${verifier.user_code}
-                        `
+                        `If your platform supports this, opening your browser. Otherwise, navigate to the URL below in your browser.\n
+                        \tAuthorization URL: ${verifier.verification_uri}\n
+                        Type or paste the code below into your browser and follow the prompts to authorize this client.\n
+                        \tDevice authorization code: ${verifier.user_code}`
                         
                     )
                 )
