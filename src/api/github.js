@@ -339,6 +339,26 @@ class GitHubFunctions {
         }
     }
 
+    // Create a method using the octokit called deleteBlob to delete a file from the repo
+    async deleteBlob(containerName, fileName, branchName, sha) {
+        // Using the github API delete a file from the container
+        try {
+            const deleteResponse = await this.octCtl.rest.repos.deleteFile({
+                owner: this.orgName,
+                repo: this.repoName,
+                path: `${containerName}/${fileName}`,
+                branch: branchName,
+                message: `Delete object [${fileName}]`,
+                sha: sha
+            })
+            // Return the delete response if the delete was successful or an error if not
+            return [true, {status_code: 200, status_msg: `deleted object [${fileName}] from container [${containerName}]`}, deleteResponse]
+        } catch (err) { 
+            // Return the error
+            return [false, {status_code: 503, status_msg: `unable to delete object [${fileName}] from container [${containerName}]`}, err]
+        }
+    }
+
     // Create a method using the octokit to write a file to the repo
     async writeBlob(containerName, fileName, blob, branchName, sha) {
         // Only pull in the file name
@@ -594,10 +614,42 @@ class GitHubFunctions {
         // Loop through the from objects, find and remove the objects matching the name
         for (const obj in caught[2].containers[source.from].objects) {
             if(caught[2].containers[source.from].objects[obj].name === objName) {
-                // Remove the object from the array
-                caught[2].containers[source.from].objects.splice(obj, 1)
+                // If from is Interactions then we need to delete the actual file from the repo based on objName
+                if(source.from === 'Interactions') {
+                    // Obtain the sha of the object to delete by obtaining the file name from the url attribute of the Interaction
+                    const fileName = caught[2].containers[source.from].objects[obj].url
+                    // Obtain the sha for fileName using octokit
+                    const { data } = await this.octCtl.rest.repos.getContent({
+                        owner: this.orgName,
+                        repo: this.repoName,
+                        path: fileName
+                    })
+                    // Remove the path from the file name
+                    const fileBits = fileName.split('/')
+                    const shortFilename = fileBits[fileBits.length - 1]
+                    // console.log(data)
+                    // Call the method above to delete the object using data.sha
+                    const deleteResponse = await this.deleteBlob(
+                        source.from, 
+                        shortFilename, 
+                        caught[2].branch.name,
+                        data.sha
+                    )
+                    console.log(deleteResponse)
+                    // Check to see if the delete was successful and return the error if not
+                    if(!deleteResponse[0]) {
+                        return [
+                            false,
+                            {status_code: 503, status_msg: `Unable to delete the [${source.from}] object [${objName}].`}, 
+                            deleteResponse
+                        ] 
+                    }
+                    // Remove the object from the array
+                    caught[2].containers[source.from].objects.splice(obj, 1)
+                }
             }
         }
+        
 
         // Loop through the to objects, find and remove objName from the linked objects and update the modification date
         for (const obj in caught[2].containers[source.to[0]].objects) {
