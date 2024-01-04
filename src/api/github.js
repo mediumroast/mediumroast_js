@@ -635,7 +635,6 @@ class GitHubFunctions {
                         caught[2].branch.name,
                         data.sha
                     )
-                    console.log(deleteResponse)
                     // Check to see if the delete was successful and return the error if not
                     if(!deleteResponse[0]) {
                         return [
