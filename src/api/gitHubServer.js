@@ -10,6 +10,7 @@
 // Import required modules
 import GitHubFunctions from './github.js'
 import { createHash } from 'crypto'
+import ora from 'ora'
 
 
 class baseObjects {
@@ -73,12 +74,20 @@ class baseObjects {
      * @param {String} value - the value for the defined attribute
      * @returns {Array} the results from the called function mrRest class
      */
-    async findByX(attribute, value) {
+    async findByX(attribute, value, allObjects=null) {
+        if(attribute === 'name') {
+            value = value.toLowerCase()
+        }
+        // console.log(`Searching for ${this.objType} where ${attribute} = ${value}`)
         let myObjects = []
-        const allObjectsResp = await this.serverCtl.readObjects(this.objType)
-        const allObjects = allObjectsResp[2].mrJson
+        if(allObjects === null) {
+            const allObjectsResp = await this.serverCtl.readObjects(this.objType)
+            allObjects = allObjectsResp[2].mrJson
+        }
         for(const obj in allObjects) {
-            if(allObjects[obj][attribute] === value) {
+            let currentObject
+            attribute == 'name' ? currentObject = allObjects[obj][attribute].toLowerCase() : null
+            if(currentObject === value) {
                 myObjects.push(allObjects[obj])
             }
         }
@@ -117,9 +126,8 @@ class baseObjects {
      * @returns {Array} the results from the called function mrRest class
      * @todo implment when available in the backend
      */
-    async deleteObj(id, endpoint='delete') {
-        const fullEndpoint = '/' + this.apiVersion + '/' + this.objType + '/' + endpoint
-        return this.rest.deleteObj(fullEndpoint, {"id": id}) 
+    async deleteObj(objName, source, repoMetadata=null, catchIt=true) {
+        return await this.serverCtl.deleteObject(objName, source, repoMetadata, catchIt)
     }
 
     /**
@@ -223,6 +231,77 @@ class Companies extends baseObjects {
         ]
         return await super.updateObj(name, key, value, dontWrite, system, whiteList)
     }
+
+    async deleteObj(objName, allowOrphans=false) {
+        let source = {
+            from: 'Companies',
+            to: ['Interactions']
+        }
+
+        // If allowOrphans is true then use the baseObjects deleteObj
+        if(allowOrphans){
+            return await super.deleteObj(objName, source)
+        }
+
+        // Catch the Companies and Interaction containers
+        // Assign repoMetadata to capture Companies nad Studies
+        let repoMetadata = {
+            containers: {
+                Companies: {},
+                Interactions: {}
+            }, 
+            branch: {}
+        }
+        const caught = await this.serverCtl.catchContainer(repoMetadata)
+
+        // Use findByX to get all linkedInteractions
+        // NOTE: This has to be done here because the company has been deleted in the next step
+        const getCompanyObject = await this.findByX('name', objName, caught[2].containers.Companies.objects)
+        if(!getCompanyObject[0]) {
+            return getCompanyObject
+        }
+        const linkedInteractions = getCompanyObject[2][0].linked_interactions
+
+        // Delete the company
+        // Use deleteObj to delete the company
+        const deleteCompanyObjResp = await this.serverCtl.deleteObject(
+            objName, 
+            source, 
+            caught[2], 
+            false
+        )
+        if(!deleteCompanyObjResp[0]) {
+            return deleteCompanyObjResp
+        }
+        
+        // Delete all linkedInteractions
+        // Update source to be from the perspective of the Interactions
+        source = {
+            from: 'Interactions',
+            to: ['Companies']
+        }
+        // Use deleteObect to delete all linkedInteractions
+        for(const interaction in linkedInteractions) {
+            const deleteInteractionObjResp = await this.serverCtl.deleteObject(
+                interaction,
+                source,
+                caught[2],
+                false
+            )
+            if(!deleteInteractionObjResp[0]) {
+                return deleteInteractionObjResp
+            }
+        }
+
+        // Release the container
+        const relased = await this.serverCtl.releaseContainer(caught[2])
+        if(!relased[0]) {
+            return relased
+        }
+
+        // Return the response
+        return [true, {status_code: 200, status_msg: `deleted company [${objName}] and all linked interactions`}, null]
+    }
 }
 
 
@@ -250,6 +329,14 @@ class Interactions extends baseObjects {
             'public', 'groups' 
         ]
         return await super.updateObj(name, key, value, dontWrite, system, whiteList)
+    }
+
+    async deleteObj(objName) {
+        const source = {
+            from: 'Interactions',
+            to: ['Companies']
+        }
+        return await super.deleteObj(objName, source)
     }
 }
 

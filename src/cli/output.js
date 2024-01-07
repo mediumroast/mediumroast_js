@@ -49,7 +49,7 @@ class CLIOutput {
 
     // NOTE: Not exterally facing doesn't require JSDoc signture
     // Purpose: Output an ASCII formatted table with key object metadata to the console
-    outputTable(objects, isUserObject=false) {
+    outputTable(objects) {
         // User objects output
         // Note: The separation between User and other objects is due to their structure. Pointedly 
         //          user objects do not contain name and description fields.
@@ -121,12 +121,16 @@ class CLIOutput {
                 colWidths: [80, 15, 10, 25]
             })
             for (const myObj in objects) {
+                let linkedCompany = 'Orphaned'
+                if(Object.keys(objects[myObj].linked_companies).length) {
+                    linkedCompany = Object.keys(objects[myObj].linked_companies)[0]
+                }
+                    
                 table.push([
                     objects[myObj].name,
                     objects[myObj].creator_name,
                     objects[myObj].region,
-                    Object.keys(objects[myObj].linked_companies)[0]
-
+                    linkedCompany
                 ])
             }
         } else {
