@@ -204,7 +204,7 @@ if (myArgs.report) {
       process.exit(0)
    }
    // Delete the object
-   const mySpinner = new ora(`Deleting interaction [${myArgs.delete}] object ...`)
+   const mySpinner = new ora(`Deleting interaction [${myArgs.delete}] ...`)
    mySpinner.start()
    const [success, stat, resp] = await interactionCtl.deleteObj(myArgs.delete)
    mySpinner.stop()

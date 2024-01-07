@@ -7,7 +7,6 @@
  * @version 1.0.0
  */
 
-import { Companies } from "mediumroast_js"
 import { Octokit } from "octokit"
 
 
@@ -49,6 +48,30 @@ class GitHubFunctions {
             Companies: 'Companies.json',
             Interactions: 'Interactions.json',
             Users: null
+        }
+    }
+
+    /**
+     * @async
+     * @function getSha
+     * @description Gets the SHA of a file in a container on a branch
+     * @param {String} containerName - the name of the container to get the SHA from
+     * @param {String} fileName - the short name of the file to get the SHA from
+     * @param {String} branchName - the name of the branch to get the SHA from
+     * @returns {Array} An array with position 0 being boolean to signify success/failure, position 1 being the response or error message, and position 2 being the SHA. 
+     * @memberof GitHubFunctions
+     */
+    async getSha(containerName, fileName, branchName) {
+        try {
+            const response = await this.octCtl.rest.repos.getContent({
+                owner: this.orgName,
+                repo: this.repoName,
+                ref: branchName,
+                path: `${containerName}/${fileName}`
+            })
+            return [true, {status_code:200, status_msg: `captured sha for [${containerName}/${fileName}]`}, response.data.sha]
+        } catch (err) {
+            return [false, {status_code: 500, status_msg: `unable to capture sha for [${containerName}/${fileName}] due to [${err}]`}, err.message]
         }
     }
 
@@ -498,6 +521,7 @@ class GitHubFunctions {
             containers: {}, 
             branch: {}
         }
+        
 
         // If dontWrite is true then don't catch the container
         let caught = {}
@@ -577,7 +601,7 @@ class GitHubFunctions {
      * @returns {Promise<Array>} A promise that resolves to the decoded contents of the object.
      * @memberof GitHubFunctions
      */
-    async deleteObject(objName, source) {
+    async deleteObject(objName, source, repoMetadata=null, catchIt=true) {
         // NOTE: source has a weakness we will have to remedy later, notably from can be Studies and Companies
         // source = {
         //     from: 'Interactions',
@@ -601,23 +625,27 @@ class GitHubFunctions {
         }
 
         // Catch the container if needed
-        let repoMetadata = {
-            containers: {}, 
-            branch: {}
-        }
+        if(catchIt) {
+            repoMetadata = {
+                containers: {}, 
+                branch: {}
+            }
 
-        // Catch the container(s)
-        repoMetadata.containers[source.from] = {}
-        repoMetadata.containers[source.to[0]] = {}
-        let caught = await this.catchContainer(repoMetadata)
+            // Catch the container(s)
+            repoMetadata.containers[source.from] = {}
+            repoMetadata.containers[source.to[0]] = {}
+            let caught = await this.catchContainer(repoMetadata)
+            repoMetadata = caught[2]
+        }   
+
 
         // Loop through the from objects, find and remove the objects matching the name
-        for (const obj in caught[2].containers[source.from].objects) {
-            if(caught[2].containers[source.from].objects[obj].name === objName) {
+        for (const obj in repoMetadata.containers[source.from].objects) {
+            if(repoMetadata.containers[source.from].objects[obj].name === objName) {
                 // If from is Interactions then we need to delete the actual file from the repo based on objName
                 if(source.from === 'Interactions') {
                     // Obtain the sha of the object to delete by obtaining the file name from the url attribute of the Interaction
-                    const fileName = caught[2].containers[source.from].objects[obj].url
+                    const fileName = repoMetadata.containers[source.from].objects[obj].url
                     // Obtain the sha for fileName using octokit
                     const { data } = await this.octCtl.rest.repos.getContent({
                         owner: this.orgName,
@@ -627,12 +655,11 @@ class GitHubFunctions {
                     // Remove the path from the file name
                     const fileBits = fileName.split('/')
                     const shortFilename = fileBits[fileBits.length - 1]
-                    // console.log(data)
                     // Call the method above to delete the object using data.sha
                     const deleteResponse = await this.deleteBlob(
                         source.from, 
                         shortFilename, 
-                        caught[2].branch.name,
+                        repoMetadata.branch.name,
                         data.sha
                     )
                     // Check to see if the delete was successful and return the error if not
@@ -643,32 +670,44 @@ class GitHubFunctions {
                             deleteResponse
                         ] 
                     }
-                    // Remove the object from the array
-                    caught[2].containers[source.from].objects.splice(obj, 1)
                 }
+                // Remove the object from the array
+                repoMetadata.containers[source.from].objects.splice(obj, 1)
             }
         }
         
 
         // Loop through the to objects, find and remove objName from the linked objects and update the modification date
-        for (const obj in caught[2].containers[source.to[0]].objects) {
-            if(objName in caught[2].containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]]) {
+        for (const obj in repoMetadata.containers[source.to[0]].objects) {
+            if(objName in repoMetadata.containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]]) {
                 // Delete the object from the linked objects object
-                delete caught[2].containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]][objName]
+                delete repoMetadata.containers[source.to[0]].objects[obj][fieldMap[source.from][source.to[0]]][objName]
                 // Update the modification date of the object
                 const now = new Date()
-                caught[2].containers[source.to[0]].objects[obj].modification_date = now.toISOString()
+                repoMetadata.containers[source.to[0]].objects[obj].modification_date = now.toISOString()
             }
+        }
+
+        // Call getSha to get the sha of the from object
+        const fromSha = await this.getSha(source.from, this.objectFiles[source.from], repoMetadata.branch.name)
+        // Check to see if the sha was captured and return the error if not
+        if(!fromSha[0]) {
+            return [
+                false,
+                {status_code: 503, status_msg: `Unable to capture the [${source.from}] sha.`},
+                fromSha
+            ]
         }
 
         // Call the method above to write the from objects
         const writeResponse = await this.writeObject(
             source.from, 
-            caught[2].containers[source.from].objects, 
-            caught[2].branch.name,
-            caught[2].containers[source.from].objectSha)
+            repoMetadata.containers[source.from].objects, 
+            repoMetadata.branch.name,
+            fromSha[2])
         // Check to see if the write was successful and return the error if not
         if(!writeResponse[0]) {
+            console.log(writeResponse)
             return [
                 false,
                 {status_code: 503, status_msg: `Unable to write the [${source.from}] objects.`}, 
@@ -676,12 +715,23 @@ class GitHubFunctions {
             ] 
         }
 
+        // Call getSha to get the sha of the to object
+        const toSha = await this.getSha(source.to[0], this.objectFiles[source.to[0]], repoMetadata.branch.name)
+        // Check to see if the sha was captured and return the error if not
+        if(!toSha[0]) {
+            return [
+                false,
+                {status_code: 503, status_msg: `Unable to capture the [${source.to[0]}] sha.`},
+                toSha
+            ]
+        }
+
         // Call the method above to write the to objects
         const writeResponse2 = await this.writeObject(
             source.to, 
-            caught[2].containers[source.to[0]].objects, 
-            caught[2].branch.name,
-            caught[2].containers[source.to[0]].objectSha)
+            repoMetadata.containers[source.to[0]].objects, 
+            repoMetadata.branch.name,
+            toSha[2])
         // Check to see if the write was successful and return the error if not
         if(!writeResponse2[0]) {
             return [
@@ -692,27 +742,40 @@ class GitHubFunctions {
         }
 
         // Release the container
-        const released = await this.releaseContainer(caught[2])
-        if(!released[0]) { 
+        if(catchIt){
+            const released = await this.releaseContainer(repoMetadata)
+            if(!released[0]) { 
+                return [
+                    false, 
+                    {
+                        status_code: 503,
+                        status_msg: `Cannot release the container please check [${source.from}] in GitHub.`
+                    }, 
+                    released
+                ] 
+            }
+            // Finally return success with the results of the release
             return [
-                false, 
+                true, 
                 {
-                    status_code: 503,
-                    status_msg: `Cannot release the container please check [${source.from}] in GitHub.`
+                    status_code: 200, 
+                    status_msg: `Deleted [${source.from}] object of the name [${objName}], and links in associated objects.`
                 }, 
                 released
-            ] 
+            ]
+        } else {
+            // Return success with the write reponses
+            return [
+                true, 
+                {
+                    status_code: 200, 
+                    status_msg: `Deleted [${source.from}] object of the name [${objName}], and links in associated objects.`
+                }, 
+                [writeResponse, writeResponse2]
+            ]
         }
 
-        // Finally return success with the results of the release
-        return [
-            true, 
-            {
-                status_code: 200, 
-                status_msg: `Deleted [${source.from}] object of the name [${objName}], and links in associated objects.`
-            }, 
-            released
-        ]
+        
     }
 
     async catchContainer(repoMetadata) {

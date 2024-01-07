@@ -18,6 +18,7 @@ import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
+import WizardUtils from '../src/cli/commonWizard.js'
 
 // Related object type
 const objectType = 'Companies'
@@ -36,7 +37,7 @@ const fileSystem = new FilesystemOperators()
 // Process the command line options
 let myProgram = environment.parseCLIArgs(true)
 myProgram
-   .option('-o, --allow_orphans', 'Allow orphaned interactions to remain in the system')
+   .option('-o, --allow_orphans', 'Allow orphaned interactions to remain in the system', false)
 
 // Parse the command line arguments into myArgs and obtain the options
 let myArgs = myProgram.parse(process.argv)
@@ -50,6 +51,9 @@ const processName = 'mrcli-company'
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
+
+// CLI Wizard object
+const wutils = new WizardUtils()
 
 // Construct the controller objects
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
@@ -221,17 +225,20 @@ if (myArgs.report) {
    }
 // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
-   if (myArgs.allow_orphans) {
       // Use operationOrNot to confirm the delete
       const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
       if(!deleteOrNot) {
          console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
          process.exit(0)
       }
+      // If allow_orphans is set log a warning to the user that they are allowing orphaned interactions
+      if(myArgs.allow_orphans) {
+         console.log(chalk.bold.yellow(`WARNING: Allowing orphaned interactions to remain in the system.`))
+      }
       // Delete the object
-      const mySpinner = new ora(`Deleting company [${myArgs.delete}] object ...`)
+      const mySpinner = new ora(`Deleting company [${myArgs.delete}] ...`)
       mySpinner.start()
-      const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete)
+      const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete, myArgs.allow_orphans)
       mySpinner.stop()
       if(success) {
          console.log(`SUCCESS: ${stat.status_msg}`)
@@ -240,7 +247,6 @@ if (myArgs.report) {
          console.log(`ERROR: ${stat.status_msg}`)
          process.exit(-1)
       }
-   }
 } else if (myArgs.add_wizard) {
    myEnv.DEFAULT = {company: 'Unknown'}
    const newCompany = new AddCompany(myEnv, companyCtl)
