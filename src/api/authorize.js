@@ -229,7 +229,7 @@ class GitHubAuth {
                 deviceCode = verifier.device_code
                 // Print the verification artifact to the console
                 console.log(
-                    chalk.blue.bold(`If your OS supports it, opening your browser, otherwise, navigate to the website below.\n`)
+                    chalk.blue.bold(`If your OS supports it, opening your browser, otherwise, navigate to the Authorization website. Then, please copy and paste the Authorization code into your browser.\n`)
                 )
                 const table = new Table({
                     rows: [

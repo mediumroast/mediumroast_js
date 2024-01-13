@@ -184,6 +184,11 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
+   const lockResp = interactionCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    const myCLIObj = JSON.parse(myArgs.update)
    const mySpinner = new ora(`Updating interaction [${myCLIObj.name}] object ...`)
    mySpinner.start()
@@ -197,6 +202,11 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
+   const lockResp = interactionCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    // Use operationOrNot to confirm the delete
    const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the interaction [${myArgs.delete}], are you sure?`)
    if(!deleteOrNot) {
@@ -216,6 +226,11 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
+   const lockResp = interactionCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    const newInteraction = new AddInteraction(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newInteraction.wizard()
    if(result[0]) {
@@ -228,6 +243,11 @@ if (myArgs.report) {
 } else if (myArgs.reset_by_type) {
    console.error('ERROR (%d): Reset by type not implemented.', -1)
    process.exit(-1)
+   const lockResp = interactionCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    const resetResponses = await resetStatuses(myArgs.reset_by_type, interactionCtl)
    if(resetResponses[0]) {
       console.log(`SUCCESS: Reset status of ${resetResponses[2].successful.length} interactions.`)

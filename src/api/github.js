@@ -38,9 +38,10 @@ class GitHubFunctions {
     constructor (token, org, processName) {
         this.token = token
         this.orgName = org
-        this.repoName = `${org}_mediumroast_app_repo`
+        this.repoName = `${org}_discovery`
         this.repoDesc = `A repository for all of the mediumroast.io application assets.`
         this.octCtl = new Octokit({auth: token})
+        // NOTE: The lockfile name needs to be more flexible in checking for the lockfile
         this.lockFileName = `${processName}.lock`
         this.mainBranchName = 'main'
         this.objectFiles = {
@@ -71,7 +72,7 @@ class GitHubFunctions {
             })
             return [true, {status_code:200, status_msg: `captured sha for [${containerName}/${fileName}]`}, response.data.sha]
         } catch (err) {
-            return [false, {status_code: 500, status_msg: `unable to capture sha for [${containerName}/${fileName}] due to [${err}]`}, err.message]
+            return [false, {status_code: 500, status_msg: `unable to capture sha for [${containerName}/${fileName}] due to [${err.message}]`}, err]
         }
     }
 
@@ -282,14 +283,17 @@ class GitHubFunctions {
             path: containerName
         })
 
+        // Can we search for a file with an extension of .lock?
+        // This is due to the fact that there are other processes that may create lock files.
+
         const lockExists = mainContents.data.some(
             item => item.path === `${containerName}/${this.lockFileName}`
         )
 
         if (lockExists) {
-            return [true, `SUCCESS: container [${containerName}] is locked with lock file [${this.lockFileName}]`]
+            return [true, {status_code: 200, status_msg: `container [${containerName}] is locked with lock file [${this.lockFileName}]`}, lockExists]
         } else {
-            return [false, `FAILED: container [${containerName}] is not locked with lock file [${this.lockFileName}]`]
+            return [false, {status_code: 404, status_msg: `container [${containerName}] is not locked with lock file [${this.lockFileName}]`}, lockExists]
         }
     }
 
@@ -784,7 +788,7 @@ class GitHubFunctions {
             // Call the method above to check for a lock
             const lockExists = await this.checkForLock(container)
             // If the lock exists return an error
-            if(lockExists[0]) { return [false, `ERROR: The container [${container}] is locked unable to create objects.`] }
+            if(lockExists[0]) { return [false, {status_code: 503, status_msg:`the container [${container}] is locked unable and cannot perform creates, updates or deletes on objects.`}, lockExists] }
         }
 
         // Lock the containers
@@ -792,7 +796,7 @@ class GitHubFunctions {
             // Call the method above to lock the container
             const locked = await this.lockContainer(container)
             // Check to see if the container was locked and return the error if not
-            if(!locked[0]) { return [false, `ERROR: Unable to lock [${container}] cannot create new objects.`, locked] }
+            if(!locked[0]) { return [false, {status_code: 503, status_msg: `unable to lock [${container}] and cannot perform creates, updates or deletes on objects.`}, locked] }
             // Save the lock sha
             repoMetadata.containers[container].lockSha = locked[2].data.content.sha
         }
@@ -801,7 +805,7 @@ class GitHubFunctions {
         // Call the method above createBranchFromMain to create a new branch
         const branchCreated = await this.createBranchFromMain()
         // Check to see if the branch was created
-        if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
+        if(!branchCreated[0]) { return [false, {status_code: 503, status_msg: `unable to create new branch`}, branchCreated] }
         // Save the branch sha into containers as a separate object
         repoMetadata.branch = {
             name: branchCreated[2].data.ref,
@@ -820,7 +824,7 @@ class GitHubFunctions {
             repoMetadata.containers[container].objects = readResponse[2].mrJson
         }
 
-        return [true,`SUCCESS: ${repoMetadata.containers.length} containers are ready for use.`, repoMetadata]
+        return [true,{status_code: 200, status_msg: `${repoMetadata.containers.length} containers are ready for use.`}, repoMetadata]
     }
 
 

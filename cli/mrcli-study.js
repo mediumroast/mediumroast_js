@@ -16,6 +16,10 @@ import { Studies } from '../src/api/gitHubServer.js'
 // import AddStudy from '../src/cli/studyWizard.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
+import chalk from 'chalk'
+
+console.log(chalk.bold.yellow('NOTICE: Studies aren\'t supported in this release, exiting.'))
+process.exit()
 
 // Globals
 const objectType = 'Studies'
