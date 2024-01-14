@@ -855,63 +855,63 @@ class GitHubFunctions {
     }
 
 
-    /**
-     * @function createObjects
-     * @description Creates objects in a specified container using the GitHub API.
-     * @async
-     * @param {string} containerName - The name of the container to create the objects in.
-     * @param {object} objs - The objects to create in the container.
-     * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
-     * @throws {Error} If an error occurs while getting the content or parsing it.
-     * @memberof GitHubFunctions
-     */
-    async createObjects(containerName, objs) {
-        // Call the method above to check for a lock
-        const lockExists = await this.checkForLock(containerName)
-        // If the lock exists return an error
-        if(lockExists[0]) { return [false, `ERROR: The container [${containerName}] is locked unable to create objects.`] }
+    // /**
+    //  * @function createObjects
+    //  * @description Creates objects in a specified container using the GitHub API.
+    //  * @async
+    //  * @param {string} containerName - The name of the container to create the objects in.
+    //  * @param {object} objs - The objects to create in the container.
+    //  * @returns {Promise<string>} A promise that resolves to the decoded contents of the object.
+    //  * @throws {Error} If an error occurs while getting the content or parsing it.
+    //  * @memberof GitHubFunctions
+    //  */
+    // async createObjects(containerName, objs) {
+    //     // Call the method above to check for a lock
+    //     const lockExists = await this.checkForLock(containerName)
+    //     // If the lock exists return an error
+    //     if(lockExists[0]) { return [false, `ERROR: The container [${containerName}] is locked unable to create objects.`] }
 
 
-        // Lock the container
-        const locked = await this.lockContainer(containerName)
-        // Check to see if the container was locked and return the error if not
-        if(!locked[0]) { return [false, `ERROR: Unable to lock [${containerName}] cannot create new objects.`, locked] }
-        const lockSha = locked[2].data.content.sha
+    //     // Lock the container
+    //     const locked = await this.lockContainer(containerName)
+    //     // Check to see if the container was locked and return the error if not
+    //     if(!locked[0]) { return [false, `ERROR: Unable to lock [${containerName}] cannot create new objects.`, locked] }
+    //     const lockSha = locked[2].data.content.sha
         
-        // Call the method above createBranchFromMain to create a new branch
-        const branchCreated = await this.createBranchFromMain()
-        // Check to see if the branch was created
-        if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
-        const branchSha = branchCreated[2].data.object.sha
-        const branchName = branchCreated[2].data.ref
+    //     // Call the method above createBranchFromMain to create a new branch
+    //     const branchCreated = await this.createBranchFromMain()
+    //     // Check to see if the branch was created
+    //     if(!branchCreated[0]) { return [false, `ERROR: Unable to create new branch`, branchCreated] }
+    //     const branchSha = branchCreated[2].data.object.sha
+    //     const branchName = branchCreated[2].data.ref
 
-        // Call the method above to read the objects
-        const readResponse = await this.readObjects(containerName)
-        // Check to see if the read was successful
-        if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects [${containerName}/${this.objectFiles[containerName]}].`, readResponse] }
-        const objectSha = readResponse[2].data.sha
+    //     // Call the method above to read the objects
+    //     const readResponse = await this.readObjects(containerName)
+    //     // Check to see if the read was successful
+    //     if(!readResponse[0]) { return [false, `ERROR: unable to read the source objects [${containerName}/${this.objectFiles[containerName]}].`, readResponse] }
+    //     const objectSha = readResponse[2].data.sha
 
-        // Merge the objects with the updated object which are an array of objects
-        let mergedObjects = [...readResponse[2].mrJson, ...objs]
+    //     // Merge the objects with the updated object which are an array of objects
+    //     let mergedObjects = [...readResponse[2].mrJson, ...objs]
 
 
-        // Write the objects to the new branch
-        const writeResponse = await this.writeObject(containerName, mergedObjects, branchName, objectSha)
-        // Check to see if the write was successful and return the error if not
-        if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects to [${containerName}/${this.objectFiles[containerName]}].`, writeResponse] }
+    //     // Write the objects to the new branch
+    //     const writeResponse = await this.writeObject(containerName, mergedObjects, branchName, objectSha)
+    //     // Check to see if the write was successful and return the error if not
+    //     if(!writeResponse[0]) { return [false,`ERROR: Unable to write the objects to [${containerName}/${this.objectFiles[containerName]}].`, writeResponse] }
 
-        // Merge the branch to main
-        const mergeResponse = await this.mergeBranchToMain(branchName, branchSha)
-        // Check to see if the merge was successful and return the error if not
-        if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
+    //     // Merge the branch to main
+    //     const mergeResponse = await this.mergeBranchToMain(branchName, branchSha)
+    //     // Check to see if the merge was successful and return the error if not
+    //     if(!mergeResponse[0]) { return [false,`ERROR: Unable to merge the branch to main.`, mergeResponse] }
 
-        // Unlock the container
-        const unlocked = await this.unlockContainer(containerName, lockSha)
-        if(!unlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${containerName}] for objects and the lock file.`, unlocked] }
+    //     // Unlock the container
+    //     const unlocked = await this.unlockContainer(containerName, lockSha)
+    //     if(!unlocked[0]) { return [false, `ERROR: Unable to unlock the container, objects may have been written please check [${containerName}] for objects and the lock file.`, unlocked] }
         
-        // Return success with number of objects written
-        return [true, `SUCCESS: [${objs.length}] object(s) written to [${containerName}/${this.objectFiles[containerName]}].`, null]
-    }
+    //     // Return success with number of objects written
+    //     return [true, `SUCCESS: [${objs.length}] object(s) written to [${containerName}/${this.objectFiles[containerName]}].`, null]
+    // }
 }
 
 export default GitHubFunctions

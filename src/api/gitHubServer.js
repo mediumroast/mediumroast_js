@@ -90,14 +90,24 @@ class baseObjects {
             const allObjectsResp = await this.serverCtl.readObjects(this.objType)
             allObjects = allObjectsResp[2].mrJson
         }
+        // If the length of allObjects is 0 then return an error
+        // This will occur when there are no objects of the type in the backend
+        if(allObjects.length === 0) {
+            return [false, {status_code: 404, status_msg: `no ${this.objType} found`}, null]
+        }
         for(const obj in allObjects) {
             let currentObject
-            attribute == 'name' ? currentObject = allObjects[obj][attribute].toLowerCase() : null
+            attribute == 'name' ? currentObject = allObjects[obj][attribute].toLowerCase() : currentObject = allObjects[obj][attribute]
             if(currentObject === value) {
                 myObjects.push(allObjects[obj])
             }
         }
-        return [true, `SUCCESS: found all objects where ${attribute} = ${value}`, myObjects]
+ 
+        if (myObjects.length === 0) { 
+            return [false, {status_code: 404, status_msg: `no ${this.objType} found where ${attribute} = ${value}`}, null]
+        } else {
+            return [true, `SUCCESS: found all objects where ${attribute} = ${value}`, myObjects]
+        }
     }
 
     /**
@@ -107,11 +117,11 @@ class baseObjects {
      * @param {Array} objs - the objects to create in the backend
      * @returns {Array} the results from the called function mrRest class
      */
-    async createObj(objs) {
-        return await this.serverCtl.createObjects(this.objType, objs)
-    }
+    // async createObj1(objs) {
+    //     return await this.serverCtl.createObjects(this.objType, objs)
+    // }
 
-    async createObj2(objs) {
+    async createObj(objs) {
         // Create the repoMetadata object
         let repoMetadata = {
             containers: {
@@ -361,6 +371,7 @@ class Companies extends baseObjects {
         // Return the response
         return [true, {status_code: 200, status_msg: `deleted company [${objName}] and all linked interactions`}, null]
     }
+
 }
 
 
@@ -396,6 +407,10 @@ class Interactions extends baseObjects {
             to: ['Companies']
         }
         return await super.deleteObj(objName, source)
+    }
+
+    async findByHash(hash) {
+        return this.findByX('file_hash', hash)
     }
 }
 

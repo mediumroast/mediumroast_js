@@ -14,7 +14,6 @@ import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
-import crypto from "node:crypto"
 import axios from "axios"
 
 
@@ -652,6 +651,8 @@ class AddCompany {
             creator: {consoleString: "", value: myUser.login}, // Set the creator to the GitHub user
             creator_id: {consoleString: "", value: myUser.id}, // Set the creator to the GitHub user
             creator_name: {consoleString: "", value: myUser.name}, // Set the creator to the GitHub user
+            creation_date: {consoleString: "", value: new Date().toISOString()}, // Set the creation date to now
+            modification_date: {consoleString: "", value: new Date().toISOString()}, // Set the modification date to now
             region: {consoleString: "region (AMER, EMEA or APAC)", value:this.defaultValue},
             company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             industry: {consoleString: "industry description", value:this.defaultValue},
@@ -716,6 +717,14 @@ class AddCompany {
         // Assign the company's name based upon what was supplied in the env and confirmed by the user
         myCompany.name = tmpCompany.name
         companyPrototype.name.value = myCompany.name
+
+        // Check to see if the company name is already in the system using findByName 
+        const companyExists = await this.apiController.findByName(myCompany.name)
+        if (companyExists[0]) {
+            // Return the companyExists object with an error message
+            return [false,{status_code: 400, status_msg: `company [${myCompany.name}] already exists, duplicates not allowed, exiting.`}, companyExists[2]]
+        }
+
 
         // Define the company type
         const tmpCompanyType = await this.wutils.doList(
@@ -782,9 +791,18 @@ class AddCompany {
 
         // Either return the company object or create it
         if (createObj) {
-            console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io ...`))
-            this.output.printLine()
-            return await this.apiController.createObj2([myCompany])
+            const spinner = ora(chalk.bold.blue(`Saving ${myCompany.name} to GitHub ... `))
+            spinner.start() // Start the spinner
+            const myCompanyResp = await this.apiController.createObj([myCompany])
+            spinner.stop() // Stop the spinner
+            // Check to see if the company was created
+            if (myCompanyResp[0]) {
+                this.output.printLine()
+                return [true,{status_code: 200, status_msg: `created [${myCompany.name}]`}, myCompanyResp[2]]
+            } else {
+                this.output.printLine()
+                return [false,{status_code: 400, status_msg: `unable to create [${myCompany.name}]`}, myCompanyResp[2]]
+            }
         } else {
             this.output.printLine()
             return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]

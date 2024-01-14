@@ -184,7 +184,7 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
-   const lockResp = interactionCtl.checkForLock()
+   const lockResp = await interactionCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
@@ -202,7 +202,7 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.delete) {
-   const lockResp = interactionCtl.checkForLock()
+   const lockResp = await interactionCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
@@ -226,7 +226,7 @@ if (myArgs.report) {
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
-   const lockResp = interactionCtl.checkForLock()
+   const lockResp = await interactionCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
@@ -234,14 +234,14 @@ if (myArgs.report) {
    const newInteraction = new AddInteraction(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newInteraction.wizard()
    if(result[0]) {
-      console.log(`SUCCESS: Added new interaction object(s).`)
+      console.log(`SUCCESS: ${result[1].status_msg}`)
       process.exit(0)
    } else {
-      console.log(`ERROR: Unable to add interaction object due to [${result[1].status_msg}].`)
+      console.log(`ERROR: ${result[1].status_msg}.`)
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {
-   console.error('ERROR (%d): Reset by type not implemented.', -1)
+   console.log('ERROR: Reset by type not implemented.')
    process.exit(-1)
    const lockResp = interactionCtl.checkForLock()
    if(lockResp[0]) {

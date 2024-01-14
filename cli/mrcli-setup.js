@@ -420,11 +420,11 @@ let spinner
 // Save the companies to GitHub
 spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
 spinner.start() // Start the spinner
-    const companyResp = await companyCtl.createObj2([owningCompany, firstCompany])
+    const companyResp = await companyCtl.createObj([owningCompany, firstCompany])
 spinner.stop() // Stop the spinner
 // If the company creation failed then exit
 if(!companyResp[0]) {
-    console.log(chalk.red.bold(`FAILED: ${companyResp[1].status_msg}, you may need to clean up the repo.`))
+    console.log(chalk.red.bold(`FAILED: ${companyResp[1].status_msg}, you may need to clean up the repository.`))
     process.exit(-1)
 } 
 cliOutput.printLine()

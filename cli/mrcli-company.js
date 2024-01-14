@@ -214,7 +214,7 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
-   const lockResp = companyCtl.checkForLock()
+   const lockResp = await companyCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
@@ -233,7 +233,7 @@ if (myArgs.report) {
    }
 // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
-      const lockResp = companyCtl.checkForLock()
+      const lockResp = await companyCtl.checkForLock()
       if(lockResp[0]) {
          console.log(`ERROR: ${lockResp[1].status_msg}`)
          process.exit(-1)
@@ -261,7 +261,7 @@ if (myArgs.report) {
          process.exit(-1)
       }
 } else if (myArgs.add_wizard) {
-   const lockResp = companyCtl.checkForLock()
+   const lockResp = await companyCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
@@ -270,10 +270,10 @@ if (myArgs.report) {
    const newCompany = new AddCompany(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newCompany.wizard()
    if(result[0]) {
-      console.log('SUCCESS: Created new company in the backend')
+      console.log(`SUCCESS: ${result[1].status_msg}`)
       process.exit(0)
    } else {
-      console.log(`ERROR: Failed to create company object with:, ${result[2]}`)
+      console.log(`ERROR: ${result[1].status_msg}`)
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {
