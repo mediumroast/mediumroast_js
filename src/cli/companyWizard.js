@@ -14,8 +14,8 @@ import ora from "ora"
 import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
-import crypto from "node:crypto"
 import axios from "axios"
+
 
 class AddCompany {
     /**
@@ -35,9 +35,12 @@ class AddCompany {
      * @todo There is a bug in how the initial company object is created, specifically the name of the company isn't set correctly
      * @todo When polling for the GitHub organization check to see what other metadata could be useful like desc, website, etc.
      */
-    constructor(env, apiController, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
+    constructor(env, apiControllers, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
         this.env = env
-        this.apiController = apiController
+        this.apiController = apiControllers.company
+        this.interactionCtl = apiControllers.interaction
+        this.userCtl = apiControllers.user
+        this.githubCtl = apiControllers.github
         this.endpoint = "/V2.0/company/merged/firmographics/"
         this.sicEndpoint = "/V2.0/sic/description/"
         
@@ -60,15 +63,6 @@ class AddCompany {
         }
         this.companyLogosRest = new mrRest(this.companyLogosCred)
 
-        this.env.nominatim ? this.nominatim = this.env.nominatim : this.nominatim = nominatimUrl
-        this.nominatimCred = this.companyDNSCred = {
-            apiKey: "Not Applicable",
-            restServer: this.nominatim,
-            user: "Not Applicable",
-            secret: "Not Applicable"
-        }
-        this.nominatiumRest = new mrRest(this.nominatimCred)
-
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
         this.version = "version 2.0.0"
@@ -82,16 +76,16 @@ class AddCompany {
     }
 
     // TODO we will deprecate this operation in favor of linking in the backend
-    _linkObj(name) {
-        // Hash the names
-        // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
-        const objHash = crypto.createHash('sha256', name).digest('hex')
+    // _linkObj(name) {
+    //     // Hash the names
+    //     // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
+    //     const objHash = crypto.createHash('sha256', name).digest('hex')
 
-        // Create the object Link
-        let objLink = {} 
-        objLink[name] = objHash
-        return objLink
-    }
+    //     // Create the object Link
+    //     let objLink = {} 
+    //     objLink[name] = objHash
+    //     return objLink
+    // }
 
     async  getCompany (companyName) {
         let myCompany = {}
@@ -147,16 +141,20 @@ class AddCompany {
     }
 
     async getLogo (companyWebsite) {
-        const myLogos = await this.companyLogosRest.getObj(companyWebsite)
-        return myLogos[2].icons[0].url
+        try {
+            const myLogos = await this.companyLogosRest.getObj(companyWebsite)
+            return myLogos[2].icons[0].url
+        } catch (err) {
+            return null
+        }
     }
 
     async getLatLong(address) {
         const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${address}&format=json`)
         if (response.data && response.data[0]) {
-            return [true, {status_code: 200, status_msg: `SUCCESS: found coordinates for ${address}`}, [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)]]
+            return [true, {status_code: 200, status_msg: `found coordinates for ${address}`}, [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)]]
         } else {
-            return [false, {status_code: 404, status_msg: `FAILED: could not find coordinates for ${address}`}, null]
+            return [false, {status_code: 404, status_msg: `could not find coordinates for ${address}`}, null]
         }
     }
 
@@ -636,15 +634,25 @@ class AddCompany {
             )
         }
 
+        // Capture the current user
+        const myUserResp = await this.userCtl.getMyself()
+        const myUser = myUserResp[2]
+
         // Set the prototype object which can be used for creating a real object.
         // Since the backend expects certain attributes that may not be human readable, the 
         // prototype below contains strings that are easier to read.  Additionally, should 
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
         let companyPrototype = {
-            name: {consoleString: "name", value:this.env.DEFAULT.company},
+            name: {consoleString: "name", value:this.env.company},
             description: {consoleString: "description", value:this.defaultValue},
             role: {consoleString: "role (e.g. Owner, Competitor, Partner, etc.)", value:this.defaultValue},
+            organization: {consoleString: "", value: this.env.gitHubOrg}, // Set the organization to the GitHub organization
+            creator: {consoleString: "", value: myUser.login}, // Set the creator to the GitHub user
+            creator_id: {consoleString: "", value: myUser.id}, // Set the creator to the GitHub user
+            creator_name: {consoleString: "", value: myUser.name}, // Set the creator to the GitHub user
+            creation_date: {consoleString: "", value: new Date().toISOString()}, // Set the creation date to now
+            modification_date: {consoleString: "", value: new Date().toISOString()}, // Set the modification date to now
             region: {consoleString: "region (AMER, EMEA or APAC)", value:this.defaultValue},
             company_type: {consoleString: "company type (e.g. Public, Private, etc.)", value:this.defaultValue},
             industry: {consoleString: "industry description", value:this.defaultValue},
@@ -689,6 +697,8 @@ class AddCompany {
             process.exit()
         }
 
+        
+
         // Defining essential company attributes
         console.log(chalk.blue.bold('Defining key company attributes like name, type, role and region.'))
  
@@ -696,7 +706,7 @@ class AddCompany {
         let tmpCompany = await this.wutils.doManual(
             {name: {
                 consoleString: "name is", 
-                value:this.env.DEFAULT.company,
+                value:this.env.company,
                 altMessage: "Your company\'s"
             }},
             [],
@@ -706,6 +716,15 @@ class AddCompany {
         
         // Assign the company's name based upon what was supplied in the env and confirmed by the user
         myCompany.name = tmpCompany.name
+        companyPrototype.name.value = myCompany.name
+
+        // Check to see if the company name is already in the system using findByName 
+        const companyExists = await this.apiController.findByName(myCompany.name)
+        if (companyExists[0]) {
+            // Return the companyExists object with an error message
+            return [false,{status_code: 400, status_msg: `company [${myCompany.name}] already exists, duplicates not allowed, exiting.`}, companyExists[2]]
+        }
+
 
         // Define the company type
         const tmpCompanyType = await this.wutils.doList(
@@ -763,16 +782,27 @@ class AddCompany {
         // Quality
         myCompany.quality = {}
         // Logo
-        myCompany.url !== 'Unknown' ?
-            myCompany.logo_url = await this.getLogo(myCompany.url):
-            myCompany.logo_url = this.defaultValue
+        myCompany.logo_url = this.defaultValue
+        if (myCompany.url !== 'Unknown') {
+            const logo_url = await this.getLogo(myCompany.url)
+            logo_url ? myCompany.logo_url = logo_url : myCompany.logo_url = this.defaultValue
+        }
         console.log(chalk.green('Finished company definition.'))
 
         // Either return the company object or create it
         if (createObj) {
-            console.log(chalk.blue.bold(`Saving company ${myCompany.name} to mediumroast.io...`))
-            this.output.printLine()
-            return await this.apiController.createObj([myCompany])
+            const spinner = ora(chalk.bold.blue(`Saving ${myCompany.name} to GitHub ... `))
+            spinner.start() // Start the spinner
+            const myCompanyResp = await this.apiController.createObj([myCompany])
+            spinner.stop() // Stop the spinner
+            // Check to see if the company was created
+            if (myCompanyResp[0]) {
+                this.output.printLine()
+                return [true,{status_code: 200, status_msg: `created [${myCompany.name}]`}, myCompanyResp[2]]
+            } else {
+                this.output.printLine()
+                return [false,{status_code: 400, status_msg: `unable to create [${myCompany.name}]`}, myCompanyResp[2]]
+            }
         } else {
             this.output.printLine()
             return [true,{status_code: 200, status_msg: `Returning object for ${myCompany.name}`}, myCompany]

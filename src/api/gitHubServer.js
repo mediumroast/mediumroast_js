@@ -27,6 +27,12 @@ class baseObjects {
     constructor(token, org, processName, objType) {
         this.serverCtl = new GitHubFunctions(token, org, processName)
         this.objType = objType
+        this.objectFiles = {
+            Studies: 'Studies.json',
+            Companies: 'Companies.json',
+            Interactions: 'Interactions.json',
+            Users: null
+        }
     }
 
     /**
@@ -84,14 +90,24 @@ class baseObjects {
             const allObjectsResp = await this.serverCtl.readObjects(this.objType)
             allObjects = allObjectsResp[2].mrJson
         }
+        // If the length of allObjects is 0 then return an error
+        // This will occur when there are no objects of the type in the backend
+        if(allObjects.length === 0) {
+            return [false, {status_code: 404, status_msg: `no ${this.objType} found`}, null]
+        }
         for(const obj in allObjects) {
             let currentObject
-            attribute == 'name' ? currentObject = allObjects[obj][attribute].toLowerCase() : null
+            attribute == 'name' ? currentObject = allObjects[obj][attribute].toLowerCase() : currentObject = allObjects[obj][attribute]
             if(currentObject === value) {
                 myObjects.push(allObjects[obj])
             }
         }
-        return [true, `SUCCESS: found all objects where ${attribute} = ${value}`, myObjects]
+ 
+        if (myObjects.length === 0) { 
+            return [false, {status_code: 404, status_msg: `no ${this.objType} found where ${attribute} = ${value}`}, null]
+        } else {
+            return [true, `SUCCESS: found all objects where ${attribute} = ${value}`, myObjects]
+        }
     }
 
     /**
@@ -101,8 +117,55 @@ class baseObjects {
      * @param {Array} objs - the objects to create in the backend
      * @returns {Array} the results from the called function mrRest class
      */
+    // async createObj1(objs) {
+    //     return await this.serverCtl.createObjects(this.objType, objs)
+    // }
+
     async createObj(objs) {
-        return await this.serverCtl.createObjects(this.objType, objs)
+        // Create the repoMetadata object
+        let repoMetadata = {
+            containers: {
+                [this.objType]: {}
+            },
+            branch: {}
+        }
+        // Catch the container
+        const caught = await this.serverCtl.catchContainer(repoMetadata)
+        // If the container is locked then return the caught object
+        if(!caught[0]) {
+            return caught
+        }
+        // Get the sha for the current branch/object
+        const sha = await this.serverCtl.getSha(
+            this.objType, 
+            this.objectFiles[this.objType], 
+            repoMetadata.branch.name
+        )
+        // If the sha is not found then return the sha object
+        if(!sha[0]) {
+            return sha
+        }
+        // Append the new object to the existing objects
+        const mergedObjects = [...caught[2].containers[this.objType].objects, ...objs]
+        // Write the new objects to the container
+        const writeResp = await this.serverCtl.writeObject(
+            this.objType, 
+            mergedObjects, 
+            repoMetadata.branch.name,
+            sha[2]
+        )
+        // If the write fails then return the writeResp
+        if(!writeResp[0]) {
+            return writeResp
+        }
+        // Release the container
+        const released = await this.serverCtl.releaseContainer(caught[2])
+        // If the release fails then return the released object
+        if(!released[0]) {
+            return released
+        }
+        // Return a success message
+        return [true, {status_code: 200, status_msg: `created [${objs.length}] ${this.objType}`}, null]
     }
     
     /**
@@ -146,6 +209,12 @@ class baseObjects {
         }
         return linkedObjs
     }
+
+    // Create a function that checks for a locked container using the serverCtl.checkForLock() function
+    async checkForLock() {
+        return await this.serverCtl.checkForLock(this.objType)
+    }
+
 }
 
 class Studies extends baseObjects {
@@ -220,7 +289,7 @@ class Companies extends baseObjects {
         const { name, key, value } = objToUpdate
         // Define the attributes that can be updated by the user
         const whiteList = [
-            'description', 'company_type', 'url', 'role', 'wikipedia_url', 'status',
+            'description', 'company_type', 'url', 'role', 'wikipedia_url', 'status', 'logo_url',
 
             'region', 'country', 'city', 'state_province', 'zip_postal', 'street_address', 'latitude', 'longitude','phone',
             'google_maps_url', 'google_news_url', 'google_finance_url','google_patents_url',
@@ -302,6 +371,7 @@ class Companies extends baseObjects {
         // Return the response
         return [true, {status_code: 200, status_msg: `deleted company [${objName}] and all linked interactions`}, null]
     }
+
 }
 
 
@@ -337,6 +407,10 @@ class Interactions extends baseObjects {
             to: ['Companies']
         }
         return await super.deleteObj(objName, source)
+    }
+
+    async findByHash(hash) {
+        return this.findByX('file_hash', hash)
     }
 }
 

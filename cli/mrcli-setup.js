@@ -25,7 +25,7 @@ import inquirer from "inquirer"
 
 import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
-import  { Companies } from '../src/api/gitHubServer.js'
+import  { Companies, Users } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
 import Table from 'cli-table'
 import ora from "ora"
@@ -96,9 +96,8 @@ async function simplePrompt(message) {
 function printNextSteps() {
     // Print out the next steps
     console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
-    console.log(chalk.blue.bold(`\t1. Create and register additional companies with mrcli company --add_wizard.`))
-    console.log(chalk.blue.bold(`\t2. Register and add interactions with mrcli interaction --add_wizard.`))
-    console.log('\nWith additional companies and new interactions registered the mediumroast.io caffeine\nservice will perform basic company comparisons.')
+    console.log(chalk.blue.bold(`\t1. Create and register additional companies with \'mrcli company --add_wizard\'.`))
+    console.log(chalk.blue.bold(`\t2. Register and add interactions with \'mrcli interaction --add_wizard\'.`))
     cliOutput.printLine()
 }
 
@@ -298,6 +297,7 @@ cliOutput.printLine()
 let prevInstall = false
 // Construct the controller objects
 const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+const userCtl = new Users(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
 // const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
 
 // Check to see if the company and study objects exist
@@ -334,8 +334,8 @@ if(!configExists[0]) {
 // Confirm that Document directory exists and if not create it
 const docDir = myConfig.DEFAULT.report_output_dir
 const reportDirExists = fsUtils.safeMakedir(docDir)
-if(reportDirExists[0]) {
-    console.log(chalk.bold.yellow(`WARNING: Report output directory [${docDir}] not detected, created.`))
+if(!reportDirExists[0]) {
+    console.log(chalk.bold.red(`ERROR: Unable to create report directory [${docDir}].`))
 }
 
 /* --------- End save config file ---------- */
@@ -390,17 +390,13 @@ cliOutput.printLine()
 /* ----------------------------------------- */
 /* ---- Begin initial objects creation ----- */
 
-// Create needed objects
-let companies = []
-// let studies = []
-
 // Create the owning company
 console.log(chalk.blue.bold('Creating your owning company'))
-myConfig.DEFAULT.company = myConfig.GitHub.org
+myConfig.company = myConfig.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(
     myConfig,
-    companyCtl,
+    {github: gitHubCtl, interaction: null, company: companyCtl, user: userCtl},
     myConfig.DEFAULT.company_dns
 )
 const owningCompanyResp = await cWizard.wizard(true, false)
@@ -408,43 +404,15 @@ let owningCompany = owningCompanyResp[2]
 
 // Create the first company
 // Reset company user name to user name set in the company wizard
-myConfig.DEFAULT.company = 'Unknown'
+myConfig.company = 'Unknown'
 const firstComp = new AddCompany(
     myConfig,
-    companyCtl, // NOTE: Company creation is commented out
+    {github: gitHubCtl, interaction: null, company: companyCtl, user: userCtl}, 
     myConfig.DEFAULT.company_dns
 )
 console.log(chalk.blue.bold('Creating the first company ...'))
 let firstCompanyResp = await firstComp.wizard(false, false)
 const firstCompany = firstCompanyResp[2]
-
-// NOTE: For the first release studies aren't needed, therefore we're commenting out anything related to them
-// const linkedCompanies = companyCtl.linkObj([owningCompany, firstCompany])
-
-// Create a default study for good housekeeping
-process.stdout.write(chalk.blue.bold(`Creating default study ... `))
-let myStudy = {
-    name: 'Default Study',
-    description: 'A placeholder study to ensure that interactions are able to have something to link to',
-    public: false,
-    groups: 'default:default',
-    document: {},
-    linked_companies: linkedCompanies,
-    linked_interactions: {}
-}
-console.log(chalk.bold.green('Ok'))
-
-// NOTE: Since studies aren't needed in the alpha_2 series of releases we will comment things out related to them.
-//       Additionally, in alpha_3 we'll determine if we need to create a default study or not.  So leaving this
-//       code in place for now.
-// Obtain the link object for studies
-// const linkedStudies = studyCtl.linkObj([myStudy])
-// const linkedStudies = {}
-
-// Link the study to the companies
-// owningCompany.linked_studies = linkedStudies
-// firstCompany.linked_studies = linkedStudies
-// companies = [owningCompany, firstCompany]
 
 // Set up the spinner
 let spinner
@@ -452,47 +420,21 @@ let spinner
 // Save the companies to GitHub
 spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
 spinner.start() // Start the spinner
-    const companyResp = await companyCtl.createObj(companies)
+    const companyResp = await companyCtl.createObj([owningCompany, firstCompany])
 spinner.stop() // Stop the spinner
 // If the company creation failed then exit
 if(!companyResp[0]) {
-    console.log(chalk.red.bold(`Failed to create companies, exiting with: [${companyResp[1]}], you may need to clean up the repo.`))
+    console.log(chalk.red.bold(`FAILED: ${companyResp[1].status_msg}, you may need to clean up the repository.`))
     process.exit(-1)
-} else {
-    console.log(chalk.bold.green('\tCompanies saved to GitHub.'))
-}
-
-// Save the default study to GitHub
-// spinner = ora(chalk.bold.blue('Saving study to GitHub ... '))
-// spinner.start() // Start the spinner
-//     const studyResp = await studyCtl.createObj([myStudy])
-// spinner.stop() // Stop the spinner
-// // If the study creation failed then exit
-// if(!studyResp[0]) {
-//     console.log(chalk.red.bold(`Failed to create study, exiting with: [${studyResp[1]}], you may need to clean up the repo.`))
-//     process.exit(-1)
-// } else {
-//     console.log(chalk.bold.green('\tDefault study saved to GitHub.'))
-// }
-
+} 
 cliOutput.printLine()
+
 /* ------ End initial objects creation ----- */
 /* ----------------------------------------- */
 
-// List all created objects to the console
-let results
-
-// Studies output
-console.log(chalk.blue.bold(`Fetching and listing all created objects`))
-cliOutput.printLine()
-// console.log(chalk.blue.bold(`Default study:`))
-// results = await studyCtl.getAll()
-// cliOutput.outputCLI(results[2].mrJson)
-// cliOutput.printLine()
-
 // Companies output
-console.log(chalk.blue.bold(`Owning and first companies:`))
-results = await companyCtl.getAll()
+console.log(chalk.blue.bold(`Fetching and listing Owning and first companies:`))
+const results = await companyCtl.getAll()
 cliOutput.outputCLI(results[2].mrJson)
 cliOutput.printLine()
 cliOutput.printLine()

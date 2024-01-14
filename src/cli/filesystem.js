@@ -142,7 +142,7 @@ class FilesystemOperators {
                 return [true, 'Directory [' + dirName + '] exists did not create.', null]
             }
         } catch (err) {
-            return [false, 'Did not create directory [' + dirName + '] because: ' + err, null]
+            return [false, 'Did not create directory [' + dirName + '] because: ' + err.message, err]
         }
     }
 

@@ -5,7 +5,9 @@ work at all.  Please exit this tool until you can confirm the application is ins
 pressing \'Control-C\'.  If you attempt to continue without the application installed this
 tool will fail.
 
-Details for installation of the GitHub application are located at: https://www.mediumroast.io/app
+You can learn more about and install the GitHub Application by visiting the following URL: https://github.com/apps/mediumroast-for-github
+
+A more detailed product description, help and other related documentation ca be found here: https://www.mediumroast.io/
 `
 
 export default installText

@@ -11,7 +11,8 @@
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
-import { Companies, Studies } from '../src/api/gitHubServer.js'
+import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
@@ -46,6 +47,7 @@ myArgs = myArgs.opts()
 // Read the environmental settings
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
+myEnv.company = 'Unknown'
 const accessToken = await environment.verifyAccessToken()
 const processName = 'mrcli-company'
 
@@ -57,10 +59,11 @@ const wutils = new WizardUtils()
 
 // Construct the controller objects
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
-// const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const interactionCtl = new Interactions(accessToken, myEnv.gitHubOrg, processName)
+const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
 
-// TODO: We need to create a higher level abstraction for capturing the owning company
-// const owningCompany = await serverOps.getOwningCompany(companyCtl)
+// const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
+const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
@@ -211,20 +214,30 @@ if (myArgs.report) {
    stat = foundObjects[1]
    results = foundObjects[2]
 } else if (myArgs.update) {
+   const lockResp = await companyCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    const myCLIObj = JSON.parse(myArgs.update)
-   const mySpinner = new ora(`Updating company [${myCLIObj.name}] object ...`)
+   const mySpinner = new ora(`Updating company [${myCLIObj.name}] ...`)
    mySpinner.start()
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
    mySpinner.stop()
    if(success) {
       console.log(`SUCCESS: ${stat.status_msg}`)
       process.exit(0)
-   } else {
+   } else { 
       console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
 // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
+      const lockResp = await companyCtl.checkForLock()
+      if(lockResp[0]) {
+         console.log(`ERROR: ${lockResp[1].status_msg}`)
+         process.exit(-1)
+      }
       // Use operationOrNot to confirm the delete
       const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
       if(!deleteOrNot) {
@@ -248,19 +261,29 @@ if (myArgs.report) {
          process.exit(-1)
       }
 } else if (myArgs.add_wizard) {
+   const lockResp = await companyCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
    myEnv.DEFAULT = {company: 'Unknown'}
-   const newCompany = new AddCompany(myEnv, companyCtl)
+   const newCompany = new AddCompany(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
    const result = await newCompany.wizard()
    if(result[0]) {
-      console.log('SUCCESS: Created new company in the backend')
+      console.log(`SUCCESS: ${result[1].status_msg}`)
       process.exit(0)
    } else {
-      console.log(`ERROR: Failed to create company object with:, ${result[2]}`)
+      console.log(`ERROR: ${result[1].status_msg}`)
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {
    console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
    process.exit(-1)
+   const lockResp = companyCtl.checkForLock()
+   if(lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
 // TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
 } else {
    [success, stat, results] = await companyCtl.getAll()

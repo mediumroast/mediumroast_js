@@ -17,6 +17,7 @@ import CLIOutput from "./output.js"
 import FilesystemOperators from "./filesystem.js"
 import * as progress from 'cli-progress'
 import ora from 'ora'
+import crypto from 'crypto'
 
 class AddInteraction {
     /**
@@ -99,16 +100,23 @@ class AddInteraction {
 
     async getValidPath() {
         const pathPrototype = {
-            path: {consoleString: 'full path to the file or directory (e.g., /dir/subdir or /dir/file.ext)', value:this.defaultValue}
+            path: {consoleString: 'full path to the directory (e.g., /dir/subdir)', value:this.defaultValue}
         }
         let myPath = await this.wutils.doManual(pathPrototype)
         const [success, message, result] = this.fileSystem.checkFilesystemObject(myPath.path)
-        if(!success) {
-            console.log(chalk.red.bold('\t-> The file system object wasn\'t detected, perhaps the path/file name isn\'t correct? Trying again...'))
+        const myObjectType = this.fileSystem.checkFilesystemObjectType(myPath.path)
+        if(!success || myObjectType[2].isFile()) {
+            console.log(chalk.red.bold(`The directory path wasn\'t resolved correctly. Here\'s your input [${myPath.path}]. Let\'s try again.`))
             myPath = await this.getValidPath()
         }
-        console.log(myPath.path)
         return myPath.path
+    }
+
+    // Create a function that computes the hash of base64 encoded data and returns the hash
+    computeHash(fileData) {
+        const hash = crypto.createHash('sha256')
+        hash.update(fileData)
+        return hash.digest('hex')
     }
 
     async ingestInteractions(branchName, branchSha) {
@@ -118,50 +126,52 @@ class AddInteraction {
         // Get a valid path
         const myPath = await this.getValidPath()
 
-        // Check to see if this is a file or a directory using the file system object
-        const myObjectType = this.fileSystem.checkFilesystemObjectType(myPath)
-        if(myObjectType[2].isFile()) {
-            // Set up the progress bar
-            this.progressBar.start(1, 0)
-            // Read the blob and return contents base64 encoded
-            const fileData = fileSystem.readBlobFile(myPath)
-            // Upload the file to GitHub
-            const myContents = await this.uploadFile(myPath, fileData[2], branchName, branchSha)
-            // Save the results
-            myFiles.push(myContents[2])
-            // Increment the progress bar
-            this.progressBar.increment()
-        } else {
-            // List all files in the directory and process them one at a time
-            const allFiles = this.fileSystem.listAllFiles(myPath)
-            // Start the progress bar
-            this.progressBar.start(allFiles[2].length, 0)
-            // Iterate through each file in the directory
-            for(const myIdx in allFiles[2]) {
-                // Set the file name for easier readability
-                let fileName = allFiles[2][myIdx]
-                // Skip files that start with . including present and parent working directories
-                if(fileName.indexOf('.') === 0) { continue }
-                // Read the blob and return contents base64 encoded
-                const fileData = this.fileSystem.readBlobFile(`${myPath}/${fileName}`)
-                // Upload the file to GitHub
-                const myContents = await this.uploadFile(`${myPath}/${fileName}`, fileData[2], branchName, branchSha)
-                // Remove the extesion from the file name and save the file name to the myFiles array
-                const fullFileName = fileName
-                const fileBits = fileName.split('.')
-                const shortFilename = fileBits[fileBits.length - 1]
-                fileName = fileName.replace(`.${shortFilename}`, '')
-                // We need to same the object name and the actual file name for later retrieval
-                myFiles.push({interactionName: fileName, fileName: fullFileName})
+        // List all files in the directory and process them one at a time
+        const allFiles = this.fileSystem.listAllFiles(myPath)
+        // Start the progress bar
+        const totalInteractions = allFiles[2].length - 1
+        this.progressBar.start(totalInteractions, 0)
+        // Iterate through each file in the directory
+        for(const myIdx in allFiles[2]) {
+            // Set the file name for easier readability
+            let fileName = allFiles[2][myIdx]
+            // Skip files that start with . including present and parent working directories
+            if(fileName.indexOf('.') === 0) { 
                 // Increment the progress bar
                 this.progressBar.increment()
+                continue 
             }
-            // Stop the progress bar
-            this.progressBar.stop()
-
-            // Return the result of uploaded files
-            return myFiles
+            // Read the blob and return contents base64 encoded
+            const fileData = this.fileSystem.readBlobFile(`${myPath}/${fileName}`)
+            // Compute the hash of the file
+            const fileHash = this.computeHash(fileData[2])
+            // Check to see if the file is already in the backend by checking the hash
+            const fileExists = await this.interactionCtl.findByHash(fileHash)
+            // If the file exists, skip it
+            if(fileExists[0]) { 
+                // Increment the progress bar
+                this.progressBar.increment()
+                // Add the file to the myFiles array, but as a special case that says it already exists
+                myFiles.push({interactionName: fileName, fileName: fileName, fileExists: true, fileHash: fileHash})
+                continue 
+            }
+            // Upload the file to GitHub
+            const myContents = await this.uploadFile(`${myPath}/${fileName}`, fileData[2], branchName, branchSha)
+            // Remove the extesion from the file name and save the file name to the myFiles array
+            const fullFileName = fileName
+            const fileBits = fileName.split('.')
+            const shortFilename = fileBits[fileBits.length - 1]
+            fileName = fileName.replace(`.${shortFilename}`, '')
+            // We need to same the object name and the actual file name for later retrieval
+            myFiles.push({interactionName: fileName, fileName: fullFileName, fileExists: false, fileHash: fileHash})
+            // Increment the progress bar
+            this.progressBar.increment()
         }
+        // Stop the progress bar
+        this.progressBar.stop()
+
+        // Return the result of uploaded files
+        return myFiles
     }
 
     async getInteractionType () {
@@ -209,15 +219,26 @@ class AddInteraction {
 
     async createInteractionObject(interactionPrototype, myFiles, myCompany) {
         this.output.printLine()
+        // Create a duplicate count
+        let duplicateCount = 0
         // Loop through each file and create an interaction object
         let myInteractions = []
         for(const myFile in myFiles) {
+            // If the file already exists, skip it
+            if(myFiles[myFile].fileExists) {
+                console.log(chalk.red.bold(`Skipping file [${myFiles[myFile].interactionName}] because it already exists.`))
+                // Increment the duplicate count
+                duplicateCount++
+                continue
+            }
             // Assign each value from the prototype to the interaction object
             let myInteraction = {}
             // Loop through each attribute in the prototype and assign the value to the interaction object
             for(const attribute in interactionPrototype) {
                 myInteraction[attribute] = interactionPrototype[attribute].value
             }
+            // Set the file hash
+            myInteraction.file_hash = myFiles[myFile].fileHash
             // Set the name of the interaction to the file name
             myInteraction.name = myFiles[myFile].interactionName
             console.log(chalk.blue.bold(`Setting details for [${myInteraction.name}]`))
@@ -240,7 +261,7 @@ class AddInteraction {
             }
             this.output.printLine()
         }
-        return [myInteractions, myCompany.linked_interactions]
+        return [myInteractions, myCompany.linked_interactions, duplicateCount]
     }
 
     /**
@@ -321,6 +342,7 @@ class AddInteraction {
             groups: {consoleString: "", value: `${this.env.gitHubOrg}:${myUser.login}`}, // Set to the organization and user, reserved for future use
             creation_date: {consoleString: "", value: myDateString}, // Set to the current date
             modification_date: {consoleString: "", value: myDateString}, // Set to the current date
+            file_hash: {consoleString: "", value: this.defaultValue}, // Assigned to detect duplicates
         }
 
         // Catch the container for updates
@@ -346,7 +368,7 @@ class AddInteraction {
         const files = await this.ingestInteractions(caught[2].branch.name, caught[2].branch.sha)
         
         // Create the interaction object
-        let [myInteractions, linkedInteractions] = await this.createInteractionObject(
+        let [myInteractions, linkedInteractions, duplicateCount] = await this.createInteractionObject(
             interactionPrototype, 
             files, 
             myCompany
@@ -368,8 +390,13 @@ class AddInteraction {
         // Create the new interactions
         mySpinner = new ora('Writing interaction objects ...')
         mySpinner.start()
+        // Capture the number of interactions
+        const interactionCount = myInteractions.length
+
         // Append the new interactions to the existing interactions
         myInteractions = [...myInteractions, ...caught[2].containers.Interactions.objects]
+        
+
         // Write the new interactions to the backend
         const createdInteractions = await this.githubCtl.writeObject(
             this.objectType, 
@@ -403,7 +430,9 @@ class AddInteraction {
         mySpinner.start()
         const released = await this.githubCtl.releaseContainer(caught[2])
         mySpinner.stop()
-        return released
+        // Return the result of the write including the interaction count and duplicate count
+        return [true, {status_code: 200, status_msg: `created ${interactionCount} interactions with ${duplicateCount} duplicates detected`}, createdInteractions[2]]
+
     }
 }
 
