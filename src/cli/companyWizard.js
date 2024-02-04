@@ -727,6 +727,7 @@ class AddCompany {
 
 
         // Define the company type
+        // NOTE: Sometimes company_dns comes back with "Public company" which isn't consistent. We need to harmonize this.
         const tmpCompanyType = await this.wutils.doList(
             "What type of company is this?",
             [
