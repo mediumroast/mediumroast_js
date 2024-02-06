@@ -1,0 +1,9 @@
+name: 'Prune Branches'
+description: 'Keeps a set number of branches available for the user to recover from'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+runs:
+  using: 'node20'
+  main: 'index.js'

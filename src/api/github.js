@@ -392,16 +392,19 @@ class GitHubFunctions {
         const fileBits = fileName.split('/')
         const shortFilename = fileBits[fileBits.length - 1]
         // Using the github API write a file to the container
+        let octoObj = {
+            owner: this.orgName,
+            repo: this.repoName,
+            path: `${containerName}/${shortFilename}`,
+            message: `Create object [${shortFilename}]`,
+            content: blob,
+            branch: branchName
+        }
+        if(sha) {
+            octoObj.sha = sha
+        }
         try {
-            const writeResponse = await this.octCtl.rest.repos.createOrUpdateFileContents({
-                owner: this.orgName,
-                repo: this.repoName,
-                path: `${containerName}/${shortFilename}`,
-                message: `Create object [${shortFilename}]`,
-                content: blob,
-                branch: branchName,
-                sha: sha
-            })
+            const writeResponse = await this.octCtl.rest.repos.createOrUpdateFileContents(octoObj)
             // Return the write response if the write was successful or an error if not
             return [true, `SUCCESS: wrote object [${fileName}] to container [${containerName}]`, writeResponse]
         } catch (err) { 

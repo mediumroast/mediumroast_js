@@ -27,8 +27,10 @@ import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
 import  { Companies, Users } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
-import Table from 'cli-table'
 import ora from "ora"
+
+import * as fs from 'fs'
+import * as path from 'path'
 
 /* 
     -----------------------------------------------------------------------
@@ -99,6 +101,29 @@ function printNextSteps() {
     console.log(chalk.blue.bold(`\t1. Create and register additional companies with \'mrcli company --add_wizard\'.`))
     console.log(chalk.blue.bold(`\t2. Register and add interactions with \'mrcli interaction --add_wizard\'.`))
     cliOutput.printLine()
+}
+
+// Create a function that reads all contents from the actions directory and copies them to the GitHub repository
+function installActionsToGitHub(fsUtils, gitHubCtl, myConfig, myEnv, actionsDir) {
+    // Use the fsUtils to read the contents of the actions directory recursively
+    const actionFiles = fsUtils.readDirRecursive(actionsDir)
+
+    // Use readBlobFile to read the contents of each file into an object that mirrors the actions directory
+    const actionObjects = []
+    actionFiles.forEach((file) => {
+        const action = fsUtils.readBlobFile(file)
+        if(action[0]) {
+            actionObjects.push({
+                name: file,
+                data: action[2]
+            })
+        }
+    })
+
+    // Copy the contents into the GitHub repository into the .guthub directory which should include both actions and workflows subdirectories
+    const actionsPath = '.github/actions'
+    const workflowsPath = '.github/workflows'
+
 }
 
 // NOTE: Commented out until we can confirm it is no longer needed
@@ -173,6 +198,70 @@ function verifyConfiguration(myConfig, configFile) {
     return success
 }
 
+// Use fs to read all the files in the actions directory recursively
+function generateActionsManifest(dir='./actions') {
+    const files = fs.readdirSync(dir)
+    let filelist
+    files.forEach((file) => {
+        // Skip .DS_Store files and node_modules directories
+        if (file === '.DS_Store' || file === 'node_modules') {
+            return
+        }
+        if (fs.statSync(path.join(dir, file)).isDirectory()) {
+            filelist = generateActionsManifest (path.join(dir, file), filelist) 
+        }
+        else {
+            // Substitute .github for the first part of the path, in the variable dir
+            // Log dir to the console including if there are any special characters
+            if (dir.includes('./')) {
+                dir = dir.replace('./', '')
+            }
+            // This will be the name of the target in the repository
+            let dotGitHub = dir.replace(/^(\.\/)?actions\//, '.github/')
+
+            filelist.push({
+                tgtPath: path.join(dotGitHub, file),
+                fileName: file,
+                containerName: dotGitHub,
+                srcUrl: new URL(path.join(dir, file), import.meta.url)
+            })
+        }
+    })
+    return filelist
+}  
+
+async function installActions(actionsManifest) {
+    // Set up the spinner
+    let spinner = ora(chalk.bold.blue('Installing GitHub Workflows and Actions'))
+    spinner.start() // Start the spinner
+    // Loop through the actionsManifest and install each action
+    await actionsManifest.forEach(async (action) => {
+        // Read in the blob file
+        const [status, msg, blobData] = fsUtils.readBlobFile(action.srcUrl)
+        if(status) {
+            // Install the action
+            const installResp = await gitHubCtl.writeBlob(
+                action.container, 
+                action.fileName, 
+                blobData, 
+                'main'
+            )
+            if(installResp[0]) {
+                spinner.text = `Installed item [${action.fileName}] `
+            } else {
+                spinner.text = `Failed to install item [${action.fileName}]`
+                return [false, installResp[1], null]
+            }
+        } else {
+            spinner.text = `Failed to read item [${action.fileName}] ... `
+            return [false, msg, null]
+        }
+        
+    })
+    spinner.stop() // Stop the spinner
+    return [true, 'All actions installed', null]
+}
+
 /* 
     -----------------------------------------------------------------------
 
@@ -241,11 +330,6 @@ if(configExists[0]) {
 
 // Ask the user ensure that the installation has been performed, if not performed then exit
 const installed = await wizardUtils.doInstallInstructions(installText)
-cliOutput.printLine()
-
-// Ask the user to accept the EULA, if they do not the function will exit
-const acceptEula = await wizardUtils.doEula(demoEulaText)
-myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
 cliOutput.printLine()
 
 /* --------- End check start setup --------- */
@@ -386,6 +470,17 @@ cliOutput.printLine()
 /* --------- End create containers --------- */
 /* ----------------------------------------- */
 
+/* ----------------------------------------- */
+/* ------------ Install actions ------------ */
+process.log(chalk.bold.blue(`Installing GitHub Workflows and Actions ... `))
+const actionsManifest = generateActionsManifest()
+const installResp = await installActions(actionsManifest)
+if(installResp[0]) {
+    console.log(chalk.bold.green('Installed all Workflows and Actions'))
+} else {
+    console.log(chalk.bold.red(`Failed, exiting with error: [${installResp[1]}]`))
+    process.exit(-1)
+}
 
 /* ----------------------------------------- */
 /* ---- Begin initial objects creation ----- */

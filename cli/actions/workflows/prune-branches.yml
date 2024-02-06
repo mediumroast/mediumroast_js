@@ -1,0 +1,20 @@
+name: prune-branches
+run-name: ${{ github.actor }} executed prune-branches action
+on:
+    schedule:
+        - cron: '0 0 * * *' # Runs at midnight every day
+jobs:
+    prune-branches:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-node@v3
+            with:
+              node-version: '20'
+          - name: Install dependencies
+            run: npm install
+            working-directory: ./.github/actions/prune-branches
+          - name: Prune stale branches
+            uses: ./.github/actions/prune-branches
+            with:
+              github-token: ${{ secrets.GITHUB_TOKEN }}

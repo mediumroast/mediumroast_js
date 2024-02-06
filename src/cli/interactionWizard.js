@@ -129,7 +129,7 @@ class AddInteraction {
         // List all files in the directory and process them one at a time
         const allFiles = this.fileSystem.listAllFiles(myPath)
         // Start the progress bar
-        const totalInteractions = allFiles[2].length - 1
+        const totalInteractions = allFiles[2].length
         this.progressBar.start(totalInteractions, 0)
         // Iterate through each file in the directory
         for(const myIdx in allFiles[2]) {
