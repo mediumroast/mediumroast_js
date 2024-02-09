@@ -199,16 +199,17 @@ function verifyConfiguration(myConfig, configFile) {
 }
 
 // Use fs to read all the files in the actions directory recursively
-function generateActionsManifest(dir='./actions') {
+function generateActionsManifest(dir, filelist) {
+    dir = dir || './actions'
     const files = fs.readdirSync(dir)
-    let filelist
+    filelist = filelist || []
     files.forEach((file) => {
         // Skip .DS_Store files and node_modules directories
         if (file === '.DS_Store' || file === 'node_modules') {
             return
         }
         if (fs.statSync(path.join(dir, file)).isDirectory()) {
-            filelist = generateActionsManifest (path.join(dir, file), filelist) 
+            filelist = generateActionsManifest(path.join(dir, file), filelist) 
         }
         else {
             // Substitute .github for the first part of the path, in the variable dir
@@ -216,49 +217,43 @@ function generateActionsManifest(dir='./actions') {
             if (dir.includes('./')) {
                 dir = dir.replace('./', '')
             }
-            // This will be the name of the target in the repository
+            // This will be the repository name
             let dotGitHub = dir.replace(/^(\.\/)?actions\//, '.github/')
 
             filelist.push({
-                tgtPath: path.join(dotGitHub, file),
                 fileName: file,
                 containerName: dotGitHub,
-                srcUrl: new URL(path.join(dir, file), import.meta.url)
+                srcURL: new URL(path.join(dir, file), import.meta.url)
             })
         }
     })
     return filelist
-}  
+} 
 
 async function installActions(actionsManifest) {
-    // Set up the spinner
-    let spinner = ora(chalk.bold.blue('Installing GitHub Workflows and Actions'))
-    spinner.start() // Start the spinner
     // Loop through the actionsManifest and install each action
     await actionsManifest.forEach(async (action) => {
-        // Read in the blob file
-        const [status, msg, blobData] = fsUtils.readBlobFile(action.srcUrl)
+        let status = false
+        let blobData
+        try {
+            // Read in the blob file
+            blobData = fs.readFileSync(action.srcURL, 'base64')
+            status = true
+        } catch (err) {
+            return [false, 'Unable to read file [' + action.fileName + '] because: ' + err, null]
+        }
         if(status) {
             // Install the action
             const installResp = await gitHubCtl.writeBlob(
-                action.container, 
+                action.containerName, 
                 action.fileName, 
                 blobData, 
                 'main'
             )
-            if(installResp[0]) {
-                spinner.text = `Installed item [${action.fileName}] `
-            } else {
-                spinner.text = `Failed to install item [${action.fileName}]`
-                return [false, installResp[1], null]
-            }
         } else {
-            spinner.text = `Failed to read item [${action.fileName}] ... `
-            return [false, msg, null]
+            return [false, 'Failed to read item [' + action.fileName + ']', null]
         }
-        
     })
-    spinner.stop() // Stop the spinner
     return [true, 'All actions installed', null]
 }
 
@@ -472,15 +467,18 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* ------------ Install actions ------------ */
-process.log(chalk.bold.blue(`Installing GitHub Workflows and Actions ... `))
+process.stdout.write(chalk.bold.blue(`Installing actions and workflows ... `))
 const actionsManifest = generateActionsManifest()
 const installResp = await installActions(actionsManifest)
 if(installResp[0]) {
-    console.log(chalk.bold.green('Installed all Workflows and Actions'))
+    console.log(chalk.bold.green('Ok'))
 } else {
     console.log(chalk.bold.red(`Failed, exiting with error: [${installResp[1]}]`))
     process.exit(-1)
 }
+cliOutput.printLine()
+/* ---------- End Install actions ---------- */
+/* ----------------------------------------- */
 
 /* ----------------------------------------- */
 /* ---- Begin initial objects creation ----- */
@@ -509,11 +507,8 @@ console.log(chalk.blue.bold('Creating the first company ...'))
 let firstCompanyResp = await firstComp.wizard(false, false)
 const firstCompany = firstCompanyResp[2]
 
-// Set up the spinner
-let spinner
-
 // Save the companies to GitHub
-spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
+let spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
 spinner.start() // Start the spinner
     const companyResp = await companyCtl.createObj([owningCompany, firstCompany])
 spinner.stop() // Stop the spinner
