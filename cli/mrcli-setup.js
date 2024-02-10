@@ -221,7 +221,7 @@ function generateActionsManifest(dir, filelist) {
                 dir = dir.replace('./', '')
             }
             // This will be the repository name
-            let dotGitHub = dir.replace(/^(\.\/)?actions\//, '.github/')
+            let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
 
             filelist.push({
                 fileName: file,
