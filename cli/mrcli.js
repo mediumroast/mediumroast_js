@@ -14,7 +14,7 @@ import program from 'commander'
 
 program
   .name('mrcli')
-  .version('0.4.40')
+  .version('0.4.41')
   .description('mediumroast.io command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')

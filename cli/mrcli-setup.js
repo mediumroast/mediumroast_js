@@ -472,6 +472,7 @@ cliOutput.printLine()
 /* ------------ Install actions ------------ */
 process.stdout.write(chalk.bold.blue(`Installing actions and workflows ... `))
 const actionsManifest = generateActionsManifest()
+console.log(actionsManifest)
 const installResp = await installActions(actionsManifest)
 if(installResp[0]) {
     console.log(chalk.bold.green('Ok'))
