@@ -202,7 +202,7 @@ function verifyConfiguration(myConfig, configFile) {
 // Use fs to read all the files in the actions directory recursively
 function generateActionsManifest(dir, filelist) {
     const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename)
+    const __dirname = path.dirname(__filename)
     dir = dir || path.resolve(path.join(__dirname, './actions') )
     const files = fs.readdirSync(dir)
     filelist = filelist || []
