@@ -18,6 +18,7 @@ import FilesystemOperators from "./filesystem.js"
 import * as progress from 'cli-progress'
 import ora from 'ora'
 import crypto from 'crypto'
+import { resolve } from 'path'
 
 class AddInteraction {
     /**
@@ -103,13 +104,15 @@ class AddInteraction {
             path: {consoleString: 'full path to the directory (e.g., /dir/subdir)', value:this.defaultValue}
         }
         let myPath = await this.wutils.doManual(pathPrototype)
+        // 
         const [success, message, result] = this.fileSystem.checkFilesystemObject(myPath.path)
+        // new URL(path.join(dir, file), import.meta.url)
         const myObjectType = this.fileSystem.checkFilesystemObjectType(myPath.path)
         if(!success || myObjectType[2].isFile()) {
             console.log(chalk.red.bold(`The directory path wasn\'t resolved correctly. Here\'s your input [${myPath.path}]. Let\'s try again.`))
-            myPath = await this.getValidPath()
+            myPath.path = await this.getValidPath()
         }
-        return myPath.path
+        return resolve(myPath.path)
     }
 
     // Create a function that computes the hash of base64 encoded data and returns the hash

@@ -39,7 +39,7 @@ class CLIOutput {
         if (outputType === 'table') {
             this.outputTable(results)
         } else if (outputType === 'json') {
-            console.dir(results)
+            console.log(JSON.stringify(results, null, 2))
         } else if (outputType === 'csv') {
             this.outputCSV(results)
         } else if (outputType === 'xls') {

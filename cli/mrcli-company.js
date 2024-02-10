@@ -288,6 +288,7 @@ if (myArgs.report) {
 } else {
    [success, stat, results] = await companyCtl.getAll()
    results = results.mrJson
+   // console.log(JSON.stringify(obj, null, 2))
 }
 
 // Emit the output
