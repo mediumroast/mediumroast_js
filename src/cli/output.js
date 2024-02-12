@@ -133,6 +133,42 @@ class CLIOutput {
                     linkedCompany
                 ])
             }
+        } else if (this.objectType === 'ActionsBilling') {
+            table = new Table({
+                head: ['Minutes Used', 'Paid Minutes Used', 'Minutes Remaining', 'Included Minutes'],
+            })
+            for (const myObj in objects) {       
+                table.push([
+                    objects[myObj].total_minutes_used + ' min',
+                    objects[myObj].total_paid_minutes_used + ' min',
+                    objects[myObj].included_minutes - objects[myObj].total_minutes_used + objects[myObj].total_paid_minutes_used + ' min',
+                    objects[myObj].included_minutes + ' min',
+                ])
+            }
+        } else if (this.objectType === 'StorageBilling') {
+            table = new Table({
+                head: ['Storage Used', 'Paid Storage Used', 'Estimated Storage Used', 'Days Left in Cycle'],
+            })
+            for (const myObj in objects) {       
+                table.push([
+                    Math.abs(objects[myObj].estimated_paid_storage_for_month - objects[myObj].estimated_storage_for_month)  + ' GiB',
+                    objects[myObj].estimated_storage_for_month + ' GiB',
+                    objects[myObj].estimated_paid_storage_for_month + ' GiB',
+                    objects[myObj].days_left_in_billing_cycle + ' days',
+                ])
+            }
+        } else if (this.objectType === 'AllBilling') {
+            table = new Table({
+                head: ['Resource Type', 'Included Units Used', 'Paid Units Used', 'Total Units Used'],
+            })
+            for (const myObj in objects) {       
+                table.push([
+                    objects[myObj].resourceType,
+                    objects[myObj].includedUnits,
+                    objects[myObj].paidUnitsUsed,
+                    objects[myObj].totalUnitsUsed,
+                ])
+            }
         } else {
             table = new Table({
                 head: ['Name', 'Description'],

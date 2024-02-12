@@ -48,7 +48,8 @@ class GitHubFunctions {
             Studies: 'Studies.json',
             Companies: 'Companies.json',
             Interactions: 'Interactions.json',
-            Users: null
+            Users: null,
+            Billings: null
         }
     }
 
@@ -111,6 +112,42 @@ class GitHubFunctions {
             return [true, `SUCCESS: able to capture info for all users`, response.data]
         } catch (err) {
             return [false, `ERROR: unable to capture info for all users due to [${err}]`, err.message]
+        }
+    }
+
+    /**
+     * @async
+     * @function getActionsBillings
+     * @description Gets the complete billing status for actions from the GitHub API
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+     */
+    async getActionsBillings() {
+        // using try and catch to handle errors get info for all billings data
+        try {
+            const response = await this.octCtl.rest.billing.getGithubActionsBillingOrg({
+                org: this.orgName,
+            })
+            return [true, `SUCCESS: able to capture info for actions billing`, response.data]
+        } catch (err) {
+            return [false, {status_code: 404, status_msg: `unable to capture info for actions billing due to [${err}]`}, err.message]
+        }
+    }
+
+    /**
+     * @async
+     * @function getStorageBillings
+     * @description Gets the complete billing status for actions from the GitHub API
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.
+     */
+    async getStorageBillings() {
+        // using try and catch to handle errors get info for all billings data
+        try {
+            const response = await this.octCtl.rest.billing.getSharedStorageBillingOrg({
+                org: this.orgName,
+            })
+            return [true, `SUCCESS: able to capture info for storage billing`, response.data]
+        } catch (err) {
+            return [false, {status_code: 404, status_msg: `unable to capture info for storage billing due to [${err}]`}, err.message]
         }
     }
 

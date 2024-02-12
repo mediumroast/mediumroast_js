@@ -14,12 +14,13 @@ import program from 'commander'
 
 program
   .name('mrcli')
-  .version('0.4.42')
+  .version('0.4.43')
   .description('mediumroast.io command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')
   .command('company', 'manage and report on mediumroast.io company objects').alias('c')
   .command('study', 'manage and report on mediumroast.io study objects').alias('s')
-  .command('user', 'manage and report on mediumroast.io users').alias('u')
+  .command('user', 'report on mediumroast.io users in GitHub').alias('u')
+  .command('billing', 'report on GitHub actions and storage units consumed').alias('b')
 
 program.parse(process.argv)
