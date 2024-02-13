@@ -71,7 +71,7 @@ class Environmentals {
             // Operational command line switches
             .option(
                 '--find_by_name <name>',
-                'Find an individual Interaction by name'
+                'Find an individual object by name'
             )
             .option(
                 '--find_by_id <ID>',

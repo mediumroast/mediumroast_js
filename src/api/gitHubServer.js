@@ -272,6 +272,54 @@ class Users extends baseObjects {
 
 }
 
+// Create a subclass called Users that inherits from baseObjects
+class Billings extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the user objects
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
+     */
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Billings')
+    }
+
+    // Create a new method for getAll that is specific to the Billings class using getBillings() in github.js
+    async getAll() {
+        const storageBillingsResp = await this.serverCtl.getStorageBillings()
+        const actionsBillingsResp = await this.serverCtl.getActionsBillings()
+        const allBillings = [
+            {
+                resourceType: 'Storage',
+                includedUnits: Math.abs(
+                        storageBillingsResp[2].estimated_paid_storage_for_month - 
+                        storageBillingsResp[2].estimated_storage_for_month
+                    ) + ' GiB',
+                paidUnitsUsed: storageBillingsResp[2].estimated_paid_storage_for_month + ' GiB',
+                totalUnitsUsed: storageBillingsResp[2].estimated_storage_for_month + ' GiB'
+            },
+            {
+                resourceType: 'Actions',
+                includedUnits: actionsBillingsResp[2].total_minutes_used + ' min',
+                paidUnitsUsed: actionsBillingsResp[2].total_paid_minutes_used + ' min',
+                totalUnitsUsed: actionsBillingsResp[2].total_minutes_used + actionsBillingsResp[2].total_paid_minutes_used + ' min'
+            }
+        ]
+        return [true, {status_code: 200, status_msg: `found all billings`}, allBillings]
+    }
+
+    // Create a new method of to get the actions billing status only
+    async getActionsBilling() {
+        return await this.serverCtl.getActionsBillings()
+    }
+
+    // Create a new method of to get the storage billing status only
+    async getStorageBilling() {
+        return await this.serverCtl.getStorageBillings()
+    }
+}
+
 class Companies extends baseObjects {
     /**
      * @constructor
@@ -415,4 +463,4 @@ class Interactions extends baseObjects {
 }
 
 // Export classes for consumers
-export { Studies, Companies, Interactions, Users }
+export { Studies, Companies, Interactions, Users, Billings }

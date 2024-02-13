@@ -27,8 +27,11 @@ import Environmentals from '../src/cli/env.js'
 import { GitHubAuth } from '../src/api/authorize.js'
 import  { Companies, Users } from '../src/api/gitHubServer.js'
 import GitHubFunctions from "../src/api/github.js"
-import Table from 'cli-table'
 import ora from "ora"
+
+import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath, URL } from 'url'
 
 /* 
     -----------------------------------------------------------------------
@@ -99,6 +102,29 @@ function printNextSteps() {
     console.log(chalk.blue.bold(`\t1. Create and register additional companies with \'mrcli company --add_wizard\'.`))
     console.log(chalk.blue.bold(`\t2. Register and add interactions with \'mrcli interaction --add_wizard\'.`))
     cliOutput.printLine()
+}
+
+// Create a function that reads all contents from the actions directory and copies them to the GitHub repository
+function installActionsToGitHub(fsUtils, gitHubCtl, myConfig, myEnv, actionsDir) {
+    // Use the fsUtils to read the contents of the actions directory recursively
+    const actionFiles = fsUtils.readDirRecursive(actionsDir)
+
+    // Use readBlobFile to read the contents of each file into an object that mirrors the actions directory
+    const actionObjects = []
+    actionFiles.forEach((file) => {
+        const action = fsUtils.readBlobFile(file)
+        if(action[0]) {
+            actionObjects.push({
+                name: file,
+                data: action[2]
+            })
+        }
+    })
+
+    // Copy the contents into the GitHub repository into the .guthub directory which should include both actions and workflows subdirectories
+    const actionsPath = '.github/actions'
+    const workflowsPath = '.github/workflows'
+
 }
 
 // NOTE: Commented out until we can confirm it is no longer needed
@@ -173,6 +199,67 @@ function verifyConfiguration(myConfig, configFile) {
     return success
 }
 
+// Use fs to read all the files in the actions directory recursively
+function generateActionsManifest(dir, filelist) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename)
+    dir = dir || path.resolve(path.join(__dirname, './actions') )
+    const files = fs.readdirSync(dir)
+    filelist = filelist || []
+    files.forEach((file) => {
+        // Skip .DS_Store files and node_modules directories
+        if (file === '.DS_Store' || file === 'node_modules') {
+            return
+        }
+        if (fs.statSync(path.join(dir, file)).isDirectory()) {
+            filelist = generateActionsManifest(path.join(dir, file), filelist) 
+        }
+        else {
+            // Substitute .github for the first part of the path, in the variable dir
+            // Log dir to the console including if there are any special characters
+            if (dir.includes('./')) {
+                dir = dir.replace('./', '')
+            }
+            // This will be the repository name
+            let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
+
+            filelist.push({
+                fileName: file,
+                containerName: dotGitHub,
+                srcURL: new URL(path.join(dir, file), import.meta.url)
+            })
+        }
+    })
+    return filelist
+} 
+
+async function installActions(actionsManifest) {
+    // Loop through the actionsManifest and install each action
+    await actionsManifest.forEach(async (action) => {
+        let status = false
+        let blobData
+        try {
+            // Read in the blob file
+            blobData = fs.readFileSync(action.srcURL, 'base64')
+            status = true
+        } catch (err) {
+            return [false, 'Unable to read file [' + action.fileName + '] because: ' + err, null]
+        }
+        if(status) {
+            // Install the action
+            const installResp = await gitHubCtl.writeBlob(
+                action.containerName, 
+                action.fileName, 
+                blobData, 
+                'main'
+            )
+        } else {
+            return [false, 'Failed to read item [' + action.fileName + ']', null]
+        }
+    })
+    return [true, 'All actions installed', null]
+}
+
 /* 
     -----------------------------------------------------------------------
 
@@ -241,11 +328,6 @@ if(configExists[0]) {
 
 // Ask the user ensure that the installation has been performed, if not performed then exit
 const installed = await wizardUtils.doInstallInstructions(installText)
-cliOutput.printLine()
-
-// Ask the user to accept the EULA, if they do not the function will exit
-const acceptEula = await wizardUtils.doEula(demoEulaText)
-myConfig.DEFAULT.accepted_eula = acceptEula // Keep the acceptance visible 
 cliOutput.printLine()
 
 /* --------- End check start setup --------- */
@@ -386,6 +468,21 @@ cliOutput.printLine()
 /* --------- End create containers --------- */
 /* ----------------------------------------- */
 
+/* ----------------------------------------- */
+/* ------------ Install actions ------------ */
+process.stdout.write(chalk.bold.blue(`Installing actions and workflows ... `))
+const actionsManifest = generateActionsManifest()
+console.log(actionsManifest)
+const installResp = await installActions(actionsManifest)
+if(installResp[0]) {
+    console.log(chalk.bold.green('Ok'))
+} else {
+    console.log(chalk.bold.red(`Failed, exiting with error: [${installResp[1]}]`))
+    process.exit(-1)
+}
+cliOutput.printLine()
+/* ---------- End Install actions ---------- */
+/* ----------------------------------------- */
 
 /* ----------------------------------------- */
 /* ---- Begin initial objects creation ----- */
@@ -414,11 +511,8 @@ console.log(chalk.blue.bold('Creating the first company ...'))
 let firstCompanyResp = await firstComp.wizard(false, false)
 const firstCompany = firstCompanyResp[2]
 
-// Set up the spinner
-let spinner
-
 // Save the companies to GitHub
-spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
+let spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
 spinner.start() // Start the spinner
     const companyResp = await companyCtl.createObj([owningCompany, firstCompany])
 spinner.stop() // Stop the spinner

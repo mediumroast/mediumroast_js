@@ -191,6 +191,15 @@ class FilesystemOperators {
         }
     }
 
+    // Create a function that will recursively list all files in a directory
+    /**
+     * @function globAllFilesRecursive
+     * @description List all contents of the directory recursively
+     * @param {String} dirName - full path of the directory to list the contents of
+     * @returns {Array} containing the status of the rmdir operation, status message and either the file contents or null
+     */
+     
+
     /**
      * @function checkFilesystemObjectType
      * @description Check the type of file system object 
