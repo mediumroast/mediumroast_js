@@ -1,19 +1,32 @@
-# The mediumroast.io CLI (Command Line Interface)
-In general we believe that there should be many ways to access your data in the mediumroast.io application, and we know there are many types of users.  Some will want to use a web based graphical user interface (GUI), others may want to use the our RESTful API either directly or through one of our SDKs, and still others may want a CLI.  It is this last one that is included in mediumroast_js to enable users and developers alike to interact with the mediumroast.io application.  This documentation provides a basic explanation, help and several how-tos for our CLI tools.  To start there are two types of CLI tools:
-1. Core CLI set for the major mediumroast.io objects which are Interactions, Studies and Companies
-2. Administrative CLIs for users, setup, and object backup/restore
-Each type is explained in the sections below including the basics and how-tos.
-## Administrative CLIs
-To enable system management, setup of the environment for the CLIs, and backup/restore of key objects within the mediumroast.io several CLI tools have been created.
-### CLI and initial system setup
-To help users quickly get on board there is a setup utility that generates a configuration in *HOME/.mediumroast/config.ini*. Users are free to modify or create the file by hand. 
+# Mediumroast for GitHub CLI (Command Line Interface)
+The CLI is divided into two sets one for administrative interactions with the system and another for interacting with **Mediumroast for GitHub** objects like Companies and Interactions.  This document covers both the administrative CLI and makes reference to the CLI set for **Mediumroast for GitHub** objects.
+
+# Administrative CLIs
+To enable setup and operational reporting of **Mediumroast for GitHub** several CLIs are available, each is described below.
+
+## User reporting
+Reports on all users who can access the repository that contains the **Mediumroast for GitHub**. A screenshot showing the usage information and outputs for major functions is included below, and notice, user names and other personally identifiable information has been redacted from the screenshot below.
+### Commands run
+- `mrcli u`
+- `mrcli u --my_user`
+### Screenshot with ouput 
+<img width="1266" alt="users_util" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/994787aa-ec26-4cb0-99a1-b670b9d929ff">
+
+## Billing reporting
+Provides reports for consumed actions and repository storage consumed by the organization that has installed and is using **Mediumroast for GitHub**. A screenshot showing the usage information and outputs for major functions is included below.
+### Commands run
+- `mrcli b`
+- `mrcli b --storage`
+- `mrcli b --actions`
+### Screenshot with ouput    
+<img width="1266" alt="billings_util" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/4a715d07-b168-41ce-9054-33bf70af8086">
+
+### Setup
+To help users quickly get on board there a setup utility that generates a configuration in *HOME/.mediumroast/config.ini*. Users are free to modify or create the file by hand. 
 #### Configure the CLI and setup initial users and companies
 Command: `mrcli setup`
 
 Example output:
-
-<img width="1216" alt="cli_sept_2023" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/ab5037ad-ce28-4697-89ed-6ae266f33270">
-
 
 ## CLI for mediumroast.io objects
 This CLI set to create, read, update, report on and delete mediumroast.io core objects.  The names for each of the CLI tools are listed below.
