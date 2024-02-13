@@ -662,7 +662,7 @@ class AddCompany {
             major_group_code: {consoleString: "major group code", value:this.defaultValue},
             major_group_description: {consoleString: "major group description", value:this.defaultValue},
             url: {consoleString: "website", value:this.defaultValue},
-            logo_url: {consoleString: "logo url", value:this.defaultValue},
+            // logo_url: {consoleString: "logo url", value:this.defaultValue},
             street_address: {consoleString: "street address", value:this.defaultValue},
             city: {consoleString: "city", value:this.defaultValue},
             state_province: {consoleString: "state or province", value:this.defaultValue},
