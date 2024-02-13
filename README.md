@@ -1,3 +1,6 @@
+# Command Line Interface (CLI) for the mediumroast.io
+Inclued within this SDK is a CLI for users who are more inclined to use that tool for interacting with the system.  These tools will be added and updated to over time as the system evolves. More information on the CLI is available in the [CLI README](./cli/README.md).
+
 # Node.js Javascript SDK for the mediumroast.io
 This is the Node.js Javascript SDK, Software Development Kit, for the mediumroast.io. The SDK is comprised of several things:
 1. A wrapper atop the backend's RESTful APIs for Interaction, Study, Company and User objects.
