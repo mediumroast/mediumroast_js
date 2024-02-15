@@ -15,6 +15,7 @@ import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
 import axios from "axios"
+import NodeGeocoder from 'node-geocoder'
 
 
 class AddCompany {
@@ -75,18 +76,6 @@ class AddCompany {
         this.output = new CLIOutput(this.env, this.objectType)
     }
 
-    // TODO we will deprecate this operation in favor of linking in the backend
-    // _linkObj(name) {
-    //     // Hash the names
-    //     // const intHash = this.crypt.createHash('sha256', prototype.name.value).digest('hex')
-    //     const objHash = crypto.createHash('sha256', name).digest('hex')
-
-    //     // Create the object Link
-    //     let objLink = {} 
-    //     objLink[name] = objHash
-    //     return objLink
-    // }
-
     async  getCompany (companyName) {
         let myCompany = {}
         const mySpinner = new ora('Fetching data from the company_dns...')
@@ -142,8 +131,9 @@ class AddCompany {
 
     async getLogo (companyWebsite) {
         try {
-            const myLogos = await this.companyLogosRest.getObj(companyWebsite)
-            return myLogos[2].icons[0].url
+            const response = await axios.get(`https://logo-server.mediumroast.io:7000/allicons.json?url=${companyWebsite}`)
+            const myLogos = response.data
+            return myLogos.icons[0].url
         } catch (err) {
             return null
         }
@@ -158,16 +148,64 @@ class AddCompany {
         }
     }
 
-    // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
-    _joinIndustry(industry) {
-        if(industry.length > 1) {
-            return industry.join('|')
-        } else if (industry === 'Unknown') {
-            return 'Unknown'
+    formatAddress(company, urlEncode=false) {
+        let locationString = "" // Set to an empty string
+        // Add the address if present
+        company.street_address !== this.defaultValue ? 
+            locationString = company.street_address + ' ' : 
+            locationString = locationString
+        // Add the state/province if present
+        company.city !== this.defaultValue ? 
+            locationString += company.city + ' ' :
+            locationString = locationString
+        // Add state/province if present
+        company.state_province !== this.defaultValue ?
+            locationString += company.state_province + ' ' :
+            locationString = locationString
+        // Add zip/postal code if present
+        company.zip_postal !== this.defaultValue ?
+            locationString += company.zip_postal + ' ' :
+            locationString = locationString
+        // Add country if present
+        company.country !== this.defaultValue ?
+            locationString += company.country :
+            locationString = locationString
+
+        // If urlEncode is true then encode the string and return it
+        if (urlEncode) {
+            return encodeURIComponent(locationString)
         } else {
-            return industry[0]
+            return locationString
         }
     }
+
+    async getLatLongNode(address) {
+        const geocoder = NodeGeocoder({
+            provider: 'openstreetmap'
+          })
+        try {
+          const res = await geocoder.geocode(address)
+          if (res.length > 0) {
+            // return [true, {status_code: 200, status_msg: `found coordinates for ${address}`}, { latitude: res[0].latitude, longitude: res[0].longitude }]
+            return [true, {status_code: 200, status_msg: `found coordinates for ${address}`}, [res[0].latitude, res[0].longitude ]]
+          } else {
+            return [false, {status_code: 404, status_msg: `could not find coordinates for ${address}`}, null]
+          }
+        } catch (err) {
+            return [false, {status_code: 404, status_msg: `could not find coordinates for ${address}`}, null]
+        }
+      }
+
+    // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
+    // _joinIndustry(industry) {
+    //     if(industry.length > 1) {
+    //         return industry.join('|')
+    //     } else if (industry === 'Unknown') {
+    //         return 'Unknown'
+    //     } else {
+    //         return industry[0]
+    //     }
+    // }
 
     _getFormUrls(forms){
         let tenQ = 'Unknown'
@@ -563,15 +601,11 @@ class AddCompany {
             myCompanyObj.major_group_code = myIndustryChoice.major_group
 
 
-            // Get Lat & Long and fill in the google maps url
-            // TODO we should look for a see if the method in commonWizard can be rennovated to solve this problem
-            // TODO if these are unknown then what will happen is that the address string will all be uknown therefore we need to see if we can 
-            //      gracefully account for that. Note that the method in commonWizard does a little bit of that thinking. Otherwise when there are
-            //      some unknown values in the mix the results will be not so good.
-            const fullAddress = encodeURIComponent(`${myCompanyObj.street_address} ${myCompanyObj.city} ${myCompanyObj.state_province} ${myCompanyObj.zip_postal} ${myCompanyObj.country}`)
-            const [status, msg, [lat, long]] = await this.getLatLong(fullAddress)
-            myCompanyObj.latitude = lat
-            myCompanyObj.longitude = long
+            // Get Lat & Long data for the company
+            const fullAddress = this.formatAddress(myCompanyObj)
+            const [status, msg, geoData] = await this.getLatLongNode(fullAddress)
+            myCompanyObj.latitude = geoData[0]
+            myCompanyObj.longitude = geoData[1]
             myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${fullAddress}`
 
             // Set the external data links which are focused on google at this time
