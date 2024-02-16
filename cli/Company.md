@@ -23,13 +23,31 @@ This is the default output when running `mrcli c` or `mrcli company` which print
 <img width="1266" alt="companies_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/af9d22d8-4161-4ae9-9c57-06b65769a54e">
 
 ## List all company objects in JSON format
-Output list of company objects in properly formatted JSON to STDOUT which can be viewed, redirected to a file, or piped to another command.
+Output a list of company objects in properly formatted JSON to STDOUT which can be viewed, redirected to a file, or piped to another command.
 ### Command(s) run
 - `mrcli c --output=json`
 - `mrcli company --output=json`
 ### Screenshot with output
 <img width="1178" alt="companies_json" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/22d46cd2-952f-4c3b-8e74-37bdceefee2a">
 
-## List all company objects and output to a CSV
+## List all company objects and output to a CSV or XLSX
+Company data can be output in either a CSV or XLSX files to enable consumption in common tools like Microsoft Excel. The resulting files will be stored in $HOME/Documents directory as `Mr_Companies.csv` or `Mr_Companies.xlsx` depending on your intended output.
+### Command(s) run
+- `mrcli c --output=csv`
+- `mrcli c --output=xls`
+### Screenshot of commands being run
+<img width="1530" alt="companies_csv" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/f135de7a-aba8-4ed0-9198-64ff50797d4c">
+### Screenshot of CSV imported into MacOS numbers
+<img width="1627" alt="companies_numbers" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/6ab2266b-bacc-4cb0-9608-db8025866ccb">
+
+## Filter company outputs
+The CLI offers the ability to filter outputs by almost any company attribute.  This is manifest by two switches on the company sub-command one specific to finding companies by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. 
+### Filter in a company by name
+To zero in on a specific company using the find by name switch is provided.
+### Command(s) run
+- `mrcli c --find_by_name="Mediumroast, Inc."`
+### Screenshot with output
+<img width="1530" alt="companies_filter_by_name" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/4d6d88eb-740f-4d4d-a16b-bea12be54330">
+
 
 
