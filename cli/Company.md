@@ -41,13 +41,21 @@ Company data can be output in either a CSV or XLSX files to enable consumption i
 <img width="1627" alt="companies_numbers" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/6ab2266b-bacc-4cb0-9608-db8025866ccb">
 
 ## Filter company outputs
-The CLI offers the ability to filter outputs by almost any company attribute.  This is manifest by two switches on the company sub-command one specific to finding companies by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. 
+The CLI offers the ability to filter outputs by almost any company attribute.  This is manifest by two switches on the company sub-command one specific to finding companies by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. Finally, only exact matches are supported, meaning if you want to search for a company using any attribute you have to fully provide the attribute's value (i.e., "Med" wouod not matche Mediumroast, Inc., but "Mediumroast, Inc. would).
 ### Filter in a company by name
 To zero in on a specific company using the find by name switch is provided.
 ### Command(s) run
 - `mrcli c --find_by_name="Mediumroast, Inc."`
 ### Screenshot with output
 <img width="1530" alt="companies_filter_by_name" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/4d6d88eb-740f-4d4d-a16b-bea12be54330">
+### Filter a company by attribute
+Find a specific company by a particular attribute in the example below 
 
+# Update a company attribute
+To update a company attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name o the company to update, the key to update, and finally the value of the key to update.
+## Command(s) run
+- `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
+## Screencast with output
+[companies_update.webm](https://github.com/mediumroast/mediumroast_js/assets/10818650/001fde0e-0d69-41b4-af7a-e692fb9c69a9)
 
 
