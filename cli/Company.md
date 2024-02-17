@@ -1,3 +1,5 @@
+[Back](./README.md)
+---
 # Companies
 Company objects are central to Mediumroast for GitHub. [Interactions](./Interaction.md) and in the future Studies rely on Companies to function. After setup is run, via `mrcli setup`, two companies are present to work with.  Additional companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
 
@@ -65,8 +67,23 @@ To update a company attribute the `--update` switch is provided.  A properly for
 https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d-8968-ccf9b875d86b
 
 # Delete a company
+Remove a company and associated interactions if in the repository. There is a confirmation prompt which defaults to yes. Note that the exact company name is needed to proceed with a deletion.
+
+## Command(s) run
+- `mrcli c --delete="Atlassian Corp"
+
+## Screenshot with output
+<img width="1786" alt="companies_delete" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/85d98dee-ce3b-4d90-9567-9410e58872a3">
 
 # Add a company
+A command line prompt based wizard steps the user through either a semi-automated process or a fully-automated process to define a company.  The semi-automated process is typically used for companies that aren't public.  While the fully-automated process is typically used for companies that are public.  In either case the user is asked to verify the steps taken before the company is committed to the repository.
+
+## Command(s) run
+- `mrcli c --add_wizard`
+
+## Screenshot with output
+
+<img width="1786" alt="companies_add" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d948fce2-6c31-4537-983d-9dad4c04c248">
 
 
 
