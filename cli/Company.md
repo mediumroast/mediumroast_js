@@ -49,13 +49,22 @@ To zero in on a specific company using the find by name switch is provided.
 ### Screenshot with output
 <img width="1530" alt="companies_filter_by_name" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/4d6d88eb-740f-4d4d-a16b-bea12be54330">
 ### Filter a company by attribute
-Find a specific company by a particular attribute in the example below 
-
+Find a specific company by a particular attribute in the example below the switch filters on the attribute `company_type`.
+### Command(s) run
+- `mrcli c --find_by_x='{"company_type": "Public"}'`
+### Screenshot with output
+<img width="1786" alt="companies_filter_by_x" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/5c3e00d2-5365-40e8-bd91-31025cb821ae">
 # Update a company attribute
 To update a company attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name o the company to update, the key to update, and finally the value of the key to update.
 ## Command(s) run
 - `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
 ## Screencast with output
-[companies_update.webm](https://github.com/mediumroast/mediumroast_js/assets/10818650/001fde0e-0d69-41b4-af7a-e692fb9c69a9)
+https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d-8968-ccf9b875d86b
+
+# Delete a company
+
+# Add a company
+
+
 
 
