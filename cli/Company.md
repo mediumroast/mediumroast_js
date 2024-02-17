@@ -56,9 +56,12 @@ Find a specific company by a particular attribute in the example below the switc
 <img width="1786" alt="companies_filter_by_x" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/5c3e00d2-5365-40e8-bd91-31025cb821ae">
 # Update a company attribute
 To update a company attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name o the company to update, the key to update, and finally the value of the key to update.
+
 ## Command(s) run
 - `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
+  
 ## Screencast with output
+
 https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d-8968-ccf9b875d86b
 
 # Delete a company
