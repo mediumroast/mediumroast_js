@@ -29,7 +29,7 @@ To help users quickly get on board with **Mediumroast for GitHub** the setup CLI
 
 # **Mediumroast for GitHub** primary object CLIs
 This CLIs to create, read, update, and delete **Mediumroast for GitHub** are linked below.
-- [Companies](./Company.md)
+- [Company](./Company.md)
 - [Interaction](./Interaction.md)
 
 
