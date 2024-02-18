@@ -14,7 +14,7 @@ Mediumroast for GitHub includes a [GitHub Application](https://github.com/apps/m
 ## Step 1 - Install the Mediumroast for GitHub Application
 
 ## Step 2 - Install mediumroast_js via NPM
-This package *mediumroast_js* can be installed and removed via `npm`, several ways to install follow.
+This package [mediumroast_js](https://www.npmjs.com/package/mediumroast_js) can be installed and removed via `npm`, several ways to install follow.
 
 ### Installation for Linux, UNIX and MacOS
 Assuming the preinstallation requirements, installation of *node.js* and *npm*, are met please one one of the following.
