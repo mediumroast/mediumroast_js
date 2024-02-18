@@ -1,40 +1,43 @@
 # Welcome to Open Source Mediumroast for GitHub.
-Products organizations (meaning those that combine Product Management and Engineering) must build robust product plans from competitive and customer interactions, derived from product discovery actions, everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.    
+Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.      
 
+# Installation and configuration
+Mediumroast for GitHub includes a [GitHub Application](https://github.com/apps/mediumroast-for-github), a [Command Line Interface](./cli/README.md), and a Software Development Kit.  The following 
 
-# Motivation
-Mediumroast, Inc. sees many insights can be drawn from press releases, customer interviews, meeting notes, announcements, document manuals, and more. However, there are key problems we've uncovered as we've interviewed and observed Products Leaders, Product Managers, Engineers, Sellers, Sales Engineers, and Customer Success teams.  These problems are best described through several quotes.
+## Preinstallation Requirements
+1. A GitHub organization, please 
+2. Permissions in your GitHub organization to install a GitHub application.
+3. Access to a command line terminal on Linux or MacOS.
+4. [Node.js installed](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm), ideally globally for all users.
+5. [NPM installed](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm), ideally globally for all users.
 
-1. "I was just hired as a product manager into a team that is new to me, and was given a folder of documents that somehow relate to my product, but I don't know what these documents tell me." (New Product Manager)
-2. "As a Product Manager leader I almost fired one of my PMs because I think they were making things up." (Product Manager Director)
-3. "Did a customer really ask for that?" (Engineering Manager)
-4. "Are we building this for one customer or all of our customers?" (Chief Product Officer)
-5. "Did we interview customers from enough countries or are we only buliding for the US?" (Asia Pacific Pre-Sales Leader)
-6. "Who are your competitors?" (Venture Capital Technical Advisor)
-7. "Every team keeps their product planning resources and interactions to themselves. We don't share so we don't know who has actually touched the customer." (Product Manager at one of the FAANG companies)
-8. "Can you show me what happened to the requirements my customer provided?" (Pre-Sales Personnel)
+## Step 1 - Install the Mediumroast for GitHub Application
 
-Certainly, these quotes point to challenging problems covering themes like traceability, transparency, coverage, bias, and many more.  As we thought about what we could do we recognized that any journey to build a robust product plan starts with collecting the right set of interactions in a space that all constituents in the process can see and in the middle of the action.  Where in this case the action is active engineering.  Without a doubt there are tools that assert they are the "single source of truth" for a product's roadmap, and these commercial products more ofthen than not fail to help.  What they fail to do is help you arrive at the truth at the center of your product plan, and our intention, with this project, is to begin Products teams along a journey that let's them get to their best plan.
+## Step 2 - Install mediumroast_js via NPM
+This package *mediumroast_js* can be installed and removed via `npm`, several ways to install follow.
 
-# Why GitHub?
-This way plans aren't static
-
-# Command Line Interface (CLI) for the mediumroast.io
-Inclued within this SDK is a CLI for users who are more inclined to use that tool for interacting with the system.  These tools will be added and updated to over time as the system evolves. More information on the CLI is available in the [CLI README](./cli/README.md).
-
-# Installation and Configuration Steps via NPM
-This package is available for installation from NPM as *mediumroast_js* and can be installed and removed via the `npm` command. Several approaches to installation are documented below.
-
-## Installation for Linux, UNIX and MacOS
-Assuming you have installed both *node.js* and *npm* the following installation processes are possible.
+### Installation for Linux, UNIX and MacOS
+Assuming the preinstallation requirements, installation of *node.js* and *npm*, are met please one one of the following.
 1. Global installation for all users: `sudo npm i -g mediumroast_js`
 2. Local installation for a developer or single user: `npm i mediumroast_js`
 
-## Installation for WinOS
+### Installation for WinOS
 Coming soon.
 
+## Step 3 - Setup the Mediumroast for GitHUB CLI
+Before you can use the Mediumroast for GitHub CLI the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in [CLI README](./cli/README.md).
+
+# What's provided
+Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` for all interactions and objects, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
+
+## Warning
+Since the repository is a GitHub repository under the covers you can perform all actions it is possible but not recommended. Doing so may result in Mediumroast for GitHub becoming unoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
+
+## Example screenshot of in repositor companiesrReport
+<img width="1001" alt="companies" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/23fbd53f-dbfe-4106-a18d-5d13e0b5ce2b">
+
 # Issues
-If you detect a problem in the code please open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve.
+If you detect a problem or want to suggest an improvement open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve or respond.
 
 
 
