@@ -8,8 +8,8 @@ tool will fail.
 You can learn more about and install the GitHub Application by visiting the following 
 URL: https://github.com/apps/mediumroast-for-github
 
-A more detailed product description, help and other related documentation ca be found 
-here: https://www.mediumroast.io/
+A more detailed product description, help and other related documentation can be found 
+here: https://www.mediumroast.io/.
 
 WARNING: This setup installs two GitHub Actions, and their associated workflows, into 
 the repository that it creates.  These Actions consume GitHub Actions minutes and may incur 

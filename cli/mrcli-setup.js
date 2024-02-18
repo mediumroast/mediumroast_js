@@ -146,7 +146,9 @@ async function confirmGitHubOrg(token, env) {
     // 
     const output = new CLIOutput(env, 'Org')
     // Prompt and confirm user's the GitHub organization
-    const gitHubOrgName = await simplePrompt('Please enter your GitHub organization.')
+    let gitHubOrgName = await simplePrompt('Please enter your GitHub organization.')
+    // URL encode the organization name
+    gitHubOrgName = encodeURI(gitHubOrgName)
     
     // Construct the GitHubFunctions object
     let gitHubCtl = new GitHubFunctions(myConfig.token, gitHubOrgName)
@@ -156,8 +158,9 @@ async function confirmGitHubOrg(token, env) {
 
     // Obtain the intel based upon the organization the user input
     const gitHubOrg = await gitHubCtl.getGitHubOrg()
+    // console.log(gitHubOrg)
     if(!gitHubOrg[0]){
-        const tryAgain = await wizardUtils.operationOrNot(
+        tryAgain = await wizardUtils.operationOrNot(
             `Unfortunately, no organization matching [${gitHubOrgName}] was found. Maybe you mistyped it, try again?`
         )
         if(tryAgain) {
@@ -168,7 +171,7 @@ async function confirmGitHubOrg(token, env) {
         }
     }
     // Only print the table if we're not trying again
-    if (!tryAgain) {cliOutput.outputCLI([gitHubOrg[1]])}
+    if (!tryAgain) {output.outputCLI([gitHubOrg[1]])}
 
     // Confirm that the organization is correct
     tryAgain = await wizardUtils.operationOrNot(
@@ -472,7 +475,6 @@ cliOutput.printLine()
 /* ------------ Install actions ------------ */
 process.stdout.write(chalk.bold.blue(`Installing actions and workflows ... `))
 const actionsManifest = generateActionsManifest()
-console.log(actionsManifest)
 const installResp = await installActions(actionsManifest)
 if(installResp[0]) {
     console.log(chalk.bold.green('Ok'))
