@@ -32,7 +32,7 @@ Before you can use the Mediumroast for GitHub CLI the environment must be setup.
 ## What's provided
 Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` for all interactions and objects, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
 
-### Warning
+## Warning
 Since the repository is a GitHub repository under the covers you can interact with it as a normal repository, but **doing so is not recommended**. If you interact with the repository in regular ways this could result in Mediumroast for GitHub becoming unoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
 
 ### Example screenshot of in repositor companiesrReport
