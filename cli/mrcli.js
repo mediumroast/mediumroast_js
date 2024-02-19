@@ -4,7 +4,7 @@
  * The wrapping CLI to engage all mediumroast.io CLIs
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
  * @version 1.0.0
  */
@@ -14,7 +14,7 @@ import program from 'commander'
 
 program
   .name('mrcli')
-  .version('0.4.44')
+  .version('0.4.46')
   .description('mediumroast.io command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')

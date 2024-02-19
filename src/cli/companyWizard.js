@@ -332,6 +332,11 @@ class AddCompany {
         // Company type
         'company_type' in myCompany ? prototype.company_type.value = myCompany.company_type : 
             prototype.company_type.value = prototype.company_type.value
+
+        // If prototype.company_type.value has text after "Public" then set it to "Public"
+        if (prototype.company_type.value.search(/Public/g)) {
+            prototype.company_type.value = "Public"
+        }
         
         // Company firmographics url
         'firmographicsURL' in myCompany ? prototype.firmographics_url.value = myCompany.firmographicsURL : 
