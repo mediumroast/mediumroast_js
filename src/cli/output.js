@@ -72,24 +72,26 @@ class CLIOutput {
             table = new Table({
                 head: ['Id', 'Name', 'GitHub Url', 'Description'],
             })
-            table.push([
-                gitHubOrg.id,
-                gitHubOrg.name,
-                gitHubOrg.html_url,
-                gitHubOrg.description,
-            ])
+            for (const myObj in objects) {
+                table.push([
+                    objects[myObj].id !== null ? objects[myObj].id : 'No Id', 
+                    objects[myObj].name !== null ? objects[myObj].name : 'No Name',
+                    objects[myObj].html_url !== null ? objects[myObj].html_url : 'No GitHub Url',
+                    objects[myObj].description !== null ? objects[myObj].description : 'No Description'
+                ])
+            }
         } else if (this.objectType === 'MyUser') {
             table = new Table({
                 head: ['GitHub Id', 'Login', 'Name', 'Type', 'Company', 'GitHub Website'],
             })
             for (const myObj in objects) {
                 table.push([
-                    objects[myObj].id,
-                    objects[myObj].login,
-                    objects[myObj].name,
-                    objects[myObj].type,
-                    objects[myObj].company,
-                    objects[myObj].html_url
+                    objects[myObj].id !== null ? objects[myObj].id : 'No Id',
+                    objects[myObj].login !== null ? objects[myObj].login : 'No Login',
+                    objects[myObj].name !== null ? objects[myObj].name : 'No Name',
+                    objects[myObj].type !== null ? objects[myObj].type : 'No Type',
+                    objects[myObj].company !== null ? objects[myObj].company : 'No Company',
+                    objects[myObj].html_url !== null ? objects[myObj].html_url : 'No GitHub Website'
                 ])
             }
         // Study, Company and Interaction objects output
@@ -191,9 +193,9 @@ class CLIOutput {
         try {
             const csv = csvParser.parse(objects)
             this.fileSystem.saveTextFile(myFile, csv)
-            return [true, null]
+            return [true, {status_code: 200, status_msg: `wrote [${this.objectType}] objects to [${myFile}]`}, null]
         } catch (err) {
-            return [false, err]
+            return [false, {}, err]
         }
     }
 

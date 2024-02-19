@@ -1,3 +1,7 @@
+[Back](../README.md)
+
+---
+
 # Mediumroast for GitHub CLI (Command Line Interface)
 The CLI is divided into two sets one for administrative interactions with the system and another for interacting with **Mediumroast for GitHub** objects like Companies and Interactions.  This document covers both the administrative CLI and makes reference to the CLI set for **Mediumroast for GitHub** objects.
 
@@ -29,7 +33,7 @@ To help users quickly get on board with **Mediumroast for GitHub** the setup CLI
 
 # **Mediumroast for GitHub** primary object CLIs
 This CLIs to create, read, update, and delete **Mediumroast for GitHub** are linked below.
-- [Companies](./Company.md)
+- [Company](./Company.md)
 - [Interaction](./Interaction.md)
 
 

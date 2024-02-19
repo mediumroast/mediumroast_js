@@ -71,27 +71,27 @@ class Environmentals {
             // Operational command line switches
             .option(
                 '--find_by_name <name>',
-                'Find an individual object by name'
+                `Find an individual a ${this.objectType} by name`
             )
             .option(
                 '--find_by_id <ID>',
-                'Find an individual Interaction by ID'
+                `Find an individual a ${this.objectType} by ID`
             )
             .option(
                 '--find_by_x <JSON>',
-                'Find object by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')'
+                `Find a ${this.objectType} by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')`
             )
             .option(
                 '--update <JSON>',
-                'Update an object from the backend by specifying the object\'s name plus attribute and value to update in JSON'
+                `Update a ${this.objectType} from the backend by specifying the object\'s name plus attribute and value to update in JSON`
             )
             .option(
                 '--delete <NAME>',
-                'Delete an object from the backend by specifying the object\'s id'
+                `Delete a ${this.objectType} from the backend by specifying the object\'s id`
             )
             .option(
                 '--report <NAME>',
-                'Create an MS word document for an object by specifying the object\'s id'
+                `Create an MS word document for a ${this.objectType} by specifying the object\'s id`
             )
             .option(
                 '--package',
