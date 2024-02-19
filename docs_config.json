@@ -15,14 +15,14 @@
         "search": true
     },
         "better-docs": {
-            "name": "mediumroast.io sdk documentation",
+            "name": "Mediumroast for GitHub SDK",
             "logo": "images/mr_logo.png",
-            "title": "SDK and CLI Documentation for the mediumroast.io",
+            "title": "Mediumroast for GitHub SDK Documentation",
             "style": "style.css",
 	        "hideGenerator": false,
             "navLinks": [
                 {
-                    "label": "Mediumroast Jascript SDK/CLI on Github",
+                    "label": "Mediumroast for GitHub JavaScript SDK",
                     "href": "https://github.com/mediumroast/mediumroast_js"
                 }
             ]

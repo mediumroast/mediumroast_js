@@ -1,9 +1,100 @@
-/**
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> github.js</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Modules</h3><ul><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li></ul><h3>Classes</h3><ul><li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>github.js</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * @fileoverview A class that safely wraps RESTful calls to the GitHub API
  * @license Apache-2.0
  * @version 1.0.0
  * 
- * @author Michael Hay <michael.hay@mediumroast.io>
+ * @author Michael Hay &lt;michael.hay@mediumroast.io>
  * @file github.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * 
@@ -212,7 +303,7 @@ class GitHubFunctions {
      * @description Creates a new branch from the main branch.
      * @function createBranchFromMain
      * @async
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the main branch reference or creating the new branch.
      * @memberof GitHubFunctions
      */
@@ -249,7 +340,7 @@ class GitHubFunctions {
      * @param {string} branchName - The name of the branch to merge into main.
      * @param {string} mySha - The SHA of the commit to use as the head of the pull request.
      * @param {string} [commitDescription='Performed CRUD operation on objects.'] - The description of the commit.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while creating the branch or the pull request.
      * @memberof GitHubFunctions
      */
@@ -294,7 +385,7 @@ class GitHubFunctions {
      * @function checkForLock
      * @async
      * @param {string} containerName - The name of the container to check for a lock.
-     * @returns {Promise<[boolean, string]>} A promise that resolves to an array containing a boolean indicating success and a message.
+     * @returns {Promise&lt;[boolean, string]>} A promise that resolves to an array containing a boolean indicating success and a message.
      * @throws {Error} If an error occurs while getting the latest commit or the contents of the container.
      * @memberof GitHubFunctions
      * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
@@ -336,7 +427,7 @@ class GitHubFunctions {
      * @function lockContainer
      * @async
      * @param {string} containerName - The name of the container to lock.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or creating the lock file.
      * @memberof GitHubFunctions
     */
@@ -373,7 +464,7 @@ class GitHubFunctions {
      * @async
      * @param {string} containerName - The name of the container to unlock.
      * @param {string} commitSha - The SHA of the commit to use as the head of the pull request.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or deleting the lock file.
      * @memberof GitHubFunctions
     */
@@ -453,7 +544,7 @@ class GitHubFunctions {
      * @param {string} containerName - The name of the container to write the object to.
      * @param {object} obj - The object to write to the container.
      * @param {string} ref - The reference to use when writing the object.
-     * @returns {Promise<string>} A promise that resolves to the response from the GitHub API.
+     * @returns {Promise&lt;string>} A promise that resolves to the response from the GitHub API.
      * @throws {Error} If an error occurs while writing the object.
      * @memberof GitHubFunctions
      * @todo Add a check to see if the container is locked and if so return an error.
@@ -485,7 +576,7 @@ class GitHubFunctions {
      * @description Reads objects from a specified container using the GitHub API.
      * @async
      * @param {string} containerName - The name of the container to read objects from.
-     * @returns {Promise<string>} A promise that resolves to the decoded contents of the objects.
+     * @returns {Promise&lt;string>} A promise that resolves to the decoded contents of the objects.
      * @throws {Error} If an error occurs while getting the content or parsing it.
      * @memberof GitHubFunctions
      */
@@ -525,7 +616,7 @@ class GitHubFunctions {
      * @param {boolean} [dontWrite=false] - A flag to indicate if the object should be written back to the container or not.
      * @param {boolean} [system=false] - A flag to indicate if the update is a system call or not.
      * @param {Array} [whiteList=[]] - A list of keys that are allowed to be updated.
-     * @returns {Promise<Array>} A promise that resolves to the decoded contents of the object.
+     * @returns {Promise&lt;Array>} A promise that resolves to the decoded contents of the object.
      * @memberof GitHubFunctions
      * @todo As deleteObject progresses look to see if we can improve here too
      */
@@ -638,7 +729,7 @@ class GitHubFunctions {
      * @async
      * @param {string} objName - The name of the object to delete.
      * @param {object} source - The source object that contains the from and to containers.
-     * @returns {Promise<Array>} A promise that resolves to the decoded contents of the object.
+     * @returns {Promise&lt;Array>} A promise that resolves to the decoded contents of the object.
      * @memberof GitHubFunctions
      */
     async deleteObject(objName, source, repoMetadata=null, catchIt=true) {
@@ -822,7 +913,7 @@ class GitHubFunctions {
      * @function catchContainer
      * @description Catches a container by locking it, creating a new branch, reading the objects, and returning the metadata.
      * @param {Object} repoMetadata - The metadata object that contains the containers and branch information.
-     * @returns {Promise<Array>} A promise that resolves to an array containing a boolean indicating success, a success message, and the metadata object.
+     * @returns {Promise&lt;Array>} A promise that resolves to an array containing a boolean indicating success, a success message, and the metadata object.
      * @memberof GitHubFunctions
      */
     async catchContainer(repoMetadata) {
@@ -875,7 +966,7 @@ class GitHubFunctions {
      * @function releaseContainer
      * @description Releases a container by unlocking it and merging the branch to main.
      * @param {Object} repoMetadata - The metadata object that contains the containers and branch information.
-     * @returns {Promise<Array>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;Array>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @memberof GitHubFunctions
      */
     async releaseContainer(repoMetadata) {
@@ -905,4 +996,35 @@ class GitHubFunctions {
     }
 }
 
-export default GitHubFunctions
+export default GitHubFunctions</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>

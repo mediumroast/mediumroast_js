@@ -4,7 +4,7 @@
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with mediumroast.io.",
   "main": "cli/mrcli.js",
   "scripts": {
-    "docs": "jsdoc -R ./README.md -c ./docs_config.json -P ./package.json ./src"
+    "docs": "jsdoc -R ./README.md -c ./docs_config.json -P ./package.json ./src/api"
   },
   "bin": {
     "mrcli-study": "cli/mrcli-study.js",
