@@ -1,3 +1,17 @@
+[Back](./README.md)
+---
+# Interactions
+After adding your first [Company](./Company.md), you can start adding [Interactions](./Interaction.md). An interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
+
+To add an interaction, you can use `mrcli` with the `interaction` subcommand. Alternatively, you can use the shorthand `mrcli i`. The `interaction` subcommand will walk you through the process of adding a new customer interaction.
+
+---
+---
+
+
+ Additional companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
+
+
 ### Company Command Line Interface (CLI)
 Key capabilities of this tool:
 - Report on either all company objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
