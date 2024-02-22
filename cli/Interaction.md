@@ -26,6 +26,7 @@ Next, the add wizard will ask you what kind of interation type you are uploading
 
 <img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
 
+Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
 
 <img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
 
