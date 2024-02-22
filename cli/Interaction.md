@@ -3,7 +3,12 @@
 # Interactions
 After adding your first [Company](./Company.md), you can start adding [Interactions](./Interaction.md). An interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
 
-To add an interaction, you can use `mrcli` with the `interaction` subcommand. Alternatively, you can use the shorthand `mrcli i`. The `interaction` subcommand will walk you through the process of adding a new customer interaction.
+
+To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
+
+<img width="743" alt="Screenshot 2024-02-21 at 8 19 13 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f09e4171-bd26-4a98-a012-9164273e3d5a">
+
+
 
 ---
 ---
