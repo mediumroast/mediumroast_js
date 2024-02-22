@@ -8,9 +8,11 @@ To add an interaction, you can use `mrcli` with the `interaction` and `--add_wiz
 
 <img width="743" alt="Screenshot 2024-02-21 at 8 19 13 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f09e4171-bd26-4a98-a012-9164273e3d5a">
 
+During the add wizard, you'll be asked to select which company the interaction belongs to. It's important, that the company is defined before adding the interation.
 
 <img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
 
+Next, the add wizard will ask you what kind of interation type you are uploading.
 
 <img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
 
