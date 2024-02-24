@@ -2,9 +2,32 @@
  * A class for authenticating and talking to the mediumroast.io backend 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file gitHubServer.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
  * @version 1.0.0
+ * 
+ * @class baseObjects
+ * @classdesc An implementation for interacting with the GitHub backend.
+ * 
+ * @requires GitHubFunctions
+ * 
+ * @example
+ * import {Companies, Interactions, Users, Billings} from './api/gitHubServer.js'
+
+ * const companies = new Companies(token, org, processName)
+ * const interactions = new Interactions(token, org, processName)
+ * const users = new Users(token, org, processName)
+ * const billings = new Billings(token, org, processName)
+ * 
+ * const allCompanies = await companies.getAll()
+ * const allInteractions = await interactions.getAll()
+ * const allUsers = await users.getAll()
+ * const allBillings = await billings.getAll()
+ * 
+ * const company = await companies.findByName('myCompany')
+ * const interaction = await interactions.findByName('myInteraction')
+ * const user = await users.findByName('myUser')
+ * 
  */
 
 // Import required modules
@@ -13,16 +36,6 @@ import { createHash } from 'crypto'
 
 
 class baseObjects {
-    /**
-     * This class contains all of the core operations which make it easier to interact with the GitHub backend.
-     * Access to objects is wrapped in a series of functions which are meant to be used by the consumer of the class.
-     * @constructor
-     * @classdesc An implementation for interacting with the GitHub backend.
-     * @param {String} token - the token for the GitHub application
-     * @param {String} org - the organization for the GitHub application
-     * @param {String} processName - the process name for the GitHub application
-     * @param {String} objType - the object type for the GitHub application
-    */
     constructor(token, org, processName, objType) {
         this.serverCtl = new GitHubFunctions(token, org, processName)
         this.objType = objType

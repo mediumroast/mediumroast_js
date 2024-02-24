@@ -82,33 +82,18 @@ class baseObjects {
 
 
 class Users extends baseObjects {
-    /**
-     * @constructor
-     * @classdesc A subclass of baseObjects that construct the user objects
-     * @param {Object} credential - the credential object returned from Auth.login()
-     */
     constructor (credential) {
         super(credential, 'users')
     }
 }
 
 class Studies extends baseObjects {
-    /**
-     * @constructor
-     * @classdesc A subclass of baseObjects that construct the study objects
-     * @param {Object} credential - the credential object returned from Auth.login()
-     */
     constructor (credential) {
         super(credential, 'studies')
     }
 }
 
 class Companies extends baseObjects {
-    /**
-     * @constructor
-     * @classdesc A subclass of baseObjects that construct the company objects
-     * @param {Object} credential - the credential object returned from Auth.login()
-     */
     constructor (credential) {
         super(credential, 'companies')
     }
@@ -116,11 +101,6 @@ class Companies extends baseObjects {
 
 
 class Interactions extends baseObjects {
-    /**
-     * @constructor
-     * @classdesc A subclass of baseObjects that construct the interaction objects
-     * @param {Object} credential - the credential object returned from Auth.login()
-     */
     constructor (credential) {
         super(credential, 'interactions')
     }
