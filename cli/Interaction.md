@@ -116,16 +116,17 @@ Command: `interaction --find_by_name='The Phases of Product Planning' --output=j
       "month": "02",
       "day": "21",
       "title": "The Phases of Product Planning",
-      "url": "read://https_www.productplan.com/?url=https%3A%2F%2Fwww.productplan.com%2Flearn%2Fstrategic-phases-product-planning-process%2F"
+      "url": "read://https_www.companyxyz.com/?url=https%3A%2F%2Fwww.companyxyz.com%2Flearn%2Fstrategic-phases-product-planning-process%2F"
     },
     "url": "Interactions/The Phases of Product Planning.pdf"
   }
 ]
 ```
 #### List all companies and output in CSV format
-Command: `mr_cli company --output=csv`
+Command: `mrcli interaction --output=csv`
 
 Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Companies.csv*.
 
-##### Screenshot of the resulting CSV file in Apple Numbers
-*UPDATE ME*
+<img width="1569" alt="Screenshot 2024-03-03 at 7 02 55 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/979f445e-5bd5-477c-85c1-e48589720cf9">
+
+
