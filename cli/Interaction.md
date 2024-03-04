@@ -25,41 +25,39 @@ Finally, because this example was a web page, the add wizard with ask for the pu
 ---
 
 
- Additional companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
+Additional interaction can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli interaction` are described in this document.
 
 
-### Company Command Line Interface (CLI)
+### Interactions Command Line Interface (CLI)
 Key capabilities of this tool:
-- Report on either all company objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
-- Pick from one of four report output formats for company objects: *table* default, *json*, *csv*, or *xlsx*.
-- Create one or more company objects from a specified json file.
-- Delete a company object by specifying the company's id (Note: this is not yet implemented).
-- Create a Microsoft DOCX formatted report for a specific company object as specified by the company's *id*.
+- Report on either all interaction objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
+- Pick from one of four report output formats for interaction objects: *table* default, *json*, *csv*, or *xlsx*.
+- Create one or more interaction objects from a specified json file.
+- Delete a interaction object by specifying the company's id (Note: this is not yet implemented).
+- Create a Microsoft DOCX formatted report for a specific interaction object as specified by the interaction's *id*.
 
 #### Print usage information to the console
-Command: `mr_cli company --help`
+Command: `mr_cli interaction --help`
 ##### Example output:
 ```
-Usage: mr_cli company [options]
+Usage: Interactions [options]
 
-Command line interface for mediumroast.io Company objects.
+Command line interface for mediumroast.io Interactions objects.
 
 Options:
   -V, --version                                 output the version number
-  -c --conf_file <file>                         Path to the configuration file (default: "/Users/mihay42/.mediumroast/config.ini")
-  -r --rest_server <server>                     The URL of the target mediumroast.io server (default: "http://cherokee.from-ca.com:16767")
-  -a --api_key <key>                            The API key needed to talk to the mediumroast.io server
-  -u --user <user name>                         Your user name for the mediumroast.io server
-  -s --secret <user secret or password>         Your user secret or password for the mediumroast.io server
+  -c --conf_file <file>                         Path to the configuration file (default: "/home/john/.mediumroast/config.ini")
   -o --output <choose the output type to emit>  Select output type: table, json, xls or csv. xls & csv will save to a file. (default: "table")
-  --find_by_name <name>                         Find an individual Interaction by name
-  --find_by_id <ID>                             Find an individual Interaction by ID
-  --find_by_x <JSON>                            Find object by an arbitrary attribute as specified by JSON (ex '{"zip_postal":"92131"}')
-  --create <file.json>                          Add objects to the backend by specifying a JSON file
-  --update <JSON>                               Update an object from the backend by specifying the object's id and value to update in JSON
-  --delete <ID>                                 Delete an object from the backend by specifying the object's id
-  --report <ID>                                 Create an MS word document for an object by specifying the object's id
+  -s --splash <yes | no>                        Whether or not to include the splash screen at startup. (default: "yes")
+  --find_by_name <name>                         Find an individual a Interactions by name
+  --find_by_id <ID>                             Find an individual a Interactions by ID
+  --find_by_x <JSON>                            Find a Interactions by an arbitrary attribute as specified by JSON (ex '{"zip_postal":"92131"}')
+  --update <JSON>                               Update a Interactions from the backend by specifying the object's name plus attribute and value to update in JSON
+  --delete <NAME>                               Delete a Interactions from the backend by specifying the object's id
+  --report <NAME>                               Create an MS word document for a Interactions by specifying the object's id
   --package                                     An additional switch used with --report to generate a ZIP package that includes the interaction
+  --add_wizard                                  Run the CLI wizard to add a Interactions to the mediumroast.io backend.
+  --reset_by_type <OBJECT_TYPE>                 Reset the status of objects to reprocesses them in the caffeine service.
   -h, --help                                    display help for command
 ```
 
