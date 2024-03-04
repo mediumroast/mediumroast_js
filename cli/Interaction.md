@@ -25,7 +25,7 @@ Finally, because this example was a web page, the add wizard with ask for the pu
 ---
 
 
-Additional interaction can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli interaction` are described in this document.
+Additional interactions can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli interaction` are described in this document.
 
 
 ### Interactions Command Line Interface (CLI)
@@ -33,7 +33,6 @@ Key capabilities of this tool:
 - Report on either all interaction objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
 - Pick from one of four report output formats for interaction objects: *table* default, *json*, *csv*, or *xlsx*.
 - Create one or more interaction objects from a specified json file.
-- Delete a interaction object by specifying the company's id (Note: this is not yet implemented).
 - Create a Microsoft DOCX formatted report for a specific interaction object as specified by the interaction's *id*.
 
 #### Print usage information to the console
@@ -61,79 +60,65 @@ Options:
   -h, --help                                    display help for command
 ```
 
-#### List all companies and output in table output
-Command: `company`
+#### List all interactions and output in table output
+Command: `interaction`
 ##### Example output:
 ```
-┌─────┬────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
-│ Id  │ Name                                   │ Description                                                                 │
-├─────┼────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
-│ 2   │ Federos                                │ Federos is a provider of AI-optimized assurance, analytics, and automation… │
-├─────┼────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
-│ 3   │ Intraway                               │ With over 40 million subscribers successfully served in more than 20 count… │
-├─────┼────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
-│ 4   │ Incognito                              │ Our productized service orchestration platforms allow cable, fiber, and fi… │
-├─────┼────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
-│ 1   │ OpenVault                              │ OpenVault and OpenVault Europe GmbH are market-leading sources of broadban… │
-└─────┴────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┬───────────────┬──────────┬─────────────────────────┐
+│ Name                                                                           │ Creator Name  │ Region   │ Linked Company          │
+├────────────────────────────────────────────────────────────────────────────────┼───────────────┼──────────┼─────────────────────────┤
+│ The Phases of Product Planning                                                 │ Bob Goldmann  │ AMER     │ Compnay XYZ             │
+└────────────────────────────────────────────────────────────────────────────────┴───────────────┴──────────┴─────────────────────────┘
 ```
 
 #### List a single company by the object id and output in JSON
-Command: `company --find_by_id=1 --output=json`
+Command: `interaction --find_by_name='The Phases of Product Planning' --output=json`
 ##### Example output:
 ```
 [
   {
-    id: 1,
-    name: 'OpenVault',
-    industry: 'Services | Business Services | Computer Programming, Data Processing, And Other Computer Related Services',
-    role: 'Owner',
-    url: 'https://openvault.com',
-    logo_url: 'http://openvault.com/NEW-SITE-OV3/wp-content/uploads/2021/01/different-blue@3x.png',
-    street_address: '111 Town Square Place Suite 1180',
-    city: 'Jersey City',
-    state_province: 'New Jersey',
-    country: 'USA',
-    region: 'AMER',
-    phone: '+1-201-677-8480',
-    icon: 'http://openvault.com/NEW-SITE-OV3/wp-content/uploads/2021/01/different-blue@3x.png',
-    description: 'OpenVault and OpenVault Europe GmbH are market-leading sources of broadband technology solutions and data-driven insights into worldwide broadband consumption patterns. The companies’ cloud- based, SaaS solutions and tools help service providers optimize network performance, increase revenue and improve subscriber satisfaction. OpenVault and OpenVault Europe aggregate and analyze the resulting market data to provide unparalleled granular views of consumer usage that can be used to anticipate residential and business broadband trends.',
-    cik: 'Unknown',
-    linked_interactions: {
-      '201004290000-OpenVault Competitive Study-OpenVault': '1',
-      '201512030000-OpenVault Competitive Study-OpenVault': '2',
-      '201606060000-OpenVault Competitive Study-OpenVault': '3',
-      '201607060000-OpenVault Competitive Study-OpenVault': '7',
-      '201702030000-OpenVault Competitive Study-OpenVault': '8',
-      ...
-      '202106240000-OpenVault Competitive Study-OpenVault': '20',
-      '202106300000-OpenVault Competitive Study-OpenVault': '35'
+    "tags": {},
+    "topics": {},
+    "status": 0,
+    "organization": "Mediumroast",
+    "content_type": "Unknown",
+    "file_size": "Unknown",
+    "reading_time": "Unknown",
+    "word_count": "Unknown",
+    "page_count": "Unknown",
+    "description": "Unknown",
+    "abstract": "Unknown",
+    "creator": "bgoldie",
+    "creator_id": 14003500,
+    "creator_name": "Bob Goldmann",
+    "linked_companies": {
+      "ProductPlan": "42aa8e3cf94546f1fa5505b042a8bae69e4ede263c4ce9d76ab1de3bbc4e1e72"
     },
-    linked_studies: {
-      'OpenVault Competitive Study': '03d20485a74f3a5371b379597eee194d57e635ff56d1c1b5a79b85bc87ae2b54'
+    "linked_studies": {},
+    "street_address": "10 E 1st St",
+    "zip_postal": "93101",
+    "city": "Santa Barbara",
+    "state_province": "CA",
+    "country": "USA",
+    "latitude": 34.414227,
+    "longitude": -119.69102,
+    "region": "AMER",
+    "public": true,
+    "groups": "Mediumroast:bgoldie",
+    "creation_date": "2024-02-22T04:30:49.737Z",
+    "modification_date": "2024-02-22T04:30:49.737Z",
+    "file_hash": "494226eb2a631f9549558874544f17e5131c437ed6c99e83bf9339cd15bd8001",
+    "name": "The Phases of Product Planning",
+    "interaction_type": "Webpage",
+    "interaction_type_detail": {
+      "author": "Compnay XYZ",
+      "year": "2024",
+      "month": "02",
+      "day": "21",
+      "title": "The Phases of Product Planning",
+      "url": "read://https_www.productplan.com/?url=https%3A%2F%2Fwww.productplan.com%2Flearn%2Fstrategic-phases-product-planning-process%2F"
     },
-    stock_symbol: 'Unknown',
-    recent10k_url: 'Unknown',
-    recent10q_url: 'Unknown',
-    zip_postal: '07310',
-    latitude: 40.71748000000008,
-    longitude: -74.04384999999996,
-    topics: {
-      'care |': 8.941359041754604,
-      'consumption levels': 10.441359041754604,
-      'customer care': 20.202859052173412,
-      'customer support': 10.253453034755818,
-      'data growth': 9.972406038255212,
-      'data usage': 11.753453034755818,
-      'live streaming': 9.096030365208183,
-      'streaming market': 8.941359041754604,
-      'traditional pay- tv': 9.479648278867261,
-      'video streaming': 11.472406038255212,
-      '| open vault': 30.269000062512852
-    },
-    comparison: { '2': [Object], '3': [Object], '4': [Object] },
-    summary: 'Unknown',
-    abstract: 'Unknown'
+    "url": "Interactions/The Phases of Product Planning.pdf"
   }
 ]
 ```
