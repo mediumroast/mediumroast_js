@@ -125,7 +125,7 @@ Command: `interaction --find_by_name='The Phases of Product Planning' --output=j
 #### List all interactions and output in CSV format
 Command: `mrcli interaction --output=csv`
 
-Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Companies.csv*.
+Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Interactions.csv*.
 
 <img width="1569" alt="Screenshot 2024-03-03 at 7 02 55 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/979f445e-5bd5-477c-85c1-e48589720cf9">
 
