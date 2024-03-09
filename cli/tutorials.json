@@ -1,0 +1,11 @@
+{
+    "README": {
+        "title": "Administrative Subcommands"
+    },
+    "Interaction": {
+        "title": "Interaction Subcommand"
+    },
+    "Company": {
+        "title": "Company Subcommand"
+    }
+}
