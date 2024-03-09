@@ -1,30 +1,32 @@
 {
-    "plugins": [
-        "plugins/markdown",
-        "plugins/summarize"
-    ],
-    "opts": {
-        "template": "node_modules/better-docs", 
-        "encoding": "utf8",               
-        "destination": "./docs",          
-        "recurse": true
+    "tags": {
+      "allowUnknownTags": true
     },
+    "plugins": ["plugins/markdown"],
     "templates": {
-        "cleverLinks": true,
-        "monospaceLinks": false,
-        "search": true
+      "logoFile": "img/logo.png",
+      "cleverLinks": true,
+      "monospaceLinks": false,
+      "dateFormat": "ddd MMM Do YYYY",
+      "outputSourceFiles": true,
+      "outputSourcePath": true,
+      "systemName": "Mediumroast for GitHub SDK",
+      "footer": "",
+      "copyright": "© 2023-2024 Mediumroast, Inc. All rights reserved.",
+      "navType": "inline",
+      "theme": "cyborg",
+      "linenums": true,
+      "collapseSymbols": false,
+      "inverseNav": false,
+      "protocol": "html://",
+      "methodHeadingReturns": false
     },
-        "better-docs": {
-            "name": "mediumroast.io sdk documentation",
-            "logo": "images/mr_logo.png",
-            "title": "SDK and CLI Documentation for the mediumroast.io",
-            "style": "style.css",
-	        "hideGenerator": false,
-            "navLinks": [
-                {
-                    "label": "Mediumroast Jascript SDK/CLI on Github",
-                    "href": "https://github.com/mediumroast/mediumroast_js"
-                }
-            ]
-        }
-}
+    "markdown": {
+      "parser": "gfm",
+      "hardwrap": true
+    },
+    "opts": {
+        "template": "node_modules/ink-docstrap/template"
+      }
+  }
+  
