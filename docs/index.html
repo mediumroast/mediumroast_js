@@ -17,7 +17,7 @@
 
 <body>
 
-<div class="navbar navbar-default navbar-fixed-top ">
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
@@ -48,7 +48,7 @@
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company CLI Subcommands</a></li><li><a href="tutorial-Interaction.html">Interaction CLI Subcommands</a></li><li><a href="tutorial-README.html">Administrative CLI Subcommands</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -92,7 +92,7 @@
 
 
 
-    <h3>mediumroast_js 0.4.46</h3>
+    <h3>mediumroast_js 0.4.47</h3>
 
 
 
@@ -110,11 +110,12 @@
 
 
     <section class="readme-section">
-        <article><h1>Welcome to Open Source Mediumroast for GitHub.</h1>
+        <article><h2>Welcome to Open Source Mediumroast for GitHub.</h2>
 <p>Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.</p>
-<h1>Installation and configuration</h1>
-<p>Mediumroast for GitHub includes a <a href="https://github.com/apps/mediumroast-for-github">GitHub Application</a>, a <a href="./cli/README.md">Command Line Interface</a>, and a Software Development Kit.  The following</p>
-<h2>Preinstallation Requirements</h2>
+<p><strong>Notice:</strong> We recommend that you read the <a href="https://mediumroast.github.io/mediumroast_js/">GitHub Page Version</a> rather the repository version.</p>
+<h2>Installation and configuration</h2>
+<p>Mediumroast for GitHub includes a <a href="https://github.com/apps/mediumroast-for-github">GitHub Application</a>, a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.</p>
+<h3>Preinstallation Requirements</h3>
 <ol>
 <li>A GitHub organization, please</li>
 <li>Permissions in your GitHub organization to install a GitHub application.</li>
@@ -122,26 +123,26 @@
 <li><a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm">Node.js installed</a>, ideally globally for all users.</li>
 <li><a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm">NPM installed</a>, ideally globally for all users.</li>
 </ol>
-<h2>Step 1 - Install the Mediumroast for GitHub Application</h2>
-<h2>Step 2 - Install mediumroast_js via NPM</h2>
+<h3>Step 1 - Install the Mediumroast for GitHub Application</h3>
+<h3>Step 2 - Install mediumroast_js via NPM</h3>
 <p>This package <a href="https://www.npmjs.com/package/mediumroast_js">mediumroast_js</a> can be installed and removed via <code>npm</code>, several ways to install follow.</p>
-<h3>Installation for Linux, UNIX and MacOS</h3>
+<h4>Installation for Linux, UNIX and MacOS</h4>
 <p>Assuming the preinstallation requirements, installation of <em>node.js</em> and <em>npm</em>, are met please one one of the following.</p>
 <ol>
 <li>Global installation for all users: <code>sudo npm i -g mediumroast_js</code></li>
 <li>Local installation for a developer or single user: <code>npm i mediumroast_js</code></li>
 </ol>
-<h3>Installation for WinOS</h3>
+<h4>Installation for WinOS</h4>
 <p>Coming soon.</p>
-<h2>Step 3 - Setup the Mediumroast for GitHUB CLI</h2>
-<p>Before you can use the Mediumroast for GitHub CLI the environment must be setup.  With the CLI installed please run <code>mrcli setup</code> to start the setup process, note there's a video of the setup process in <a href="./cli/README.md">CLI README</a>.</p>
-<h1>What's provided</h1>
+<h3>Step 3 - Setup the Mediumroast for GitHUB CLI</h3>
+<p>Before you can use the Mediumroast for GitHub CLI the environment must be setup.  With the CLI installed please run <code>mrcli setup</code> to start the setup process, note there's a video of the setup process in [CLI README.</p>
+<h2>What's provided</h2>
 <p>Running <code>mrcli setup</code> creates a repository in your oganization called <code>&lt;organization_name&gt;_discovery</code> for all interactions and objects, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.</p>
-<h2>Warning</h2>
+<h3>Warning</h3>
 <p>Since the repository is a GitHub repository under the covers you can interact with it as a normal repository, but <strong>doing so is not recommended</strong>. If you interact with the repository in regular ways this could result in Mediumroast for GitHub becoming unoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.</p>
-<h2>Example screenshot of in repositor companiesrReport</h2>
+<h3>Example screenshot of in repositor companiesrReport</h3>
 <img width="1001" alt="companies" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/23fbd53f-dbfe-4106-a18d-5d13e0b5ce2b">
-<h1>Issues</h1>
+<h2>Issues</h2>
 <p>If you detect a problem or want to suggest an improvement open an <a href="https://github.com/mediumroast/mediumroast_js/issues">issue</a> and we will work with you to resolve or respond.</p></article>
     </section>
 
@@ -192,7 +193,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Wed Feb 21st 2024
+		on Sat Mar 9th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

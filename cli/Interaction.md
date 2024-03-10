@@ -1,7 +1,5 @@
-[Back](./README.md)
----
 # Interactions
-After adding your first [Company](./Company.md), you can start adding [Interactions](./Interaction.md). An interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
+After adding your first Company, you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
 
 
 To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
@@ -41,7 +39,6 @@ Finally, because this example was a web page, the add wizard with ask for the pu
 <img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
 
 
----
 ---
 
 
