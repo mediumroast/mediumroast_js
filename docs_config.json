@@ -17,7 +17,7 @@
       "theme": "cyborg",
       "linenums": true,
       "collapseSymbols": false,
-      "inverseNav": false,
+      "inverseNav": true,
       "protocol": "html://",
       "methodHeadingReturns": false
     },
