@@ -1,5 +1,5 @@
 ## Interactions
-After running `mrcli setup` you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. Additional Interactions can be added, updated, or removed; essentially, interaction is an mrcli sub-command that affords users Create, Read, Update and Delete capabilities. Each of the major functions for mrcli company are described in this document.
+After running `mrcli setup` you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. Additional Interactions can be added, updated, or removed; essentially, interaction is an mrcli sub-command that affords users Create, Read, Update and Delete capabilities. Each of the major functions for mrcli interaction are described in this document.
 
 ### Notice
 Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
