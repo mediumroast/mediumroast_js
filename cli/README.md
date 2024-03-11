@@ -31,9 +31,6 @@ To help users quickly get on board with **Mediumroast for GitHub** the setup CLI
 - `mrcli setup`
 ### Screencast showing setup process
 
-# **Mediumroast for GitHub** primary object CLIs
-This CLIs to create, read, update, and delete **Mediumroast for GitHub** are linked below.
-- [Company](./Company.md)
-- [Interaction](./Interaction.md)
+
 
 

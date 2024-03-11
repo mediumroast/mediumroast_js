@@ -1,5 +1,16 @@
-# Interactions
-After adding your first Company, you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
+## Interactions
+After running `mrcli setup` you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. 
+
+### Notice
+Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+
+## Help
+Prints the usage for the `interaction` sub-command and exits.
+
+### Command(s) run
+- `mrcli interaction --help`
+
+### Screenshot with output
 
 
 To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
@@ -52,30 +63,7 @@ Key capabilities of this tool:
 - Create one or more interaction objects from a specified json file.
 - Create a Microsoft DOCX formatted report for a specific interaction object as specified by the interaction's *id*.
 
-#### Print usage information to the console
-Command: `mr_cli interaction --help`
-##### Example output:
-```
-Usage: Interactions [options]
 
-Command line interface for mediumroast.io Interactions objects.
-
-Options:
-  -V, --version                                 output the version number
-  -c --conf_file <file>                         Path to the configuration file (default: "/home/john/.mediumroast/config.ini")
-  -o --output <choose the output type to emit>  Select output type: table, json, xls or csv. xls & csv will save to a file. (default: "table")
-  -s --splash <yes | no>                        Whether or not to include the splash screen at startup. (default: "yes")
-  --find_by_name <name>                         Find an individual a Interactions by name
-  --find_by_id <ID>                             Find an individual a Interactions by ID
-  --find_by_x <JSON>                            Find a Interactions by an arbitrary attribute as specified by JSON (ex '{"zip_postal":"92131"}')
-  --update <JSON>                               Update a Interactions from the backend by specifying the object's name plus attribute and value to update in JSON
-  --delete <NAME>                               Delete a Interactions from the backend by specifying the object's id
-  --report <NAME>                               Create an MS word document for a Interactions by specifying the object's id
-  --package                                     An additional switch used with --report to generate a ZIP package that includes the interaction
-  --add_wizard                                  Run the CLI wizard to add a Interactions to the mediumroast.io backend.
-  --reset_by_type <OBJECT_TYPE>                 Reset the status of objects to reprocesses them in the caffeine service.
-  -h, --help                                    display help for command
-```
 
 #### List all interactions and output in table output
 Command: `interaction`
