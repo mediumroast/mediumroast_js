@@ -72,56 +72,6 @@ Find a specific interaction by a particular attribute in the example below the s
 
 # HERE
 
-To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
-
-<img width="743" alt="Screenshot 2024-02-21 at 8 19 13 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f09e4171-bd26-4a98-a012-9164273e3d5a">
-
-During the add wizard, you'll be asked to select which company the interaction belongs to. It's important, that the company is defined before adding the interation.
-
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
-
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
-
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
-
-
----
-
-
-Additional interactions can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli interaction` are described in this document.
-
-
-### Interactions Command Line Interface (CLI)
-Key capabilities of this tool:
-- Report on either all interaction objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
-- Pick from one of four report output formats for interaction objects: *table* default, *json*, *csv*, or *xlsx*.
-- Create one or more interaction objects from a specified json file.
-- Create a Microsoft DOCX formatted report for a specific interaction object as specified by the interaction's *id*.
-
 
 
 
