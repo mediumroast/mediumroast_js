@@ -84,7 +84,7 @@ https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d
 Remove a company and associated interactions if in the repository. There is a confirmation prompt which defaults to yes. Note that the exact company name is needed to proceed with a deletion.
 
 ### Command(s) run
-- `mrcli c --delete="Atlassian Corp`
+- `mrcli c --delete="Atlassian Corp"`
 
 ### Screenshot with output
 <img width="1178" alt="companies_delete" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/85d98dee-ce3b-4d90-9567-9410e58872a3">
