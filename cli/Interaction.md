@@ -12,6 +12,8 @@ Prints the usage for the `interaction` sub-command and exits.
 
 ### Screenshot with output
 
+<img width="1178" alt="interactions_help" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/20d50b3e-b87a-4996-a7e4-fcc2443e7a45">
+
 
 To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
 
