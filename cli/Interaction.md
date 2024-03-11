@@ -70,6 +70,8 @@ Find a specific interaction by a particular attribute in the example below the s
 
 #### Screenshot with output
 
+# HERE
+
 To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
 
 <img width="743" alt="Screenshot 2024-02-21 at 8 19 13 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f09e4171-bd26-4a98-a012-9164273e3d5a">
@@ -122,73 +124,6 @@ Key capabilities of this tool:
 
 
 
-#### List all interactions and output in table output
-Command: `interaction`
-##### Example output:
-```
-┌────────────────────────────────────────────────────────────────────────────────┬───────────────┬──────────┬─────────────────────────┐
-│ Name                                                                           │ Creator Name  │ Region   │ Linked Company          │
-├────────────────────────────────────────────────────────────────────────────────┼───────────────┼──────────┼─────────────────────────┤
-│ The Phases of Product Planning                                                 │ Bob Goldmann  │ AMER     │ Compnay XYZ             │
-└────────────────────────────────────────────────────────────────────────────────┴───────────────┴──────────┴─────────────────────────┘
-```
 
-#### List a single company by the object id and output in JSON
-Command: `interaction --find_by_name='The Phases of Product Planning' --output=json`
-##### Example output:
-```
-[
-  {
-    "tags": {},
-    "topics": {},
-    "status": 0,
-    "organization": "Mediumroast",
-    "content_type": "Unknown",
-    "file_size": "Unknown",
-    "reading_time": "Unknown",
-    "word_count": "Unknown",
-    "page_count": "Unknown",
-    "description": "Unknown",
-    "abstract": "Unknown",
-    "creator": "bgoldie",
-    "creator_id": 14003500,
-    "creator_name": "Bob Goldmann",
-    "linked_companies": {
-      "ProductPlan": "42aa8e3cf94546f1fa5505b042a8bae69e4ede263c4ce9d76ab1de3bbc4e1e72"
-    },
-    "linked_studies": {},
-    "street_address": "10 E 1st St",
-    "zip_postal": "93101",
-    "city": "Santa Barbara",
-    "state_province": "CA",
-    "country": "USA",
-    "latitude": 34.414227,
-    "longitude": -119.69102,
-    "region": "AMER",
-    "public": true,
-    "groups": "Mediumroast:bgoldie",
-    "creation_date": "2024-02-22T04:30:49.737Z",
-    "modification_date": "2024-02-22T04:30:49.737Z",
-    "file_hash": "494226eb2a631f9549558874544f17e5131c437ed6c99e83bf9339cd15bd8001",
-    "name": "The Phases of Product Planning",
-    "interaction_type": "Webpage",
-    "interaction_type_detail": {
-      "author": "Compnay XYZ",
-      "year": "2024",
-      "month": "02",
-      "day": "21",
-      "title": "The Phases of Product Planning",
-      "url": "read://https_www.companyxyz.com/?url=https%3A%2F%2Fwww.companyxyz.com%2Flearn%2Fstrategic-phases-product-planning-process%2F"
-    },
-    "url": "Interactions/The Phases of Product Planning.pdf"
-  }
-]
-```
-#### List all companies and output in CSV format
-Command: `mr_cli company --output=csv`
-
-Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Interactions.csv*.
-
-<img width="1569" alt="Screenshot 2024-03-03 at 7 02 55 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/979f445e-5bd5-477c-85c1-e48589720cf9">
 
 
