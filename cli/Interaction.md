@@ -69,10 +69,10 @@ To zero in on a specific interaction using the find by name switch is provided.
 
 
 #### Filter an interaction by attribute
-Find a specific interaction by a particular attribute in the example below the switch filters on the attribute `company_type`.
+Find a specific interaction by a particular attribute in the example below the switch filters on the attribute `city`.
 
 #### Command(s) run
-- `mrcli i --find_by_x='{"company_type": "Public"}'`
+- `mrcli i --find_by_x='{"city": "Santa Barbara"}'`
 
 #### Screenshot with output
 <img width="1178" alt="interactions_filter_by_x" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/27fa0ac4-45ff-48f0-b600-1c4c2b000dbf">
