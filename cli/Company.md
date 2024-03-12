@@ -50,7 +50,7 @@ Company data can be output in either a CSV or XLSX files to enable consumption i
 <img width="1178" alt="companies_numbers" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/6ab2266b-bacc-4cb0-9608-db8025866ccb">
 
 ### Filter company outputs
-The CLI offers the ability to filter outputs by almost any company attribute.  This is manifest by two switches on the company sub-command one specific to finding companies by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. Finally, only exact matches are supported, meaning if you want to search for a company using any attribute you have to fully provide the attribute's value (i.e., "Med" would not match Mediumroast, Inc., but "Mediumroast, Inc. would).
+The CLI offers the ability to filter outputs by almost any company attribute.  This is manifest by two switches on the company sub-command one specific to finding companies by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. Finally, only exact matches are supported, meaning if you want to search for a company using any attribute you have to fully provide the attribute's value (i.e., "Med" would not match "Mediumroast, Inc.", but "Mediumroast, Inc." would).
 
 #### Filter in a company by name
 To zero in on a specific company using the find by name switch is provided.
@@ -71,7 +71,7 @@ Find a specific company by a particular attribute in the example below the switc
 <img width="1178" alt="companies_filter_by_x" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/5c3e00d2-5365-40e8-bd91-31025cb821ae">
 
 # Update a company attribute
-To update a company attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name o the company to update, the key to update, and finally the value of the key to update.
+To update a company attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name of the company to update, the key to update, and finally the value of the key to update.
 
 ### Command(s) run
 - `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
