@@ -25,7 +25,8 @@ This is the default output when running `mrcli i` or `mrcli interaction` which p
 - `mrcli interaction`
 
 #### Screenshot with output
-<img width="1178" alt="interactions_help" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/7959a473-3059-43fa-a074-48a0708961c7">
+<img width="1178" alt="interactions_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d0f19383-1b71-4e51-8199-16f857f89952">
+
 
 
 ### List all interaction objects in JSON format
