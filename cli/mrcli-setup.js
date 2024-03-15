@@ -14,7 +14,6 @@ import CLIOutput from '../src/cli/output.js'
 import WizardUtils from '../src/cli/commonWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
 
-import demoEulaText from '../src/cli/demoEula.js'
 import installText from '../src/cli/installInstructions.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 
