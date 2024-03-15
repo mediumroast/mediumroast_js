@@ -27,6 +27,8 @@ To help users quickly get on board with **Mediumroast for GitHub** the setup CLI
 - `mrcli setup`
 ### Screencast showing setup process
 
+https://github.com/mediumroast/mediumroast_js/assets/10818650/68c08502-4f59-4981-a001-0d9c9bd1d4d2
+
 
 
 
