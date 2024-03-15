@@ -106,7 +106,9 @@ A command line prompt based wizard steps the user through a semi-automated proce
 
 ### Screencast with output
 
-https://github.com/mediumroast/mediumroast_js/assets/10818650/7acda618-2917-4a2c-acd1-d80df23b684e
+https://github.com/mediumroast/mediumroast_js/assets/10818650/3d4e86e6-9bcf-47d9-9cf3-63562bcb8a19
+
+
 
 
 
