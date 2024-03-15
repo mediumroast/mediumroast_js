@@ -86,7 +86,7 @@ To update an interaction attribute the `--update` switch is provided.  A properl
   
 ### Screencast with output
 
-https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d-8968-ccf9b875d86b
+https://github.com/mediumroast/mediumroast_js/assets/10818650/e11256e7-28ca-47d5-b131-58a2036671a6
 
 ## Delete an interaction
 Remove a company and associated interactions if in the repository. There is a confirmation prompt which defaults to yes. Note that the exact company name is needed to proceed with a deletion.
