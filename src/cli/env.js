@@ -4,7 +4,7 @@
  * @file env.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.3.0
+ * @version 2.3.1
  */
 
 // Import required modules
@@ -71,35 +71,31 @@ class Environmentals {
             // Operational command line switches
             .option(
                 '--find_by_name <name>',
-                `Find an individual a ${this.objectType} by name`
-            )
-            .option(
-                '--find_by_id <ID>',
-                `Find an individual a ${this.objectType} by ID`
+                `Find individual ${this.objectType} by name`
             )
             .option(
                 '--find_by_x <JSON>',
-                `Find a ${this.objectType} by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')`
+                `Find ${this.objectType} by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')`
             )
             .option(
                 '--update <JSON>',
-                `Update a ${this.objectType} from the backend by specifying the object\'s name plus attribute and value to update in JSON`
+                `Update ${this.objectType} from the backend by specifying the object\'s name plus attribute and value to update in JSON`
             )
             .option(
                 '--delete <NAME>',
-                `Delete a ${this.objectType} from the backend by specifying the object\'s id`
+                `Delete ${this.objectType} from the backend by specifying the object\'s id`
             )
             .option(
                 '--report <NAME>',
-                `Create an MS word document for a ${this.objectType} by specifying the object\'s id`
+                `Create an MS word document for ${this.objectType} by specifying the object\'s id`
             )
             .option(
                 '--package',
-                'An additional switch used with --report to generate a ZIP package that includes the interaction'
+                'An additional switch used with --report to generate a ZIP package that includes the Interaction artifact(s)'
             )
             .option(
                 '--add_wizard',
-                `Run the CLI wizard to add a ${this.objectType} to the mediumroast.io backend.`
+                `Run the CLI wizard to add ${this.objectType} to the mediumroast.io backend.`
             )
             .option(
                 '--reset_by_type <OBJECT_TYPE>',

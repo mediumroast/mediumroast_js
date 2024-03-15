@@ -1,149 +1,119 @@
-# Interactions
-After adding your first Company, you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even competitive documentation about a competitor. 
+## Interactions
+After running `mrcli setup` you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. Additional Interactions can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities. Each of the major functions for `mrcli interaction` are described in this document.
+
+### Notice
+Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+
+## Help
+Prints the usage for the `interaction` sub-command and exits.
+
+### Command(s) run
+- `mrcli interaction --help`
+
+### Screenshot with output
+
+<img width="1178" alt="interactions_help" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d76b1e58-b421-48bd-8860-781444c372ee">
+
+## List interaction objects
+Print out one or more Interaction to the command line or an alternative output mechanism like a CSV file.  Filtering can be applied to find Interactions with specific attributes.
+
+### List all interaction objects in a table format
+This is the default output when running `mrcli i` or `mrcli interaction` which prints a text table to STDOUT.
+
+#### Command(s) run
+- `mrcli i`
+- `mrcli interaction`
+
+#### Screenshot with output
+<img width="1178" alt="interactions_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d0f19383-1b71-4e51-8199-16f857f89952">
 
 
-To add an interaction, you can use `mrcli` with the `interaction` and `--add_wizard` subcommands. Alternatively, you can use the shorthand `mrcli i --add_wizard`. The `mrcli interaction --add_wizard` subcommand will walk you through the process of adding a new customer interaction.
 
-<img width="743" alt="Screenshot 2024-02-21 at 8 19 13 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f09e4171-bd26-4a98-a012-9164273e3d5a">
+### List all interaction objects in JSON format
+Output a list of company objects in properly formatted JSON to STDOUT which can be viewed, redirected to a file, or piped to another command.
 
-During the add wizard, you'll be asked to select which company the interaction belongs to. It's important, that the company is defined before adding the interation.
+#### Command(s) run
+- `mrcli i --output=json`
+- `mrcli interaction --output=json`
 
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
-
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
-
-<img width="690" alt="Screenshot 2024-02-21 at 8 30 46 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/f7762961-8f89-4b46-87ff-443f47d83fa5">
-
-Next, the add wizard will ask you what kind of interation type you are uploading. Keep in mind, that the add wizard will look in the `./productplan` directory for any interations. If there are multiple interations, the add wizard will iterate through all the interations in the folder. NOTE: Even though we will specify a URL for the web page in the next step, the mrcli add wizard function will look for a local directory with interation files (text, PDF, etc.)
-
-<img width="671" alt="Screenshot 2024-02-21 at 8 31 48 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/1019bf84-7898-48a2-aec3-252d5dcb21ee">
-
-Finally, because this example was a web page, the add wizard with ask for the publish date and URL.
-
-<img width="1037" alt="Screenshot 2024-02-21 at 8 33 22 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/5458eac9-59b1-4d6c-8ab1-9cfcfde8ef77">
+#### Screenshot with output
+<img width="1178" alt="interactions_json" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/060656ff-8272-4574-a546-d28b9a351dab">
 
 
----
+### List all interaction objects and output to a CSV or XLSX
+Interaction data can be output in either a CSV or XLSX files to enable consumption in common tools like Microsoft Excel. The resulting files will be stored in $HOME/Documents directory as `Mr_Interactions.csv` or `Mr_Interactions.xlsx` depending on your intended output.
+
+#### Command(s) run
+- `mrcli i --output=csv`
+- `mrcli i --output=xls`
+
+#### Screenshot of commands being run
+<img width="1178" alt="interactions_csv" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/621064e0-33a1-4136-988d-ec4f68c07330">
 
 
-Additional interactions can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli interaction` are described in this document.
+### Screenshot of CSV imported into MacOS numbers
+<img width="1178" alt="interactions_numbers" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/1a484785-7733-4881-ab9e-57532ac686ab">
 
 
-### Interactions Command Line Interface (CLI)
-Key capabilities of this tool:
-- Report on either all interaction objects or by specific properties like *id*, *name*, *region*, *country*, and so on.
-- Pick from one of four report output formats for interaction objects: *table* default, *json*, *csv*, or *xlsx*.
-- Create one or more interaction objects from a specified json file.
-- Create a Microsoft DOCX formatted report for a specific interaction object as specified by the interaction's *id*.
+### Filter interaction outputs
+The CLI offers the ability to filter outputs by almost any interaction attribute.  This is manifest by two switches on the interaction sub-command one specific to finding Interactions by name, `--find_by_name` and the other by an arbitrary attribute, `--find_by_x`. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. Finally, only exact matches are supported, meaning if you want to search for a interaction using any attribute you have to fully provide the attribute's value (i.e., "The" would not match "The 7 Strategic Phases of the Product Planning Process" , but "The 7 Strategic Phases of the Product Planning Process" would).
 
-#### Print usage information to the console
-Command: `mr_cli interaction --help`
-##### Example output:
-```
-Usage: Interactions [options]
+#### Filter in a interaction by name
+To zero in on a specific interaction using the find by name switch is provided.
 
-Command line interface for mediumroast.io Interactions objects.
+#### Command(s) run
+- `mrcli i --find_by_name="The 7 Strategic Phases of the Product Planning Process"`
 
-Options:
-  -V, --version                                 output the version number
-  -c --conf_file <file>                         Path to the configuration file (default: "/home/john/.mediumroast/config.ini")
-  -o --output <choose the output type to emit>  Select output type: table, json, xls or csv. xls & csv will save to a file. (default: "table")
-  -s --splash <yes | no>                        Whether or not to include the splash screen at startup. (default: "yes")
-  --find_by_name <name>                         Find an individual a Interactions by name
-  --find_by_id <ID>                             Find an individual a Interactions by ID
-  --find_by_x <JSON>                            Find a Interactions by an arbitrary attribute as specified by JSON (ex '{"zip_postal":"92131"}')
-  --update <JSON>                               Update a Interactions from the backend by specifying the object's name plus attribute and value to update in JSON
-  --delete <NAME>                               Delete a Interactions from the backend by specifying the object's id
-  --report <NAME>                               Create an MS word document for a Interactions by specifying the object's id
-  --package                                     An additional switch used with --report to generate a ZIP package that includes the interaction
-  --add_wizard                                  Run the CLI wizard to add a Interactions to the mediumroast.io backend.
-  --reset_by_type <OBJECT_TYPE>                 Reset the status of objects to reprocesses them in the caffeine service.
-  -h, --help                                    display help for command
-```
+#### Screenshot with output
+<img width="1178" alt="interactions_filter_by_name" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/7a5ff39f-23f4-47b8-9432-5483ec874d5a">
 
-#### List all interactions and output in table output
-Command: `interaction`
-##### Example output:
-```
-┌────────────────────────────────────────────────────────────────────────────────┬───────────────┬──────────┬─────────────────────────┐
-│ Name                                                                           │ Creator Name  │ Region   │ Linked Company          │
-├────────────────────────────────────────────────────────────────────────────────┼───────────────┼──────────┼─────────────────────────┤
-│ The Phases of Product Planning                                                 │ Bob Goldmann  │ AMER     │ Compnay XYZ             │
-└────────────────────────────────────────────────────────────────────────────────┴───────────────┴──────────┴─────────────────────────┘
-```
 
-#### List a single company by the object id and output in JSON
-Command: `interaction --find_by_name='The Phases of Product Planning' --output=json`
-##### Example output:
-```
-[
-  {
-    "tags": {},
-    "topics": {},
-    "status": 0,
-    "organization": "Mediumroast",
-    "content_type": "Unknown",
-    "file_size": "Unknown",
-    "reading_time": "Unknown",
-    "word_count": "Unknown",
-    "page_count": "Unknown",
-    "description": "Unknown",
-    "abstract": "Unknown",
-    "creator": "bgoldie",
-    "creator_id": 14003500,
-    "creator_name": "Bob Goldmann",
-    "linked_companies": {
-      "ProductPlan": "42aa8e3cf94546f1fa5505b042a8bae69e4ede263c4ce9d76ab1de3bbc4e1e72"
-    },
-    "linked_studies": {},
-    "street_address": "10 E 1st St",
-    "zip_postal": "93101",
-    "city": "Santa Barbara",
-    "state_province": "CA",
-    "country": "USA",
-    "latitude": 34.414227,
-    "longitude": -119.69102,
-    "region": "AMER",
-    "public": true,
-    "groups": "Mediumroast:bgoldie",
-    "creation_date": "2024-02-22T04:30:49.737Z",
-    "modification_date": "2024-02-22T04:30:49.737Z",
-    "file_hash": "494226eb2a631f9549558874544f17e5131c437ed6c99e83bf9339cd15bd8001",
-    "name": "The Phases of Product Planning",
-    "interaction_type": "Webpage",
-    "interaction_type_detail": {
-      "author": "Compnay XYZ",
-      "year": "2024",
-      "month": "02",
-      "day": "21",
-      "title": "The Phases of Product Planning",
-      "url": "read://https_www.companyxyz.com/?url=https%3A%2F%2Fwww.companyxyz.com%2Flearn%2Fstrategic-phases-product-planning-process%2F"
-    },
-    "url": "Interactions/The Phases of Product Planning.pdf"
-  }
-]
-```
-#### List all companies and output in CSV format
-Command: `mr_cli company --output=csv`
+#### Filter an interaction by attribute
+Find a specific interaction by a particular attribute in the example below the switch filters on the attribute `city`.
 
-Notice: This command saves the file to your environment's *HOME/Documents* directory called *Mr_Interactions.csv*.
+#### Command(s) run
+- `mrcli i --find_by_x='{"city": "Santa Barbara"}'`
 
-<img width="1569" alt="Screenshot 2024-03-03 at 7 02 55 PM" src="https://github.com/mediumroast/mediumroast_js/assets/14003500/979f445e-5bd5-477c-85c1-e48589720cf9">
+#### Screenshot with output
+<img width="1178" alt="interactions_filter_by_x" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/27fa0ac4-45ff-48f0-b600-1c4c2b000dbf">
+
+
+# Update an interaction attribute
+To update an interaction attribute the `--update` switch is provided.  A properly formatted JSON stanza is supplied to the `--update` switch that specifies the name of the interaction to update, the key to update, and finally the value of the key to update.
+
+### Command(s) run
+- `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
+  
+### Screencast with output
+
+https://github.com/mediumroast/mediumroast_js/assets/10818650/e11256e7-28ca-47d5-b131-58a2036671a6
+
+## Delete an interaction
+Remove a company and associated interactions if in the repository. There is a confirmation prompt which defaults to yes. Note that the exact company name is needed to proceed with a deletion.
+
+### Command(s) run
+- `mrcli i --delete="Atlassian Corp"`
+
+### Screenshot with output
+<img width="1178" alt="interactions_delete" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/56036574-0edd-4aaa-a482-a1c03b2d81d4">
+
+
+## Add an interaction
+A command line prompt based wizard steps the user through a semi-automated process process to define an interaction.  The user is asked to verify the steps taken before the interaction(s) is committed to the repository.
+
+### Command(s) run
+- `mrcli i --add_wizard`
+
+### Screencast with output
+
+https://github.com/mediumroast/mediumroast_js/assets/10818650/0b28db90-d6ba-4224-a9ae-4c301c2b9614
+
+
+
+
+
+
+
+
 
 
