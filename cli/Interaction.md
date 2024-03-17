@@ -85,6 +85,7 @@ To update an interaction attribute the `--update` switch is provided.  A properl
 - `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
   
 ### Screencast with output
+**Notice**: Only the markdown version rendered through the GitHub web interface will display the screencast.  If you're viewing these files through the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/tutorial-Interaction.html) the link below will just show up as text.
 
 https://github.com/mediumroast/mediumroast_js/assets/10818650/e11256e7-28ca-47d5-b131-58a2036671a6
 
@@ -105,6 +106,7 @@ A command line prompt based wizard steps the user through a semi-automated proce
 - `mrcli i --add_wizard`
 
 ### Screencast with output
+**Notice**: Only the markdown version rendered through the GitHub web interface will display the screencast.  If you're viewing these files through the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/tutorial-Interaction.html) the link below will just show up as text.
 
 https://github.com/mediumroast/mediumroast_js/assets/10818650/0b28db90-d6ba-4224-a9ae-4c301c2b9614
 
