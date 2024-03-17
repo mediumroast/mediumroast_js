@@ -77,6 +77,7 @@ To update a company attribute the `--update` switch is provided.  A properly for
 - `mrcli c --update='{"name": "Atlassian Corp", "key": "company_type", "value": "Public"}'`
   
 ### Screencast with output
+**Notice**: Only the markdown version rendered through the GitHub web interface will display the screencast.  If you're viewing these files through the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/tutorial-Company.html) the link below will just show up as text.
 
 https://github.com/mediumroast/mediumroast_js/assets/10818650/a74cb8cd-f8cb-4a8d-8968-ccf9b875d86b
 

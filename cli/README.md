@@ -23,11 +23,17 @@ Provides reports for consumed actions and repository storage consumed by the org
 
 ## Setup
 To help users quickly get on board with **Mediumroast for GitHub** the setup CLI is used.  This CLI creates the `${HOME}/.mediumroast/config.ini` file, creates the repository including key directories, and creates two initial companies.  A screencast video showing the process for setting up the CLI environment and creating two companies is available below.
+
 ### Command(s) run
 - `mrcli setup`
 ### Screencast showing setup process
+**Notice**: Only the markdown version rendered through the GitHub web interface will display the screencast.  If you're viewing these files through the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/tutorial-README.html) the link below will just show up as text.
 
 https://github.com/mediumroast/mediumroast_js/assets/10818650/68c08502-4f59-4981-a001-0d9c9bd1d4d2
+
+---
+
+[[Company Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Company.md)] | [[Interaction Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Interaction.md)]
 
 
 
