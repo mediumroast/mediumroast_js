@@ -1,7 +1,7 @@
 ## Welcome to Open Source Mediumroast for GitHub.
 Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.
 
-**Notice:** We recommend that you review the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) rather than the repository version. 
+**Notice:** You can review the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display. 
 
 ## Installation and configuration
 Mediumroast for GitHub includes a [GitHub Application](https://github.com/apps/mediumroast-for-github), a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.
@@ -33,7 +33,7 @@ Assuming the preinstallation requirements, installation of *node.js* and *npm*, 
 Coming soon.
 
 ### Step 3 - Setup the CLI
-Before you can use the Mediumroast for GitHub CLI the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in CLI README.
+Before you can use the Mediumroast for GitHub [CLI](https://github.com/mediumroast/mediumroast_js/blob/main/cli/README.md) the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in CLI README.
 
 ## What's provided
 Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` for all interactions and objects, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
