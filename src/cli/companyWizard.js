@@ -2,7 +2,7 @@
  * A class used to build CLIs for accessing and reporting on mediumroast.io objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file companyCLIwizard.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
  * @version 1.1.0
  */
@@ -131,7 +131,7 @@ class AddCompany {
 
     async getLogo (companyWebsite) {
         try {
-            const response = await axios.get(`https://logo-server.mediumroast.io:7000/allicons.json?url=${companyWebsite}`)
+            const response = await axios.get(`${this.env.companyLogos}${companyWebsite}`)
             const myLogos = response.data
             return myLogos.icons[0].url
         } catch (err) {
@@ -140,7 +140,7 @@ class AddCompany {
     }
 
     async getLatLong(address) {
-        const response = await axios.get(`https://nominatim.openstreetmap.org/search?q=${address}&format=json`)
+        const response = await axios.get(`${this.env.nominatim}${address}&format=json`)
         if (response.data && response.data[0]) {
             return [true, {status_code: 200, status_msg: `found coordinates for ${address}`}, [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)]]
         } else {
@@ -334,7 +334,7 @@ class AddCompany {
             prototype.company_type.value = prototype.company_type.value
 
         // If prototype.company_type.value has text after "Public" then set it to "Public"
-        if (prototype.company_type.value.search(/Public/g)) {
+        if (prototype.company_type.value.search(/Public/g )  !== -1) {
             prototype.company_type.value = "Public"
         }
         
@@ -824,14 +824,18 @@ class AddCompany {
         // Logo
         myCompany.logo_url = this.defaultValue
         if (myCompany.url !== 'Unknown') {
+            const spinner = ora(chalk.bold.blue(`Fetching the logo url for [${myCompany.name}]...`))
+            spinner.start() // Start the spinner
             const logo_url = await this.getLogo(myCompany.url)
+            // console.log(chalk.blue.bold(`Setting the company logo to [${logo_url}]`))
             logo_url ? myCompany.logo_url = logo_url : myCompany.logo_url = this.defaultValue
+            spinner.stop() // Stop the spinner
         }
         console.log(chalk.green('Finished company definition.'))
 
         // Either return the company object or create it
         if (createObj) {
-            const spinner = ora(chalk.bold.blue(`Saving ${myCompany.name} to GitHub ... `))
+            const spinner = ora(chalk.bold.blue(`Saving [${myCompany.name}] to GitHub...`))
             spinner.start() // Start the spinner
             const myCompanyResp = await this.apiController.createObj([myCompany])
             spinner.stop() // Stop the spinner

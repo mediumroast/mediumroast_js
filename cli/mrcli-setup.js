@@ -64,8 +64,8 @@ function parseCLIArgs(name, version, description) {
 function getEnv () {
     return {
         DEFAULT: {
-            company_dns: "https://www.mediumroast.io/company_dns",
-            company_logos: "https://logo-server.mediumroast.io:7000/allicons.json?url=",
+            company_dns: "https://company-dns.mediumroast.io",
+            company_logos: "https://icon-server.mediumroast.io/allicons.json?url=",
             echarts: "https://chart-server.mediumroast.io:11000",
             nominatim: 'https://nominatim.openstreetmap.org/search?addressdetails=1&q=',
             working_directory: "working",
