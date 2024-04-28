@@ -3,6 +3,7 @@ run-name: ${{ github.actor }} executed basic-reporting action
 on: 
     schedule:
         - cron: '0 0 * * *' # Runs at midnight every day
+    workflow_dispatch:
 jobs:
     prune-branches:
         runs-on: ubuntu-latest
