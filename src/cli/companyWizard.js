@@ -35,7 +35,7 @@ class AddCompany {
      * @todo There is a bug in how the initial company object is created, specifically the name of the company isn't set correctly
      * @todo When polling for the GitHub organization check to see what other metadata could be useful like desc, website, etc.
      */
-    constructor(env, apiControllers, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
+    constructor(env, apiControllers){
         this.env = env
         this.apiController = apiControllers.company
         this.interactionCtl = apiControllers.interaction
@@ -46,9 +46,9 @@ class AddCompany {
         this.firmographicsEndpoint = "/V3.0/global/company/merged/firmographics/"
         this.sicEndpoint = "/V3.0/na/sic/description/"
         
-        this.default.companyDNS ? this.companyDNS = this.default.companyDNS: this.companyDNS = companyDNSUrl
-        this.default.companyLogos ? this.companyLogos = this.default.companyLogos : this.companyDNS = companyLogoUrl
-        this.default.nominatim ? this.nominatim = this.default.nominatim : this.nominatim = nominatimUrl
+        this.default.companyDNS ? this.companyDNS = this.default.companyDNS: this.companyDNS = this.env.companyDNS
+        this.default.companyLogos ? this.companyLogos = this.default.companyLogos : this.companyLogos = this.env.companyLogos
+        this.default.nominatim ? this.nominatim = this.default.nominatim : this.nominatim = this.env.nominatim
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -114,7 +114,7 @@ class AddCompany {
     async  getCompany (companyName) {
         let myCompany = {}
         const mySpinner = new ora('Fetching data from the company_dns...')
-        const myURL = this.companyDNS + this.endpoint + companyName
+        const myURL = this.companyDNS + this.firmographicsEndpoint + encodeURIComponent(companyName)
         mySpinner.start()
 
         try {
@@ -551,7 +551,7 @@ class AddCompany {
 
         // Attempt to search company_dns, but if there is no answer then ask if try again or do manual
         let myCompanyObj = await this.redoAutomatic(company.name)
-        usedCompanyDNS = true
+        let usedCompanyDNS = true
         
         // If we don't get a response from the company_dns we need to do a manual entry
         if (!myCompanyObj[0]){
