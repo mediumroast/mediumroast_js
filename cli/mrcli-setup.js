@@ -126,21 +126,6 @@ function installActionsToGitHub(fsUtils, gitHubCtl, myConfig, myEnv, actionsDir)
 
 }
 
-// NOTE: Commented out until we can confirm it is no longer needed
-// function printOrgTable(gitHubOrg) {
-//     const table = new Table({
-//         head: ['Id', 'Name', 'GitHub Url', 'Description'],
-//         // colWidths: [10, 20, 35, 90]
-//     })
-//     table.push([
-//         gitHubOrg.id,
-//         gitHubOrg.name,
-//         gitHubOrg.html_url,
-//         gitHubOrg.description,
-//     ])  
-//     console.log(table.toString())
-// }
-
 async function confirmGitHubOrg(token, env) {
     // 
     const output = new CLIOutput(env, 'Org')
@@ -377,8 +362,9 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* -------- Check for prev install --------- */
-// Set the flag to false initially to indicate that we have not installed
+// Set the flags to false to indicate that we have not installed fully or partially
 let prevInstall = false
+let partialInstall = false
 // Construct the controller objects
 const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
 const userCtl = new Users(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
@@ -388,6 +374,7 @@ const userCtl = new Users(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-set
 const prevInstallComp = await companyCtl.getAll()
 if(prevInstallComp[0]) {
     prevInstall = prevInstallComp[2].mrJson.length > 0 ? true : false
+    partialInstall = prevInstallComp[2].mrJson.length === 0 ? true : false
 }
 /* ------- End check for prev install ------ */
 /* ----------------------------------------- */
@@ -440,30 +427,34 @@ if(prevInstall) {
 
 /* ----------------------------------------- */
 /* --------- Create the repository --------- */
-process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
-gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
-const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
-if(repoResp[0]) {
-    console.log(chalk.bold.green('Ok'))
+if (!partialInstall) {
+    process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
+    gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
+    const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
+    if(repoResp[0]) {
+        console.log(chalk.bold.green('Ok'))
+    } else {
+        console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
+        process.exit(-1)
+    }
+
+    cliOutput.printLine()
+    /* --------- End create repository --------- */
+    /* ----------------------------------------- */
+
+
+    /* ----------------------------------------- */
+    /* --------- Create the containers --------- */
+    process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
+    const containerResp = await gitHubCtl.createContainers()
+    if(containerResp[0]) {
+        console.log(chalk.bold.green('Ok'))
+    } else {
+        console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
+        process.exit(-1)
+    }
 } else {
-    console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
-    process.exit(-1)
-}
-
-cliOutput.printLine()
-/* --------- End create repository --------- */
-/* ----------------------------------------- */
-
-
-/* ----------------------------------------- */
-/* --------- Create the containers --------- */
-process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
-const containerResp = await gitHubCtl.createContainers()
-if(containerResp[0]) {
-    console.log(chalk.bold.green('Ok'))
-} else {
-    console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
-    process.exit(-1)
+    console.log(chalk.bold.yellow(`NOTICE: Partial installation detected, skipping container creation and picking up where we left off.`))
 }
 
 cliOutput.printLine()
@@ -490,6 +481,9 @@ cliOutput.printLine()
 
 // Create the owning company
 console.log(chalk.blue.bold('Creating your owning company'))
+myConfig.DEFAULT.companyDNS = myConfig.DEFAULT.company_dns
+myConfig.DEFAULT.companyLogos = myConfig.DEFAULT.company_logos
+myConfig.DEFAULT.echartServer = myConfig.DEFAULT.echarts
 myConfig.company = myConfig.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(

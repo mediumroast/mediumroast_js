@@ -11,7 +11,6 @@
 // Import required modules
 import chalk from 'chalk'
 import ora from "ora"
-import mrRest from "../api/scaffold.js"
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
 import axios from "axios"
@@ -36,33 +35,20 @@ class AddCompany {
      * @todo There is a bug in how the initial company object is created, specifically the name of the company isn't set correctly
      * @todo When polling for the GitHub organization check to see what other metadata could be useful like desc, website, etc.
      */
-    constructor(env, apiControllers, companyDNSUrl=null, companyLogoUrl=null, nominatimUrl=null){
+    constructor(env, apiControllers){
         this.env = env
         this.apiController = apiControllers.company
         this.interactionCtl = apiControllers.interaction
         this.userCtl = apiControllers.user
         this.githubCtl = apiControllers.github
-        this.endpoint = "/V2.0/company/merged/firmographics/"
-        this.sicEndpoint = "/V2.0/sic/description/"
+        this.default = this.env.DEFAULT
         
+        this.firmographicsEndpoint = "/V3.0/global/company/merged/firmographics/"
+        this.sicEndpoint = "/V3.0/na/sic/description/"
         
-        this.env.companyDNS ? this.companyDNS = this.env.companyDNS: this.companyDNS = companyDNSUrl
-        this.companyDNSCred = {
-            apiKey: "Not Applicable",
-            restServer: this.companyDNS,
-            user: "Not Applicable",
-            secret: "Not Applicable"
-        }
-        this.companyDNSRest = new mrRest(this.companyDNSCred)
-
-        this.env.companyLogos ? this.companyLogos = this.env.companyLogos : this.companyDNS = companyLogoUrl
-        this.companyLogosCred = {
-            apiKey: "Not Applicable",
-            restServer: this.companyLogos,
-            user: "Not Applicable",
-            secret: "Not Applicable"
-        }
-        this.companyLogosRest = new mrRest(this.companyLogosCred)
+        this.default.companyDNS ? this.companyDNS = this.default.companyDNS: this.companyDNS = this.env.companyDNS
+        this.default.companyLogos ? this.companyLogos = this.default.companyLogos : this.companyLogos = this.env.companyLogos
+        this.default.nominatim ? this.nominatim = this.default.nominatim : this.nominatim = this.env.nominatim
 
         // Splash screen elements
         this.name = "mediumroast.io Company Wizard"
@@ -76,43 +62,39 @@ class AddCompany {
         this.output = new CLIOutput(this.env, this.objectType)
     }
 
-    async  getCompany (companyName) {
-        let myCompany = {}
-        const mySpinner = new ora('Fetching data from the company_dns...')
-        const myURL = this.endpoint + companyName
-        mySpinner.start()
-            myCompany = await this.companyDNSRest.getObj(myURL)
-        mySpinner.stop()
-        return myCompany
-    }
 
     async getIndustries() {
-        let sics
-        let sicResult
-        let myInustries
+        let sics = null
+        let sicResult = null
+        let myIndustries = null
+        let myURL = this.companyDNS + this.sicEndpoint
 
         // Obtain the sic search string
         const SICPrototype = {sicDescription: {consoleString: "industry search string", value: null, altMessage: 'What\'s your'}}
         let industryDescription = await this.wutils.doManual(SICPrototype, [], false, true)
         
         // Check to see if the user put in a search string, if not then call again
-        if (! industryDescription.sicDescription) {
+        if (!industryDescription.sicDescription) {
             sicResult = await this.getIndustries()
         }
 
         // In the case where this is not already set get the details
-        if (! sicResult) {
+        if (!sicResult) {
+            // Add the search string to the URL
+            myURL = myURL + encodeURIComponent(industryDescription.sicDescription)
             let sicNames
-            const myURL = this.sicEndpoint + encodeURIComponent(industryDescription.sicDescription)
-            myInustries = await this.companyDNSRest.getObj(myURL)
-            if(myInustries[0]) {
-                sics = myInustries[2].data.sics
+            try {
+                const response = await axios.get(myURL)
+                myIndustries = response.data
+                if (myIndustries.code === 404) {
+                    rconsole.log(chalk.blue.bold('No matching industry found, trying again.'))
+                    sicResult = await this.getIndustries()
+                }
+                sics = myIndustries.data.sics
                 sicNames = Object.keys(sics)
-            } else {
-                console.log(chalk.blue.bold('No matching industry found, trying again.'))
-                sicResult = await this.getIndustries()
+            } catch (err) {
+                return [false, {status_code: 404, status_msg: `A query for [${industryDescription.sicDescription}] failed with this error [${err.message}].`}, err]
             }
-
             const sicChoices = sicNames.map(
                 (choice) => {
                     // NOTE: For some reason this makes a bug that causes the wizard to crash
@@ -129,9 +111,29 @@ class AddCompany {
         return sicResult
     }
 
+    async  getCompany (companyName) {
+        let myCompany = {}
+        const mySpinner = new ora('Fetching data from the company_dns...')
+        const myURL = this.companyDNS + this.firmographicsEndpoint + encodeURIComponent(companyName)
+        mySpinner.start()
+
+        try {
+            const response = await axios.get(myURL)
+            myCompany = response.data
+            if (myCompany.status_code === 404) {
+                return [false, {status_code: 404, status_msg: `No company matching [${companyName}] found.`}, null]
+            }
+        } catch (err) {
+            mySpinner.stop()
+            return [false, {status_code: 404, status_msg: `No company matching [${companyName}] found.`}, null]
+        }
+        mySpinner.stop()
+        return [true,{status_code: 200, status_msg: `Found [${companyName}]`}, myCompany]
+    }
+
     async getLogo (companyWebsite) {
         try {
-            const response = await axios.get(`${this.env.companyLogos}${companyWebsite}`)
+            const response = await axios.get(`${this.companyLogos}${companyWebsite}`)
             const myLogos = response.data
             return myLogos.icons[0].url
         } catch (err) {
@@ -140,7 +142,7 @@ class AddCompany {
     }
 
     async getLatLong(address) {
-        const response = await axios.get(`${this.env.nominatim}${address}&format=json`)
+        const response = await axios.get(`${this.nominatim}${address}&format=json`)
         if (response.data && response.data[0]) {
             return [true, {status_code: 200, status_msg: `found coordinates for ${address}`}, [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)]]
         } else {
@@ -196,17 +198,6 @@ class AddCompany {
         }
       }
 
-    // TODO Industry data in company_dns is cleaner now than before, so this is likely unnecessary
-    // _joinIndustry(industry) {
-    //     if(industry.length > 1) {
-    //         return industry.join('|')
-    //     } else if (industry === 'Unknown') {
-    //         return 'Unknown'
-    //     } else {
-    //         return industry[0]
-    //     }
-    // }
-
     _getFormUrls(forms){
         let tenQ = 'Unknown'
         let tenK = 'Unknown'
@@ -244,7 +235,13 @@ class AddCompany {
         'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
         // Company website
-        'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
+        if ('website' in myCompany && myCompany.website === 'Unknown') {
+            prototype.url.value = prototype.url.value
+        } else if ('website' in myCompany && myCompany.website !== 'Unknown' && myCompany.website.length > 0) {
+            prototype.url.value = myCompany.website[0]
+        } else {
+            prototype.url.value = prototype.url.value
+        }
 
         // Company address
         'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
@@ -503,6 +500,7 @@ class AddCompany {
     async redoAutomatic (company) {
         typeof company === 'object' ? company = company.name : null
         let myCompanyObj = await this.getCompany(company)
+
         if (!myCompanyObj[0]){
             const answer = await this.wutils.operationOrNot(`No company matching [${company}] found, try again?`)
             
@@ -563,18 +561,29 @@ class AddCompany {
         
         // If we don't get a response from the company_dns we need to do a manual entry
         if (!myCompanyObj[0]){
-            usedCompanyDNS = false
             console.log(chalk.blue.bold('No matching company found, starting manual company definition...'))
+            usedCompanyDNS = false
             if (company.company_type === 'Public') {
-                // NOTE There's a problem here, the return from company_dns is not harmonized with the prototype.
-                //      Therefore, when we sync the company object with the prototype with _setPublicCompany() it
-                //      will potentially fail and/or imperfectly work. More thinking is needed here as we need to 
-                //      handle a variety of cases where we don't get the inputs expected from company_dns.  One
-                //      potential approach is to make use of _setGeneralCompany() to have a switch for public that
-                //      essentially does the remainder of steps to sync. We'd then need to set a switch related to
-                //      if company_dns worked or not.  This is likely the best case.
-                // TODO Need a test case documented to show if this does or doesn't work, I think this is resolved.
-                myCompanyObj = await this.wutils.doManual(prototype)
+                myCompanyObj = await this.wutils.doManual(
+                    prototype,
+                    [
+                        'phone',
+                        'url',
+                        'description',
+                        'street_address',
+                        'city',
+                        'state_province',
+                        'zip_postal',
+                        'country',
+                        'wikipedia_url',
+                        'cik',
+                        'stock_symbol',
+                        'stock_exchange',
+                        'recent10k_url',
+                        'recent10q_url',
+                    ],
+                    true
+                )
                 // Save role, region and type
                 myCompanyObj.role = company.role
                 myCompanyObj.region = company.region
@@ -608,10 +617,16 @@ class AddCompany {
 
             // Get Lat & Long data for the company
             const fullAddress = this.formatAddress(myCompanyObj)
+            const encodedAddress = this.formatAddress(myCompanyObj, true)
             const [status, msg, geoData] = await this.getLatLongNode(fullAddress)
-            myCompanyObj.latitude = geoData[0]
-            myCompanyObj.longitude = geoData[1]
-            myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${fullAddress}`
+            if (!status) {
+                myCompanyObj.latitude = 'Unknown'
+                myCompanyObj.longitude = 'Unknown'
+            } else {
+                myCompanyObj.latitude = geoData[0]
+                myCompanyObj.longitude = geoData[1]
+            }
+            myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${encodedAddress}`
 
             // Set the external data links which are focused on google at this time
             myCompanyObj.google_finance_url = 'Unknown'
@@ -777,6 +792,7 @@ class AddCompany {
             ]
         )
         myCompany.company_type = tmpCompanyType
+        companyPrototype.company_type.value = myCompany.company_type
         console.log(chalk.blue.bold(`Set the company\'s type to [${myCompany.company_type}]`))
 
         // Set company role
@@ -796,11 +812,13 @@ class AddCompany {
                 ]
             )
             myCompany.role = tmpRole
+            companyPrototype.role.value = myCompany.role
         }
         console.log(chalk.blue.bold(`Set the company\'s role to [${myCompany.role}]`))
 
         // Set the region
         myCompany.region = await this.wutils.getRegion()
+        companyPrototype.region.value = myCompany.region
         console.log(chalk.blue.bold(`Set the company\'s region to [${myCompany.region}]`))
 
         // NOTE: We will need to pass in the company name and type to help us determine what do to
@@ -823,6 +841,7 @@ class AddCompany {
         myCompany.quality = {}
         // Logo
         myCompany.logo_url = this.defaultValue
+        // TODO: the url for the website needs a little attention 
         if (myCompany.url !== 'Unknown') {
             const spinner = ora(chalk.bold.blue(`Fetching the logo url for [${myCompany.name}]...`))
             spinner.start() // Start the spinner
