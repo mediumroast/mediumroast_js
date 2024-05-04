@@ -235,7 +235,13 @@ class AddCompany {
         'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
         // Company website
-        'website' in myCompany ? prototype.url.value = myCompany.website[0] : prototype.url.value = prototype.url.value
+        if ('website' in myCompany && myCompany.website === 'Unknown') {
+            prototype.url.value = prototype.url.value
+        } else if ('website' in myCompany && myCompany.website !== 'Unknown' && myCompany.website.length > 0) {
+            prototype.url.value = myCompany.website[0]
+        } else {
+            prototype.url.value = prototype.url.value
+        }
 
         // Company address
         'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
@@ -611,6 +617,7 @@ class AddCompany {
 
             // Get Lat & Long data for the company
             const fullAddress = this.formatAddress(myCompanyObj)
+            const encodedAddress = this.formatAddress(myCompanyObj, true)
             const [status, msg, geoData] = await this.getLatLongNode(fullAddress)
             if (!status) {
                 myCompanyObj.latitude = 'Unknown'
@@ -619,7 +626,7 @@ class AddCompany {
                 myCompanyObj.latitude = geoData[0]
                 myCompanyObj.longitude = geoData[1]
             }
-            myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${fullAddress}`
+            myCompanyObj.google_maps_url = `https://www.google.com/maps/place/${encodedAddress}`
 
             // Set the external data links which are focused on google at this time
             myCompanyObj.google_finance_url = 'Unknown'
@@ -834,6 +841,7 @@ class AddCompany {
         myCompany.quality = {}
         // Logo
         myCompany.logo_url = this.defaultValue
+        // TODO: the url for the website needs a little attention 
         if (myCompany.url !== 'Unknown') {
             const spinner = ora(chalk.bold.blue(`Fetching the logo url for [${myCompany.name}]...`))
             spinner.start() // Start the spinner

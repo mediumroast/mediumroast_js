@@ -5,8 +5,11 @@ on:
         - cron: '0 0 * * *' # Runs at midnight every day
     workflow_dispatch:
 jobs:
-    prune-branches:
+    basic-reporting:
         runs-on: ubuntu-latest
+        permissions:
+          actions: read
+          contents: write
         steps:
           - uses: actions/checkout@v4
           - uses: actions/setup-node@v3

@@ -6,7 +6,7 @@
  * @file mrcli.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.2.0
  */
 
 // Import required modules
@@ -14,7 +14,7 @@ import program from 'commander'
 
 program
   .name('mrcli')
-  .version('0.6.3')
+  .version('0.6.4')
   .description('mediumroast.io command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')

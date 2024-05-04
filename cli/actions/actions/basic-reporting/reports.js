@@ -71,9 +71,13 @@ function createInteractionList (company, interactions) {
 }
 
 function createCompanyMap (company) {
+    // Check to see if either the latitude or longitude is "Unknown" and if so return false
+    if (company.latitude === 'Unknown' || company.longitude === 'Unknown') {
+        return ''
+    }
     let geoJsonMarkdown = mrMarkdownBuilder.h2('Location')
     geoJsonMarkdown += MAPS_WARNING
-    // Create the Industry List
+    // Create the location JSON
     const geoJson = {
         type: 'Feature',
         geometry: {
@@ -93,6 +97,8 @@ function createCompanyMap (company) {
 }
 
 function createCompaniesMap (companies) {
+    // Filter out companies with unknown latitude or longitude
+    companies = companies.filter((company) => company.latitude !== 'Unknown' && company.longitude !== 'Unknown')
     // Create the map
     let map = mrMarkdownBuilder.h1('Company Locations')
     map += MAPS_WARNING
