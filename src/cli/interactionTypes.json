@@ -1,5 +1,5 @@
 {
-    "Book": {
+      "Book": {
         "author": {"consoleString": "Book's author", "value": "Unknown"},
         "year": {"consoleString": "Book's published year", "value": "Unknown"},
         "month": {"consoleString": "Book's published month", "value": "Unknown"},

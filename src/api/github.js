@@ -903,6 +903,69 @@ class GitHubFunctions {
         // Return success with number of objects written
         return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
     }
+
+    // Use fs to read all the files in the actions directory recursively
+    generateActionsManifest(dir, filelist) {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename)
+        dir = dir || path.resolve(path.join(__dirname, './actions') )
+        const files = fs.readdirSync(dir)
+        filelist = filelist || []
+        files.forEach((file) => {
+            // Skip .DS_Store files and node_modules directories
+            if (file === '.DS_Store' || file === 'node_modules') {
+                return
+            }
+            if (fs.statSync(path.join(dir, file)).isDirectory()) {
+                filelist = generateActionsManifest(path.join(dir, file), filelist) 
+            }
+            else {
+                // Substitute .github for the first part of the path, in the variable dir
+                // Log dir to the console including if there are any special characters
+                if (dir.includes('./')) {
+                    dir = dir.replace('./', '')
+                }
+                // This will be the repository name
+                let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
+
+                filelist.push({
+                    fileName: file,
+                    containerName: dotGitHub,
+                    srcURL: new URL(path.join(dir, file), import.meta.url)
+                })
+            }
+        })
+        return filelist
+    } 
+
+    async installActions() {
+        let actionsManifest = this.generateActionsManifest()
+        // Loop through the actionsManifest and install each action
+        await actionsManifest.forEach(async (action) => {
+            let status = false
+            let blobData
+            try {
+                // Read in the blob file
+                blobData = fs.readFileSync(action.srcURL, 'base64')
+                status = true
+            } catch (err) {
+                return [false, 'Unable to read file [' + action.fileName + '] because: ' + err, null]
+            }
+            if(status) {
+                // Install the action
+                const installResp = await this.writeBlob(
+                    action.containerName, 
+                    action.fileName, 
+                    blobData, 
+                    'main'
+                )
+            } else {
+                return [false, 'Failed to read item [' + action.fileName + ']', null]
+            }
+        })
+        return [true, 'All actions installed', null]
+    }
+
 }
 
 export default GitHubFunctions

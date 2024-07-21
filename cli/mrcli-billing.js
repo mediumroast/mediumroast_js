@@ -13,7 +13,6 @@
 import { Billings } from '../src/api/gitHubServer.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
-import chalk from 'chalk'
 
 // Related object type
 const objectType = 'Billings'
@@ -58,8 +57,6 @@ myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--find_by_name')
 myProgram = environment.removeArgByName(myProgram, '--find_by_x')
 myProgram = environment.removeArgByName(myProgram, '--find_by_id')
-myProgram = environment.removeArgByName(myProgram, '--update')
-myProgram = environment.removeArgByName(myProgram, '--delete')
 myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--splash')

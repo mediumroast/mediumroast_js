@@ -14,7 +14,7 @@ import program from 'commander'
 
 program
   .name('mrcli')
-  .version('0.6.4')
+  .version('0.7.0')
   .description('mediumroast.io command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')
@@ -22,5 +22,6 @@ program
   .command('study', 'manage and report on mediumroast.io study objects').alias('s')
   .command('user', 'report on mediumroast.io users in GitHub').alias('u')
   .command('billing', 'report on GitHub actions and storage units consumed').alias('b')
+  .command('actions', 'report on and update GitHub actions').alias('a')
 
 program.parse(process.argv)
