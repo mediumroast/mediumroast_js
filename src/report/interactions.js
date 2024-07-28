@@ -11,9 +11,27 @@
 import docx from 'docx'
 import DOCXUtilities from './common.js'
 import { CompanySection } from './companies.js'
+import { InteractionDashboard } from './dashboard.js' 
+
+class BaseInteractionsReport {
+    constructor(interactions, objectType, objectName, env) {
+
+        // NOTE creation of a ZIP package is something we likely need some workspace for
+        //      since the documents should be downloaded and then archived.  Therefore,
+        //      the CLI is a likely place to do this for now.  Suspect for the web_ui
+        //      we will need some server side logic to make this happen.
+
+        this.interactions = interactions
+        this.objectName = objectName
+        this.objectType = objectType
+        this.env = env
+        this.util = new DOCXUtilities(env)
+    }
+    
+}
 
 
-class InteractionSection {
+class InteractionSection extends BaseInteractionsReport {
     /**
      * A high level class to create  sections for an Interaction report using either 
      * Microsoft DOCX format or eventually HTML format.  Right now the only available 
@@ -25,18 +43,8 @@ class InteractionSection {
      * @param {String} objectName - the name of the object calling this class
      * @param {String} objectType - the type of object calling this class
      */
-    constructor(interactions, objectName, objectType) {
-
-        // NOTE creation of a ZIP package is something we likely need some workspace for
-        //      since the documents should be downloaded and then archived.  Therefore,
-        //      the CLI is a likely place to do this for now.  Suspect for the web_ui
-        //      we will need some server side logic to make this happen.
-
-        this.interactions = interactions
-        this.objectName = objectName
-        this.objectType = objectType
-        this.fontSize = 10 // We need to pass this in from the config file
-        this.util = new DOCXUtilities()
+    constructor(interactions, objectName, objectType, env) {
+        super(interactions, objectType, objectName, env)
     }
 
     /**
@@ -182,7 +190,7 @@ class InteractionSection {
                 // Create the abstract for the interaction
                 this.util.makeParagraph(
                     this.interactions[interaction].abstract,
-                    this.fontSize * 1.5
+                    this.util.halfFontSize * 1.5
                 ),
                 // NOTE: Early reviews by users show topcis are confusing
                 // this.util.makeHeading2('Topics'), 
@@ -208,7 +216,7 @@ class InteractionSection {
     }
 }
 
-class InteractionStandalone {
+class InteractionStandalone extends BaseInteractionsReport {
     /**
      * A high level class to create a complete document for an Interaction report using either 
      * Microsoft DOCX format or eventually HTML format.  Right now the only available 
@@ -220,9 +228,12 @@ class InteractionStandalone {
      * @param {String} creator - A string defining the creator for this document
      * @param {String} authorCompany - A string containing the company who authored the document
      */
-    constructor(interaction, company, creator, authorCompany) {
+    constructor(interaction, company, creator, authorCompany, env) {
+        super([interaction], 'Interaction', interaction.name, env)
         this.creator = creator
+        this.author = authorCompany
         this.authorCompany = authorCompany
+        this.authoredBy = 'Mediumroast for GitHub'
         this.title = interaction.name + ' Interaction Report'
         this.interaction = interaction
         this.company = company
@@ -233,8 +244,7 @@ class InteractionStandalone {
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.abstract = interaction.abstract
-        this.util = new DOCXUtilities()
-        this.topics = this.util.rankTags(this.interaction.topics)
+        this.topics = this.util.rankTags(this.interaction.tags)
     }
 
     metadataTableDOCX (isPackage) {
@@ -272,11 +282,25 @@ class InteractionStandalone {
      * @returns {Array} The result of the writeReport function that is an Array
      */
     async makeDOCX(fileName, isPackage) {
+        // Initialize the working directories
+        this.util.initDirectories()
+
         // If fileName isn't specified create a default
-        fileName = fileName ? fileName : process.env.HOME + '/Documents/' + this.interaction.name.replace(/ /g,"_") + '.docx'
+        fileName = fileName ? fileName : `${this.env.outputDir}/${this.interaction.name.replace(/ /g,"_")}.docx`
+
+        // Capture the current date
+        const date = new Date();
+        const preparedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
 
         // Construct the company section
-        const companySection = new CompanySection(this.company)
+        const companySection = new CompanySection(this.company, this.env)
+
+        // Construct the dashboard section
+        const myDash = new InteractionDashboard(this.env)
 
         // Set up the default options for the document
         const myDocument = [].concat(
@@ -295,15 +319,52 @@ class InteractionStandalone {
         // Construct the document
         const myDoc = new docx.Document ({
             creator: this.creator,
-            company: this.authorCompany,
+            company: this.author,
             title: this.title,
             description: this.description,
+            background: {
+                color: this.util.documentColor,
+            },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,
-            sections: [{
-                properties: {},
-                children: myDocument,
-            }],
+            sections: [
+                {
+                    properties: {
+                        page: {
+                            size: {
+                                orientation: docx.PageOrientation.LANDSCAPE,
+                            },
+                        },
+                    },
+                    headers: {
+                        default: this.util.makeHeader(this.interaction.name, 'Interaction dashboard for: ', true)
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makeFooter(`Authored by: ${this.authoredBy}`, `Prepared on: ${preparedDate}`, true)]
+                        })
+                    },
+                    children: [
+                        await myDash.makeDashboard(
+                            this.company, 
+                            this.competitors, 
+                            this.baseDir
+                        )
+                    ],
+                },
+                {
+                    properties: {},
+                    headers: {
+                        default: this.util.makeHeader(this.interaction.name, 'Company comparison detail prepared for: ')
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
+                        })
+                    },
+                    children: myDocument,
+                }
+            ],
         })
 
         // Persist the document to storage

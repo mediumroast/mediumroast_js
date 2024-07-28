@@ -17,7 +17,22 @@ import FilesystemOperators from '../cli/filesystem.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
 import { getMostSimilarCompany } from './tools.js'
 
-class CompanySection {
+class BaseCompanyReport {
+    constructor(company, env) {
+        this.company = company
+        this.env = env
+        this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
+            this.companyType = 'Private' :
+            this.companyType = 'Public'
+        this.util = new DOCXUtilities(env)
+        this.baseDir = this.env.outputDir
+        this.workDir = this.env.workDir
+        this.baseName = company.name.replace(/ /g,"_")
+    }
+
+}
+
+class CompanySection extends BaseCompanyReport {
     /**
      * A high level class to create sections for a Company report using either 
      * Microsoft DOCX format or eventually HTML format.  Right now the only available 
@@ -29,14 +44,8 @@ class CompanySection {
      * @todo Since the ingestion function detects the companyType this property is deprecated and should be removed
      * @todo separate this class into a separate file
      */
-    constructor(company, baseDir) {
-        this.company = company
-        this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
-            this.companyType = 'Private' :
-            this.companyType = 'Public'
-        this.util = new DOCXUtilities()
-        this.baseDir = baseDir
-        this.baseName = company.name.replace(/ /g,"_")
+    constructor(company, env) {
+        super(company, env)
     }
 
     // Create a URL on Google maps to search for the address
@@ -244,7 +253,7 @@ class CompanySection {
             const competitor = competitors[myComp]
 
             // Construct the object to create company related document sections
-            const comp = new CompanySection(competitor.company)
+            const comp = new CompanySection(competitor.company, this.env)
 
             // Create a section for the most/least similar interactions
             const interact = new InteractionSection(
@@ -312,7 +321,7 @@ class CompanySection {
 }
 
 
-class CompanyStandalone {
+class CompanyStandalone extends BaseCompanyReport {
     /**
      * A high level class to create a complete document for a Company report using either 
      * Microsoft DOCX format or eventually HTML format.  Right now the only available 
@@ -328,16 +337,13 @@ class CompanyStandalone {
      * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
     constructor(company, interactions, competitors, env, creator, author) {
+        super(company, env)
         this.objectType = 'Company'
-        this.env = env
         this.creator = creator
         this.author = author
         this.title = company.name + ' Company Report'
-        this.baseName = company.name.replace(/ /g,"_")
-        this.baseDir = this.env.workDir + '/' + this.baseName
         this.interactions = interactions
         this.competitors = competitors
-        this.company = company
         this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
         /*
         ChatGPT summary
@@ -348,7 +354,7 @@ class CompanyStandalone {
             '  If this report document is produced as a package, instead of standalone, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
-        this.util = new DOCXUtilities()
+        this.util = new DOCXUtilities(env)
         this.fileSystem = new FilesystemOperators()
         // this.topics = this.util.rankTags(this.company.topics)
         this.comparison = company.comparison,
@@ -383,11 +389,10 @@ class CompanyStandalone {
      */
     async makeDOCX(fileName, isPackage) {
         // Initialize the working directories to create a package and/or download relevant images
-        this._initialize()
+        this.util.initDirectories()
 
-        // TODO when we remove fileName we can uncomment the item below
-        // const fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
-        fileName = process.env.HOME + '/Documents/' + this.baseName + '.docx'
+        // Set the file name
+        fileName = fileName ? fileName : `${this.env.outputDir}/${this.baseName}.docx`
 
         // Capture the current date
         const date = new Date();
@@ -398,11 +403,12 @@ class CompanyStandalone {
         })
         
         // Construct the company section
-        const companySection = new CompanySection(this.company, this.baseDir)
+        const companySection = new CompanySection(this.company, this.baseDir, env)
         const interactionSection = new InteractionSection(
             this.interactions, 
             this.company.name,
-            this.objectType
+            this.objectType,
+            this.env
         )
         const myDash = new CompanyDashbord(this.env)
 
@@ -442,7 +448,7 @@ class CompanyStandalone {
             title: this.title,
             description: this.description,
             background: {
-                color: "0F0D0E",
+                color: this.util.documentColor,
             },
             styles: {default: this.util.styling.default},
             numbering: this.util.styling.numbering,

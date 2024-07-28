@@ -14,6 +14,220 @@ import DOCXUtilities from './common.js'
 import docxSettings from './settings.js'
 import { bubbleChart, radarChart } from './charts.js'
 
+class Dashboards {
+    /**
+     * A high class meant to create an initial dashboard page for an MS Word document company report
+     * @constructor
+     * @classdesc To operate this class the constructor should be passed a the environmental setting for the object.
+     * @param {Object} env - Environmental variable settings for the CLI environment
+     * @param {String} theme - Governs the color of the dashboard, be either coffee or latte 
+     */
+    constructor(env) {
+        this.env = env
+        this.util = new DOCXUtilities(env)
+        this.themeStyle = docxSettings[env.theme] // Set the theme for the report
+        this.generalStyle = docxSettings.general // Pull in all of the general settings
+        
+        // Define specifics for table borders
+        this.noneStyle = {
+            style: this.generalStyle.noBorderStyle
+        }
+        this.borderStyle = {
+            style: this.generalStyle.tableBorderStyle,
+            size: this.generalStyle.tableBorderSize,
+            color: this.themeStyle.tableBorderColor
+        }
+        // No borders
+        this.noBorders = {
+            left: this.noneStyle,
+            right: this.noneStyle,
+            top: this.noneStyle,
+            bottom: this.noneStyle
+        }
+        // Right border only
+        this.rightBorder = {
+            left: this.noneStyle,
+            right: this.borderStyle,
+            top: this.noneStyle,
+            bottom: this.noneStyle
+        }
+        // Bottom border only
+        this.bottomBorder = {
+            left: this.noneStyle,
+            right: this.noneStyle,
+            top: this.noneStyle,
+            bottom: this.borderStyle
+        }
+        // Bottom and right borders
+        this.bottomAndRightBorders = {
+            left: this.noneStyle,
+            right: this.borderStyle,
+            top: this.noneStyle,
+            bottom: this.borderStyle
+        }
+        // Top and right borders
+        this.topAndRightBorders = {
+            left: this.noneStyle,
+            right: this.borderStyle,
+            top: this.borderStyle,
+            bottom: this.noneStyle
+        }
+        // All borders, helpful for debugging
+        this.allBorders = {
+            left: this.borderStyle,
+            right: this.borderStyle,
+            top: this.borderStyle,
+            bottom: this.borderStyle
+        }
+    
+    }
+
+    // Following the _statisticsTable method in the CompanyDashboard class create a similar method for all dashboards
+    /**
+     * 
+     * 
+     * @param {*} statistics
+     * @returns
+     * @todo turn into a loop instead of having the code repeated
+     * @todo if the length of any number is greater than 3 digits shrink the font size by 15% and round down
+     * @todo add a check for the length of the title and shrink the font size by 15% and round down
+     * @todo add a check for the length of the value and shrink the font size by 15% and round down
+     */
+    descriptiveStatisticsTable(statistics) {
+        let myRows = []
+        for(const stat in statistics) {
+            myRows.push(
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [
+                                this.util.makeParagraph(
+                                    statistics[stat].value,
+                                    this.generalStyle.metricFontSize,
+                                    this.themeStyle.titleFontColor,
+                                    0,
+                                    true,
+                                    true,
+                                    this.generalStyle.heavyFont
+                                )
+                            ],
+                            borders: this.bottomBorder,
+                            margins: {
+                                top: this.generalStyle.tableMargin
+                            }
+                        }),
+                    ]
+                }),
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [
+                                this.util.makeParagraph(
+                                    statistics[stat].title,
+                                    this.generalStyle.metricFontTitleSize,
+                                    this.themeStyle.titleFontColor,
+                                    0,
+                                    false,
+                                    true
+                                )
+                            ],
+                            borders: this.noBorders,
+                            margins: {
+                                bottom: this.generalStyle.tableMargin,
+                                top: this.generalStyle.tableMargin
+                            }
+                        }),
+                    ]
+                })
+            )
+        }
+        return new docx.Table({
+            columnWidths: [95],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
+    /**
+     * 
+     * @param {*} imageFile 
+     * @param {*} height 
+     * @param {*} width 
+     * @returns 
+     * @todo move to common
+     */
+    insertImage (imageFile, height, width) {
+        const myFile = fs.readFileSync(imageFile)
+        return new docx.Paragraph({
+            alignment: docx.AlignmentType.CENTER,
+            children: [
+                new docx.ImageRun({
+                    data: myFile,
+                    transformation: {
+                        height: height,
+                        width: width
+                    }
+                })
+            ]
+        })
+    }
+}
+
+class InteractionDashboard extends Dashboards {
+    /**
+     * A class meant to create an initial dashboard page for an MS Word document interaction report
+     * @constructor
+     * @classdesc To operate this class the constructor should be passed a the environmental setting for the object.
+     * @param {Object} env - Environmental variable settings for the CLI environment
+     */
+    constructor(env) {
+        super(env)
+    }
+
+    // Create the first row with two images and a nested table
+    //     40%      |    40%      |   20%
+    // bubble chart | radar chart | nested table for stats
+    firstRow (bubbleImage, radarImage, statisticsTable) {
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    children: [this.insertImage(bubbleImage, 226, 259.2)],
+                    borders: this.bottomAndRightBorders
+                }),
+                new docx.TableCell({
+                    children: [this.insertImage(radarImage, 226, 345.6)],
+                    borders: this.bottomAndRightBorders
+                }),
+                new docx.TableCell({
+                    children: [statisticsTable],
+                    borders: this.noBorders,
+                    rowSpan: 5,
+                    margins: {
+                        left: this.generalStyle.tableMargin,
+                        right: this.generalStyle.tableMargin,
+                        bottom: this.generalStyle.tableMargin,
+                        top: this.generalStyle.tableMargin
+                    },
+                    verticalAlign: docx.VerticalAlign.CENTER,
+                }),
+            ]
+        })
+    }
+
+    async makeDashboard(interaction, company) {
+        // TODO Create the table around this data, note that we're also missing the cells of the first row, but we're writing the file
+        const statisticsTable = super.descriptiveStatisticsTable([
+            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
+            {title: 'Estimated reading time (minutes)', value: interaction.reading_time},
+            {title: 'Page count', value: interaction.page_count},
+        ])
+        return statisticsTable
+    }
+}
+
 class CompanyDashbord {
     /**
      * A high class meant to create an initial dashboard page for an MS Word document company report
@@ -24,7 +238,7 @@ class CompanyDashbord {
      */
     constructor(env) {
         this.env = env
-        this.util = new DOCXUtilities()
+        this.util = new DOCXUtilities(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
         
@@ -713,5 +927,6 @@ class CompanyDashbord {
 }
 
 export {
-    CompanyDashbord
+    CompanyDashbord,
+    InteractionDashboard
 }

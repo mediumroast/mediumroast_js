@@ -10,6 +10,8 @@
 import docx from 'docx'
 import * as fs from 'fs'
 import boxPlot from 'box-plot'
+import docxSettings from './settings.js'
+import FilesystemOperators from '../cli/filesystem.js'
 
 
 // TODO Change class names to: GenericUtilities, DOCXUtilities and HTMLUtilities
@@ -25,25 +27,35 @@ class DOCXUtilities {
      * with document generation. 
      * @constructor
      * @classdesc Core utilities for generating elements in a Microsoft word DOCX file
-     * @param {String} font 
-     * @param {Float} fontSize 
-     * @param {Float} textFontSize 
-     * @param {String} textFontColor
+     * @param {Object} env 
      * @todo when we get to HTML report generation for the front end we will rename this class and create a new one for HTML
-     * @todo adopt settings.js
      */
-    constructor (font, fontSize, textFontSize, textFontColor) {
-        this.font = font ? font : 'Avenir Next'
-        this.heavyFont = 'Avenir Next Heavy'
-        this.size = fontSize ? fontSize : 11
-        this.textFontSize = textFontSize ? textFontSize : 22
-        this.textFontColor = textFontColor ? textFontColor : '#41a6ce'
-        this.fontFactor = 1
+    constructor (env) {
+        this.env = env
+        this.font = docxSettings.general.font
+        this.heavyFont = docxSettings.general.heavyFont
+        this.halfFontSize = docxSettings.general.halfFontSize
+        this.fullFontSize = docxSettings.general.fullFontSize
+        this.fontFactor = docxSettings.general.fontFactor
+        this.theme = this.env.theme
+        this.documentColor = docxSettings[this.theme].documentColor
+        this.textFontColor = `#${docxSettings[this.theme].textFontColor.toLowerCase()}`
+        this.titleFontColor = `#${docxSettings[this.theme].titleFontColor.toLowerCase()}`
+        this.tableBorderColor = `#${docxSettings[this.theme].tableBorderColor.toLowerCase()}`
         this.styling = this.initStyles()
+        this.fileSystem = new FilesystemOperators()
         this.regions = {
             AMER: 'Americas',
             EMEA: 'Europe, Middle East and Africa',
             APAC: 'Asia Pacific and Japan'
+        }
+    }
+
+    // Initials the working directories
+    initDirectories() {
+        const subdirs = ['interactions', 'images']
+        for(const myDir in subdirs) {
+            this.fileSystem.safeMakedir(this.env.workDir + '/' + subdirs[myDir])
         }
     }
 
@@ -54,7 +66,7 @@ class DOCXUtilities {
                 default: {
                     heading1: {
                         run: {
-                            size: this.textFontSize,
+                            size: this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -68,7 +80,7 @@ class DOCXUtilities {
                     },
                     heading2: {
                         run: {
-                            size: 0.75 * this.textFontSize,
+                            size: 0.75 * this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -82,7 +94,7 @@ class DOCXUtilities {
                     },
                     heading3: {
                         run: {
-                            size: 0.8 * this.textFontSize,
+                            size: 0.8 * this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -97,12 +109,12 @@ class DOCXUtilities {
                     listParagraph: {
                         run: {
                             font: this.font,
-                            size: 1.5 * this.size,
+                            size: 1.5 * this.halfFontSize,
                         },
                     },
                     paragraph: {
                         font: this.font,
-                        size: this.size,
+                        size: this.halfFontSize,
                     }
                 },
                 paragraphStyles: [
@@ -114,7 +126,7 @@ class DOCXUtilities {
                         quickFormat: true,
                         run: {
                             font: this.font,
-                            size: this.size,
+                            size: this.halfFontSize,
                         },
                     },
                 ],
@@ -333,17 +345,59 @@ class DOCXUtilities {
      * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
      * @returns {Object} a docx paragraph object 
      */
-    makeParagraph (paragraph, size, bold, spaceAfter) {
+    // makeParagraph (paragraph, size, bold, spaceAfter) {
+    //     return new docx.Paragraph({
+    //         children: [
+    //             new docx.TextRun({
+    //                 text: paragraph,
+    //                 font: this.font,
+    //                 size: size ? size : 20,
+    //                 bold: bold ? bold : false, 
+    //                 break: spaceAfter ? spaceAfter : 0
+    //             })
+    //         ]
+    //     })
+    // }
+
+    /**
+     * 
+     * @param {*} paragraph 
+     * @param {*} size 
+     * @param {*} color 
+     * @param {*} spaceAfter 
+     * @param {*} bold 
+     * @param {*} center 
+     * @param {*} font
+     * @returns 
+     * @todo Replace the report/common.js makeParagraph method with this one during refactoring
+     * @todo Add an options object in a future release when refactoring
+     * @todo Review the NOTICE section and at a later date work on all TODOs there
+     */
+    makeParagraph (
+        paragraph, 
+        spaceAfter=0, 
+        bold=false, 
+        center=false, 
+        font="Avenir Next", 
+        italics=false, 
+        underline=false
+    ) {
+        const fontSize = 2 * this.fullFontSize // Font size is measured in half points, multiply by to is needed
         return new docx.Paragraph({
+            alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
             children: [
                 new docx.TextRun({
                     text: paragraph,
                     font: this.font,
-                    size: size ? size : 20,
-                    bold: bold ? bold : false, 
-                    break: spaceAfter ? spaceAfter : 0
+                    size: this.fullFontSize, // Default font size size 10pt or 2 * 10 = 20
+                    bold: bold ? bold : false, // Bold is off by default
+                    italics: italics ? italics : false, // Italics off by default
+                    underline: underline ? underline : false, // Underline off by default
+                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
+                    color: this.textFontColor
                 })
-            ]
+            ],
+            
         })
     }
 

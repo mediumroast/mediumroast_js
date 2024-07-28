@@ -4,9 +4,9 @@
  * A CLI utility used for accessing and reporting on mediumroast.io interaction objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file interactions.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 3.0.0
+ * @version 3.1.0
  */
 
 
@@ -57,7 +57,7 @@ const objectType = 'Interactions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.0.0',
+   '3.1.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -94,12 +94,10 @@ let results = Array() || []
 
 // Process the cli options
 if (myArgs.report) {
-   console.error('ERROR (%d): Report not implemented.', -1)
-   process.exit(-1)
    // Retrive the interaction by Id
-   const [int_success, int_stat, int_results] = await interactionCtl.findById(myArgs.report)
-   // Retrive the company by Name
+   const [int_success, int_stat, int_results] = await interactionCtl.findByName(myArgs.report)
    const companyName = Object.keys(int_results[0].linked_companies)[0]
+   // Retrive the company by Name
    const [comp_success, comp_stat, comp_results] = await companyCtl.findByName(companyName)
    // Set the root name to be used for file and directory names in case of packaging
    const baseName = int_results[0].name.replace(/ /g,"_")
@@ -112,8 +110,9 @@ if (myArgs.report) {
    const docController = new InteractionStandalone(
       int_results[0], // Interaction to report on
       comp_results[0], // The company associated to the interaction
-      'mediumroast.io barrista robot', // The author
-      'Mediumroast, Inc.' // The authoring company/org
+      'Mediumroast for GitHub robot', // The author
+      'Mediumroast, Inc.', // The authoring company/org
+      myEnv // The environment settings
    )
 
    if(myArgs.package) {
@@ -168,11 +167,6 @@ if (myArgs.report) {
       process.exit(-1)
    }
    
-} else if (myArgs.find_by_id) {
-   console.error('ERROR (%d): Find by name not implemented.', -1)
-   process.exit(-1)
-   // Retrive the interaction by Id
-   [success, stat, results] = await interactionCtl.findById(myArgs.find_by_id)
 } else if (myArgs.find_by_name) {
    // Retrive the interaction by Name
    [success, stat, results] = await interactionCtl.findByName(myArgs.find_by_name)

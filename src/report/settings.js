@@ -2,7 +2,9 @@ import docx from 'docx'
 
 const docxSettings = {
     general: {
-        fontSize: 10,
+        halfFontSize: 11,
+        fullFontSize: 22,
+        fontFactor: 1,
         dashFontSize: 9,
         tableFontSize: 8,
         titleFontSize: 18,
@@ -27,7 +29,7 @@ const docxSettings = {
         tableBorderColor: "4A7E92", // Light Blue
         documentColor: "0F0D0E", // Coffee black
         titleFontColor: "41A6CE", // Saturated Light Blue
-        fontColor: "DCE9F6", // Ultra light Blue
+        textFontColor: "DCE9F6", // Ultra light Blue
         chartAxisLineColor: "#374246",
         chartAxisFontColor: "rgba(71,121,140, 0.7)",
         chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
