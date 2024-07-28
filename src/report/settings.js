@@ -4,6 +4,7 @@ const docxSettings = {
     general: {
         halfFontSize: 11,
         fullFontSize: 22,
+        headerFontSize: 20,
         fontFactor: 1,
         dashFontSize: 9,
         tableFontSize: 8,

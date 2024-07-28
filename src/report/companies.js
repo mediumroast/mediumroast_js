@@ -341,6 +341,7 @@ class CompanyStandalone extends BaseCompanyReport {
         this.objectType = 'Company'
         this.creator = creator
         this.author = author
+        this.authoredBy = 'Mediumroast for GitHub'
         this.title = company.name + ' Company Report'
         this.interactions = interactions
         this.competitors = competitors
@@ -401,6 +402,11 @@ class CompanyStandalone extends BaseCompanyReport {
             month: "long",
             day: "numeric"
         })
+
+        // Set up strings for headers and footers
+        const preparedOn = `Prepared on: ${preparedDate}`
+        const authoredBy = `Authored by: ${this.authoredBy}`
+        const preparedFor = `${this.authoredBy} report for: `
         
         // Construct the company section
         const companySection = new CompanySection(this.company, this.baseDir, env)
@@ -462,11 +468,11 @@ class CompanyStandalone extends BaseCompanyReport {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison dashboard prepared for: ', true)
+                        default: this.util.makeHeader(this.company.name, preparedFor, {landscape: true})
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate, true)]
+                            children: [this.util.makeFooter(authoredBy, preparedOn, {landscape: true})]
                         })
                     },
                     children: [
@@ -480,11 +486,11 @@ class CompanyStandalone extends BaseCompanyReport {
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.company.name, 'Company comparison detail prepared for: ')
+                        default: this.util.makeHeader(this.company.name, preparedFor)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
+                            children: [this.util.makeFooter(authoredBy, preparedOn)]
                         })
                     },
                     children: myDocument,

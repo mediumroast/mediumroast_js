@@ -190,7 +190,7 @@ class InteractionSection extends BaseInteractionsReport {
                 // Create the abstract for the interaction
                 this.util.makeParagraph(
                     this.interactions[interaction].abstract,
-                    this.util.halfFontSize * 1.5
+                    {fontSize: this.util.halfFontSize * 1.5}
                 ),
                 // NOTE: Early reviews by users show topcis are confusing
                 // this.util.makeHeading2('Topics'), 
@@ -296,6 +296,11 @@ class InteractionStandalone extends BaseInteractionsReport {
             day: "numeric"
         })
 
+        // Define header/footer content
+        const preparedOn = `Prepared on: ${preparedDate}`
+        const authoredBy = `Authored by: ${this.authoredBy}`
+        const preparedFor = `${this.objectType}: `
+
         // Construct the company section
         const companySection = new CompanySection(this.company, this.env)
 
@@ -337,29 +342,28 @@ class InteractionStandalone extends BaseInteractionsReport {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.interaction.name, 'Interaction dashboard for: ', true)
+                        default: this.util.makeHeader(this.interaction.name, preparedFor, {landscape: true})
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter(`Authored by: ${this.authoredBy}`, `Prepared on: ${preparedDate}`, true)]
+                            children: [this.util.makeFooter(authoredBy, preparedOn, {landscape: true})]
                         })
                     },
                     children: [
                         await myDash.makeDashboard(
-                            this.company, 
-                            this.competitors, 
-                            this.baseDir
+                            this.interaction, 
+                            this.company
                         )
                     ],
                 },
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.interaction.name, 'Company comparison detail prepared for: ')
+                        default: this.util.makeHeader(this.interaction.name, preparedFor)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter('Authored by: mediumroast.io', 'Prepared on: ' + preparedDate)]
+                            children: [this.util.makeFooter(authoredBy, preparedOn)]
                         })
                     },
                     children: myDocument,

@@ -32,6 +32,7 @@ class DOCXUtilities {
      */
     constructor (env) {
         this.env = env
+        this.generalSettings = docxSettings.general
         this.font = docxSettings.general.font
         this.heavyFont = docxSettings.general.heavyFont
         this.halfFontSize = docxSettings.general.halfFontSize
@@ -286,7 +287,10 @@ class DOCXUtilities {
      * @param {String} documentType 
      * @param {Boolean} landscape 
      */
-    makeHeader(itemName, documentType, landscape=false) {
+    makeHeader(itemName, documentType, options={}) {
+        const {
+            landscape = false
+        } = options
         let separator = "\t".repeat(3)
         if (landscape) { separator = "\t".repeat(4)}
         return new docx.Header({
@@ -297,13 +301,12 @@ class DOCXUtilities {
                         new docx.TextRun({
                             children: [documentType],
                             font: this.font,
-                            size: 20
+                            size: this.generalSettings.headerFontSize
                         }),
                         new docx.TextRun({
                             children: [itemName],
                             font: this.heavyFont,
-                            size: 20,
-                            color: "c7701e"
+                            size: this.generalSettings.headerFontSize
                         })
                     ],
                 }),
@@ -373,28 +376,30 @@ class DOCXUtilities {
      * @todo Add an options object in a future release when refactoring
      * @todo Review the NOTICE section and at a later date work on all TODOs there
      */
-    makeParagraph (
-        paragraph, 
-        spaceAfter=0, 
-        bold=false, 
-        center=false, 
-        font="Avenir Next", 
-        italics=false, 
-        underline=false
-    ) {
-        const fontSize = 2 * this.fullFontSize // Font size is measured in half points, multiply by to is needed
+    makeParagraph (paragraph,options={}) {
+        const {
+            fontSize,
+            bold=false, 
+            fontColor,
+            font='Avenir Next',
+            center=false, 
+            italics=false, 
+            underline=false,
+            spaceAfter=0,
+        } = options
+        // const fontSize = 2 * this.fullFontSize // Font size is measured in half points, multiply by to is needed
         return new docx.Paragraph({
             alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
             children: [
                 new docx.TextRun({
                     text: paragraph,
-                    font: this.font,
-                    size: this.fullFontSize, // Default font size size 10pt or 2 * 10 = 20
+                    font: font ? font : this.font,
+                    size: fontSize ? fontSize : this.fullFontSize, // Default font size size 10pt or 2 * 10 = 20
                     bold: bold ? bold : false, // Bold is off by default
                     italics: italics ? italics : false, // Italics off by default
                     underline: underline ? underline : false, // Underline off by default
                     break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
-                    color: this.textFontColor
+                    color: fontColor ? fontColor : this.textFontColor
                 })
             ],
             
@@ -604,14 +609,14 @@ class DOCXUtilities {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(name, this.fontFactor * this.fontSize, true)]
+                    children: [this.makeParagraph(name, {fontSize: this.fontFactor * this.fontSize, bold: true})]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(data, this.fontFactor * this.fontSize)]
+                    children: [this.makeParagraph(data, {fontSize: this.fontFactor * this.fontSize})]
                 })
             ]
         })
@@ -633,14 +638,14 @@ class DOCXUtilities {
                         size: 10,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(id, 16, bold ? true : false)]
+                    children: [this.makeParagraph(id, {fontSize: 16, bold: bold ? true : false})]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 90,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(description, 16, bold ? true : false)]
+                    children: [this.makeParagraph(description, {fontSize: 16, bold: bold ? true : false})]
                 })
             ]
         })

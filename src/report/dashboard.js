@@ -103,12 +103,13 @@ class Dashboards {
                             children: [
                                 this.util.makeParagraph(
                                     statistics[stat].value,
-                                    this.generalStyle.metricFontSize,
-                                    this.themeStyle.titleFontColor,
-                                    0,
-                                    true,
-                                    true,
-                                    this.generalStyle.heavyFont
+                                    {
+                                        fontSize: this.generalStyle.metricFontSize,
+                                        fontColor: this.themeStyle.titleFontColor,
+                                        font: this.generalStyle.heavyFont,
+                                        bold: true,
+                                        center: true
+                                    }
                                 )
                             ],
                             borders: this.bottomBorder,
@@ -124,11 +125,12 @@ class Dashboards {
                             children: [
                                 this.util.makeParagraph(
                                     statistics[stat].title,
-                                    this.generalStyle.metricFontTitleSize,
-                                    this.themeStyle.titleFontColor,
-                                    0,
-                                    false,
-                                    true
+                                    {
+                                        fontSize: this.generalStyle.metricFontSize/2,
+                                        fontColor: this.themeStyle.titleFontColor,
+                                        bold: false,
+                                        center: true
+                                    }
                                 )
                             ],
                             borders: this.noBorders,
@@ -141,6 +143,24 @@ class Dashboards {
                 })
             )
         }
+        return new docx.Table({
+            columnWidths: [95],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
+    // Using DOCXUtilties basicRow method create a similar method for all dashboards that returns a table with a single row
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    simpleDescriptiveTable(title, text) {
+        const myRows = [this.util.basicRow(title, text)]
         return new docx.Table({
             columnWidths: [95],
             rows: myRows,
@@ -190,21 +210,39 @@ class InteractionDashboard extends Dashboards {
     // Create the first row with two images and a nested table
     //     40%      |    40%      |   20%
     // bubble chart | radar chart | nested table for stats
-    firstRow (bubbleImage, radarImage, statisticsTable) {
+    firstRow (interactionData, statisticsData) {
         return new docx.TableRow({
             children: [
                 new docx.TableCell({
-                    children: [this.insertImage(bubbleImage, 226, 259.2)],
-                    borders: this.bottomAndRightBorders
+                    children: [interactionData.name],
+                    borders: this.bottomBorder,
+                    rowSpan: 1,
+                    columnSpan:2,
+                    margins: {
+                        left: this.generalStyle.tableMargin,
+                        right: this.generalStyle.tableMargin,
+                        bottom: this.generalStyle.tableMargin,
+                        top: this.generalStyle.tableMargin
+                    },
+                    verticalAlign: docx.VerticalAlign.CENTER,
                 }),
                 new docx.TableCell({
-                    children: [this.insertImage(radarImage, 226, 345.6)],
-                    borders: this.bottomAndRightBorders
+                    children: [interactionData.description],
+                    borders: this.bottomBorder,
+                    rowSpan: 1,
+                    columnSpan:2,
+                    margins: {
+                        left: this.generalStyle.tableMargin,
+                        right: this.generalStyle.tableMargin,
+                        bottom: this.generalStyle.tableMargin,
+                        top: this.generalStyle.tableMargin
+                    },
+                    verticalAlign: docx.VerticalAlign.CENTER,
                 }),
                 new docx.TableCell({
-                    children: [statisticsTable],
-                    borders: this.noBorders,
-                    rowSpan: 5,
+                    children: [statisticsData],
+                    borders: this.allBorders,
+                    rowSpan: 1,
                     margins: {
                         left: this.generalStyle.tableMargin,
                         right: this.generalStyle.tableMargin,
@@ -219,12 +257,31 @@ class InteractionDashboard extends Dashboards {
 
     async makeDashboard(interaction, company) {
         // TODO Create the table around this data, note that we're also missing the cells of the first row, but we're writing the file
-        const statisticsTable = super.descriptiveStatisticsTable([
-            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
+        
+        const statsData = super.descriptiveStatisticsTable([
+            {title: 'Interaction type', value: interaction.interaction_type},
             {title: 'Estimated reading time (minutes)', value: interaction.reading_time},
             {title: 'Page count', value: interaction.page_count},
+            {title: 'Region', value: interaction.region},
+            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
         ])
-        return statisticsTable
+        const interactionNameTable = super.simpleDescriptiveTable('Interaction Name', interaction.name)
+        const interactionDescriptionTable = super.simpleDescriptiveTable('Interaction Description', interaction.description)
+        const myRows = this.firstRow({name: interactionNameTable, description: interactionDescriptionTable}, statsData)
+        const myTable = new docx.Table({
+            columnWidths: [40, 20],
+            rows: [myRows],
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            },
+            height: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return myTable
     }
 }
 
