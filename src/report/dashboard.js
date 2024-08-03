@@ -145,6 +145,7 @@ class Dashboards {
         }
         return new docx.Table({
             columnWidths: [95],
+            borders: this.noBorders,
             rows: myRows,
             width: {
                 size: 100,
@@ -168,7 +169,6 @@ class Dashboards {
                         top: this.generalStyle.tableMargin,
                         right: this.generalStyle.tableMargin
                     },
-                    padding: this.generalStyle.tableMargin
                 }),
                 new docx.TableCell({
                     width: {
@@ -181,7 +181,6 @@ class Dashboards {
                         top: this.generalStyle.tableMargin,
                         right: this.generalStyle.tableMargin
                     },
-                    padding: this.generalStyle.tableMargin
                 })
             ]
         })
@@ -194,7 +193,6 @@ class Dashboards {
      * @returns 
      */
     simpleDescriptiveTable(title, text) {
-        const myRows = this.twoCellRow(title, text)
         return new docx.Table({
             columnWidths: [95],
             borders: this.noBorders,
@@ -204,12 +202,22 @@ class Dashboards {
                 bottom: this.generalStyle.tableMargin,
                 top: this.generalStyle.tableMargin
             },
-            rows: [myRows],
+            rows: [this.twoCellRow(title, text)],
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
             }
         })
+    }
+
+    // Create a utility that takes text as an input, and an integer called numSentences, splits the text into sentences and returns the first numSentences as a string
+    shortenText(text, numSentences=2) {
+        const sentences = text.split('.')
+        let shortText = ''
+        for (let i=0; i<numSentences; i++) {
+            shortText += sentences[i] + '.'
+        }
+        return shortText
     }
 
     /**
@@ -248,58 +256,7 @@ class InteractionDashboard extends Dashboards {
         super(env)
     }
 
-    firstRow (interactionData, statisticsData) {
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    children: [interactionData.name, interactionData.description],
-                    borders: this.noBorders,
-                    columnSpan:3,
-                    margins: {
-                        left: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin,
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    },
-                    verticalAlign: docx.VerticalAlign.CENTER,
-                }),
-                new docx.TableCell({
-                    children: [statisticsData],
-                    borders: this.noBorders,
-                    rowSpan: 3,
-                    margins: {
-                        left: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin,
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    },
-                    verticalAlign: docx.VerticalAlign.CENTER,
-                }),
-            ]
-        })
-    }
-
-    secondRow (companyData) {
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    children: [companyData],
-                    borders: this.noBorders,
-                    rowSpan: 1,
-                    columnSpan:3,
-                    margins: {
-                        left: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin,
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    },
-                    verticalAlign: docx.VerticalAlign.CENTER,
-                }),
-            ]
-        })
-    }
-
-    _getTopTwoTopics(topics) {
+    _getTopTwoTopics(topics, topicCount=1) {
         // Convert the topics object to an array of entries
         const topicsArray = Object.entries(topics)
     
@@ -307,7 +264,7 @@ class InteractionDashboard extends Dashboards {
         topicsArray.sort((a, b) => b[1].frequency - a[1].frequency)
     
         // Slice the array to get the top 2 entries
-        const top2TopicsArray = topicsArray.slice(0, 2)
+        const top2TopicsArray = topicsArray.slice(0, topicCount)
     
         // Convert the array back to an object
         const top2Topics = Object.fromEntries(top2TopicsArray);
@@ -315,103 +272,70 @@ class InteractionDashboard extends Dashboards {
         return top2Topics
     }
 
-    thirdRowHeader () {
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    children: [this.util.makeParagraph('Id', {fontSize: this.fontFactor * this.fontSize, bold: true})],
-                    borders: this.bottomBorder,
-                    margins: {
-                        top: this.generalStyle.tableMargin
-                    }
-                }),
-                new docx.TableCell({
-                    children: [this.util.makeParagraph('Frequency', {fontSize: this.fontFactor * this.fontSize, bold: true})],
-                    borders: this.bottomBorder,
-                    margins: {
-                        top: this.generalStyle.tableMargin
-                    }
-                }),
-                new docx.TableCell({
-                    children: [this.util.makeParagraph('Description', {fontSize: this.fontFactor * this.fontSize, bold: true})],
-                    borders: this.bottomAndRightBorders,
-                    margins: {
-                        top: this.generalStyle.tableMargin
-                    }
-                }),
-            ]
-        })
-    }
-
-    thirdRow (top2Topics) {
-        // Create a table row for the header
-        let myRows = [this.thirdRowHeader()]
-
-        // TODO set width of columns to 33.33% each
-
-        // Change to two column with Frequency and Description/Label
-
-        // The other items are contained withing their own tables making the sizing of the columns difficult
-
+    _priorityTopicsTable (top2Topics) {
+        let myTopics = []
         // Loop through the top 2 topics and create a table row for each topic
         for (const topic in top2Topics) {
+            myTopics.push(
+                super.simpleDescriptiveTable('Priority Proto-requirement', top2Topics[topic].label)
+            )
+        }
+        return myTopics
+    }
+
+    _mergeLeftContents (contents) {
+        let myRows = []
+        for (const content in contents) {
             myRows.push(
                 new docx.TableRow({
                     children: [
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topic, {fontSize: this.fontFactor * this.fontSize})],
-                            borders: this.bottomBorder,
-                            margins: {
-                                top: this.generalStyle.tableMargin
-                            }
-                        }),
-                        new docx.TableCell({
-                            children: [this.util.makeParagraph(top2Topics[topic].frequency, {fontSize: this.fontFactor * this.fontSize})],
-                            borders: this.bottomBorder,
-                            margins: {
-                                top: this.generalStyle.tableMargin
-                            }
-                        }),
-                        new docx.TableCell({
-                            children: [this.util.makeParagraph(top2Topics[topic].label, {fontSize: this.fontFactor * this.fontSize})],
-                            borders: this.bottomAndRightBorders,
-                            margins: {
-                                top: this.generalStyle.tableMargin
-                            }
+                            children: [contents[content]],
+                            borders: this.noBorders,
+                            width: {
+                                size: 100,
+                                type: docx.WidthType.PERCENTAGE
+                            },
                         }),
                     ]
                 })
             )
         }
-        return myRows
+        return new docx.Table({
+            columnWidths: [95],
+            borders: this.noBorders,
+            margins: {
+                left: this.generalStyle.tableMargin,
+                right: this.generalStyle.tableMargin,
+                bottom: this.generalStyle.tableMargin,
+                top: this.generalStyle.tableMargin
+            },
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
     }
 
-    async makeDashboard(interaction, company) {
-        // TODO Create the table around this data, note that we're also missing the cells of the first row, but we're writing the file
-        
-        // Add key metadata for the interaction
-        const statsData = super.descriptiveStatisticsTable([
-            {title: 'Type', value: interaction.interaction_type},
-            {title: 'Est. reading time (min)', value: interaction.reading_time},
-            {title: 'Page(s)', value: interaction.page_count},
-            {title: 'Region', value: interaction.region},
-            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
-        ])
-
-        // Add the name and description of the interaction
-        const interactionNameTable = super.simpleDescriptiveTable('Name', interaction.name)
-        const interactionDescriptionTable = super.simpleDescriptiveTable('Description', interaction.description)
-        let myRows = [this.firstRow({name: interactionNameTable, description: interactionDescriptionTable}, statsData)]
-        
-        // Add the company data
-        myRows.push(this.secondRow(super.simpleDescriptiveTable(`Linked company: ${company.name}`, company.description)))
-
-        // Add the top two topics
-        const top2Topics = this._getTopTwoTopics(interaction.topics)
-        myRows = myRows.concat(this.thirdRow(top2Topics))
-        const myTable = new docx.Table({
-            columnWidths: [40, 20],
-            rows: myRows,
+    // Create the dashboard shell which will contain all of the outputs
+    _createDashboardShell (leftContents, rightContents) {
+        return new docx.Table({
+            columnWidths: [80, 20],
+            rows: [
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [leftContents],
+                            borders: this.noBorders
+                        }),
+                        new docx.TableCell({
+                            children: [rightContents],
+                            borders: this.noBorders
+                        }),
+                    ]
+                })
+            ],
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
@@ -421,8 +345,70 @@ class InteractionDashboard extends Dashboards {
                 type: docx.WidthType.PERCENTAGE
             }
         })
+    }
 
-        return myTable
+    async makeDashboard(interaction, company) {
+        // Define the right contents
+        // Add key metadata for the interaction to fit within the right contents
+        /*
+           ------------
+           |   Meta   |
+           | -------- |
+           |   Data   |
+           |          |
+           |   Meta   |
+           | -------- |
+           |   Data   |
+           |          |
+           |   Meta   |
+           | -------- |
+           |   Data   |
+           |          |
+           |   Meta   |
+           | -------- |
+           |   Data   |
+           ------------
+        */
+        const rightContents = super.descriptiveStatisticsTable([
+            {title: 'Type', value: interaction.interaction_type},
+            {title: 'Est. reading time (min)', value: interaction.reading_time},
+            {title: 'Page(s)', value: interaction.page_count},
+            {title: 'Region', value: interaction.region},
+            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
+        ])
+
+        // Create individual tables for name, description and company
+        /*
+             ------------------------------
+            |      |                       |
+             ------------------------------
+
+        */
+        const interactionNameTable = super.simpleDescriptiveTable('Name', interaction.name)
+        const interactionDescriptionTable = super.simpleDescriptiveTable('Description', super.shortenText(interaction.description))
+        const associatedCompanyTable = super.simpleDescriptiveTable(`Linked company: ${company.name}`, super.shortenText(company.description))
+
+        const top2Topics = this._getTopTwoTopics(interaction.topics)
+        const protorequirementsTable = this._priorityTopicsTable(top2Topics)[0]
+        const leftContents = this._mergeLeftContents([interactionNameTable, interactionDescriptionTable, associatedCompanyTable, protorequirementsTable])
+
+
+
+        // Create and return the dashboard shell with left and right contents
+        /*
+            ----------------------------------------------
+            |               80%            |     20%     |
+            |                              |             |
+            |                              |             |
+            |                              |             |
+            |                              |             |
+            |                              |             |
+            |                              |             |
+            |                              |             |
+            ----------------------------------------------
+        */
+
+        return this._createDashboardShell(leftContents, rightContents)
     }
 }
 

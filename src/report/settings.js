@@ -21,6 +21,7 @@ const docxSettings = {
         tableBorderStyle: docx.BorderStyle.SINGLE,
         noBorderStyle: docx.BorderStyle.NIL,
         tableMargin: docx.convertInchesToTwip(0.1),
+        tagMargin: docx.convertInchesToTwip(0.08),
         font: "Avenir Next",
         heavyFont: "Avenir Next Heavy",
         lightFont: "Avenir Next Light"
@@ -28,6 +29,8 @@ const docxSettings = {
     },
     coffee: {
         tableBorderColor: "4A7E92", // Light Blue
+        tagColor: "4A7E92", // Light Blue
+        tagFontColor: "0F0D0E", // Coffee black
         documentColor: "0F0D0E", // Coffee black
         titleFontColor: "41A6CE", // Saturated Light Blue
         textFontColor: "DCE9F6", // Ultra light Blue

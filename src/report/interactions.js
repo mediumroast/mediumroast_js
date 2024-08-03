@@ -311,14 +311,10 @@ class InteractionStandalone extends BaseInteractionsReport {
         const myDocument = [].concat(
             this.util.makeIntro(this.introduction),
             [
-                this.util.makeHeading1('Interaction Detail'), 
-                this.metadataTableDOCX(isPackage),
-                this.util.makeHeading1('Topics'),
-                this.util.topicTable(this.topics),
                 this.util.makeHeading1('Abstract'),
                 this.util.makeParagraph(this.abstract),
-                this.util.makeHeading1('Company Detail'),
-                companySection.makeFirmographicsDOCX()
+                this.util.makeHeading1('Tags'),
+                this.util.tagsTable(this.topics),
             ])
     
         // Construct the document

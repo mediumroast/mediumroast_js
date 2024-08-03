@@ -33,6 +33,7 @@ class DOCXUtilities {
     constructor (env) {
         this.env = env
         this.generalSettings = docxSettings.general
+        this.themeSettings = docxSettings[this.env.theme]
         this.font = docxSettings.general.font
         this.heavyFont = docxSettings.general.heavyFont
         this.halfFontSize = docxSettings.general.halfFontSize
@@ -305,7 +306,7 @@ class DOCXUtilities {
                         }),
                         new docx.TextRun({
                             children: [itemName],
-                            font: this.heavyFont,
+                            font: this.font,
                             size: this.generalSettings.headerFontSize
                         })
                     ],
@@ -398,39 +399,14 @@ class DOCXUtilities {
                     bold: bold ? bold : false, // Bold is off by default
                     italics: italics ? italics : false, // Italics off by default
                     underline: underline ? underline : false, // Underline off by default
-                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
+                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space
                     color: fontColor ? fontColor : this.textFontColor
                 })
-            ],
-            
+            ]
         })
     }
 
-    // 
-    /**
-     * @function makeTextrun
-     * @description Create a text run with or without space after
-     * @param {String} text - text/prose for the textrun
-     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
-     * @returns {Object} a docx textrun object
-     */
-    makeTextrun(text, spaceAfter=false) {
-        const myFontSize = 16
-        if (spaceAfter) {
-            return new docx.TextRun({
-                text: text,
-                font: this.font,
-                size: myFontSize,
-                break: 1
-            })
-        } else {
-            return new docx.TextRun({
-                text: text,
-                font: this.font,
-                size: myFontSize
-            })
-        }
-    }
+
 
     /**
      * @function pageBreak
@@ -852,6 +828,78 @@ class DOCXUtilities {
         // define the table with the summary theme information
         const myTable = new docx.Table({
             columnWidths: [60, 20, 20],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return myTable
+    }
+
+    _tagCell(tag) {
+        return new docx.TableCell({
+            margins: {
+                top: this.generalSettings.tagMargin,
+                right: this.generalSettings.tagMargin,
+                bottom: this.generalSettings.tagMargin,
+                left: this.generalSettings.tagMargin
+            },
+            borders: {
+                top: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE }, // 2 points thick, black color
+                bottom: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+                left: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+                right: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+            },
+            shading: {fill: this.themeSettings.tagColor},
+            children: [this.makeParagraph(tag, {fontSize: this.fontSize, fontColor: this.themeSettings.tagFontColor, center: true})],
+            verticalAlign: docx.AlignmentType.CENTER,
+        })
+    }
+
+    _distributeTags(tagsList) {
+        // Calculate the number of lists as the ceiling of the square root of the length of tagsList
+        const numLists = Math.ceil(Math.sqrt(tagsList.length))
+        
+        // Initialize result array with numLists empty arrays
+        const result = Array.from({ length: numLists }, () => [])
+        // Initialize lengths array with numLists zeros
+        const lengths = Array(numLists).fill(0)
+    
+        // Sort tagsList in descending order based on the length of the tags
+        tagsList.sort((a, b) => b.length - a.length)
+    
+        // Distribute tags
+        tagsList.forEach(tag => {
+            // Find the index of the child list with the minimum total character length
+            const minIndex = lengths.indexOf(Math.min(...lengths))
+            // Add the tag to this child list
+            result[minIndex].push(tag);
+            // Update the total character length of this child list
+            lengths[minIndex] += tag.length
+        })
+    
+        return result;
+    }
+
+    tagsTable(tags) {
+        // Get the length of the tags
+        const tagsList = Object.keys(tags)
+        const distributedTags = this._distributeTags(tagsList)
+        let myRows = []
+        distributedTags.forEach(tags => {
+            let cells = []
+            tags.forEach(tag => {
+                cells.push(this._tagCell(tag))
+            })
+            myRows.push(new docx.TableRow({
+                children: cells
+            }))
+        })
+        // define the table with the summary theme information
+        const myTable = new docx.Table({
+            columnWidths: Array(distributedTags.length).fill(100/distributedTags.length),
             rows: myRows,
             width: {
                 size: 100,
