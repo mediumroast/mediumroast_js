@@ -10,6 +10,8 @@
 import docx from 'docx'
 import * as fs from 'fs'
 import boxPlot from 'box-plot'
+import docxSettings from './settings.js'
+import FilesystemOperators from '../cli/filesystem.js'
 
 
 // TODO Change class names to: GenericUtilities, DOCXUtilities and HTMLUtilities
@@ -25,25 +27,37 @@ class DOCXUtilities {
      * with document generation. 
      * @constructor
      * @classdesc Core utilities for generating elements in a Microsoft word DOCX file
-     * @param {String} font 
-     * @param {Float} fontSize 
-     * @param {Float} textFontSize 
-     * @param {String} textFontColor
+     * @param {Object} env 
      * @todo when we get to HTML report generation for the front end we will rename this class and create a new one for HTML
-     * @todo adopt settings.js
      */
-    constructor (font, fontSize, textFontSize, textFontColor) {
-        this.font = font ? font : 'Avenir Next'
-        this.heavyFont = 'Avenir Next Heavy'
-        this.size = fontSize ? fontSize : 11
-        this.textFontSize = textFontSize ? textFontSize : 22
-        this.textFontColor = textFontColor ? textFontColor : '#41a6ce'
-        this.fontFactor = 1
+    constructor (env) {
+        this.env = env
+        this.generalSettings = docxSettings.general
+        this.themeSettings = docxSettings[this.env.theme]
+        this.font = docxSettings.general.font
+        this.heavyFont = docxSettings.general.heavyFont
+        this.halfFontSize = docxSettings.general.halfFontSize
+        this.fullFontSize = docxSettings.general.fullFontSize
+        this.fontFactor = docxSettings.general.fontFactor
+        this.theme = this.env.theme
+        this.documentColor = docxSettings[this.theme].documentColor
+        this.textFontColor = `#${docxSettings[this.theme].textFontColor.toLowerCase()}`
+        this.titleFontColor = `#${docxSettings[this.theme].titleFontColor.toLowerCase()}`
+        this.tableBorderColor = `#${docxSettings[this.theme].tableBorderColor.toLowerCase()}`
         this.styling = this.initStyles()
+        this.fileSystem = new FilesystemOperators()
         this.regions = {
             AMER: 'Americas',
             EMEA: 'Europe, Middle East and Africa',
             APAC: 'Asia Pacific and Japan'
+        }
+    }
+
+    // Initials the working directories
+    initDirectories() {
+        const subdirs = ['interactions', 'images']
+        for(const myDir in subdirs) {
+            this.fileSystem.safeMakedir(this.env.workDir + '/' + subdirs[myDir])
         }
     }
 
@@ -54,7 +68,7 @@ class DOCXUtilities {
                 default: {
                     heading1: {
                         run: {
-                            size: this.textFontSize,
+                            size: this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -68,7 +82,7 @@ class DOCXUtilities {
                     },
                     heading2: {
                         run: {
-                            size: 0.75 * this.textFontSize,
+                            size: 0.75 * this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -82,7 +96,7 @@ class DOCXUtilities {
                     },
                     heading3: {
                         run: {
-                            size: 0.8 * this.textFontSize,
+                            size: 0.8 * this.fullFontSize,
                             bold: true,
                             font: this.font,
                             color: this.textFontColor
@@ -97,12 +111,12 @@ class DOCXUtilities {
                     listParagraph: {
                         run: {
                             font: this.font,
-                            size: 1.5 * this.size,
+                            size: 1.5 * this.halfFontSize,
                         },
                     },
                     paragraph: {
                         font: this.font,
-                        size: this.size,
+                        size: this.halfFontSize,
                     }
                 },
                 paragraphStyles: [
@@ -114,7 +128,7 @@ class DOCXUtilities {
                         quickFormat: true,
                         run: {
                             font: this.font,
-                            size: this.size,
+                            size: this.halfFontSize,
                         },
                     },
                 ],
@@ -272,9 +286,13 @@ class DOCXUtilities {
      * @description Generate a header with an item's name and the document type fields
      * @param {String} itemName 
      * @param {String} documentType 
-     * @param {Boolean} landscape 
+     * @param {Object} options 
      */
-    makeHeader(itemName, documentType, landscape=false) {
+    makeHeader(itemName, documentType, options={}) {
+        const {
+            landscape = false,
+            fontColor = this.textFontColor,
+        } = options
         let separator = "\t".repeat(3)
         if (landscape) { separator = "\t".repeat(4)}
         return new docx.Header({
@@ -285,13 +303,14 @@ class DOCXUtilities {
                         new docx.TextRun({
                             children: [documentType],
                             font: this.font,
-                            size: 20
+                            size: this.generalSettings.headerFontSize,
+                            color: fontColor ? fontColor : this.textFontColor
                         }),
                         new docx.TextRun({
                             children: [itemName],
-                            font: this.heavyFont,
-                            size: 20,
-                            color: "c7701e"
+                            font: this.font,
+                            size: this.generalSettings.headerFontSize,
+                            color: fontColor ? fontColor : this.textFontColor
                         })
                     ],
                 }),
@@ -299,7 +318,11 @@ class DOCXUtilities {
         })
     }
 
-    makeFooter(documentAuthor, datePrepared, landscape=false) {
+    makeFooter(documentAuthor, datePrepared, options={}) {
+        const {
+            landscape = false,
+            fontColor = this.textFontColor,
+        } = options
         let separator = "\t"
         if (landscape) { separator = "\t".repeat(2)}
         return new docx.Paragraph({
@@ -308,17 +331,20 @@ class DOCXUtilities {
                 new docx.TextRun({
                     children: ['Page ', docx.PageNumber.CURRENT, ' of ', docx.PageNumber.TOTAL_PAGES, separator],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 }),
                 new docx.TextRun({
                     children: ['|', separator, documentAuthor, separator],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 }),
                 new docx.TextRun({
                     children: ['|', separator, datePrepared],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 })
             ]
         })
@@ -328,50 +354,39 @@ class DOCXUtilities {
      * @function makeParagraph
      * @description For a section of prose create a paragraph
      * @param {String} paragraph - text/prose for the paragraph
-     * @param {Integer} size - font size for the paragrah
-     * @param {Boolean} bold - a boolean value for determining if the text should be bolded
-     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
+     * @param {Object} objects - an object that contains the font size, color, and other styling options
      * @returns {Object} a docx paragraph object 
      */
-    makeParagraph (paragraph, size, bold, spaceAfter) {
+    makeParagraph (paragraph,options={}) {
+        const {
+            fontSize,
+            bold=false, 
+            fontColor,
+            font='Avenir Next',
+            center=false, 
+            italics=false, 
+            underline=false,
+            spaceAfter=0,
+        } = options
+        // const fontSize = 2 * this.fullFontSize // Font size is measured in half points, multiply by to is needed
         return new docx.Paragraph({
+            alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
             children: [
                 new docx.TextRun({
                     text: paragraph,
-                    font: this.font,
-                    size: size ? size : 20,
-                    bold: bold ? bold : false, 
-                    break: spaceAfter ? spaceAfter : 0
+                    font: font ? font : this.font,
+                    size: fontSize ? fontSize : this.fullFontSize, // Default font size size 10pt or 2 * 10 = 20
+                    bold: bold ? bold : false, // Bold is off by default
+                    italics: italics ? italics : false, // Italics off by default
+                    underline: underline ? underline : false, // Underline off by default
+                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space
+                    color: fontColor ? fontColor : this.textFontColor
                 })
             ]
         })
     }
 
-    // 
-    /**
-     * @function makeTextrun
-     * @description Create a text run with or without space after
-     * @param {String} text - text/prose for the textrun
-     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
-     * @returns {Object} a docx textrun object
-     */
-    makeTextrun(text, spaceAfter=false) {
-        const myFontSize = 16
-        if (spaceAfter) {
-            return new docx.TextRun({
-                text: text,
-                font: this.font,
-                size: myFontSize,
-                break: 1
-            })
-        } else {
-            return new docx.TextRun({
-                text: text,
-                font: this.font,
-                size: myFontSize
-            })
-        }
-    }
+
 
     /**
      * @function pageBreak
@@ -550,14 +565,14 @@ class DOCXUtilities {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(name, this.fontFactor * this.fontSize, true)]
+                    children: [this.makeParagraph(name, {fontSize: this.fontFactor * this.fontSize, bold: true})]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(data, this.fontFactor * this.fontSize)]
+                    children: [this.makeParagraph(data, {fontSize: this.fontFactor * this.fontSize})]
                 })
             ]
         })
@@ -579,14 +594,14 @@ class DOCXUtilities {
                         size: 10,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(id, 16, bold ? true : false)]
+                    children: [this.makeParagraph(id, {fontSize: 16, bold: bold ? true : false})]
                 }),
                 new docx.TableCell({
                     width: {
                         size: 90,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(description, 16, bold ? true : false)]
+                    children: [this.makeParagraph(description, {fontSize: 16, bold: bold ? true : false})]
                 })
             ]
         })
@@ -793,6 +808,78 @@ class DOCXUtilities {
         // define the table with the summary theme information
         const myTable = new docx.Table({
             columnWidths: [60, 20, 20],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return myTable
+    }
+
+    _tagCell(tag) {
+        return new docx.TableCell({
+            margins: {
+                top: this.generalSettings.tagMargin,
+                right: this.generalSettings.tagMargin,
+                bottom: this.generalSettings.tagMargin,
+                left: this.generalSettings.tagMargin
+            },
+            borders: {
+                top: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE }, // 2 points thick, black color
+                bottom: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+                left: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+                right: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
+            },
+            shading: {fill: this.themeSettings.tagColor},
+            children: [this.makeParagraph(tag, {fontSize: this.fontSize, fontColor: this.themeSettings.tagFontColor, center: true})],
+            verticalAlign: docx.AlignmentType.CENTER,
+        })
+    }
+
+    _distributeTags(tagsList) {
+        // Calculate the number of lists as the ceiling of the square root of the length of tagsList
+        const numLists = Math.ceil(Math.sqrt(tagsList.length))
+        
+        // Initialize result array with numLists empty arrays
+        const result = Array.from({ length: numLists }, () => [])
+        // Initialize lengths array with numLists zeros
+        const lengths = Array(numLists).fill(0)
+    
+        // Sort tagsList in descending order based on the length of the tags
+        tagsList.sort((a, b) => b.length - a.length)
+    
+        // Distribute tags
+        tagsList.forEach(tag => {
+            // Find the index of the child list with the minimum total character length
+            const minIndex = lengths.indexOf(Math.min(...lengths))
+            // Add the tag to this child list
+            result[minIndex].push(tag);
+            // Update the total character length of this child list
+            lengths[minIndex] += tag.length
+        })
+    
+        return result;
+    }
+
+    tagsTable(tags) {
+        // Get the length of the tags
+        const tagsList = Object.keys(tags)
+        const distributedTags = this._distributeTags(tagsList)
+        let myRows = []
+        distributedTags.forEach(tags => {
+            let cells = []
+            tags.forEach(tag => {
+                cells.push(this._tagCell(tag))
+            })
+            myRows.push(new docx.TableRow({
+                children: cells
+            }))
+        })
+        // define the table with the summary theme information
+        const myTable = new docx.Table({
+            columnWidths: Array(distributedTags.length).fill(100/distributedTags.length),
             rows: myRows,
             width: {
                 size: 100,

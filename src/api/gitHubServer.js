@@ -474,5 +474,55 @@ class Interactions extends baseObjects {
     }
 }
 
+class Actions extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the interaction objects
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
+     */
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Interactions')
+    }
+
+    async updateObj(objToUpdate, dontWrite=false, system=false) {
+        // Destructure objToUpdate
+        const { name, key, value } = objToUpdate
+        // Define the attributes that can be updated by the user
+        const whiteList = [
+            'status', 'content_type', 'file_size', 'reading_time', 'word_count', 'page_count', 'description', 'abstract',
+
+            'region', 'country', 'city', 'state_province', 'zip_postal', 'street_address', 'latitude', 'longitude',
+            
+            'public', 'groups' 
+        ]
+        return await super.updateObj(name, key, value, dontWrite, system, whiteList)
+    }
+
+    async getAll() {
+        const storageBillingsResp = await this.serverCtl.getStorageBillings()
+        const actionsBillingsResp = await this.serverCtl.getActionsBillings()
+        const allBillings = [
+            {
+                resourceType: 'Storage',
+                includedUnits: Math.abs(
+                        storageBillingsResp[2].estimated_paid_storage_for_month - 
+                        storageBillingsResp[2].estimated_storage_for_month
+                    ) + ' GiB',
+                paidUnitsUsed: storageBillingsResp[2].estimated_paid_storage_for_month + ' GiB',
+                totalUnitsUsed: storageBillingsResp[2].estimated_storage_for_month + ' GiB'
+            },
+            {
+                resourceType: 'Actions',
+                includedUnits: actionsBillingsResp[2].total_minutes_used + ' min',
+                paidUnitsUsed: actionsBillingsResp[2].total_paid_minutes_used + ' min',
+                totalUnitsUsed: actionsBillingsResp[2].total_minutes_used + actionsBillingsResp[2].total_paid_minutes_used + ' min'
+            }
+        ]
+        return [true, {status_code: 200, status_msg: `found all billings`}, allBillings]
+    }
+}
+
 // Export classes for consumers
 export { Studies, Companies, Interactions, Users, Billings }
