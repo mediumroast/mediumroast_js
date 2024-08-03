@@ -12,6 +12,7 @@ import docx from 'docx'
 import DOCXUtilities from './common.js'
 import { CompanySection } from './companies.js'
 import { InteractionDashboard } from './dashboard.js' 
+import docxSettings from './settings.js'
 
 class BaseInteractionsReport {
     constructor(interactions, objectType, objectName, env) {
@@ -26,8 +27,119 @@ class BaseInteractionsReport {
         this.objectType = objectType
         this.env = env
         this.util = new DOCXUtilities(env)
+        this.themeStyle = docxSettings[env.theme] // Set the theme for the report
+        this.generalStyle = docxSettings.general // Pull in all of the general settings
+        
+        // Define specifics for table borders
+        this.noneStyle = {
+            style: this.generalStyle.noBorderStyle
+        }
+        this.borderStyle = {
+            style: this.generalStyle.tableBorderStyle,
+            size: this.generalStyle.tableBorderSize,
+            color: this.themeStyle.tableBorderColor
+        }
+        this.bottomBorder = {
+            left: this.noneStyle,
+            right: this.noneStyle,
+            top: this.noneStyle,
+            bottom: this.borderStyle
+        }
     }
-    
+
+    protorequirementsTable(topics) {
+        let myRows = [
+            new docx.TableRow({
+                children: [
+                    new docx.TableCell({
+                        children: [this.util.makeParagraph('Id', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        borders: this.bottomBorder,
+                        margins: {
+                            top: this.generalStyle.tableMargin
+                        },
+                        width: {
+                            size: 5,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                    }),
+                    new docx.TableCell({
+                        children: [this.util.makeParagraph('Frequency', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        borders: this.bottomBorder,
+                        margins: {
+                            top: this.generalStyle.tableMargin
+                        },
+                        width: {
+                            size: 15,
+                            type: docx.WidthType.PERCENTAGE
+                        }
+                    }),
+                    new docx.TableCell({
+                        children: [this.util.makeParagraph('Proto-requirement', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        borders: this.bottomBorder,
+                        margins: {
+                            top: this.generalStyle.tableMargin
+                        },
+                        width: {
+                            size: 80,
+                            type: docx.WidthType.PERCENTAGE
+                        },
+                    })
+                ]
+            })
+        ]
+        for (const topic in topics) {
+            myRows.push(
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [this.util.makeParagraph(topic, {fontSize: this.generalStyle.dashFontSize})],
+                            borders: this.bottomBorder,
+                            margins: {
+                                top: this.generalStyle.tableMargin
+                            },
+                            width: {
+                                size: 5,
+                                type: docx.WidthType.PERCENTAGE
+                            },
+                        }),
+                        new docx.TableCell({
+                            children: [this.util.makeParagraph(topics[topic].frequency, {fontSize: this.generalStyle.dashFontSize})],
+                            borders: this.bottomBorder,
+                            margins: {
+                                top: this.generalStyle.tableMargin
+                            },
+                            width: {
+                                size: 15,
+                                type: docx.WidthType.PERCENTAGE
+                            },
+                        }),
+                        new docx.TableCell({
+                            children: [this.util.makeParagraph(topics[topic].label, {fontSize: this.generalStyle.dashFontSize})],
+                            borders: this.bottomBorder,
+                            margins: {
+                                top: this.generalStyle.tableMargin
+                            },
+                            width: {
+                                size: 80,
+                                type: docx.WidthType.PERCENTAGE
+                            },
+                        })
+                    ]
+                })
+            )
+        }
+        // define the table with the summary theme information
+        const myTable = new docx.Table({
+            columnWidths: [5, 20, 75],
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+
+        return myTable
+    }
 }
 
 
@@ -202,7 +314,7 @@ class InteractionSection extends BaseInteractionsReport {
         references.splice(0,0,
             // Section intro
             this.util.makeParagraph(
-                'The mediumroast.io system automatically generated this section.' +
+                'The Mediumroast for GitHub automatically generated this section.' +
                 ' It includes key metadata from each interaction associated to the object ' + this.objectName +
                 '.  If this report document is produced as a package, instead of standalone, then the' +
                 ' hyperlinks are active and will link to documents on the local folder after the' +
@@ -237,14 +349,15 @@ class InteractionStandalone extends BaseInteractionsReport {
         this.title = interaction.name + ' Interaction Report'
         this.interaction = interaction
         this.company = company
-        this.description = 'An Interaction report summarizing ' + interaction.name + ' and including relevant company data.'
-        this.introduction = 'The mediumroast.io system automatically generated this document.' +
-            ' It includes key metadata for this Interaction object and relevant metadata from the associated company.' + 
-            '  If this report document is produced as a package, instead of standalone, then the' +
+        this.description = `An Interaction report summarizing ${interaction.name}.`
+        this.introduction = 'This document was automatically generated by Mediumroast for GitHub.' +
+            ' It includes an abstract, tags and proto-requirement for this Interaction.' + 
+            '  If this report is produced as a package, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
         this.abstract = interaction.abstract
-        this.topics = this.util.rankTags(this.interaction.tags)
+        this.tags = this.util.rankTags(this.interaction.tags)
+        this.topics = this.interaction.topics
     }
 
     metadataTableDOCX (isPackage) {
@@ -314,7 +427,9 @@ class InteractionStandalone extends BaseInteractionsReport {
                 this.util.makeHeading1('Abstract'),
                 this.util.makeParagraph(this.abstract),
                 this.util.makeHeading1('Tags'),
-                this.util.tagsTable(this.topics),
+                this.util.tagsTable(this.tags),
+                this.util.makeHeading1('Proto-Requirements'),
+                super.protorequirementsTable(this.topics),
             ])
     
         // Construct the document

@@ -163,7 +163,7 @@ class Dashboards {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.util.makeParagraph(name, {fontSize: this.fontFactor * this.fontSize, bold: true})],
+                    children: [this.util.makeParagraph(name, {fontSize: this.generalStyle.dashFontSize, bold: true})],
                     borders: this.bottomBorder,
                     margins: {
                         top: this.generalStyle.tableMargin,
@@ -175,7 +175,7 @@ class Dashboards {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.util.makeParagraph(data, {fontSize: this.fontFactor * this.fontSize})],
+                    children: [this.util.makeParagraph(data, {fontSize: this.generalStyle.dashFontSize})],
                     borders: this.bottomAndRightBorders,
                     margins: {
                         top: this.generalStyle.tableMargin,
@@ -321,7 +321,7 @@ class InteractionDashboard extends Dashboards {
     // Create the dashboard shell which will contain all of the outputs
     _createDashboardShell (leftContents, rightContents) {
         return new docx.Table({
-            columnWidths: [80, 20],
+            columnWidths: [70, 30],
             rows: [
                 new docx.TableRow({
                     children: [

@@ -286,11 +286,12 @@ class DOCXUtilities {
      * @description Generate a header with an item's name and the document type fields
      * @param {String} itemName 
      * @param {String} documentType 
-     * @param {Boolean} landscape 
+     * @param {Object} options 
      */
     makeHeader(itemName, documentType, options={}) {
         const {
-            landscape = false
+            landscape = false,
+            fontColor = this.textFontColor,
         } = options
         let separator = "\t".repeat(3)
         if (landscape) { separator = "\t".repeat(4)}
@@ -302,12 +303,14 @@ class DOCXUtilities {
                         new docx.TextRun({
                             children: [documentType],
                             font: this.font,
-                            size: this.generalSettings.headerFontSize
+                            size: this.generalSettings.headerFontSize,
+                            color: fontColor ? fontColor : this.textFontColor
                         }),
                         new docx.TextRun({
                             children: [itemName],
                             font: this.font,
-                            size: this.generalSettings.headerFontSize
+                            size: this.generalSettings.headerFontSize,
+                            color: fontColor ? fontColor : this.textFontColor
                         })
                     ],
                 }),
@@ -315,7 +318,11 @@ class DOCXUtilities {
         })
     }
 
-    makeFooter(documentAuthor, datePrepared, landscape=false) {
+    makeFooter(documentAuthor, datePrepared, options={}) {
+        const {
+            landscape = false,
+            fontColor = this.textFontColor,
+        } = options
         let separator = "\t"
         if (landscape) { separator = "\t".repeat(2)}
         return new docx.Paragraph({
@@ -324,17 +331,20 @@ class DOCXUtilities {
                 new docx.TextRun({
                     children: ['Page ', docx.PageNumber.CURRENT, ' of ', docx.PageNumber.TOTAL_PAGES, separator],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 }),
                 new docx.TextRun({
                     children: ['|', separator, documentAuthor, separator],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 }),
                 new docx.TextRun({
                     children: ['|', separator, datePrepared],
                     font: this.font,
-                    size: 18
+                    size: this.generalSettings.footerFontSize,
+                    color: fontColor ? fontColor : this.textFontColor
                 })
             ]
         })
@@ -344,38 +354,8 @@ class DOCXUtilities {
      * @function makeParagraph
      * @description For a section of prose create a paragraph
      * @param {String} paragraph - text/prose for the paragraph
-     * @param {Integer} size - font size for the paragrah
-     * @param {Boolean} bold - a boolean value for determining if the text should be bolded
-     * @param {Integer} spaceAfter - an integer 1 or 0 to determine if there should be space after this element
+     * @param {Object} objects - an object that contains the font size, color, and other styling options
      * @returns {Object} a docx paragraph object 
-     */
-    // makeParagraph (paragraph, size, bold, spaceAfter) {
-    //     return new docx.Paragraph({
-    //         children: [
-    //             new docx.TextRun({
-    //                 text: paragraph,
-    //                 font: this.font,
-    //                 size: size ? size : 20,
-    //                 bold: bold ? bold : false, 
-    //                 break: spaceAfter ? spaceAfter : 0
-    //             })
-    //         ]
-    //     })
-    // }
-
-    /**
-     * 
-     * @param {*} paragraph 
-     * @param {*} size 
-     * @param {*} color 
-     * @param {*} spaceAfter 
-     * @param {*} bold 
-     * @param {*} center 
-     * @param {*} font
-     * @returns 
-     * @todo Replace the report/common.js makeParagraph method with this one during refactoring
-     * @todo Add an options object in a future release when refactoring
-     * @todo Review the NOTICE section and at a later date work on all TODOs there
      */
     makeParagraph (paragraph,options={}) {
         const {
