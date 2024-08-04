@@ -2,11 +2,10 @@
  * A class for common functions for all CLIs.
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file common.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
  * @version 1.1.0
  */
-
 
 // Import required modules
 import axios from 'axios'

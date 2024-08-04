@@ -4,6 +4,9 @@ import axios from 'axios'
 import docxSettings from './settings.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
 
+// Pickup the general settings
+const generalStyle = docxSettings.general
+
 function _transformForBubble(objData) {
     let chartData = []
     for(const obj in objData){
@@ -11,6 +14,17 @@ function _transformForBubble(objData) {
         const mostSimilar = (objData[obj].most_similar.score * 100).toFixed(2)
         const leastSimilar = (objData[obj].least_similar.score * 100).toFixed(2)
         chartData.push([mostSimilar, leastSimilar, objName])
+    }
+    return chartData
+}
+
+// TODO this isn't really correct or used yet
+function _transformForPie(objData) {
+    let chartData = []
+    for(const obj in objData){
+        const objName = objData[obj].name
+        const objScore = (objData[obj].score * 100).toFixed(2)
+        chartData.push([objName, objScore])
     }
     return chartData
 }
@@ -104,7 +118,6 @@ export async function bubbleChart (
     const cliUtil = new CLIUtilities()
 
     // Pick up the settings including those from the theme
-    const generalStyle = docxSettings.general
     const themeStyle = docxSettings[env.theme]
 
     // Change the originating data into data aligned to the bubble chart
@@ -347,4 +360,8 @@ export async function radarChart (
     const putResult = await _postToChartServer(myChart, env.echartsServer)
     let imageURL = env.echartsServer  + '/' + putResult[2].filename
     return await cliUtil.downloadImage(imageURL, baseDir + '/images', chartFile)
+}
+
+export async function pieChart () {
+    // TODO
 }

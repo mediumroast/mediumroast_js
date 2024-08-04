@@ -82,7 +82,6 @@ class Dashboards {
     
     }
 
-    // Following the _statisticsTable method in the CompanyDashboard class create a similar method for all dashboards
     /**
      * 
      * 
@@ -412,7 +411,7 @@ class InteractionDashboard extends Dashboards {
     }
 }
 
-class CompanyDashbord {
+class CompanyDashbord extends Dashboards {
     /**
      * A high class meant to create an initial dashboard page for an MS Word document company report
      * @constructor
@@ -421,63 +420,66 @@ class CompanyDashbord {
      * @param {String} theme - Governs the color of the dashboard, be either coffee or latte 
      */
     constructor(env) {
-        this.env = env
-        this.util = new DOCXUtilities(env)
-        this.themeStyle = docxSettings[env.theme] // Set the theme for the report
-        this.generalStyle = docxSettings.general // Pull in all of the general settings
-        
-        // Define specifics for table borders
-        this.noneStyle = {
-            style: this.generalStyle.noBorderStyle
-        }
-        this.borderStyle = {
-            style: this.generalStyle.tableBorderStyle,
-            size: this.generalStyle.tableBorderSize,
-            color: this.themeStyle.tableBorderColor
-        }
-        // No borders
-        this.noBorders = {
-            left: this.noneStyle,
-            right: this.noneStyle,
-            top: this.noneStyle,
-            bottom: this.noneStyle
-        }
-        // Right border only
-        this.rightBorder = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.noneStyle,
-            bottom: this.noneStyle
-        }
-        // Bottom border only
-        this.bottomBorder = {
-            left: this.noneStyle,
-            right: this.noneStyle,
-            top: this.noneStyle,
-            bottom: this.borderStyle
-        }
-        // Bottom and right borders
-        this.bottomAndRightBorders = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.noneStyle,
-            bottom: this.borderStyle
-        }
-        // Top and right borders
-        this.topAndRightBorders = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.borderStyle,
-            bottom: this.noneStyle
-        }
-        // All borders, helpful for debugging
-        this.allBorders = {
-            left: this.borderStyle,
-            right: this.borderStyle,
-            top: this.borderStyle,
-            bottom: this.borderStyle
-        }
+        super(env)
     }
+    // constructor(env) {
+    //     this.env = env
+    //     this.util = new DOCXUtilities(env)
+    //     this.themeStyle = docxSettings[env.theme] // Set the theme for the report
+    //     this.generalStyle = docxSettings.general // Pull in all of the general settings
+        
+    //     // Define specifics for table borders
+    //     this.noneStyle = {
+    //         style: this.generalStyle.noBorderStyle
+    //     }
+    //     this.borderStyle = {
+    //         style: this.generalStyle.tableBorderStyle,
+    //         size: this.generalStyle.tableBorderSize,
+    //         color: this.themeStyle.tableBorderColor
+    //     }
+    //     // No borders
+    //     this.noBorders = {
+    //         left: this.noneStyle,
+    //         right: this.noneStyle,
+    //         top: this.noneStyle,
+    //         bottom: this.noneStyle
+    //     }
+    //     // Right border only
+    //     this.rightBorder = {
+    //         left: this.noneStyle,
+    //         right: this.borderStyle,
+    //         top: this.noneStyle,
+    //         bottom: this.noneStyle
+    //     }
+    //     // Bottom border only
+    //     this.bottomBorder = {
+    //         left: this.noneStyle,
+    //         right: this.noneStyle,
+    //         top: this.noneStyle,
+    //         bottom: this.borderStyle
+    //     }
+    //     // Bottom and right borders
+    //     this.bottomAndRightBorders = {
+    //         left: this.noneStyle,
+    //         right: this.borderStyle,
+    //         top: this.noneStyle,
+    //         bottom: this.borderStyle
+    //     }
+    //     // Top and right borders
+    //     this.topAndRightBorders = {
+    //         left: this.noneStyle,
+    //         right: this.borderStyle,
+    //         top: this.borderStyle,
+    //         bottom: this.noneStyle
+    //     }
+    //     // All borders, helpful for debugging
+    //     this.allBorders = {
+    //         left: this.borderStyle,
+    //         right: this.borderStyle,
+    //         top: this.borderStyle,
+    //         bottom: this.borderStyle
+    //     }
+    // }
 
     /**
      * 
@@ -930,7 +932,7 @@ class CompanyDashbord {
     }
 
     // Find the closest competitor
-    // This uses the Euclidean distantce, given points (x1, y1) and (x2, y2)
+    // This uses the Euclidean distance, given points (x1, y1) and (x2, y2)
     // d = sqrt((x2 - x1)^2 + (y2 - y1)^2) 
     _getMostSimilarCompany(comparisons, companies) {
         const x1 = 1 // In this case x1 = 1 and y1 = 1
@@ -1052,7 +1054,7 @@ class CompanyDashbord {
         }
         // Compute the descriptive statistics for interactions
         const myStats = this._computeInteractionStats(company,competitors)
-        // Create the radard chart from supplied interaction quality data
+        // TODO change to pie chart
         const radarChartFile = await radarChart(
             {company: company, competitors: competitors, stats: myStats},
             this.env,
