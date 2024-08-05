@@ -13,7 +13,6 @@ import boxPlot from 'box-plot'
 import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
-import FilesystemOperators from '../cli/filesystem.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
 import { getMostSimilarCompany } from './tools.js'
 
@@ -82,16 +81,14 @@ class CompanySection extends BaseCompanyReport {
 
     // Create a URL to search for patents on Google patents
     patentRow() {
-        const patentString = this.company.name + ' Patent Search'
-        const patentUrl = 'https://patents.google.com/?assignee=' + this.company.name
-        return this.util.urlRow('Patents', patentString, patentUrl)
+        const patentString = `${this.company.name} Patent Search`
+        return this.util.urlRow('Patents', patentString, this.company.google_patents_url)
     }
 
     // Create a URL to search for news on Google news
     newsRow() {
-        const newsString = this.company.name + ' Company News'
-        const newsUrl = 'https://news.google.com/search?q=' + this.company.name
-        return this.util.urlRow('News', newsString, newsUrl)
+        const newsString = `${this.company.name} Company News`
+        return this.util.urlRow('News', newsString, this.company.google_news_url)
     }
 
     // Define the CIK and link it to an EDGAR search if available
@@ -336,48 +333,25 @@ class CompanyStandalone extends BaseCompanyReport {
      * @todo Rename this class as report and rename the file as companyDocx.js
      * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
-    constructor(company, interactions, competitors, env, creator, author) {
-        super(company, env)
+    constructor(sourceData, env, author='Mediumroast for GitHub') {
+        super(sourceData.company, env)
         this.objectType = 'Company'
-        this.creator = creator
+        this.creator = author
         this.author = author
-        this.authoredBy = 'Mediumroast for GitHub'
-        this.title = company.name + ' Company Report'
-        this.interactions = interactions
+        this.authoredBy = author
+        this.title = `${this.company.name} Company Report`
+        this.interactions = this.company.interactions
         this.competitors = competitors
-        this.description = 'A Company report summarizing ' + company.name + ' and including relevant company data.'
-        /*
-        ChatGPT summary
-        The mediumroast.io system has meticulously crafted this report to provide you with a comprehensive overview of the Company object and its associated interactions. This document features a robust collection of key metadata that provides valuable insights into the company's operations. Furthermore, to enhance the user experience, if this report is part of a package, the hyperlinks within it are designed to be active, linking to various documents within the local folder with just one click after the package is opened. This makes exploring the details of the company a breeze!
-        */
-        this.introduction = 'The mediumroast.io system automatically generated this document.' +
-            ' It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions.' + 
-            '  If this report document is produced as a package, instead of standalone, then the' +
-            ' hyperlinks are active and will link to documents on the local folder after the' +
-            ' package is opened.'
-        this.util = new DOCXUtilities(env)
-        this.fileSystem = new FilesystemOperators()
-        // this.topics = this.util.rankTags(this.company.topics)
-        this.comparison = company.comparison,
+        this.description = `A Company report for ${this.company.name} and including relevant company data.`
+        this.introduction = `The mediumroast.io system automatically generated this document.
+        It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions. If this report document is produced as a package, instead of standalone, then the
+        hyperlinks are active and will link to documents on the local folder after the
+        package is opened.`
+        this.similarity = this.company.similarity,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
+        this.totalInteractions = this.company.totalInteractions
+        this.totalCompanies = this.company.totalCompanies
     }
-
-    // 
-    // Local functions
-    // 
-
-    // Basic operations to prepare for report and package creation
-    _initialize() {
-        // 
-        const subdirs = ['interactions', 'images']
-        for(const myDir in subdirs) {
-            this.fileSystem.safeMakedir(this.baseDir + '/' + subdirs[myDir])
-        }
-    }
-
-    // 
-    // External functions
-    // 
 
     /**
      * @async
@@ -429,7 +403,7 @@ class CompanyStandalone extends BaseCompanyReport {
                 companySection.makeFirmographicsDOCX(),
                 this.util.makeHeading1('Comparison')
             ],
-            companySection.makeComparisonDOCX(this.comparison, this.competitors),
+            companySection.makeComparisonDOCX(this.similarity, this.competitors),
             [   this.util.makeHeading1('Topics'),
                 this.util.makeParagraph(
                     'The following topics were automatically generated from all ' +
