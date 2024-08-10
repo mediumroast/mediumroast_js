@@ -69,12 +69,15 @@ function initializeSource() {
    return {
       company: [],
       interactions: [],
+      allInteractions: [],
       competitors: {
          leastSimilar: {},
          mostSimilar: {},
+         all: []
       },
       totalInteractions: 0,
       totalCompanies: 0,
+      averageInteractionsPerCompany: 0,
    }
 }
 
@@ -99,7 +102,7 @@ function getCompetitors(sourceCompany, allCompanies) {
     const competitorNames = Object.keys(sourceCompany[0].similarity);
     const allCompetitors = competitorNames.map(competitorName => 
         allCompanies.mrJson.find(company => company.name === competitorName)
-    ).filter(company => company !== undefined);
+    ).filter(company => company !== undefined)
 
     const mostSimilar = competitorNames.reduce((mostSimilar, competitorName) => {
         const competitor = allCompanies.mrJson.find(company => company.name === competitorName);
@@ -107,10 +110,10 @@ function getCompetitors(sourceCompany, allCompanies) {
 
         const similarityScore = sourceCompany[0].similarity[competitorName].similarity;
         if (!mostSimilar || similarityScore > mostSimilar.similarity) {
-            return { ...competitor, similarity: similarityScore };
+            return { ...competitor, similarity: similarityScore }
         }
-        return mostSimilar;
-    }, null);
+        return mostSimilar
+    }, null)
 
     const leastSimilar = competitorNames.reduce((leastSimilar, competitorName) => {
         const competitor = allCompanies.mrJson.find(company => company.name === competitorName);
@@ -118,12 +121,12 @@ function getCompetitors(sourceCompany, allCompanies) {
 
         const similarityScore = sourceCompany[0].similarity[competitorName].similarity;
         if (!leastSimilar || similarityScore < leastSimilar.similarity) {
-            return { ...competitor, similarity: similarityScore };
+            return { ...competitor, similarity: similarityScore }
         }
-        return leastSimilar;
+        return leastSimilar
     }, null);
 
-    return { allCompetitors, mostSimilar, leastSimilar };
+    return { allCompetitors, mostSimilar, leastSimilar }
 }
 
 async function _prepareData(companyName) {
@@ -134,16 +137,15 @@ async function _prepareData(companyName) {
     source.company = getSourceCompany(allCompanies, companyName)
     source.totalCompanies = allCompanies.mrJson.length
 
-    source.interactions = getInteractions(source.company, allInteractions);
+    source.interactions = getInteractions(source.company, allInteractions)
+    source.allInteractions = allInteractions.mrJson
     source.totalInteractions = source.interactions.length
+    source.averageInteractionsPerCompany = Math.round(source.totalInteractions / source.totalCompanies)
 
     const { allCompetitors, mostSimilar, leastSimilar } = getCompetitors(source.company, allCompanies)
     source.competitors.all = allCompetitors
     source.competitors.mostSimilar = mostSimilar
     source.competitors.leastSimilar = leastSimilar
-
-    console.log(JSON.stringify(source, null, 2))
-    process.exit(0)
 
     return source
 }
@@ -165,9 +167,7 @@ if (myArgs.report) {
    // Set up the document controller
    const docController = new CompanyStandalone(
       reportData,
-      myEnv,
-      'mediumroast.io barrista robot', // The author
-      'Mediumroast, Inc.' // The authoring company/org
+      myEnv
    )
 
    if (myArgs.package) {

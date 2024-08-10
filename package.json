@@ -70,6 +70,7 @@
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "docx": "^7.4.1",
+    "flatted": "^3.3.1",
     "inquirer": "^9.1.2",
     "mediumroast_js": "^0.3.6",
     "node-fetch": "^3.2.10",

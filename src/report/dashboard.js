@@ -12,7 +12,7 @@ import docx from 'docx'
 import * as fs from 'fs'
 import DOCXUtilities from './common.js'
 import docxSettings from './settings.js'
-import { bubbleChart, radarChart } from './charts.js'
+import Charting from './charts.js'
 
 class Dashboards {
     /**
@@ -79,6 +79,8 @@ class Dashboards {
             top: this.borderStyle,
             bottom: this.borderStyle
         }
+
+        // TODO need baseDir to be passed in or defined in the constructor
     
     }
 
@@ -422,64 +424,6 @@ class CompanyDashbord extends Dashboards {
     constructor(env) {
         super(env)
     }
-    // constructor(env) {
-    //     this.env = env
-    //     this.util = new DOCXUtilities(env)
-    //     this.themeStyle = docxSettings[env.theme] // Set the theme for the report
-    //     this.generalStyle = docxSettings.general // Pull in all of the general settings
-        
-    //     // Define specifics for table borders
-    //     this.noneStyle = {
-    //         style: this.generalStyle.noBorderStyle
-    //     }
-    //     this.borderStyle = {
-    //         style: this.generalStyle.tableBorderStyle,
-    //         size: this.generalStyle.tableBorderSize,
-    //         color: this.themeStyle.tableBorderColor
-    //     }
-    //     // No borders
-    //     this.noBorders = {
-    //         left: this.noneStyle,
-    //         right: this.noneStyle,
-    //         top: this.noneStyle,
-    //         bottom: this.noneStyle
-    //     }
-    //     // Right border only
-    //     this.rightBorder = {
-    //         left: this.noneStyle,
-    //         right: this.borderStyle,
-    //         top: this.noneStyle,
-    //         bottom: this.noneStyle
-    //     }
-    //     // Bottom border only
-    //     this.bottomBorder = {
-    //         left: this.noneStyle,
-    //         right: this.noneStyle,
-    //         top: this.noneStyle,
-    //         bottom: this.borderStyle
-    //     }
-    //     // Bottom and right borders
-    //     this.bottomAndRightBorders = {
-    //         left: this.noneStyle,
-    //         right: this.borderStyle,
-    //         top: this.noneStyle,
-    //         bottom: this.borderStyle
-    //     }
-    //     // Top and right borders
-    //     this.topAndRightBorders = {
-    //         left: this.noneStyle,
-    //         right: this.borderStyle,
-    //         top: this.borderStyle,
-    //         bottom: this.noneStyle
-    //     }
-    //     // All borders, helpful for debugging
-    //     this.allBorders = {
-    //         left: this.borderStyle,
-    //         right: this.borderStyle,
-    //         top: this.borderStyle,
-    //         bottom: this.borderStyle
-    //     }
-    // }
 
     /**
      * 
@@ -954,36 +898,6 @@ class CompanyDashbord extends Dashboards {
         return mostSimilarCompany[0]
     }
 
-    // Compute interaction descriptive statistics
-    _computeInteractionStats(company, competitors) {
-        // Pull out company interactions
-        const companyInteractions = Object.keys(company.linked_interactions).length
-
-        // Get the total number of interactions
-        // Add the current company interactions to the total
-        let totalInteractions = companyInteractions 
-        // Sum all other companies' interactions
-        for(const competitor in competitors) {
-            totalInteractions += Object.keys(competitors[competitor].company.linked_interactions).length
-        }
-
-        // Compute the average interactions per company
-        const totalCompanies = 1 + competitors.length  
-        const averageInteractions = Math.round(totalInteractions/totalCompanies) 
-
-        // Return the result
-        return {
-            totalStatsTitle: "Total Interactions",
-            totalStats: totalInteractions,
-            averageStatsTitle: "Average Interactions/Company",
-            averageStats: averageInteractions,
-            companyStatsTitle: "Interactions",
-            companyStats: companyInteractions,
-            totalCompaniesTitle: "Total Companies",
-            totalCompanies: totalCompanies
-        }
-    }
-
     /**
      * 
      * @param {*} paragraph 
@@ -1036,30 +950,15 @@ class CompanyDashbord extends Dashboards {
      * @returns 
      */
     async makeDashboard(company, competitors, baseDir) {
+        // Construct the Charting class
+        const charting = new Charting(this.env)
         // Create the bubble chart from the company comparisons
-        const bubbleChartFile = await bubbleChart(
-            company.comparison,
-            this.env,
-            baseDir
-        )
-        // Find the most similar company
-        const mostSimilarCompany = this._getMostSimilarCompany(
-            company.comparison, 
-            competitors
-        )
-        // Pull in the relevant interactions from the most similar company
-        const mostLeastSimilarInteractions = {
-            most_similar: mostSimilarCompany.mostSimilar.interaction,
-            least_similar: mostSimilarCompany.leastSimilar.interaction
-        }
-        // Compute the descriptive statistics for interactions
-        const myStats = this._computeInteractionStats(company,competitors)
-        // TODO change to pie chart
-        const radarChartFile = await radarChart(
-            {company: company, competitors: competitors, stats: myStats},
-            this.env,
-            baseDir
-        )
+        const bubbleChartFile = await charting.bubbleChart({similarities: company.similarity, company: company})
+
+        // Create the pie chart for interaction characterization
+        const pieChartFile = await charting.pieChart({company: company})
+
+        process.exit(0)
         /**
          * NOTICE
          * I believe that there is a potential bug in node.js filesystem module.
@@ -1090,7 +989,7 @@ class CompanyDashbord extends Dashboards {
             'scratch_chart.png'
         )
         let myRows = [
-            this.firstRow(bubbleChartFile, radarChartFile, myStats),
+            this.firstRow(bubbleChartFile, pieChartFile, myStats),
             this.shellRow("companyDesc", mostSimilarCompany),
             this.shellRow("docDesc", null, mostLeastSimilarInteractions),
         ]

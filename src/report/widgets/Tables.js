@@ -3,7 +3,7 @@ import Widgets from './Widgets.js'
 import TextWidgets from './Text.js'
 import docx from 'docx'
 
-class TableWidget extends Widgets {
+class TableWidgets extends Widgets {
     constructor(env) {
         super(env)
         // Define specifics for table borders
@@ -76,6 +76,7 @@ class TableWidget extends Widgets {
             allColumnsBold = false,
             allBorders = false,
             bottomBorders = true,
+            lastCellBottomRightBorders = false
         } = options
 
         // Set the first column to bold if all columns are bold
@@ -84,11 +85,17 @@ class TableWidget extends Widgets {
         }
 
         // Set the border style
-        let borderStyle = this.noBorders
+        let leftBorderStyle = this.noBorders
+        let rightBorderStyle = this.noBorders
         if (allBorders) {
-            borderStyle = this.allBorders
+            leftBorderStyle = this.allBorders
+            rightBorderStyle = this.allBorders
         } else if (bottomBorders) {
-            borderStyle = this.bottomBorder
+            leftBorderStyle = this.bottomBorder
+            rightBorderStyle = this.bottomBorder
+        } else if (lastCellBottomRightBorders) {
+            leftBorderStyle = this.bottomBorder
+            rightBorderStyle = this.bottomAndRightBorders
         }
 
         // Destructure the cols array
@@ -103,7 +110,7 @@ class TableWidget extends Widgets {
                         type: docx.WidthType.PERCENTAGE
                     },
                     children: [TextWidgets.makeParagraph(col1, {fontSize: this.fontFactor * this.fontSize, bold: firstColumnBold})],
-                    borders: borderStyle
+                    borders: leftBorderStyle
                 }),
                 new docx.TableCell({
                     width: {
@@ -111,7 +118,7 @@ class TableWidget extends Widgets {
                         type: docx.WidthType.PERCENTAGE
                     },
                     children: [TextWidgets.makeParagraph(col2, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
-                    borders: borderStyle
+                    borders: rightBorderStyle
                 })
             ]
         })
@@ -130,6 +137,7 @@ class TableWidget extends Widgets {
             allColumnsBold = false,
             allBorders = false,
             bottomBorders = true,
+            lastCellBottomRightBorders = false
         } = options
 
         // Set the first column to bold if all columns are bold
@@ -138,11 +146,17 @@ class TableWidget extends Widgets {
         }
 
         // Set the border style
-        let borderStyle = this.noBorders
+        let leftBorderStyle = this.noBorders
+        let rightBorderStyle = this.noBorders
         if (allBorders) {
-            borderStyle = this.allBorders
+            leftBorderStyle = this.allBorders
+            rightBorderStyle = this.allBorders
         } else if (bottomBorders) {
-            borderStyle = this.bottomBorder
+            leftBorderStyle = this.bottomBorder
+            rightBorderStyle = this.bottomBorder
+        } else if (lastCellBottomRightBorders) {
+            leftBorderStyle = this.bottomBorder
+            rightBorderStyle = this.bottomAndRightBorders
         }
 
         // Destructure the cols array
@@ -156,6 +170,7 @@ class TableWidget extends Widgets {
                     style: 'Hyperlink',
                     font: this.generalSettings.font,
                     size: this.generalSettings.fullFontSize,
+                    bold: allColumnsBold
                 })
             ],
             link: col2Hyperlink
@@ -169,14 +184,16 @@ class TableWidget extends Widgets {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [this.makeParagraph(col1, this.fontFactor * this.fontSize, true)]
+                    children: [TextWidgets.makeParagraph(col1, {fontSize: this.generalSettings.fullFontSize, bold: firstColumnBold})],
+                    borders: leftBorderStyle
                 }),
                 new docx.TableCell({
                     width: {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [new docx.Paragraph({children:[myUrl]})]
+                    children: [new docx.Paragraph({children:[myUrl]})],
+                    borders: rightBorderStyle
                 })
             ]
         })
@@ -243,6 +260,9 @@ class TableWidget extends Widgets {
         })
     }
 
+    /** 
+     * Begin functions for completely defining tables with a particular structure
+    */
     _tagCell(tag) {
         return new docx.TableCell({
             margins: {
@@ -332,17 +352,43 @@ class TableWidget extends Widgets {
 
         return myTable
     }
-
-/** 
- * Begin functions for completely defining tables with a particular structure
-*/
     
+    /**
+     * @function simpleDescriptiveTable
+     * @param {String} title -  the title of the table
+     * @param {String} text - the text for the table
+     * @returns {Object} a docx Table object
+     * @example
+     * const myTable = simpleDescriptiveTable("Title", "Text")
+     * 
+     * Will return a table with the title in the first column and the text in the second column, like this:
+     * 
+     * -------------------------------------
+     * | Title | Text                       |
+     * -------------------------------------
+     */
+    simpleDescriptiveTable(title, text) {
+        return new docx.Table({
+            columnWidths: [95],
+            margins: {
+                left: this.generalStyle.tableMargin,
+                right: this.generalStyle.tableMargin,
+                bottom: this.generalStyle.tableMargin,
+                top: this.generalStyle.tableMargin
+            },
+            rows: [this.twoColumnRowBasic([title, text], {firstColumnBold: true, allColumnsBold: false, lastCellBottomRightBorders: true})],
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
     /**
      * 
      * @function descriptiveStatisticsTable
-     * @param {*} statistics
+     * @param {Object} statistics
      * @returns
-     * @todo turn into a loop instead of having the code repeated
      * @todo if the length of any number is greater than 3 digits shrink the font size by 15% and round down
      * @todo add a check for the length of the title and shrink the font size by 15% and round down
      * @todo add a check for the length of the value and shrink the font size by 15% and round down
@@ -407,38 +453,6 @@ class TableWidget extends Widgets {
             }
         })
     }
-
-    twoCellRow (name, data) {
-        // return the row
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    width: {
-                        size: 20,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [this.util.makeParagraph(name, {fontSize: this.generalStyle.dashFontSize, bold: true})],
-                    borders: this.bottomBorder,
-                    margins: {
-                        top: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin
-                    },
-                }),
-                new docx.TableCell({
-                    width: {
-                        size: 80,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [this.util.makeParagraph(data, {fontSize: this.generalStyle.dashFontSize})],
-                    borders: this.bottomAndRightBorders,
-                    margins: {
-                        top: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin
-                    },
-                })
-            ]
-        })
-    }
 }
 
-export default TableWidget
+export default TableWidgets

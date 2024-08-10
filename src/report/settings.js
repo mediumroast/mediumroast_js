@@ -65,12 +65,12 @@ const docxSettings = {
         documentColor: "F1F0EE", // Coffee black
         titleFontColor: "25110f", // Saturated Light Blue
         textFontColor: "25110f", // Ultra light Blue
-        chartAxisLineColor: "#374246",
-        chartAxisFontColor: "rgba(71,121,140, 0.7)",
-        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
-        chartItemFontColor: "rgba(149,181,192, 0.9)",
-        chartSeriesColor: "rgb(71,113,128)",
-        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
+        chartAxisLineColor: "#25110f",
+        chartAxisFontColor: "rgba(37,17,15, 0.7)",
+        chartAxisTickFontColor: "rgba(37,17,15, 0.6)",
+        chartItemFontColor: "rgba(37,17,15, 0.9)",
+        chartSeriesColor: "rgb(27,12,10, 0.7)",
+        chartSeriesBorderColor: "rgba(27,12,10, 0.9)", 
         highlightFontColor: ""
     } 
 } 

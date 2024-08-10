@@ -40,7 +40,7 @@ class DOCXUtilities {
         this.fullFontSize = docxSettings.general.fullFontSize
         this.fontFactor = docxSettings.general.fontFactor
         this.theme = this.env.theme
-        this.documentColor = docxSettings[this.theme].documentColor
+        this.documentColor = this.themeSettings.documentColor
         this.textFontColor = `#${docxSettings[this.theme].textFontColor.toLowerCase()}`
         this.titleFontColor = `#${docxSettings[this.theme].titleFontColor.toLowerCase()}`
         this.tableBorderColor = `#${docxSettings[this.theme].tableBorderColor.toLowerCase()}`

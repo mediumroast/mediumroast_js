@@ -15,6 +15,7 @@ import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
 import { getMostSimilarCompany } from './tools.js'
+import TextWidgets from './widgets/Text.js'
 
 class BaseCompanyReport {
     constructor(company, env) {
@@ -27,6 +28,7 @@ class BaseCompanyReport {
         this.baseDir = this.env.outputDir
         this.workDir = this.env.workDir
         this.baseName = company.name.replace(/ /g,"_")
+        this.textWidgets = new TextWidgets(env)
     }
 
 }
@@ -45,6 +47,7 @@ class CompanySection extends BaseCompanyReport {
      */
     constructor(company, env) {
         super(company, env)
+        console.log('CompanySection constructor')
     }
 
     // Create a URL on Google maps to search for the address
@@ -334,14 +337,14 @@ class CompanyStandalone extends BaseCompanyReport {
      * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
     constructor(sourceData, env, author='Mediumroast for GitHub') {
-        super(sourceData.company, env)
+        super(sourceData.company[0], env)
         this.objectType = 'Company'
         this.creator = author
         this.author = author
         this.authoredBy = author
         this.title = `${this.company.name} Company Report`
-        this.interactions = this.company.interactions
-        this.competitors = competitors
+        this.interactions = sourceData.allInteractions
+        this.competitors = sourceData.competitors.all
         this.description = `A Company report for ${this.company.name} and including relevant company data.`
         this.introduction = `The mediumroast.io system automatically generated this document.
         It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions. If this report document is produced as a package, instead of standalone, then the
@@ -349,8 +352,9 @@ class CompanyStandalone extends BaseCompanyReport {
         package is opened.`
         this.similarity = this.company.similarity,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
-        this.totalInteractions = this.company.totalInteractions
-        this.totalCompanies = this.company.totalCompanies
+        this.totalInteractions = sourceData.totalInteractions
+        this.totalCompanies = sourceData.totalCompanies
+        this.averageInteractions = sourceData.averageInteractionsPerCompany
     }
 
     /**
@@ -383,43 +387,38 @@ class CompanyStandalone extends BaseCompanyReport {
         const preparedFor = `${this.authoredBy} report for: `
         
         // Construct the company section
-        const companySection = new CompanySection(this.company, this.baseDir, env)
-        const interactionSection = new InteractionSection(
-            this.interactions, 
-            this.company.name,
-            this.objectType,
-            this.env
-        )
+        // const companySection = new CompanySection(this.company, this.env)
+        // const interactionSection = new InteractionSection(
+        //     this.interactions, 
+        //     this.company.name,
+        //     this.objectType,
+        //     this.env
+        // )
         const myDash = new CompanyDashbord(this.env)
 
-        // Construct the interactions section
-        // const interactionsSection = new InteractionSection(this.interactions)
-
         // Set up the default options for the document
-        const myDocument = [].concat(
-            this.util.makeIntro(this.introduction),
-            [
-                this.util.makeHeading1('Company Detail'), 
-                companySection.makeFirmographicsDOCX(),
-                this.util.makeHeading1('Comparison')
-            ],
-            companySection.makeComparisonDOCX(this.similarity, this.competitors),
-            [   this.util.makeHeading1('Topics'),
-                this.util.makeParagraph(
-                    'The following topics were automatically generated from all ' +
-                    this.noInteractions + ' interactions associated to this company.'
-                ),
-                // this.util.makeHeading2('Topics Table'),
-                // this.util.topicTable(this.topics),
-                this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
-            ],
-            ...interactionSection.makeDescriptionsDOCX(),
-            await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
-            [   this.util.pageBreak(),
-                this.util.makeHeading1('References')
-            ],
-            ...interactionSection.makeReferencesDOCX(isPackage)
-            )
+        // const myDocument = [].concat(
+        //     this.util.makeIntro(this.introduction),
+        //     [
+        //         this.util.makeHeading1('Company Detail'), 
+        //         companySection.makeFirmographicsDOCX(),
+        //         this.util.makeHeading1('Comparison')
+        //     ],
+        //     companySection.makeComparisonDOCX(this.similarity, this.competitors),
+        //     [   this.util.makeHeading1('Topics'),
+        //         this.util.makeParagraph(
+        //             'The following topics were automatically generated from all ' +
+        //             this.noInteractions + ' interactions associated to this company.'
+        //         ),
+        //         this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
+        //     ],
+        //     ...interactionSection.makeDescriptionsDOCX(),
+        //     await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
+        //     [   this.util.pageBreak(),
+        //         this.util.makeHeading1('References')
+        //     ],
+        //     ...interactionSection.makeReferencesDOCX(isPackage)
+        //     )
     
         // Construct the document
         const myDoc = new docx.Document ({
@@ -453,7 +452,7 @@ class CompanyStandalone extends BaseCompanyReport {
                         await myDash.makeDashboard(
                             this.company, 
                             this.competitors, 
-                            this.baseDir
+                            this.workDir
                         )
                     ],
                 },
@@ -467,7 +466,7 @@ class CompanyStandalone extends BaseCompanyReport {
                             children: [this.util.makeFooter(authoredBy, preparedOn)]
                         })
                     },
-                    children: myDocument,
+                    children: [this.textWidgets.makeParagraph('Table of Contents')],
                 }
             ],
         })
