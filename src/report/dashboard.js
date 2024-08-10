@@ -13,6 +13,7 @@ import * as fs from 'fs'
 import DOCXUtilities from './common.js'
 import docxSettings from './settings.js'
 import Charting from './charts.js'
+import TableWidgets from './widgets/Tables.js'
 
 class Dashboards {
     /**
@@ -25,6 +26,8 @@ class Dashboards {
     constructor(env) {
         this.env = env
         this.util = new DOCXUtilities(env)
+        this.charting = new Charting(env)
+        this.tableWidgets = new TableWidgets(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
         
@@ -219,6 +222,11 @@ class Dashboards {
             shortText += sentences[i] + '.'
         }
         return shortText
+    }
+
+    // Create a function called truncate text that takes a string and an integer called numChars, and returns the first numChars of the string
+    truncateText(text, numChars=107) {
+        return `${text.substring(0, numChars)}...`
     }
 
     /**
@@ -419,528 +427,38 @@ class CompanyDashbord extends Dashboards {
      * @constructor
      * @classdesc To operate this class the constructor should be passed a the environmental setting for the object.
      * @param {Object} env - Environmental variable settings for the CLI environment
-     * @param {String} theme - Governs the color of the dashboard, be either coffee or latte 
      */
     constructor(env) {
         super(env)
     }
 
-    /**
-     * 
-     * @param {*} statistics 
-     * @returns 
-     * @todo turn into a loop instead of having the code repeated
-     * @todo if the length of any number is greater than 3 digits shrink the font size by 15% and round down
-     */
-    _statisticsTable(statistics) {
-        const myRows = [
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.companyStats,
-                                this.generalStyle.metricFontSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                true,
-                                true,
-                                this.generalStyle.heavyFont
-                            )
-                        ],
-                        borders: this.bottomBorder,
-                        margins: {
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.companyStatsTitle,
-                                this.generalStyle.metricFontTitleSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                false,
-                                true
-                            )
-                        ],
-                        borders: this.noBorders,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.averageStats,
-                                this.generalStyle.metricFontSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                true,
-                                true,
-                                this.generalStyle.heavyFont
-                            )
-                        ],
-                        borders: this.bottomBorder,
-                        margins: {
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.averageStatsTitle,
-                                this.generalStyle.metricFontTitleSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                false,
-                                true
-                            )
-                        ],
-                        borders: this.noBorders,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.totalStats,
-                                this.generalStyle.metricFontSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                true,
-                                true,
-                                this.generalStyle.heavyFont
-                            )
-                        ],
-                        borders: this.bottomBorder,
-                        margins: {
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.totalStatsTitle,
-                                this.generalStyle.metricFontTitleSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                false,
-                                true
-                            )
-                        ],
-                        borders: this.noBorders,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.totalCompanies,
-                                this.generalStyle.metricFontSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                true,
-                                true,
-                                this.generalStyle.heavyFont
-                            )
-                        ],
-                        borders: this.bottomBorder,
-                        margins: {
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                statistics.totalCompaniesTitle,
-                                this.generalStyle.metricFontTitleSize,
-                                this.themeStyle.titleFontColor,
-                                0,
-                                false,
-                                true
-                            )
-                        ],
-                        borders: this.noBorders,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            }),
-        ]
+    // Create a table with the two images in a single row
+    //     50%      |    50%    
+    // bubble chart | radar chart
+    _createChartsTable (bubbleImage, pieImage) {
         return new docx.Table({
-            columnWidths: [95],
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
-    }
-
-    // Create the first row with two images and a nested table
-    //     40%      |    40%      |   20%
-    // bubble chart | radar chart | nested table for stats
-    firstRow (bubbleImage, radarImage, stats) {
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    children: [this.insertImage(bubbleImage, 226, 259.2)],
-                    borders: this.bottomAndRightBorders
-                }),
-                new docx.TableCell({
-                    children: [this.insertImage(radarImage, 226, 345.6)],
-                    borders: this.bottomAndRightBorders
-                }),
-                new docx.TableCell({
-                    children: [this._statisticsTable(stats)],
-                    borders: this.noBorders,
-                    rowSpan: 5,
-                    margins: {
-                        left: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin,
-                        bottom: this.generalStyle.tableMargin,
-                        top: this.generalStyle.tableMargin
-                    },
-                    verticalAlign: docx.VerticalAlign.CENTER,
-                }),
-            ]
-        })
-    }
-
-    // A custom table that contains a company logo/name and description
-    _companyDescRow(company, descriptionLen=550) {
-        // Trim the length of the description to the required size
-        let companyDesc = company.company.description
-        companyDesc = companyDesc.replace(/\.\.\.|\.$/, '')
-        if (companyDesc.length > descriptionLen) {
-            companyDesc = companyDesc.substring(0,descriptionLen)
-        }
-        companyDesc = companyDesc + '...'
-        const myRows = [
+            columnWidths: [50, 50],
+            rows: [
                 new docx.TableRow({
                     children: [
                         new docx.TableCell({
-                            children: [
-                                this.makeParagraph(
-                                        company.company.name, // Text for the paragraph
-                                        this.generalStyle.companyNameFontSize, // Font size
-                                        this.themeStyle.titleFontColor, // Specify the font color
-                                        0, // Set the space after attribute to 0
-                                        false, // Set bold to false
-                                        true, // Set alignment to center
-                                        this.generalStyle.heavyFont // Define the font used
-                                    )
-                                ],
-                            borders: this.noBorders,
-                            columnSpan: 2,
-                            margins: {
-                                top: this.generalStyle.tableMargin
-                            }
+                            children: [this.insertImage(bubbleImage, 240, 345)],
+                            borders: this.bottomAndRightBorders
                         }),
-                    ],
-            }),
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                companyDesc, 
-                                this.generalStyle.dashFontSize,
-                                this.themeStyle.fontColor, 
-                                false
-                            )
-                        ],
-                        borders: this.noBorders,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                    }),
-                ]
-            })
-        ]   
-        return new docx.Table({
-            columnWidths: [100],
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
-    }
-
-    _docDescRow (
-        docs, 
-        fileNameLen=25, 
-        docLen=460, 
-        headerText="Most/Least Similar Interactions",
-        mostSimilarRowName="Most similar",
-        leastSimilarRowName="Least similar"
-    ) {
-        // TODO add the header row with colspan=3, centered, and with margins all around to myrows
-        let myRows = [
-            new docx.TableRow({
-                children: [
-                    new docx.TableCell({
-                        children: [
-                            this.makeParagraph(
-                                    headerText, 
-                                    this.generalStyle.dashFontSize,
-                                    this.themeStyle.titleFontColor,
-                                    0, // Set the space after attribute to 0
-                                    true, // Set bold to true
-                                    true, // Set alignment to center
-                                    this.generalStyle.heavyFont // Define the font used
-                                )
-                            ],
-                        borders: this.noBorders,
-                        columnSpan: 3,
-                        margins: {
-                            bottom: this.generalStyle.tableMargin,
-                            top: this.generalStyle.tableMargin
-                        }
-                        
-                    }),
-                ],
-        })]
-        for(const doc in docs) {
-            let docCategoryName = ""
-            doc === "most_similar" ? docCategoryName = mostSimilarRowName : docCategoryName = leastSimilarRowName
-            // Trim the length of the document name
-            let docName = docs[doc].name
-            if (docName.length > fileNameLen) {
-                docName = docName.substring(0,fileNameLen) + '...'
-            }
-            // Trim the length of the document description
-            let docDesc = docs[doc].description
-            docDesc = docDesc.replace(/\.\.\.|\.$/, '')
-            if (docDesc.length > docLen) {
-                docDesc = docDesc.substring(0,docLen)
-            }
-            docDesc = docDesc + '...'
-            myRows.push(
-                    new docx.TableRow({
-                        children: [
-                            new docx.TableCell({
-                                children: [
-                                    this.makeParagraph(
-                                            docCategoryName, 
-                                            this.generalStyle.dashFontSize,
-                                            this.themeStyle.fontColor,
-                                        )
-                                    ],
-                                borders: this.noBorders,
-                                margins: {
-                                    top: this.generalStyle.tableMargin,
-                                    left: this.generalStyle.tableMargin,
-                                },
-                                width: {
-                                    size: 15,
-                                    type: docx.WidthType.PERCENTAGE
-                                }
-                            }),
-                            new docx.TableCell({
-                                children: [
-                                    // TODO this needs to be a URL which points to the relevant document
-                                    this.makeParagraph(
-                                        docName, 
-                                        this.generalStyle.dashFontSize,
-                                        this.themeStyle.fontColor, 
-                                    )
-                                ],
-                                borders: this.noBorders,
-                                margins: {
-                                    top: this.generalStyle.tableMargin,
-                                    right: this.generalStyle.tableMargin,
-                                },
-                                width: {
-                                    size: 15,
-                                    type: docx.WidthType.PERCENTAGE
-                                }
-                            }),
-                            new docx.TableCell({
-                                children: [
-                                    this.makeParagraph(
-                                        docDesc, 
-                                        this.generalStyle.dashFontSize,
-                                        this.themeStyle.fontColor, 
-                                    )
-                                ],
-                                borders: this.noBorders,
-                                margins: {
-                                    // left: this.generalStyle.tableMargin,
-                                    right: this.generalStyle.tableMargin,
-                                    bottom: this.generalStyle.tableMargin,
-                                    top: this.generalStyle.tableMargin
-                                },
-                                width: {
-                                    size: 70,
-                                    type: docx.WidthType.PERCENTAGE
-                                }
-                            }),
-                        ],
-                })
-            )
-        }
-        return new docx.Table({
-            columnWidths: [20, 30, 50],
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            },
-        })
-
-    }
-
-
-    // A shell row to contain company description, document descriptions, etc.
-    shellRow (type, company, docs) {
-        let myTable = {}
-        if (type === "companyDesc") {
-            myTable = this._companyDescRow(company)
-        } else if (type === "docDesc") {
-            myTable = this._docDescRow(docs)
-        } else {
-            myTable = this._blankRow()
-        }
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    children: [myTable],
-                    borders: this.topAndRightBorders,
-                    columnSpan: 2,
-                })
-            ]
-        })
-    }
-
-    /**
-     * 
-     * @param {*} imageFile 
-     * @param {*} height 
-     * @param {*} width 
-     * @returns 
-     * @todo move to common
-     */
-    insertImage (imageFile, height, width) {
-        const myFile = fs.readFileSync(imageFile)
-        return new docx.Paragraph({
-            alignment: docx.AlignmentType.CENTER,
-            children: [
-                new docx.ImageRun({
-                    data: myFile,
-                    transformation: {
-                        height: height,
-                        width: width
-                    }
-                })
-            ]
-        })
-    }
-
-    // Find the closest competitor
-    // This uses the Euclidean distance, given points (x1, y1) and (x2, y2)
-    // d = sqrt((x2 - x1)^2 + (y2 - y1)^2) 
-    _getMostSimilarCompany(comparisons, companies) {
-        const x1 = 1 // In this case x1 = 1 and y1 = 1
-        const y1 = 1
-        let distances = {}
-        for(const companyId in comparisons) {
-            const myDistance = Math.sqrt(
-                    (comparisons[companyId].most_similar.score - x1) ** 2 + 
-                    (comparisons[companyId].least_similar.score - y1) ** 2
-                )
-            distances[myDistance] = companyId
-        }
-        const mostSimilarId = distances[Math.min(...Object.keys(distances))]
-        const mostSimilarCompany = companies.filter(company => {
-            if (parseInt(company.company.id) === parseInt(mostSimilarId)) {
-                return company
-            }
-        })
-        return mostSimilarCompany[0]
-    }
-
-    /**
-     * 
-     * @param {*} paragraph 
-     * @param {*} size 
-     * @param {*} color 
-     * @param {*} spaceAfter 
-     * @param {*} bold 
-     * @param {*} center 
-     * @param {*} font
-     * @returns 
-     * @todo Replace the report/common.js makeParagraph method with this one during refactoring
-     * @todo Add an options object in a future release when refactoring
-     * @todo Review the NOTICE section and at a later date work on all TODOs there
-     */
-    makeParagraph (
-        paragraph, 
-        size=20, 
-        color="000", 
-        spaceAfter=0, 
-        bold=false, 
-        center=false, 
-        font="Avenir Next", 
-        italics=false, 
-        underline=false
-    ) {
-        size = 2 * size // Font size is measured in half points, multiply by to is needed
-        return new docx.Paragraph({
-            alignment: center ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT,
-            children: [
-                new docx.TextRun({
-                    text: paragraph,
-                    font: font ? font : "Avenir Next", // Default font: Avenir next
-                    size: size ? size : 20, // Default font size size 10pt or 2 * 10 = 20
-                    bold: bold ? bold : false, // Bold is off by default
-                    italics: italics ? italics : false, // Italics off by default
-                    underline: underline ? underline : false, // Underline off by default
-                    break: spaceAfter ? spaceAfter : 0, // Defaults to no trailing space after the paragraph
-                    color: color ? color : "000", // Default color is black 
+                        new docx.TableCell({
+                            children: [this.insertImage(pieImage, 240, 345)],
+                            borders: this.bottomAndRightBorders
+                        }),
+                    ]
                 })
             ],
-            
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
         })
     }
+
 
     /**
      * @async
@@ -948,17 +466,11 @@ class CompanyDashbord extends Dashboards {
      * @param {Object} competitors - the competitors to the company
      * @param {String} baseDir - the complete directory needed to store images for the dashboard
      * @returns 
+     * 
+     * 
      */
-    async makeDashboard(company, competitors, baseDir) {
-        // Construct the Charting class
-        const charting = new Charting(this.env)
-        // Create the bubble chart from the company comparisons
-        const bubbleChartFile = await charting.bubbleChart({similarities: company.similarity, company: company})
+    async makeDashboard(company, competitors, interactions, noInteractions, totalInteractions, totalCompanies, averageInteractions) {
 
-        // Create the pie chart for interaction characterization
-        const pieChartFile = await charting.pieChart({company: company})
-
-        process.exit(0)
         /**
          * NOTICE
          * I believe that there is a potential bug in node.js filesystem module.
@@ -982,31 +494,60 @@ class CompanyDashbord extends Dashboards {
          * 3. Clearly document the steps and problem encountered
          * 4. In the separate standalone program try using with and without axios use default http without
          */
-        const scratchChartFile = await radarChart(
-            {company: company, competitors: competitors, stats: myStats},
-            this.env,
-            baseDir,
-            'scratch_chart.png'
-        )
-        let myRows = [
-            this.firstRow(bubbleChartFile, pieChartFile, myStats),
-            this.shellRow("companyDesc", mostSimilarCompany),
-            this.shellRow("docDesc", null, mostLeastSimilarInteractions),
-        ]
-        const myTable = new docx.Table({
-            columnWidths: [40, 40, 20],
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            },
-            height: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
+        // const scratchChartFile = await radarChart(
+        //     {company: company, competitors: competitors, stats: myStats},
+        //     this.env,
+        //     baseDir,
+        //     'scratch_chart.png'
+        // )
 
-        return myTable
+        // Create bubble and pie charts and the associated wrapping table
+        const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company})
+        const pieChartFile = await this.charting.pieChart({company: company})
+        const chartsTable = this._createChartsTable(bubbleChartFile, pieChartFile)
+
+        // Create the most similar company description table
+        const mostSimilarCompanyDescTable = this.tableWidgets.oneColumnTwoRowsTable([
+            `Most similar company to ${company.name}: ${competitors.mostSimilar.name}`, 
+            this.shortenText(competitors.mostSimilar.description, 3)
+        ])
+
+        // From the most similar company find the most similar interaction and the least similar interaction
+        const mostSimilarInterationName = company.similarity[competitors.mostSimilar.name].most_similar.name
+        // Find the most similar interaction using mostSimilarInterationName from the interactions object
+        const mostSimilarInteraction = interactions.filter(interaction => {
+            if (interaction.name === mostSimilarInterationName) {
+                return interaction
+            }
+        })[0]
+        const mostSimilarInteractionDescTable = this.tableWidgets.oneColumnTwoRowsTable([
+            this.truncateText(`Most similar interaction from ${competitors.mostSimilar.name}: ${mostSimilarInteraction.name}`),
+            this.shortenText(mostSimilarInteraction.description, 1)
+        ])
+
+        const leastSimilarInterationName = company.similarity[competitors.mostSimilar.name].least_similar.name
+        // Find the least similar interaction using leastSimilarInterationName from the interactions object
+        const leastSimilarInteraction = interactions.filter(interaction => {
+            if (interaction.name === leastSimilarInterationName) {
+                return interaction
+            }
+        })[0]
+        const leastSimilarInteractionDescTable = this.tableWidgets.oneColumnTwoRowsTable([
+            this.truncateText(`Least similar interaction from ${competitors.mostSimilar.name}: ${leastSimilarInteraction.name}`),
+            this.shortenText(leastSimilarInteraction.description, 1)
+        ])
+        
+        // Create the left and right contents
+        const leftContents = this.tableWidgets.packContents([chartsTable, mostSimilarCompanyDescTable, mostSimilarInteractionDescTable, leastSimilarInteractionDescTable])
+        const rightContents = this.tableWidgets.descriptiveStatisticsTable([
+            {title: 'Number of Interactions', value: noInteractions},
+            {title: 'Average Interactions per Company', value: averageInteractions},
+            {title: 'Total Interactions', value: totalInteractions},
+            {title: 'Total Companies', value: totalCompanies},
+        ])
+
+
+        return this.tableWidgets.createDashboardShell(leftContents, rightContents, {leftWidth: 85, rightWidth: 15})
     }
 
 }

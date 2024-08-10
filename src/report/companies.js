@@ -338,6 +338,7 @@ class CompanyStandalone extends BaseCompanyReport {
      */
     constructor(sourceData, env, author='Mediumroast for GitHub') {
         super(sourceData.company[0], env)
+        this.sourceData = sourceData
         this.objectType = 'Company'
         this.creator = author
         this.author = author
@@ -419,7 +420,7 @@ class CompanyStandalone extends BaseCompanyReport {
         //     ],
         //     ...interactionSection.makeReferencesDOCX(isPackage)
         //     )
-    
+
         // Construct the document
         const myDoc = new docx.Document ({
             creator: this.creator,
@@ -451,23 +452,27 @@ class CompanyStandalone extends BaseCompanyReport {
                     children: [
                         await myDash.makeDashboard(
                             this.company, 
-                            this.competitors, 
-                            this.workDir
+                            {mostSimilar: this.sourceData.competitors.mostSimilar, leastSimilar: this.sourceData.competitors.leastSimilar},
+                            this.interactions,
+                            this.noInteractions,
+                            this.totalInteractions,
+                            this.totalCompanies,
+                            this.averageInteractions
                         )
                     ],
                 },
-                {
-                    properties: {},
-                    headers: {
-                        default: this.util.makeHeader(this.company.name, preparedFor)
-                    },
-                    footers: {
-                        default: new docx.Footer({
-                            children: [this.util.makeFooter(authoredBy, preparedOn)]
-                        })
-                    },
-                    children: [this.textWidgets.makeParagraph('Table of Contents')],
-                }
+                // {
+                //     properties: {},
+                //     headers: {
+                //         default: this.util.makeHeader(this.company.name, preparedFor)
+                //     },
+                //     footers: {
+                //         default: new docx.Footer({
+                //             children: [this.util.makeFooter(authoredBy, preparedOn)]
+                //         })
+                //     },
+                //     children: [this.textWidgets.makeParagraph('Table of Contents')],
+                // }
             ],
         })
 

@@ -8,12 +8,12 @@ class TableWidgets extends Widgets {
         super(env)
         // Define specifics for table borders
         this.noneStyle = {
-            style: this.generalStyle.noBorderStyle
+            style: this.generalSettings.noBorderStyle
         }
         this.borderStyle = {
-            style: this.generalStyle.tableBorderStyle,
-            size: this.generalStyle.tableBorderSize,
-            color: this.themeStyle.tableBorderColor
+            style: this.generalSettings.tableBorderStyle,
+            size: this.generalSettings.tableBorderSize,
+            color: this.themeSettings.tableBorderColor
         }
         // No borders
         this.noBorders = {
@@ -57,6 +57,7 @@ class TableWidgets extends Widgets {
             top: this.borderStyle,
             bottom: this.borderStyle
         }
+        this.textWidgets = new TextWidgets(env)
     }
 
     /**
@@ -109,7 +110,7 @@ class TableWidgets extends Widgets {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [TextWidgets.makeParagraph(col1, {fontSize: this.fontFactor * this.fontSize, bold: firstColumnBold})],
+                    children: [this.textWidgets.makeParagraph(col1, {fontSize: this.fontFactor * this.fontSize, bold: firstColumnBold})],
                     borders: leftBorderStyle
                 }),
                 new docx.TableCell({
@@ -117,7 +118,7 @@ class TableWidgets extends Widgets {
                         size: 80,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [TextWidgets.makeParagraph(col2, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
+                    children: [this.textWidgets.makeParagraph(col2, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
                     borders: rightBorderStyle
                 })
             ]
@@ -184,7 +185,7 @@ class TableWidgets extends Widgets {
                         size: 20,
                         type: docx.WidthType.PERCENTAGE
                     },
-                    children: [TextWidgets.makeParagraph(col1, {fontSize: this.generalSettings.fullFontSize, bold: firstColumnBold})],
+                    children: [this.textWidgets.makeParagraph(col1, {fontSize: this.generalSettings.fullFontSize, bold: firstColumnBold})],
                     borders: leftBorderStyle
                 }),
                 new docx.TableCell({
@@ -237,7 +238,7 @@ class TableWidgets extends Widgets {
                         size: 40,
                         type: docx.WidthType.PERCENTAGE,
                     },
-                    children: [TextWidgets.makeParagraph(col1, {fontSize: this.fontFactor * this.fontSize, bold: firstColumnBold})],
+                    children: [this.textWidgets.makeParagraph(col1, {fontSize: this.fontFactor * this.fontSize, bold: firstColumnBold})],
                     borders: borderStyle
                 }),
                 new docx.TableCell({
@@ -245,7 +246,7 @@ class TableWidgets extends Widgets {
                         size: 30,
                         type: docx.WidthType.PERCENTAGE,
                     },
-                    children: [TextWidgets.makeParagraph(col2, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
+                    children: [this.textWidgets.makeParagraph(col2, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
                     borders: borderStyle
                 }),
                 new docx.TableCell({
@@ -253,12 +254,79 @@ class TableWidgets extends Widgets {
                         size: 30,
                         type: docx.WidthType.PERCENTAGE,
                     },
-                    children: [TextWidgets.makeParagraph(col3, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
+                    children: [this.textWidgets.makeParagraph(col3, {fontSize: this.fontFactor * this.fontSize, bold: allColumnsBold})],
                     borders: borderStyle
                 }),
             ]
         })
     }
+
+    oneColumnTwoRowsBasic (rows, options={}) {
+        // Desctructure the options object
+        let {
+            firstRowBold = true,
+            allRowsBold = false,
+            allBorders = false,
+            bottomBorders = true,
+            centerFirstRow = false
+        } = options
+
+        // Desctructure the rows array
+        const [row1, row2] = rows
+
+        // Set the first row to bold if all rows are bold
+        if (allRowsBold) {
+            firstRowBold = true
+        }
+
+        // Set the border style
+        let borderStyle = this.noBorders
+        if (allBorders) {
+            borderStyle = this.allBorders
+        } else if (bottomBorders) {
+            borderStyle = this.bottomBorders
+        } else {
+            borderStyle = this.bottomAndRightBorders
+        }
+
+        // return the row
+        return [
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            width: {
+                                size: 100,
+                                type: docx.WidthType.PERCENTAGE,
+                            },
+                            children: [this.textWidgets.makeParagraph(row1, {fontSize: this.fontFactor * this.fontSize, bold: firstRowBold, align: centerFirstRow ? docx.AlignmentType.CENTER : docx.AlignmentType.START})],
+                            margins: {
+                                bottom: this.generalSettings.tableMargin
+                            },
+                            borders: this.rightBorder
+                            
+                        }),
+                    ],
+                    borders: borderStyle
+                }),
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            width: {
+                                size: 100,
+                                type: docx.WidthType.PERCENTAGE,
+                            },
+                            children: [this.textWidgets.makeParagraph(row2, {fontSize: this.fontFactor * this.fontSize, bold: allRowsBold})],
+                            borders: this.bottomAndRightBorders,
+                            margins: {
+                                bottom: this.generalSettings.tableMargin
+                            }
+                        }),
+                    ],
+                })
+        ]   
+    }
+
+
 
     /** 
      * Begin functions for completely defining tables with a particular structure
@@ -278,7 +346,7 @@ class TableWidgets extends Widgets {
                 right: { size: 20, color: this.themeSettings.documentColor, style: docx.BorderStyle.SINGLE },
             },
             shading: {fill: this.themeSettings.tagColor},
-            children: [this.makeParagraph(tag, {fontSize: this.fontSize, fontColor: this.themeSettings.tagFontColor, center: true})],
+            children: [this.textWidgets.makeParagraph(tag, {fontSize: this.fontSize, fontColor: this.themeSettings.tagFontColor, center: true})],
             verticalAlign: docx.AlignmentType.CENTER,
         })
     }
@@ -371,10 +439,10 @@ class TableWidgets extends Widgets {
         return new docx.Table({
             columnWidths: [95],
             margins: {
-                left: this.generalStyle.tableMargin,
-                right: this.generalStyle.tableMargin,
-                bottom: this.generalStyle.tableMargin,
-                top: this.generalStyle.tableMargin
+                left: this.generalSettings.tableMargin,
+                right: this.generalSettings.tableMargin,
+                bottom: this.generalSettings.tableMargin,
+                top: this.generalSettings.tableMargin
             },
             rows: [this.twoColumnRowBasic([title, text], {firstColumnBold: true, allColumnsBold: false, lastCellBottomRightBorders: true})],
             width: {
@@ -401,12 +469,12 @@ class TableWidgets extends Widgets {
                     children: [
                         new docx.TableCell({
                             children: [
-                                this.util.makeParagraph(
+                                this.textWidgets.makeParagraph(
                                     statistics[stat].value,
                                     {
-                                        fontSize: this.generalStyle.metricFontSize,
-                                        fontColor: this.themeStyle.titleFontColor,
-                                        font: this.generalStyle.heavyFont,
+                                        fontSize: this.generalSettings.metricFontSize,
+                                        fontColor: this.themeSettings.titleFontColor,
+                                        font: this.generalSettings.heavyFont,
                                         bold: true,
                                         center: true
                                     }
@@ -414,7 +482,7 @@ class TableWidgets extends Widgets {
                             ],
                             borders: this.bottomBorder,
                             margins: {
-                                top: this.generalStyle.tableMargin
+                                top: this.generalSettings.tableMargin
                             }
                         }),
                     ]
@@ -423,11 +491,11 @@ class TableWidgets extends Widgets {
                     children: [
                         new docx.TableCell({
                             children: [
-                                this.util.makeParagraph(
+                                this.textWidgets.makeParagraph(
                                     statistics[stat].title,
                                     {
-                                        fontSize: this.generalStyle.metricFontSize/2,
-                                        fontColor: this.themeStyle.titleFontColor,
+                                        fontSize: this.generalSettings.metricFontSize/2,
+                                        fontColor: this.themeSettings.titleFontColor,
                                         bold: false,
                                         center: true
                                     }
@@ -435,8 +503,8 @@ class TableWidgets extends Widgets {
                             ],
                             borders: this.noBorders,
                             margins: {
-                                bottom: this.generalStyle.tableMargin,
-                                top: this.generalStyle.tableMargin
+                                bottom: this.generalSettings.tableMargin,
+                                top: this.generalSettings.tableMargin
                             }
                         }),
                     ]
@@ -448,6 +516,97 @@ class TableWidgets extends Widgets {
             borders: this.noBorders,
             rows: myRows,
             width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            },
+
+        })
+    }
+
+    oneColumnTwoRowsTable(rows) {
+        const tableRows = this.oneColumnTwoRowsBasic(rows)
+        return new docx.Table({
+            columnWidths: [95],
+            rows: tableRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
+    packContents (contents) {
+        let myRows = []
+        for (const content in contents) {
+            myRows.push(
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [contents[content]],
+                            borders: this.noBorders,
+                            width: {
+                                size: 100,
+                                type: docx.WidthType.PERCENTAGE
+                            },
+                        }),
+                    ]
+                })
+            )
+        }
+        return new docx.Table({
+            columnWidths: [95],
+            borders: this.noBorders,
+            margins: {
+                left: this.generalSettings.tableMargin,
+                right: this.generalSettings.tableMargin,
+                bottom: this.generalSettings.tableMargin,
+                top: this.generalSettings.tableMargin
+            },
+            rows: myRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
+    // Create the dashboard shell which will contain all of the outputs
+    createDashboardShell (leftContents, rightContents, options={}) {
+        const {
+            allBorders = false,
+            leftWidth = 70,
+            rightWidth = 30
+        } = options
+        return new docx.Table({
+            columnWidths: [leftWidth, rightWidth],
+            rows: [
+                new docx.TableRow({
+                    children: [
+                        new docx.TableCell({
+                            children: [leftContents],
+                            borders: allBorders ? this.allBorders : this.noBorders,
+                            width: {
+                                size: leftWidth,
+                                type: docx.WidthType.PERCENTAGE
+                            }
+                        }),
+                        new docx.TableCell({
+                            children: [rightContents],
+                            borders: allBorders ? this.allBorders : this.noBorders,
+                            width: {
+                                size: rightWidth,
+                                type: docx.WidthType.PERCENTAGE
+                            },
+                            verticalAlign: docx.VerticalAlign.CENTER
+                        }),
+                    ]
+                })
+            ],
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            },
+            height: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
             }

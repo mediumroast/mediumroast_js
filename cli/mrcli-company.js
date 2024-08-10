@@ -139,7 +139,7 @@ async function _prepareData(companyName) {
 
     source.interactions = getInteractions(source.company, allInteractions)
     source.allInteractions = allInteractions.mrJson
-    source.totalInteractions = source.interactions.length
+    source.totalInteractions = allInteractions.mrJson.length
     source.averageInteractionsPerCompany = Math.round(source.totalInteractions / source.totalCompanies)
 
     const { allCompetitors, mostSimilar, leastSimilar } = getCompetitors(source.company, allCompanies)

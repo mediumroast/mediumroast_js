@@ -6,7 +6,7 @@
  * @license Apache-2.0
  */
 
-import docxSettings from './settings.js'
+import docxSettings from '../settings.js'
 import docx from 'docx'
 
 class Widgets {
