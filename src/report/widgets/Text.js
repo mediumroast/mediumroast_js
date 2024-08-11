@@ -183,6 +183,49 @@ class TextWidgets extends Widgets {
         })
     }
 
+     /**
+     * @function makeHeadingBookmark1
+     * @description Create a target within a document to link to with an internal hyperlink of heading 1
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark at the heading level 1
+     * @todo could we generalize this function and make the heading level a parameter in the future?
+     */
+     makeHeadingBookmark1(text, ident) {
+        return new docx.Paragraph({
+            heading: docx.HeadingLevel.HEADING_1,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
+    /**
+     * @function makeHeadingBookmark2
+     * @description Create a target within a document to link to with an internal hyperlink of heading 2
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark at the heading level 2
+     */
+    makeHeadingBookmark2(text, ident) {
+        return new docx.Paragraph({
+            heading: docx.HeadingLevel.HEADING_2,
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
     /**
      * @function makeIntro
      * @description Creates an introduction paragraph with a heading of level 1

@@ -17,6 +17,7 @@ import { Utilities as CLIUtilities } from '../cli/common.js'
 import { getMostSimilarCompany } from './tools.js'
 import TextWidgets from './widgets/Text.js'
 import TableWidgets from './widgets/Tables.js'
+import { read } from 'xlsx'
 
 class BaseCompanyReport {
     constructor(company, env) {
@@ -224,79 +225,62 @@ class CompanySection extends BaseCompanyReport {
         ]
     }
 
-    async makeCompetitorsDOCX(competitors, isPackage){
-        const myUtils = new CLIUtilities()
-        let competitivePages = []
-        let totalReadingTime = null
-        for (const myComp in competitors) {
-            // Filter in the competitor
-            const competitor = competitors[myComp]
+    async makeCompetitorDOCX(similarCompany, interactions, similarity, isPackage){
+        let competitivePage = []
 
-            // Construct the object to create company related document sections
-            const comp = new CompanySection(competitor.company, this.env)
+        // Construct the object to create company related document sections
+        const comp = new CompanySection(similarCompany, this.env)
+        // Create the company firmographics table
+        const firmographicsTable = comp.makeFirmographicsDOCX() 
+        const tagsTable = this.tableWidgets.tagsTable(similarCompany.tags)
+        
+        // Create a section for the most/least similar interactions
+        const mostSimIntName = similarity[similarCompany.name].most_similar.name
+        const mostSimIntScore = Math.round(parseFloat(similarity[similarCompany.name].most_similar.score) * 100)
+        const mostSimInt = interactions.filter(interaction => interaction.name === mostSimIntName)[0]
+        const leastSimIntName = similarity[similarCompany.name].least_similar.name
+        const leastSimIntScore = Math.round(parseFloat(similarity[similarCompany.name].least_similar.score) * 100)
+        const leastSimInt = interactions.filter(interaction => interaction.name === leastSimIntName)[0]
 
-            // Create a section for the most/least similar interactions
-            const interact = new InteractionSection(
-                [
-                    competitor.mostSimilar.interaction, 
-                    competitor.leastSimilar.interaction
-                ],
-                competitor.company.name,
-                'Company'
-            )
+        // Compute reading time
+        const totalReadingTime = parseInt(mostSimInt.reading_time) + parseInt(leastSimInt.reading_time)
 
-            // Compute reading time
-            totalReadingTime += 
-                parseInt(competitor.mostSimilar.interaction.reading_time) + 
-                parseInt(competitor.leastSimilar.interaction.reading_time)
+        // Build the most/least similar interactions tables
+        const simTableRows = [
+            this.tableWidgets.threeColumnRowBasic(['Interaction Name', 'Similarity Score', 'Type'], {allColumnsBold: true}),
+            this.tableWidgets.threeColumnRowBasic([mostSimIntName, mostSimIntScore, 'Most Similar'], {firstColumnBold: false}),
+            this.tableWidgets.threeColumnRowBasic([leastSimIntName, leastSimIntScore, 'Least Similar'], {firstColumnBold: false})
+        ]
+        const simTable = new docx.Table({
+            columnWidths: [60, 20, 20],
+            rows: simTableRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
 
-            // Create the company firmographics table
-            const firmographicsTable = comp.makeFirmographicsDOCX() 
+        // Create a section for the most/least similar interactions
+        const interact = new InteractionSection(
+            [mostSimInt, leastSimInt],
+            similarCompany.name,
+            'Company'
+        )
 
-            // Assemble the rows and table
-            const myRows = [
-                this.util.basicTopicRow('Name', 'Percent Similar', 'Category', true),
-                this.util.basicTopicRow(
-                    competitor.mostSimilar.name, 
-                    competitor.mostSimilar.score, 
-                    'Most Similar'),
-                this.util.basicTopicRow(
-                    competitor.leastSimilar.name, 
-                    competitor.leastSimilar.score, 
-                    'Least Similar'),
-            ]
-            const summaryTable = new docx.Table({
-                columnWidths: [60, 20, 20],
-                rows: myRows,
-                width: {
-                    size: 100,
-                    type: docx.WidthType.PERCENTAGE
-                }
-            })
-
-            // Construct this competitive pages
-            competitivePages.push(
-                this.util.makeHeadingBookmark2(`Firmographics for: ${competitor.company.name}`),
-                firmographicsTable,
-                this.util.makeHeadingBookmark2('Table for most/least similar interactions'),
-                summaryTable,
-                this.util.makeHeadingBookmark2('Interaction descriptions'),
-                ...interact.makeDescriptionsDOCX(),
-                this.util.makeHeadingBookmark2('Interaction summaries'),
-                ...interact.makeReferencesDOCX(isPackage)
-            )
-
-        }
+        // Construct this competitive pages
+        competitivePage.push(
+            this.util.makeHeadingBookmark2(`Details for: ${similarCompany.name}`),
+            firmographicsTable,
+            this.util.makeHeadingBookmark2('Tags'),
+            tagsTable,
+            this.util.makeHeadingBookmark2('Table for most/least similar interactions'),
+            simTable,
+            this.util.makeHeadingBookmark2('Interaction abstracts'),
+            // ...interact.makeReferencesDOCX(isPackage)
+        )
 
         // Return the document fragment
-        return [
-            this.util.pageBreak(),
-            this.util.makeHeadingBookmark1('Competitive Content'),
-            this.util.makeParagraph(
-                `For compared companies additional data is provided including firmographics, most/least similar interaction table, most/least similar interaction descriptions, and most/least similar interaction summaries.\r\rTotal estimated reading time for all source most/least similar interactions is ${totalReadingTime} minutes.`
-            ),
-            ...competitivePages
-        ]
+        return {reading_time: totalReadingTime, doc: competitivePage}
     }
 }
 
@@ -326,7 +310,9 @@ class CompanyStandalone extends BaseCompanyReport {
         this.title = `${this.company.name} Company Report`
         this.interactions = sourceData.allInteractions
         this.competitors = sourceData.competitors.all
-        this.description = `A Company report for ${this.company.name} and including relevant company data.`
+        this.mostSimilar = sourceData.competitors.mostSimilar
+        this.leastSimilar = sourceData.competitors.leastSimilar
+        this.description = `A Company report for ${this.company.name} that includes firmographics, key information on competitors, and Interactions data.`
         this.introduction = `Mediumroast for GitHub automatically generated this document. It includes company firmographics, key information on competitors, and Interactions data for ${this.company.name}. If this report is produced as a package, then the hyperlinks are active and will link to documents on the local folder after the package is opened.`
         this.similarity = this.company.similarity,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
@@ -364,19 +350,34 @@ class CompanyStandalone extends BaseCompanyReport {
         const authoredBy = `Authored by: ${this.authoredBy}`
         const preparedFor = `${this.authoredBy} report for: `
         
-        // Construct the company section
+        // Construct the companySection and interactionSection objects
         const companySection = new CompanySection(this.company, this.env)
-        const interactionSection = new InteractionSection(
-            this.interactions, 
-            this.company.name,
-            this.objectType,
-            this.env
-        )
+        // const interactionSection = new InteractionSection(
+        //     this.interactions, 
+        //     this.company.name,
+        //     this.objectType,
+        //     this.env
+        // )
+
+        // Construct the dashboard object
         const myDash = new CompanyDashbord(this.env)
+
+        // Build sections for most and least similar companies
+        const mostSimilarReport = await companySection.makeCompetitorDOCX(this.mostSimilar, this.interactions, this.similarity, isPackage)
+
+        const leastSimilarReport = await companySection.makeCompetitorDOCX(this.leastSimilar, this.interactions, this.similarity, isPackage)
+
+        // Compute the total reading time for all source most/least similar interactions
+        const totalReadingTime = mostSimilarReport.reading_time + leastSimilarReport.reading_time
+
+        const mostLeastSimilarIntro = this.textWidgets.makeParagraph(
+            `For the most and least similar companies, additional data is provided including firmographics, most/least similar interaction table, and most/least similar interaction abstracts.\n\nTotal estimated reading time for all interactions from most/least similar companies is ${totalReadingTime} minutes, but reading the abstracts will take less time.`
+        )
 
         // Set up the default options for the document
         const myDocument = [].concat(
             this.util.makeIntro(this.introduction),
+            // Generate the firmographics and tags sections for the Company being reported on
             [
                 this.textWidgets.makeHeading1('Firmographics'), 
                 companySection.makeFirmographicsDOCX(),
@@ -384,7 +385,17 @@ class CompanyStandalone extends BaseCompanyReport {
                 this.tableWidgets.tagsTable(this.company.tags),
                 this.textWidgets.makeHeading1('Competitive Similarity'),
             ],
+            // Generate the comparisons section for the Company being reported on to characterize competitive similarity
             companySection.makeComparisonDOCX(this.similarity, this.competitors),
+            [
+                this.textWidgets.pageBreak(),
+                this.textWidgets.makeHeadingBookmark1('Detail For Most/Least Similar Companies'),
+                mostLeastSimilarIntro,
+                ...mostSimilarReport.doc,
+                ...leastSimilarReport.doc
+            ],
+
+
             // [   this.util.makeHeading1('Topics'),
             //     this.util.makeParagraph(
             //         'The following topics were automatically generated from all ' +
