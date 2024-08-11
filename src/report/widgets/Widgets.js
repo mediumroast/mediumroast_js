@@ -23,7 +23,7 @@ class Widgets {
                 default: {
                     heading1: {
                         run: {
-                            size: this.generalSettings.fullFontSize,
+                            size: this.generalSettings.titleFontSize,
                             bold: true,
                             font: this.generalSettings.font,
                             color: this.themeSettings.textFontColor
@@ -37,7 +37,7 @@ class Widgets {
                     },
                     heading2: {
                         run: {
-                            size: 0.75 * this.generalSettings.fullFontSize,
+                            size: 0.9 * this.generalSettings.titleFontSize,
                             bold: true,
                             font: this.generalSettings.font,
                             color: this.themeSettings.textFontColor
@@ -51,7 +51,7 @@ class Widgets {
                     },
                     heading3: {
                         run: {
-                            size: 0.8 * this.generalSettings.fullFontSize,
+                            size: 0.8 * this.generalSettings.titleFontSize,
                             bold: true,
                             font: this.generalSettings.font,
                             color: this.themeSettings.textFontColor

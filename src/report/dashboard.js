@@ -402,28 +402,13 @@ class InteractionDashboard extends Dashboards {
         const leftContents = this._mergeLeftContents([interactionNameTable, interactionDescriptionTable, associatedCompanyTable, protorequirementsTable])
 
 
-
-        // Create and return the dashboard shell with left and right contents
-        /*
-            ----------------------------------------------
-            |               80%            |     20%     |
-            |                              |             |
-            |                              |             |
-            |                              |             |
-            |                              |             |
-            |                              |             |
-            |                              |             |
-            |                              |             |
-            ----------------------------------------------
-        */
-
         return this._createDashboardShell(leftContents, rightContents)
     }
 }
 
 class CompanyDashbord extends Dashboards {
     /**
-     * A high class meant to create an initial dashboard page for an MS Word document company report
+     * A class meant to create an initial dashboard page for an MS Word document company report
      * @constructor
      * @classdesc To operate this class the constructor should be passed a the environmental setting for the object.
      * @param {Object} env - Environmental variable settings for the CLI environment
@@ -462,44 +447,29 @@ class CompanyDashbord extends Dashboards {
 
     /**
      * @async
-     * @param {Object} company - the company the dashboard is for
-     * @param {Object} competitors - the competitors to the company
-     * @param {String} baseDir - the complete directory needed to store images for the dashboard
-     * @returns 
+     * @function makeDashboard - Create a dashboard for a company report
+     * @param {Object} company - A company object
+     * @param {Object} competitors - A competitors object
+     * @param {Object} interactions - An interactions object
+     * @param {Number} noInteractions - The number of interactions
+     * @param {Number} totalInteractions - The total number of interactions
+     * @param {Number} totalCompanies - The total number of companies
+     * @param {Number} averageInteractions - The average number of interactions per company
+     * @returns {Object} - A docx.Table object that contains the dashboard
      * 
+     * @example
+     * const companyDashboard = new CompanyDashboard(env)
+     * const dashboard = await companyDashboard.makeDashboard(company, competitors, interactions, noInteractions, totalInteractions, totalCompanies, averageInteractions)
      * 
      */
-    async makeDashboard(company, competitors, interactions, noInteractions, totalInteractions, totalCompanies, averageInteractions) {
-
-        /**
-         * NOTICE
-         * I believe that there is a potential bug in node.js filesystem module.
-         * This file is needed because otherwise the actual final of the two images
-         * that needs to be inserted into the docx file won't load.  If we create a
-         * scratch file then it will.  Essentially something is off with the last
-         * file created in a series of files, but the second to last file appears ok.
-         * 
-         * Obviously more testing is needed before we approach the node team with something
-         * half baked.  Until then here are some observations:
-         * 1. Unless the file of a given name is present, even if zero bytes, the image data
-         *    will not be put into the file.  If the file name exists then everything works.
-         * 2. Again the last file in a series of files appears to be corrupted and cannot, for
-         *    some odd reason, be read by the docx module and be inserted into a docx file.
-         *    Yet when we look at the file system object within the file system it can be opened
-         *    without any problems.
-         * 
-         * TODOs
-         * 1. Create a separate program that emulates what is done in the mrcli dashboard
-         * 2. Try on multiple OSes
-         * 3. Clearly document the steps and problem encountered
-         * 4. In the separate standalone program try using with and without axios use default http without
-         */
-        // const scratchChartFile = await radarChart(
-        //     {company: company, competitors: competitors, stats: myStats},
-        //     this.env,
-        //     baseDir,
-        //     'scratch_chart.png'
-        // )
+    async makeDashboard(
+        company, 
+        competitors, 
+        interactions, 
+        noInteractions, 
+        totalInteractions, 
+        totalCompanies, 
+        averageInteractions) {
 
         // Create bubble and pie charts and the associated wrapping table
         const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company})

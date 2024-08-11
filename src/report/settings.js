@@ -3,13 +3,13 @@ import docx from 'docx'
 const docxSettings = {
     general: {
         halfFontSize: 11,
-        fullFontSize: 22,
+        fullFontSize: 11 * 2, // Note these are in half points, so 22 * 2 = 44
         headerFontSize: 18,
         footerFontSize: 18,
         fontFactor: 1,
         dashFontSize: 22,
-        tableFontSize: 8,
-        titleFontSize: 18,
+        tableFontSize: 9 * 2, // Note these are in half points, so 9 * 2 = 18
+        titleFontSize: 30 * 2,
         companyNameFontSize: 11.5,
         metricFontTitleSize: 11,
         metricFontSize: 48,

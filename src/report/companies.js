@@ -16,6 +16,7 @@ import { CompanyDashbord } from './dashboard.js'
 import { Utilities as CLIUtilities } from '../cli/common.js' 
 import { getMostSimilarCompany } from './tools.js'
 import TextWidgets from './widgets/Text.js'
+import TableWidgets from './widgets/Tables.js'
 
 class BaseCompanyReport {
     constructor(company, env) {
@@ -29,6 +30,7 @@ class BaseCompanyReport {
         this.workDir = this.env.workDir
         this.baseName = company.name.replace(/ /g,"_")
         this.textWidgets = new TextWidgets(env)
+        this.tableWidgets = new TableWidgets(env)
     }
 
 }
@@ -47,11 +49,10 @@ class CompanySection extends BaseCompanyReport {
      */
     constructor(company, env) {
         super(company, env)
-        console.log('CompanySection constructor')
     }
 
     // Create a URL on Google maps to search for the address
-    addressRow() {
+    _addressRow() {
         // Define the address string
         const addressBits = [
             this.company.street_address, 
@@ -79,38 +80,14 @@ class CompanySection extends BaseCompanyReport {
             addressBits[1] + ', ' + addressBits[2] + ' ' + addressBits[3] + ', ' +
             addressBits[4]
         // Return the created elements 
-        return this.util.urlRow('Location', addressString, addressUrl)
+        return this.tableWidgets.twoColumnRowWithHyperlink(['Location', addressString, addressUrl])
     }
 
-    // Create a URL to search for patents on Google patents
-    patentRow() {
-        const patentString = `${this.company.name} Patent Search`
-        return this.util.urlRow('Patents', patentString, this.company.google_patents_url)
-    }
-
-    // Create a URL to search for news on Google news
-    newsRow() {
-        const newsString = `${this.company.name} Company News`
-        return this.util.urlRow('News', newsString, this.company.google_news_url)
-    }
-
-    // Define the CIK and link it to an EDGAR search if available
-    cikRow() {
-        if (this.company.cik === 'Unknown') {
-            return this.util.basicRow('CIK', this.company.cik)
+    _genericUrlRow(label, urlText, url) {
+        if (urlText === 'Unknown') {
+            return this.tableWidgets.twoColumnRowBasic([label, urlText])
         } else {
-            const baseURL = 'https://www.sec.gov/edgar/search/#/ciks='
-            return this.util.urlRow('CIK', this.company.cik, baseURL + this.company.cik)
-        }
-    }
-
-    // Define the CIK and link it to an EDGAR search if available
-    stockSymbolRow() {
-        if (this.company.stock_symbol === 'Unknown') {
-            return this.util.basicRow('Stock Symbol', this.company.stock_symbol)
-        } else {
-            const baseURL = 'https://www.bing.com/search?q='
-            return this.util.urlRow('Stock Symbol', this.company.stock_symbol, baseURL + this.company.stock_symbol)
+            return this.tableWidgets.twoColumnRowWithHyperlink([label, urlText, url])
         }
     }
 
@@ -120,38 +97,39 @@ class CompanySection extends BaseCompanyReport {
      * @returns {Object} A docx table is return to the caller
      */
     makeFirmographicsDOCX() {
-        const noInteractions = String(Object.keys(this.company.linked_interactions).length)
-        const noStudies = String(Object.keys(this.company.linked_studies).length)
-        const myTable = new docx.Table({
+        return new docx.Table({
             columnWidths: [20, 80],
             rows: [
-                this.util.basicRow('Name', this.company.name),
-                this.util.basicRow('Description', this.company.description),
-                this.util.urlRow('Website', this.company.url, this.company.url),
-                this.util.basicRow('Role', this.company.role),
-                this.util.basicRow('Industry', this.company.industry),
-                this.patentRow(),
-                this.newsRow(),
-                this.addressRow(),
-                this.util.basicRow('Region', this.company.region),
-                this.util.basicRow('Phone', this.company.phone),
-                this.util.basicRow('Type', this.companyType),
-                this.stockSymbolRow(),
-                this.cikRow(),
-                this.util.basicRow('No. Interactions', noInteractions),
-                this.util.basicRow('No. Studies', noStudies),
+                this.tableWidgets.twoColumnRowBasic(['Name', this.company.name]),
+                this.tableWidgets.twoColumnRowBasic(['Description', this.company.description]),
+                this._genericUrlRow('Website', this.company.url, this.company.url),
+                this.tableWidgets.twoColumnRowBasic(['Role', this.company.role]),
+                this._genericUrlRow('Patents', 'Patent Search', this.company.google_patents_url),
+                this._genericUrlRow('News', 'Company News', this.company.google_news_url),
+                this._addressRow(),
+                this.tableWidgets.twoColumnRowBasic(['Region', this.company.region]),
+                this.tableWidgets.twoColumnRowBasic(['Phone', this.company.phone]),
+                this.tableWidgets.twoColumnRowBasic(['Type', this.companyType]),
+                this._genericUrlRow(
+                    'Stock Symbol', 
+                    this.company.stock_symbol, 
+                    `https://www.bing.com/search?q=${this.company.stock_symbol}`
+                ),
+                this._genericUrlRow(
+                    'EDGAR CIK',
+                    this.company.cik,
+                    `https://www.sec.gov/edgar/search/#/ciks=${this.company.cik}`
+                )
             ],
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE
             }
         })
-
-        return myTable
     }
 
     // Rank supplied topics and return an object that can be rendered
-    rankComparisons (comparisons, competitors) {
+    _rankComparisons (comparisons, competitors) {
         // Set up a blank object to help determine the top score
         let rankPicker = {}
 
@@ -204,7 +182,7 @@ class CompanySection extends BaseCompanyReport {
      */
     makeComparisonDOCX(comparisons, competitors) {
         // Transform the comparisons into something that is usable for display
-        const [myComparison, picks] = this.rankComparisons(comparisons, competitors)
+        const [myComparison, picks] = this._rankComparisons(comparisons, competitors)
 
         // Choose the company object with the top score
         const topChoice = picks[Object.keys(picks).sort()[0]]
@@ -212,13 +190,16 @@ class CompanySection extends BaseCompanyReport {
         const topCompanyName = topCompany.name
         const topCompanyRole = topCompany.role
 
-        let myRows = [this.util.basicComparisonRow('Company', 'Role', 'Similarity Distance', true)]
+        let myRows = [this.tableWidgets.threeColumnRowBasic(['Company', 'Role', 'Similarity Distance'], {allColumnsBold: true})]
         for (const comparison in myComparison) {
             myRows.push(
-                this.util.basicComparisonRow(
-                    myComparison[comparison].name,
-                    myComparison[comparison].role,
-                    `${String.fromCharCode(0x2588).repeat(myComparison[comparison].score)}    (${myComparison[comparison].rank})`,
+                this.tableWidgets.threeColumnRowBasic(
+                    [
+                        myComparison[comparison].name,
+                        myComparison[comparison].role,
+                        `${String.fromCharCode(0x2588).repeat(myComparison[comparison].score)}    (${myComparison[comparison].rank})`,
+                    ],
+                    {firstColumnBold: false}
                 )
             )
         }
@@ -233,13 +214,12 @@ class CompanySection extends BaseCompanyReport {
         })
 
         return [
-            this.util.makeParagraph(
-                `According to findings from mediumroast.io, the closest company to ${this.company.name} in terms of ` +
+            this.textWidgets.makeParagraph(
+                `According to findings from Mediumroast for GitHub, the closest company to ${this.company.name} in terms of ` +
                 `content similarity is ${topCompanyName} who appears to be a ${topCompanyRole} of ${this.company.name}. ` +
                 `Additional information on ` +
                 `${this.company.name}'s comparison with other companies is available in the accompanying table.`
             ),
-            this.util.makeHeading2('Comparison Table'),
             myTable
         ]
     }
@@ -347,10 +327,7 @@ class CompanyStandalone extends BaseCompanyReport {
         this.interactions = sourceData.allInteractions
         this.competitors = sourceData.competitors.all
         this.description = `A Company report for ${this.company.name} and including relevant company data.`
-        this.introduction = `The mediumroast.io system automatically generated this document.
-        It includes key metadata for this Company object and relevant summaries and metadata from the associated interactions. If this report document is produced as a package, instead of standalone, then the
-        hyperlinks are active and will link to documents on the local folder after the
-        package is opened.`
+        this.introduction = `Mediumroast for GitHub automatically generated this document. It includes company firmographics, key information on competitors, and Interactions data for ${this.company.name}. If this report is produced as a package, then the hyperlinks are active and will link to documents on the local folder after the package is opened.`
         this.similarity = this.company.similarity,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
         this.totalInteractions = sourceData.totalInteractions
@@ -388,38 +365,40 @@ class CompanyStandalone extends BaseCompanyReport {
         const preparedFor = `${this.authoredBy} report for: `
         
         // Construct the company section
-        // const companySection = new CompanySection(this.company, this.env)
-        // const interactionSection = new InteractionSection(
-        //     this.interactions, 
-        //     this.company.name,
-        //     this.objectType,
-        //     this.env
-        // )
+        const companySection = new CompanySection(this.company, this.env)
+        const interactionSection = new InteractionSection(
+            this.interactions, 
+            this.company.name,
+            this.objectType,
+            this.env
+        )
         const myDash = new CompanyDashbord(this.env)
 
         // Set up the default options for the document
-        // const myDocument = [].concat(
-        //     this.util.makeIntro(this.introduction),
-        //     [
-        //         this.util.makeHeading1('Company Detail'), 
-        //         companySection.makeFirmographicsDOCX(),
-        //         this.util.makeHeading1('Comparison')
-        //     ],
-        //     companySection.makeComparisonDOCX(this.similarity, this.competitors),
-        //     [   this.util.makeHeading1('Topics'),
-        //         this.util.makeParagraph(
-        //             'The following topics were automatically generated from all ' +
-        //             this.noInteractions + ' interactions associated to this company.'
-        //         ),
-        //         this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
-        //     ],
-        //     ...interactionSection.makeDescriptionsDOCX(),
-        //     await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
-        //     [   this.util.pageBreak(),
-        //         this.util.makeHeading1('References')
-        //     ],
-        //     ...interactionSection.makeReferencesDOCX(isPackage)
-        //     )
+        const myDocument = [].concat(
+            this.util.makeIntro(this.introduction),
+            [
+                this.textWidgets.makeHeading1('Firmographics'), 
+                companySection.makeFirmographicsDOCX(),
+                this.textWidgets.makeHeading1('Tags'),
+                this.tableWidgets.tagsTable(this.company.tags),
+                this.textWidgets.makeHeading1('Competitive Similarity'),
+            ],
+            companySection.makeComparisonDOCX(this.similarity, this.competitors),
+            // [   this.util.makeHeading1('Topics'),
+            //     this.util.makeParagraph(
+            //         'The following topics were automatically generated from all ' +
+            //         this.noInteractions + ' interactions associated to this company.'
+            //     ),
+            //     this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
+            // ],
+            // ...interactionSection.makeDescriptionsDOCX(),
+            // await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
+            // [   this.util.pageBreak(),
+            //     this.util.makeHeading1('References')
+            // ],
+            // ...interactionSection.makeReferencesDOCX(isPackage)
+            )
 
         // Construct the document
         const myDoc = new docx.Document ({
@@ -461,18 +440,18 @@ class CompanyStandalone extends BaseCompanyReport {
                         )
                     ],
                 },
-                // {
-                //     properties: {},
-                //     headers: {
-                //         default: this.util.makeHeader(this.company.name, preparedFor)
-                //     },
-                //     footers: {
-                //         default: new docx.Footer({
-                //             children: [this.util.makeFooter(authoredBy, preparedOn)]
-                //         })
-                //     },
-                //     children: [this.textWidgets.makeParagraph('Table of Contents')],
-                // }
+                {
+                    properties: {},
+                    headers: {
+                        default: this.util.makeHeader(this.company.name, preparedFor)
+                    },
+                    footers: {
+                        default: new docx.Footer({
+                            children: [this.util.makeFooter(authoredBy, preparedOn)]
+                        })
+                    },
+                    children: myDocument,
+                }
             ],
         })
 
