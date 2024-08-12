@@ -13,6 +13,8 @@ import DOCXUtilities from './common.js'
 import { CompanySection } from './companies.js'
 import { InteractionDashboard } from './dashboard.js' 
 import docxSettings from './settings.js'
+import TextWidgets from './widgets/Text.js'
+import TableWidgets from './widgets/Tables.js'
 
 class BaseInteractionsReport {
     constructor(interactions, objectType, objectName, env) {
@@ -27,6 +29,8 @@ class BaseInteractionsReport {
         this.objectType = objectType
         this.env = env
         this.util = new DOCXUtilities(env)
+        this.textWidgets = new TextWidgets(env)
+        this.tableWidgets = new TableWidgets(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
         
@@ -211,12 +215,13 @@ class InteractionSection extends BaseInteractionsReport {
      * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} An array containing a section description and a table of interaction references
      */
-    makeReferencesDOCX(isPackage) {
-        // Link this back to the descriptions section
-        const descriptionsLink = this.util.makeInternalHyperLink(
-            'Back to Interaction Summaries', 
-            'interaction_summaries'
-        )
+    makeReferencesDOCX(isPackage, bookmark=null) {
+        const {
+            bookmarkName = 'Back to Interaction Descriptions',
+            bookmarkLink ='interaction_descriptions'
+        } = bookmark
+
+        const descriptionsLink = this.textWidgets.makeInternalHyperLink(bookmarkName, bookmarkLink)
 
         // Create the array for the references starting with the introduction
         let references = []
@@ -228,63 +233,59 @@ class InteractionSection extends BaseInteractionsReport {
             totalReadingTime += parseInt(this.interactions[interaction].reading_time)
             
             // Create the link to the underlying interaction document
-            const objWithPath = this.interactions[interaction].url.split('://').pop()
-            const myObj = objWithPath.split('/').pop()
+            // TODO consider making this a hyperlink to the interaction document in GitHub
+            const myObj = this.interactions[interaction].url.split('/').pop()
             let interactionLink = this.util.makeExternalHyperLink(
                 'Document', 
-                './interactions/' + myObj
+                `./interactions/${myObj}`
             )
             
             // Depending upon if this is a package or not create the metadata strip with/without document link
-            let metadataStrip = null
+            let metadataRow
+            let metadataStrip
             if(isPackage) { 
                 // isPackage version of the strip
-                metadataStrip = new docx.Paragraph({
-                    spacing: {
-                        before: 100,
-                    },
-                    children: [
-                        this.util.makeTextrun('[ '),
+                metadataRow = this.tableWidgets.fourColumnRowBasic(
+                    [
                         interactionLink,
-                        this.util.makeTextrun(
-                            ' | Created on: ' + 
-                            this.interactions[interaction].creation_date + 
-                            ' | '
-                        ),
-                        this.util.makeTextrun(
-                            ' Est. Reading Time: ' + 
-                            this.interactions[interaction].reading_time + ' min' + 
-                            ' | '
-                        ),
-                        descriptionsLink,
-                        this.util.makeTextrun(' ]'),
-                    ]
+                        `Created on: ${this.interactions[interaction].creation_date}`,
+                        `Est. reading time: ${this.interactions[interaction].reading_time} min`,
+                        descriptionsLink
+                    ],
+                    {firstColumnBold: false}
+                )
+                metadataStrip = new docx.Table({
+                    columnWidths: [25, 25, 25, 25],
+                    rows: [metadataRow],
+                    width: {
+                        size: 100,
+                        type: docx.WidthType.PERCENTAGE
+                    }
                 })
             } else {
                 // Non isPackage version of the strip
-                metadataStrip = new docx.Paragraph({
-                    spacing: {
-                        before: 100,
-                    },
-                    children: [
-                        this.util.makeTextrun('[ '),
-                        this.util.makeTextrun(
-                            'Creation Date: ' + 
-                            this.interactions[interaction].creation_date + 
-                            ' | '
-                        ),
-                        this.util.makeTextrun(
-                            ' Est. Reading Time: ' + 
-                            this.interactions[interaction].reading_time + ' min' + 
-                            ' | '
-                        ),
-                        descriptionsLink,
-                        this.util.makeTextrun(' ]'),
-                    ]
+                metadataRow = this.tableWidgets.fourColumnRowBasic(
+                    [
+                        `Created on: ${this.interactions[interaction].creation_date}`,
+                        `Est. reading time: ${this.interactions[interaction].reading_time} min`,
+                        descriptionsLink
+                    ],
+                    {firstColumnBold: false}
+                )
+                metadataStrip = new docx.Table({
+                    columnWidths: [50, 25, 25],
+                    rows: [metadataRow],
+                    width: {
+                        size: 100,
+                        type: docx.WidthType.PERCENTAGE
+                    }
                 })
             }
+            
 
-            // NOTE: Early reviews by users show topcis are confusing
+            // Create the tags table for the interaction
+            const tagsTable = this.tableWidgets.tagsTable(this.interactions[interaction].tags)
+
             // Generate the topic table
             // const topics = this.util.rankTags(this.interactions[interaction].topics)
             // const topicTable = this.util.topicTable(topics)
@@ -296,30 +297,28 @@ class InteractionSection extends BaseInteractionsReport {
                     this.interactions[interaction].name, 
                     String(
                         'interaction_' +
-                        String(this.interactions[interaction].id)
+                        String(this.interactions[interaction].file_hash)
                     ).substring(0, 40)
                 ),
                 // Create the abstract for the interaction
-                this.util.makeParagraph(
-                    this.interactions[interaction].abstract,
-                    {fontSize: this.util.halfFontSize * 1.5}
-                ),
+                this.util.makeParagraph(this.interactions[interaction].abstract),
+                metadataStrip,
+                this.textWidgets.makeHeading2('Tags'),
+                tagsTable,
                 // NOTE: Early reviews by users show topcis are confusing
                 // this.util.makeHeading2('Topics'), 
                 // topicTable,
-                metadataStrip
             )
         }
 
         references.splice(0,0,
             // Section intro
-            this.util.makeParagraph(
-                'The Mediumroast for GitHub automatically generated this section.' +
-                ' It includes key metadata from each interaction associated to the object ' + this.objectName +
-                '.  If this report document is produced as a package, instead of standalone, then the' +
-                ' hyperlinks are active and will link to documents on the local folder after the' +
-                ' package is opened. ' +
-                `Note that the total estimated reading time for all interactions is ${totalReadingTime} minutes.`
+            this.textWidgets.makeParagraph(
+                'The Mediumroast for GitHub automatically generated this section. ' +
+                `It includes key metadata from each interaction associated to the company ${this.objectName}. ` +
+                'If this report is produced as a package, then hyperlinks are present and will link to documents ' +
+                'on the local system. ' +
+                `Note the total estimated reading time for all interactions is ${totalReadingTime} minutes.`
             )
         )
 

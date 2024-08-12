@@ -274,6 +274,91 @@ class TableWidgets extends Widgets {
         })
     }
 
+    /**
+     * @function fourColumnRowBasic
+     * @description Basic table row with 4 columns
+     * @param {Array} cols - an array of 4 strings to be used as the text/prose for the cells
+     * * @param {Object} options - options for the cell to control bolding in the first column and all columns and border styles
+     * @returns {Object} a new 3 column docx TableRow object
+     */
+    fourColumnRowBasic (cols, options={}) {
+        let {
+            firstColumnBold = true,
+            allColumnsBold = false,
+            allBorders = false,
+            bottomBorders = true,
+        } = options
+
+        // Set the first column to bold if all columns are bold
+        if (allColumnsBold) {
+            firstColumnBold = true
+        }
+
+        // Set the border style
+        let borderStyle = this.noBorders
+        if (allBorders) {
+            borderStyle = this.allBorders
+        } else if (bottomBorders) {
+            borderStyle = this.bottomBorder
+        }
+        // Destructure the cols array
+        const [col1, col2, col3, col4] = cols
+
+        // return the row
+        return new docx.TableRow({
+            children: [
+                new docx.TableCell({
+                    width: {
+                        size: 40,
+                        type: docx.WidthType.PERCENTAGE,
+                    },
+                    children: [this.textWidgets.makeParagraph(col1, {fontSize: this.generalSettings.tableFontSize, bold: firstColumnBold})],
+                    borders: borderStyle,
+                    margins: {
+                        bottom: this.generalSettings.tableMargin,
+                        top: this.generalSettings.tableMargin
+                    }
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 30,
+                        type: docx.WidthType.PERCENTAGE,
+                    },
+                    children: [this.textWidgets.makeParagraph(col2, {fontSize: this.generalSettings.tableFontSize, bold: allColumnsBold})],
+                    borders: borderStyle,
+                    margins: {
+                        bottom: this.generalSettings.tableMargin,
+                        top: this.generalSettings.tableMargin
+                    }
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 30,
+                        type: docx.WidthType.PERCENTAGE,
+                    },
+                    children: [this.textWidgets.makeParagraph(col3, {fontSize: this.generalSettings.tableFontSize, bold: allColumnsBold})],
+                    borders: borderStyle,
+                    margins: {
+                        bottom: this.generalSettings.tableMargin,
+                        top: this.generalSettings.tableMargin
+                    }
+                }),
+                new docx.TableCell({
+                    width: {
+                        size: 30,
+                        type: docx.WidthType.PERCENTAGE,
+                    },
+                    children: [this.textWidgets.makeParagraph(col4, {fontSize: this.generalSettings.tableFontSize, bold: allColumnsBold})],
+                    borders: borderStyle,
+                    margins: {
+                        bottom: this.generalSettings.tableMargin,
+                        top: this.generalSettings.tableMargin
+                    }
+                }),
+            ]
+        })
+    }
+
     oneColumnTwoRowsBasic (rows, options={}) {
         // Desctructure the options object
         let {

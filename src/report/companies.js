@@ -264,19 +264,29 @@ class CompanySection extends BaseCompanyReport {
         const interact = new InteractionSection(
             [mostSimInt, leastSimInt],
             similarCompany.name,
-            'Company'
+            'Company',
+            this.env
         )
+
+        // Replaced any spaces in the company name with underscores
+        const company_bookmark_base = String(similarCompany.name.replace(/ /g, '_')).substring(0, 20)
 
         // Construct this competitive pages
         competitivePage.push(
-            this.util.makeHeadingBookmark2(`Details for: ${similarCompany.name}`),
+            this.textWidgets.makeHeadingBookmark2(`Details for: ${similarCompany.name}`, `company_${company_bookmark_base}`),
             firmographicsTable,
-            this.util.makeHeadingBookmark2('Tags'),
+            this.textWidgets.makeHeadingBookmark2('Tags', `tags_${company_bookmark_base}`),
             tagsTable,
-            this.util.makeHeadingBookmark2('Table for most/least similar interactions'),
+            this.textWidgets.makeHeadingBookmark2('Table for most/least similar interactions', `similarities_${company_bookmark_base}`),
             simTable,
-            this.util.makeHeadingBookmark2('Interaction abstracts'),
-            // ...interact.makeReferencesDOCX(isPackage)
+            this.textWidgets.makeHeadingBookmark2('Interaction abstracts', `abstracts_${company_bookmark_base}`),
+            ...interact.makeReferencesDOCX(isPackage, 
+                {
+                    bookmarkName: `Back to ${similarCompany.name}`, 
+                    bookmarkLink: `company_${company_bookmark_base}`
+                }
+            ),
+            this.textWidgets.pageBreak()
         )
 
         // Return the document fragment

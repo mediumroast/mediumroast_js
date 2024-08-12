@@ -227,6 +227,48 @@ class TextWidgets extends Widgets {
     }
 
     /**
+     * @function makeInternalHyperLink
+     * @description Create an external hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} link - the URL for the hyperlink within the document
+     * @returns {Object} a new docx InternalHyperlink object
+     */
+    makeInternalHyperLink(text, link) {
+        return new docx.InternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: text,
+                    style: 'Hyperlink',
+                    font: this.font,
+                    size: 16,
+                }),
+            ],
+            anchor: link,
+        })
+    }
+
+    /**
+     * @function makeBookmark
+     * @description Create a target within a document to link to with an internal hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} ident - the unique name of the bookmark
+     * @returns {Object} a new docx paragraph object with a bookmark
+     * @todo test and revise this function as it may need to be a textrun which can be embedded in something else
+     */
+    makeBookmark(text, ident) {
+        return new docx.Paragraph({
+            children: [
+                new docx.Bookmark({
+                    id: String(ident),
+                    children: [
+                        new docx.TextRun({text: text})
+                    ]
+                })
+            ]
+        })
+    }
+
+    /**
      * @function makeIntro
      * @description Creates an introduction paragraph with a heading of level 1
      * @param {String} introText - text/prose for the introduction
