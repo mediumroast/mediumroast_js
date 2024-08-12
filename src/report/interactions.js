@@ -56,7 +56,7 @@ class BaseInteractionsReport {
             new docx.TableRow({
                 children: [
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Id', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Id', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -67,7 +67,7 @@ class BaseInteractionsReport {
                         },
                     }),
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Frequency', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Frequency', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -78,7 +78,7 @@ class BaseInteractionsReport {
                         }
                     }),
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Proto-requirement', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Proto-requirement', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -96,7 +96,7 @@ class BaseInteractionsReport {
                 new docx.TableRow({
                     children: [
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topic, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(topic, {fontSize: this.generalStyle.tableFontSize})],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -107,7 +107,7 @@ class BaseInteractionsReport {
                             },
                         }),
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topics[topic].frequency, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(topics[topic].frequency, {fontSize: this.generalStyle.tableFontSize})],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -118,7 +118,7 @@ class BaseInteractionsReport {
                             },
                         }),
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topics[topic].label, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(topics[topic].label, {fontSize: this.generalStyle.tableFontSize})],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -215,7 +215,7 @@ class InteractionSection extends BaseInteractionsReport {
      * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} An array containing a section description and a table of interaction references
      */
-    makeReferencesDOCX(isPackage, bookmark=null) {
+    makeReferencesDOCX(isPackage, bookmark={}) {
         const {
             bookmarkName = 'Back to Interaction Descriptions',
             bookmarkLink ='interaction_descriptions'
@@ -232,19 +232,18 @@ class InteractionSection extends BaseInteractionsReport {
             // Calculate the aggregate reading time
             totalReadingTime += parseInt(this.interactions[interaction].reading_time)
             
-            // Create the link to the underlying interaction document
-            // TODO consider making this a hyperlink to the interaction document in GitHub
-            const myObj = this.interactions[interaction].url.split('/').pop()
-            let interactionLink = this.util.makeExternalHyperLink(
-                'Document', 
-                `./interactions/${myObj}`
-            )
-            
             // Depending upon if this is a package or not create the metadata strip with/without document link
             let metadataRow
             let metadataStrip
             if(isPackage) { 
                 // isPackage version of the strip
+                // Create the link to the underlying interaction document
+                // TODO consider making this a hyperlink to the interaction document in GitHub
+                const myObj = this.interactions[interaction].url.split('/').pop()
+                let interactionLink = this.util.makeExternalHyperLink(
+                    'Document', 
+                    `./interactions/${myObj}`
+                )
                 metadataRow = this.tableWidgets.fourColumnRowBasic(
                     [
                         interactionLink,
@@ -286,9 +285,8 @@ class InteractionSection extends BaseInteractionsReport {
             // Create the tags table for the interaction
             const tagsTable = this.tableWidgets.tagsTable(this.interactions[interaction].tags)
 
-            // Generate the topic table
-            // const topics = this.util.rankTags(this.interactions[interaction].topics)
-            // const topicTable = this.util.topicTable(topics)
+            // Generate the proto-requirements table
+            const protoRequirementsTable = this.protorequirementsTable(this.interactions[interaction].topics)
             
             // Push all of the content into the references array
             references.push(
@@ -305,9 +303,8 @@ class InteractionSection extends BaseInteractionsReport {
                 metadataStrip,
                 this.textWidgets.makeHeading2('Tags'),
                 tagsTable,
-                // NOTE: Early reviews by users show topcis are confusing
-                // this.util.makeHeading2('Topics'), 
-                // topicTable,
+                this.textWidgets.makeHeading2('Proto-Requirements'),
+                protoRequirementsTable
             )
         }
 

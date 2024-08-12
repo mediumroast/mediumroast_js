@@ -13,11 +13,9 @@ import boxPlot from 'box-plot'
 import DOCXUtilities from './common.js'
 import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
-import { Utilities as CLIUtilities } from '../cli/common.js' 
 import { getMostSimilarCompany } from './tools.js'
 import TextWidgets from './widgets/Text.js'
 import TableWidgets from './widgets/Tables.js'
-import { read } from 'xlsx'
 
 class BaseCompanyReport {
     constructor(company, env) {
@@ -318,6 +316,7 @@ class CompanyStandalone extends BaseCompanyReport {
         this.author = author
         this.authoredBy = author
         this.title = `${this.company.name} Company Report`
+        this.companyInteractions = sourceData.interactions
         this.interactions = sourceData.allInteractions
         this.competitors = sourceData.competitors.all
         this.mostSimilar = sourceData.competitors.mostSimilar
@@ -362,12 +361,12 @@ class CompanyStandalone extends BaseCompanyReport {
         
         // Construct the companySection and interactionSection objects
         const companySection = new CompanySection(this.company, this.env)
-        // const interactionSection = new InteractionSection(
-        //     this.interactions, 
-        //     this.company.name,
-        //     this.objectType,
-        //     this.env
-        // )
+        const interactionSection = new InteractionSection(
+            this.companyInteractions, 
+            this.company.name,
+            this.objectType,
+            this.env
+        )
 
         // Construct the dashboard object
         const myDash = new CompanyDashbord(this.env)
@@ -406,19 +405,16 @@ class CompanyStandalone extends BaseCompanyReport {
             ],
 
 
-            // [   this.util.makeHeading1('Topics'),
-            //     this.util.makeParagraph(
-            //         'The following topics were automatically generated from all ' +
-            //         this.noInteractions + ' interactions associated to this company.'
-            //     ),
-            //     this.util.makeHeadingBookmark1('Interaction Summaries', 'interaction_summaries')
-            // ],
             // ...interactionSection.makeDescriptionsDOCX(),
-            // await companySection.makeCompetitorsDOCX(this.competitors, isPackage),
+
             // [   this.util.pageBreak(),
             //     this.util.makeHeading1('References')
             // ],
-            // ...interactionSection.makeReferencesDOCX(isPackage)
+            [
+                this.textWidgets.pageBreak(),
+                this.textWidgets.makeHeading1('References')
+            ],
+            ...interactionSection.makeReferencesDOCX(isPackage)
             )
 
         // Construct the document
