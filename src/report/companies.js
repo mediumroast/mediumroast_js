@@ -401,15 +401,10 @@ class CompanyStandalone extends BaseCompanyReport {
                 this.textWidgets.makeHeadingBookmark1('Detail For Most/Least Similar Companies'),
                 mostLeastSimilarIntro,
                 ...mostSimilarReport.doc,
-                ...leastSimilarReport.doc
+                ...leastSimilarReport.doc,
+                this.textWidgets.makeHeading1('Interaction Descriptions')
             ],
-
-
-            // ...interactionSection.makeDescriptionsDOCX(),
-
-            // [   this.util.pageBreak(),
-            //     this.util.makeHeading1('References')
-            // ],
+            ...interactionSection.makeDescriptionsDOCX(),
             [
                 this.textWidgets.pageBreak(),
                 this.textWidgets.makeHeading1('References')

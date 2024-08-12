@@ -173,24 +173,26 @@ class InteractionSection extends BaseInteractionsReport {
         const noInteractions = this.interactions.length
 
         // Create the header row for the descriptions
-        let myRows = [this.util.descriptionRow('Id', 'Description', true)]
+        let myRows = [this.tableWidgets.twoColumnRowBasic(['Name', 'Description'], {allColumnsBold: true})]
         
         // Loop over the interactions and pull out the interaction ids and descriptions
         for (const interaction in this.interactions) {
-            myRows.push(this.util.descriptionRow(
-                // Create the internal hyperlink for the interaction reference
-                this.util.makeInternalHyperLink(
-                    this.interactions[interaction].id, 'interaction_' + String(this.interactions[interaction].id)
-                ), 
-                // Pull in the description
-                this.interactions[interaction].description
+            const interactionBaseLink = String(`interaction_${this.interactions[interaction].file_hash}`).substring(0, 20)
+            myRows.push(this.tableWidgets.twoColumnRowBasic(
+                    [
+                        this.textWidgets.makeInternalHyperLink(
+                            this.interactions[interaction].name, interactionBaseLink
+                        ), 
+                        this.interactions[interaction].description
+                    ],
+                    {firstColumnBold: false}
                 )
             )
         }
 
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [10, 90],
+            columnWidths: [30, 70],
             rows: myRows,
             width: {
                 size: 100,
@@ -200,10 +202,8 @@ class InteractionSection extends BaseInteractionsReport {
 
         // Return the results as an array
         return [
-            this.util.makeParagraph(
-                'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
-                this.objectName + ' ' + this.objectType + ' object.  Additional detail is in ' +
-                'the References section of this document.'
+            this.textWidgets.makeParagraph(
+                `This section contains descriptions for the ${noInteractions} interactions associated to the ${this.objectName} ${this.objectType}.  Additional detail is in the References section of this document.`
             ),
             myTable
         ]
@@ -296,7 +296,7 @@ class InteractionSection extends BaseInteractionsReport {
                     String(
                         'interaction_' +
                         String(this.interactions[interaction].file_hash)
-                    ).substring(0, 40)
+                    ).substring(0, 20)
                 ),
                 // Create the abstract for the interaction
                 this.util.makeParagraph(this.interactions[interaction].abstract),

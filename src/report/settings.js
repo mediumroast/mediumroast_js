@@ -51,11 +51,11 @@ const docxSettings = {
         titleFontColor: "C7701E", // Saturated Light Blue
         textFontColor: "C7701E", // Ultra light Blue
         chartAxisLineColor: "#374246",
-        chartAxisFontColor: "rgba(71,121,140, 0.7)",
-        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
-        chartItemFontColor: "rgba(149,181,192, 0.9)",
-        chartSeriesColor: "rgb(71,113,128)",
-        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
+        chartAxisFontColor: "rgba(199,112,30, 0.7)",
+        chartAxisTickFontColor: "rgba(199,112,30, 0.6)",
+        chartItemFontColor: "rgba(199,112,30, 0.9)",
+        chartSeriesColor: "rgb(199,112,30, 0.7)",
+        chartSeriesBorderColor: "rgba(199,112,30,, 0.9)", 
         highlightFontColor: ""
     },
     latte: {
