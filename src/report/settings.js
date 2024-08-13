@@ -55,7 +55,7 @@ const docxSettings = {
         chartAxisTickFontColor: "rgba(199,112,30, 0.6)",
         chartItemFontColor: "rgba(199,112,30, 0.9)",
         chartSeriesColor: "rgb(199,112,30, 0.7)",
-        chartSeriesBorderColor: "rgba(199,112,30,, 0.9)", 
+        chartSeriesBorderColor: "rgba(199,112,30, 0.9)", 
         highlightFontColor: ""
     },
     latte: {
@@ -65,7 +65,7 @@ const docxSettings = {
         documentColor: "F1F0EE", // Coffee black
         titleFontColor: "25110f", // Saturated Light Blue
         textFontColor: "25110f", // Ultra light Blue
-        chartAxisLineColor: "#25110f",
+        chartAxisLineColor: "#374246",
         chartAxisFontColor: "rgba(37,17,15, 0.7)",
         chartAxisTickFontColor: "rgba(37,17,15, 0.6)",
         chartItemFontColor: "rgba(37,17,15, 0.9)",

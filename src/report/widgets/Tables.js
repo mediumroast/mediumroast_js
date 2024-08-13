@@ -2,11 +2,12 @@
 import Widgets from './Widgets.js'
 import TextWidgets from './Text.js'
 import docx from 'docx'
-import { right } from 'inquirer/lib/utils/readline.js'
+import FilesystemOperators from '../../cli/filesystem.js'
 
 class TableWidgets extends Widgets {
     constructor(env) {
         super(env)
+        this.filesystem = new FilesystemOperators()
         // Define specifics for table borders
         this.noneStyle = {
             style: this.generalSettings.noBorderStyle
@@ -570,7 +571,7 @@ class TableWidgets extends Widgets {
                         new docx.TableCell({
                             children: [
                                 this.textWidgets.makeParagraph(
-                                    statistics[stat].value,
+                                    String(statistics[stat].value),
                                     {
                                         fontSize: this.generalSettings.metricFontSize,
                                         fontColor: this.themeSettings.titleFontColor,

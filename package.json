@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with mediumroast.io.",
   "main": "cli/mrcli.js",
   "scripts": {
