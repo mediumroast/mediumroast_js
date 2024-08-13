@@ -1,8 +1,6 @@
 // Load the modules
 const { readObjects, readBranches, readWorkflows, saveReports } = require('./github.js')
-const { createCompaniesReport } = require('./companies.js')
-const { createCompanyReport } = require('./company.js')
-const { createMainReport } = require('./main.js')
+const { createCompaniesReport, createCompanyReports, createMainReport } = require('./reports.js')
 
 
 // Create the run function that creates the reports
@@ -28,7 +26,7 @@ async function run () {
     }
 
     // Create the company files
-    const companyFiles = await createCompanyReport(inputs.companies, inputs.interactions, reports)
+    const companyFiles = await createCompanyReports(inputs.companies, inputs.interactions, reports)
     // Create the companies file
     const companiesFile = createCompaniesReport(inputs.companies)
     // Create the main file
