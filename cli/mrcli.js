@@ -11,17 +11,34 @@
 
 // Import required modules
 import program from 'commander'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url';
+
+// Function to update version from package.json
+function updateVersionFromPackageJson() {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const packageJsonPath = path.join(__dirname, '..', 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const versionNumber = packageJson.version;
+
+  program.version(versionNumber);
+}
+
+// Update the version from package.json
+updateVersionFromPackageJson()
 
 program
   .name('mrcli')
-  .version('0.7.2')
-  .description('mediumroast.io command line interface')
+  .description('Mediumroast for GitHub command line interface')
   .command('setup', 'setup the mediumroast.io system via the command line').alias('f')
   .command('interaction', 'manage and report on mediumroast.io interaction objects').alias('i')
   .command('company', 'manage and report on mediumroast.io company objects').alias('c')
   .command('study', 'manage and report on mediumroast.io study objects').alias('s')
   .command('user', 'report on mediumroast.io users in GitHub').alias('u')
-  .command('billing', 'report on GitHub actions and storage units consumed').alias('b')
+  .command('billing', 'DEPRECATED - report on GitHub actions and storage units consumed')
+  .command('storage', 'report on GitHub storage units consumed').alias('t')
   .command('actions', 'report on and update GitHub actions').alias('a')
 
 program.parse(process.argv)

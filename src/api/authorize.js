@@ -219,8 +219,48 @@ class Auth0Auth {
 }
 
 class GitHubAuth {
-    
+    constructor (env) {
+        this.env = env
+    }
 
+    async _checkTokenExpiration(token) {
+        const response = await fetch('https://api.github.com/applications/:client_id/token', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${Buffer.from(`client_id:client_secret`).toString('base64')}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                access_token: token
+            })
+        })
+    
+        if (!response.ok) {
+            return [false, {status_cde: 500, status_msg: response.statusText}, null]
+        }
+    
+        const data = await response.json()
+        return [true, {status_cde: 200, status_msg: response.statusText}, data]
+    }
+
+    getAccessTokenPat(defaultExpiryDays = 30) {
+        // Read the PAT from the file
+        const pat = fs.readFileSync(this.secretFile, 'utf8').trim()
+
+        // Check to see if the token remains valid
+        const isTokenValid = this._checkTokenExpiration(pat)
+        
+        if (!isTokenValid[0]) {
+            return isTokenValid
+        }
+    
+        return {
+          token: pat,
+          auth_type: 'pat'
+        }
+      }
+    
 
     /**
      * 

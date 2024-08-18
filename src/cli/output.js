@@ -157,16 +157,29 @@ class CLIOutput {
                     objects[myObj].days_left_in_billing_cycle + ' days',
                 ])
             }
-        } else if (this.objectType === 'AllBilling') {
+        } else if (this.objectType === 'Workflows') {
             table = new Table({
-                head: ['Resource Type', 'Included Units Used', 'Paid Units Used', 'Total Units Used'],
+                head: ['Name', 'Id', 'Status', 'Trigger', 'Runtime (min)'],
             })
-            for (const myObj in objects) {       
+            for (const myObj in objects.slice(-5)) {
                 table.push([
-                    objects[myObj].resourceType,
-                    objects[myObj].includedUnits,
-                    objects[myObj].paidUnitsUsed,
-                    objects[myObj].totalUnitsUsed,
+                    objects[myObj].name,
+                    objects[myObj].workflowId,
+                    objects[myObj].conclusion,
+                    objects[myObj].event,
+                    objects[myObj].runTimeMinutes + ' min'
+                ])
+            }
+        } else if (this.objectType === 'Storage') {
+            table = new Table({
+                head: ['Reposistory', 'Organization', 'File Count', 'Size (MB)'],
+            })
+            for (const myObj in objects.slice(-5)) {
+                table.push([
+                    objects[myObj].name,
+                    objects[myObj].org,
+                    objects[myObj].numFiles,
+                    objects[myObj].size + ' MB',
                 ])
             }
         } else {

@@ -10,16 +10,18 @@
  */
 
 // Import required modules
-import { Billings } from '../src/api/gitHubServer.js'
+import { Actions } from '../src/api/gitHubServer.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
+import ora from "ora"
+import chalk from 'chalk'
 
 // Related object type
 const objectType = 'Actions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '2.0',
+   '1.0.0',
    `${objectType}`,
    `Command line interface to report on and update actions.`,
    objectType
@@ -56,6 +58,10 @@ myProgram = environment.removeArgByName(myProgram, '--find_by_id')
 myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--splash')
+myProgram = environment.removeArgByName(myProgram, '--update')
+myProgram
+   .option('-u, --update', 'Update actions and workflows from Mediumroast for GitHub package')
+   .option('-b, --billing', 'Return all actions billing information for the GitHub organization')
 
 // Parse the command line arguments into myArgs and obtain the options
 let myArgs = myProgram.parse(process.argv)
@@ -66,23 +72,32 @@ let myEnv = environment.getEnv(myArgs, myConfig)
 const accessToken = await environment.verifyAccessToken()
 const processName = 'mrcli-actions'
 
-// Output object
-const output = new CLIOutput(myEnv, objectType)
-
 // Construct the controller objects
-const actionsCtl = new Billings(accessToken, myEnv.gitHubOrg, processName)
+const actionsCtl = new Actions(accessToken, myEnv.gitHubOrg, processName)
 
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
 
 if (myArgs.update) {
-   [success, stat, results] = await billingsCtl.getActionsBilling()
+   let spinner = ora(chalk.bold.blue('Updating actions and workflows on GitHub ... '))
+   spinner.start() // Start the spinner
+   const updates = await actionsCtl.updateActions()
+   spinner.stop() // Stop the spinner
+   if (updates[0]) {
+      console.log(`SUCCESS: A total of [${updates[2].total}] actions and workflows updated successfully.`)
+      process.exit(0)
+   } else {
+      console.log(`ERROR: Installing actions and workflows failed.\nTotal attempted: [${updates[2].total}] -> total failed: ${updates[2].failCount}; total successul: ${updates[2].successCount}.\nError message: ${updates[1].status_msg}`)
+      process.exit(-1)
+   }
+} else if (myArgs.billing) {
+   [success, stat, results] = await actionsCtl.getActionsBilling()
    const myUserOutput = new CLIOutput(myEnv, 'ActionsBilling')
    myUserOutput.outputCLI([results], myArgs.output)
    process.exit()
 } else {
-   [success, stat, results] = await billingsCtl.getAll()
-   const myUserOutput = new CLIOutput(myEnv, 'AllBilling')
+   [success, stat, results] = await actionsCtl.getAll()
+   const myUserOutput = new CLIOutput(myEnv, 'Workflows')
    myUserOutput.outputCLI(results, myArgs.output)
    process.exit()
 }

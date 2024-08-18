@@ -184,6 +184,120 @@ class GitHubFunctions {
     }
 
     /**
+     * @async
+     * @function getWorkflowRuns
+     * @description Gets all of the workflow runs for the repository
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the response or error message.
+     */
+    async getWorkflowRuns () {
+        let workflows
+        try {
+            workflows = await this.octCtl.rest.actions.listWorkflowRunsForRepo({
+                owner: this.orgName,
+                repo: this.repoName
+            })
+        } catch (err) {
+            return [false, {status_code: 500, status_msg: err.message}, err]
+        }
+    
+        const workflowList = []
+        let totalRunTimeThisMonth = 0
+        for (const workflow of workflows.data.workflow_runs) {
+            // Get the current month
+            const currentMonth = new Date().getMonth()
+            
+            // Compute the runtime and if the time is less than 60s round it to 1m
+            const runTime = Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60) < 1 ? 1 : Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60)
+    
+            // If the month of the workflow is not the current month, then skip it
+            if (new Date(workflow.updated_at).getMonth() !== currentMonth) {
+                continue
+            }
+            totalRunTimeThisMonth += runTime
+    
+            // Add the workflow to the workflowList
+            workflowList.push({
+                // Create name where the path is the name of the workflow, but remove the path and the .yml extension
+                name: workflow.path.replace('.github/workflows/', '').replace('.yml', ''),
+                title: workflow.display_title,
+                id: workflow.id,
+                workflowId: workflow.workflow_id,
+                runTimeMinutes: runTime,
+                status: workflow.status,
+                conclusion: workflow.conclusion,
+                event: workflow.event,
+                path: workflow.path,
+            })
+        }
+    
+        // Sort the worflowList to put the most recent workflows first
+        workflowList.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+        
+        return [true, {
+            status_code: 200, 
+            status_msg: `discovered [${workflowList.length}] workflow runs for [${this.repoName}]`,}, 
+            workflowList
+        ]
+    }
+
+    // Create a method using the octokit to get the size of the repository and return the size in MB
+    async getRepoSize() {
+        let repoData = {
+            size: 0,
+            numFiles: 0,
+            name: this.repoName,
+            org: this.orgName,
+        }
+        // Count the number of files in the repository
+        const countFiles = async (path = '') => {
+            try {
+                const response = await this.octCtl.rest.repos.getContent({
+                    owner: this.orgName,
+                    repo: this.repoName,
+                    path: path
+                })
+    
+                let fileCount = 0;
+                for (const item of response.data) {
+                    if (item.type === 'file') {
+                        fileCount += 1;
+                    } else if (item.type === 'dir') {
+                        fileCount += await countFiles(item.path)
+                    }
+                }
+                return fileCount
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.numFiles = await countFiles()
+        } catch (err) {
+            repoData.numFiles = 'Unknown'
+        }
+
+        const getRepoSize = async () => {
+            try {
+                const response = await this.octCtl.rest.repos.get({
+                    owner: this.orgName,
+                    repo: this.repoName
+                })
+                const sizeInKB = response.data.size;
+                const sizeInMB = sizeInKB / 1024;
+                return sizeInMB.toFixed(2); // Convert to MB and format to 2 decimal places
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.size = await getRepoSize()
+        } catch (err) {
+            repoData.size = 'Unknown'
+        }
+        return [true, {status_code: 200, status_msg: `discovered size of [${this.repoName}]`}, repoData]
+    }
+
+    /**
      * @function createContainers
      * @description Creates the top level Study, Company and Interaction containers for all mediumroast.io assets
      * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the responses or error messages.
@@ -902,68 +1016,6 @@ class GitHubFunctions {
     
         // Return success with number of objects written
         return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
-    }
-
-    // Use fs to read all the files in the actions directory recursively
-    generateActionsManifest(dir, filelist) {
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename)
-        dir = dir || path.resolve(path.join(__dirname, './actions') )
-        const files = fs.readdirSync(dir)
-        filelist = filelist || []
-        files.forEach((file) => {
-            // Skip .DS_Store files and node_modules directories
-            if (file === '.DS_Store' || file === 'node_modules') {
-                return
-            }
-            if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                filelist = generateActionsManifest(path.join(dir, file), filelist) 
-            }
-            else {
-                // Substitute .github for the first part of the path, in the variable dir
-                // Log dir to the console including if there are any special characters
-                if (dir.includes('./')) {
-                    dir = dir.replace('./', '')
-                }
-                // This will be the repository name
-                let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
-
-                filelist.push({
-                    fileName: file,
-                    containerName: dotGitHub,
-                    srcURL: new URL(path.join(dir, file), import.meta.url)
-                })
-            }
-        })
-        return filelist
-    } 
-
-    async installActions() {
-        let actionsManifest = this.generateActionsManifest()
-        // Loop through the actionsManifest and install each action
-        await actionsManifest.forEach(async (action) => {
-            let status = false
-            let blobData
-            try {
-                // Read in the blob file
-                blobData = fs.readFileSync(action.srcURL, 'base64')
-                status = true
-            } catch (err) {
-                return [false, 'Unable to read file [' + action.fileName + '] because: ' + err, null]
-            }
-            if(status) {
-                // Install the action
-                const installResp = await this.writeBlob(
-                    action.containerName, 
-                    action.fileName, 
-                    blobData, 
-                    'main'
-                )
-            } else {
-                return [false, 'Failed to read item [' + action.fileName + ']', null]
-            }
-        })
-        return [true, 'All actions installed', null]
     }
 
 }

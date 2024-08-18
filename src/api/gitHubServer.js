@@ -33,6 +33,9 @@
 // Import required modules
 import GitHubFunctions from './github.js'
 import { createHash } from 'crypto'
+import fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 
 
 class baseObjects {
@@ -285,7 +288,7 @@ class Users extends baseObjects {
 }
 
 // Create a subclass called Users that inherits from baseObjects
-class Billings extends baseObjects {
+class Storage extends baseObjects {
     /**
      * @constructor
      * @classdesc A subclass of baseObjects that construct the user objects
@@ -299,31 +302,7 @@ class Billings extends baseObjects {
 
     // Create a new method for getAll that is specific to the Billings class using getBillings() in github.js
     async getAll() {
-        const storageBillingsResp = await this.serverCtl.getStorageBillings()
-        const actionsBillingsResp = await this.serverCtl.getActionsBillings()
-        const allBillings = [
-            {
-                resourceType: 'Storage',
-                includedUnits: Math.abs(
-                        storageBillingsResp[2].estimated_paid_storage_for_month - 
-                        storageBillingsResp[2].estimated_storage_for_month
-                    ) + ' GiB',
-                paidUnitsUsed: storageBillingsResp[2].estimated_paid_storage_for_month + ' GiB',
-                totalUnitsUsed: storageBillingsResp[2].estimated_storage_for_month + ' GiB'
-            },
-            {
-                resourceType: 'Actions',
-                includedUnits: actionsBillingsResp[2].total_minutes_used + ' min',
-                paidUnitsUsed: actionsBillingsResp[2].total_paid_minutes_used + ' min',
-                totalUnitsUsed: actionsBillingsResp[2].total_minutes_used + actionsBillingsResp[2].total_paid_minutes_used + ' min'
-            }
-        ]
-        return [true, {status_code: 200, status_msg: `found all billings`}, allBillings]
-    }
-
-    // Create a new method of to get the actions billing status only
-    async getActionsBilling() {
-        return await this.serverCtl.getActionsBillings()
+        return await this.serverCtl.getRepoSize()
     }
 
     // Create a new method of to get the storage billing status only
@@ -483,46 +462,111 @@ class Actions extends baseObjects {
      * @param {String} processName - the process name for the GitHub application
      */
     constructor (token, org, processName) {
-        super(token, org, processName, 'Interactions')
+        super(token, org, processName, 'Actions')
     }
 
-    async updateObj(objToUpdate, dontWrite=false, system=false) {
-        // Destructure objToUpdate
-        const { name, key, value } = objToUpdate
-        // Define the attributes that can be updated by the user
-        const whiteList = [
-            'status', 'content_type', 'file_size', 'reading_time', 'word_count', 'page_count', 'description', 'abstract',
+    _generateManifest(dir, filelist) {
+        // Define which content to skip
+        const skipContent = ['.DS_Store', 'node_modules']
+        const __filename = fileURLToPath(import.meta.url)
+        const __dirname = path.dirname(__filename);
+        // Use regex to prune everything after mediumroast_js/
+        const basePath = __dirname.match(/.*mediumroast_js\//)[0];
+        // Append cli/actions to the base path
+        dir = dir || path.resolve(path.join(basePath, 'cli/actions'))
+        
+        
+        const files = fs.readdirSync(dir)
+        filelist = filelist || [];
+        files.forEach((file) => {
+            // Skip unneeded directories
+            if (skipContent.includes(file)) {
+                return
+            }
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+                filelist = this._generateManifest(path.join(dir, file), filelist)
+            } else {
+                // Substitute .github for the first part of the path, in the variable dir
+                if (dir.includes('./')) {
+                    dir = dir.replace('./', '')
+                }
+                // This will be the repository name
+                let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
+    
+                filelist.push({
+                    fileName: file,
+                    containerName: dotGitHub,
+                    srcURL: new URL(`file://${fullPath}`)
+                })
+                
+            }
+        })
+        return filelist
+    } 
 
-            'region', 'country', 'city', 'state_province', 'zip_postal', 'street_address', 'latitude', 'longitude',
-            
-            'public', 'groups' 
-        ]
-        return await super.updateObj(name, key, value, dontWrite, system, whiteList)
+    async updateActions() {
+        // Discover the manifest
+        const actionsManifest = this._generateManifest()
+        // Capture detailed install status
+        let installStatus = {
+            successCount: 0,
+            failCount: 0,
+            success: [],
+            fail: [],
+            total: actionsManifest.length
+        }
+        for (const action of actionsManifest) {
+        // Loop through the actionsManifest and install each action
+            let status = false
+            let blobData
+            try {
+                // Read in the blob file
+                blobData = fs.readFileSync(action.srcURL, 'base64')
+                status = true
+            } catch (err) {
+                console.log(`Unable to read file [${action.fileName}] because: ${err}`)
+                return [false,{status_code: 500, status_msg: `Unable to read file [${action.fileName}] because: ${err}`}, installStatus]
+            }
+            if(status) {
+                // Get the sha for the current branch/object
+                const sha = await this.serverCtl.getSha(
+                    action.containerName, 
+                    action.fileName, 
+                    'main'
+                )
+                // Keep action update failures
+                // Install the action
+                const installResp = await this.serverCtl.writeBlob(
+                    action.containerName, 
+                    action.fileName, 
+                    blobData, 
+                    'main',
+                    sha[2]
+                )
+                if(installResp[0]){
+                    installStatus.success.push({fileName: action.fileName, containerName: action.catchContainer, installMsg: installResp[1].status_msg})
+                    installStatus.successCount++
+                } else { 
+                    installStatus.fail.push({fileName: action.fileName, containerName: action.catchContainer, installMsg: installResp[1].status_msg})
+                    installStatus.failCount++
+                }
+            } else {
+                return [false, {status_code: 503,status_msg:`Failed to read item [${action.fileName}]`}, installStatus]
+            }
+        }
+        return [true, {status_code: 200, status_msg:`All actions installed`}, installStatus]
+    }
+
+    // Create a new method of to get the actions billing status only
+    async getActionsBilling() {
+        return await this.serverCtl.getActionsBillings()
     }
 
     async getAll() {
-        const storageBillingsResp = await this.serverCtl.getStorageBillings()
-        const actionsBillingsResp = await this.serverCtl.getActionsBillings()
-        const allBillings = [
-            {
-                resourceType: 'Storage',
-                includedUnits: Math.abs(
-                        storageBillingsResp[2].estimated_paid_storage_for_month - 
-                        storageBillingsResp[2].estimated_storage_for_month
-                    ) + ' GiB',
-                paidUnitsUsed: storageBillingsResp[2].estimated_paid_storage_for_month + ' GiB',
-                totalUnitsUsed: storageBillingsResp[2].estimated_storage_for_month + ' GiB'
-            },
-            {
-                resourceType: 'Actions',
-                includedUnits: actionsBillingsResp[2].total_minutes_used + ' min',
-                paidUnitsUsed: actionsBillingsResp[2].total_paid_minutes_used + ' min',
-                totalUnitsUsed: actionsBillingsResp[2].total_minutes_used + actionsBillingsResp[2].total_paid_minutes_used + ' min'
-            }
-        ]
-        return [true, {status_code: 200, status_msg: `found all billings`}, allBillings]
+        return await this.serverCtl.getWorkflowRuns()
     }
 }
 
 // Export classes for consumers
-export { Studies, Companies, Interactions, Users, Billings }
+export { Studies, Companies, Interactions, Users, Storage, Actions }

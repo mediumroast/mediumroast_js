@@ -142,7 +142,7 @@ async function confirmGitHubOrg(token, env) {
 
     // Obtain the intel based upon the organization the user input
     const gitHubOrg = await gitHubCtl.getGitHubOrg()
-    // console.log(gitHubOrg)
+
     if(!gitHubOrg[0]){
         tryAgain = await wizardUtils.operationOrNot(
             `Unfortunately, no organization matching [${gitHubOrgName}] was found. Maybe you mistyped it, try again?`
