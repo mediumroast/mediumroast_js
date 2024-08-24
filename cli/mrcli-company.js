@@ -4,14 +4,14 @@
  * A CLI utility used for accessing and reporting on mediumroast.io company objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file company.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.2.0
  */
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
 import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import DOCXUtilities from '../src/report/helpers.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
@@ -27,7 +27,7 @@ const objectType = 'Companies'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.1.0',
+   '3.2.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -35,6 +35,7 @@ const environment = new Environmentals(
 
 // Filesystem object
 const fileSystem = new FilesystemOperators()
+
 
 // Process the command line options
 let myProgram = environment.parseCLIArgs(true)
@@ -52,6 +53,9 @@ myEnv.company = 'Unknown'
 const accessToken = await environment.verifyAccessToken()
 const processName = 'mrcli-company'
 
+// Construct the DOCXUtilities object
+const docxUtils = new DOCXUtilities(myEnv)
+
 // Output object
 const output = new CLIOutput(myEnv, objectType)
 
@@ -65,89 +69,10 @@ const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
 // const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
 const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
-function initializeSource() {
-   return {
-      company: [],
-      interactions: [],
-      allInteractions: [],
-      competitors: {
-         leastSimilar: {},
-         mostSimilar: {},
-         all: []
-      },
-      totalInteractions: 0,
-      totalCompanies: 0,
-      averageInteractionsPerCompany: 0,
-   }
-}
-
 async function fetchData() {
    const [intStatus, intMsg, allInteractions] = await interactionCtl.getAll()
    const [compStatus, compMsg, allCompanies] = await companyCtl.getAll()
    return { allInteractions, allCompanies }
-}
-
-function getSourceCompany(allCompanies, companyName) {
-   return allCompanies.mrJson.filter(company => company.name === companyName)
-}
-
-function getInteractions(sourceCompany, allInteractions) {
-    const interactionNames = Object.keys(sourceCompany[0].linked_interactions);
-    return interactionNames.map(interactionName => 
-        allInteractions.mrJson.find(interaction => interaction.name === interactionName)
-    ).filter(interaction => interaction !== undefined);
-}
-
-function getCompetitors(sourceCompany, allCompanies) {
-    const competitorNames = Object.keys(sourceCompany[0].similarity);
-    const allCompetitors = competitorNames.map(competitorName => 
-        allCompanies.mrJson.find(company => company.name === competitorName)
-    ).filter(company => company !== undefined)
-
-    const mostSimilar = competitorNames.reduce((mostSimilar, competitorName) => {
-        const competitor = allCompanies.mrJson.find(company => company.name === competitorName);
-        if (!competitor) return mostSimilar;
-
-        const similarityScore = sourceCompany[0].similarity[competitorName].similarity;
-        if (!mostSimilar || similarityScore > mostSimilar.similarity) {
-            return { ...competitor, similarity: similarityScore }
-        }
-        return mostSimilar
-    }, null)
-
-    const leastSimilar = competitorNames.reduce((leastSimilar, competitorName) => {
-        const competitor = allCompanies.mrJson.find(company => company.name === competitorName);
-        if (!competitor) return leastSimilar;
-
-        const similarityScore = sourceCompany[0].similarity[competitorName].similarity;
-        if (!leastSimilar || similarityScore < leastSimilar.similarity) {
-            return { ...competitor, similarity: similarityScore }
-        }
-        return leastSimilar
-    }, null);
-
-    return { allCompetitors, mostSimilar, leastSimilar }
-}
-
-async function _prepareData(companyName) {
-    let source = initializeSource()
-
-    const { allInteractions, allCompanies } = await fetchData()
-
-    source.company = getSourceCompany(allCompanies, companyName)
-    source.totalCompanies = allCompanies.mrJson.length
-
-    source.interactions = getInteractions(source.company, allInteractions)
-    source.allInteractions = allInteractions.mrJson
-    source.totalInteractions = allInteractions.mrJson.length
-    source.averageInteractionsPerCompany = Math.round(source.totalInteractions / source.totalCompanies)
-
-    const { allCompetitors, mostSimilar, leastSimilar } = getCompetitors(source.company, allCompanies)
-    source.competitors.all = allCompetitors
-    source.competitors.mostSimilar = mostSimilar
-    source.competitors.leastSimilar = leastSimilar
-
-    return source
 }
 
 // Predefine the results variable
@@ -157,16 +82,19 @@ let [success, stat, results] = [null, null, null]
 // TODO consider moving this out into at least a separate function to make main clean
 if (myArgs.report) {
    // Prepare the data for the report
-   const reportData = await _prepareData(myArgs.report)
+   // const reportData = await _prepareData(myArgs.report)
+   const { allInteractions, allCompanies } = await fetchData()
    // Set the root name to be used for file and directory names in case of packaging
-   const baseName = reportData.company[0].name.replace(/ /g, "_")
+   const baseName = myArgs.report.replace(/ /g, "_")
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
    let fileName = process.env.HOME + '/Documents/' + baseName + '.docx'
    // Set up the document controller
    const docController = new CompanyStandalone(
-      reportData,
+      myArgs.report,
+      allCompanies.mrJson,
+      allInteractions.mrJson,
       myEnv
    )
 

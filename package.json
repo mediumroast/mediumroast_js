@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.7.34",
+  "version": "0.7.00.42",
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with Mediumroast for GitHub.",
   "main": "cli/mrcli.js",
   "scripts": {
@@ -13,6 +13,7 @@
     "mrcli-setup": "cli/mrcli-setup.js",
     "mrcli-user": "cli/mrcli-user.js",
     "mrcli-billing": "cli/mrcli-billing.js",
+    "mrcli-storage": "cli/mrcli-storage.js",
     "mrcli-actions": "cli/mrcli-actions.js",
     "mrcli": "cli/mrcli.js"
   },

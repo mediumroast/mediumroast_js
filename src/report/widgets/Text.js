@@ -1,4 +1,24 @@
-// report/widgets/TableWidget.js
+/**
+ * @module TextWidgets
+ * @description This class contains Text widgets for building reports in docx
+ * @extends Widgets
+ * @requires Widgets
+ * @requires docx
+ * @version 1.2.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file Text.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * 
+ * @example
+ * import TextWidgets from './Text.js'
+ * const text = new TextWidgets()
+ * const myParagraph = text.makeParagraph('This is a paragraph')
+ * 
+ */
+
+// Import required modules
 import Widgets from './Widgets.js'
 import docx from 'docx'
 
@@ -234,17 +254,18 @@ class TextWidgets extends Widgets {
      * @returns {Object} a new docx InternalHyperlink object
      */
     makeInternalHyperLink(text, link) {
-        return new docx.InternalHyperlink({
+        const myLink = new docx.InternalHyperlink({
             children: [
                 new docx.TextRun({
-                    text: text,
+                    text: String(text),
                     style: 'Hyperlink',
-                    font: this.font,
-                    size: 16,
+                    font: this.generalSettings.font,
+                    size: this.fullFontSize,
                 }),
             ],
             anchor: link,
         })
+        return myLink
     }
 
     /**

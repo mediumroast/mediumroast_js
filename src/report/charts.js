@@ -1,11 +1,11 @@
 /**    
- * @fileOverview This file contains the Charting class which is used to generate charts for the report
+ * @description This file contains the Charting class which is used to generate charts for the report
  * 
  * @license Apache-2.0
  * @version 2.0.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
- * @file github.js
+ * @file charts.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * 
  * @module Charting
@@ -36,7 +36,7 @@
 */
 
 
-
+// Import required modules
 import axios from 'axios'
 import docxSettings from './settings.js'
 import path from 'path'

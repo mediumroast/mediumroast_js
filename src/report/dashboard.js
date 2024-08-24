@@ -2,15 +2,15 @@
  * Classes to create dashboards for company, interaction and study objects in mediumroast.io documents
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file dashboard.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 0.1.0
+ * @version 2.0.0
  */
 
 // Import required modules
 import docx from 'docx'
 import * as fs from 'fs'
-import DOCXUtilities from './common.js'
+import Utilities from './helpers.js'
 import docxSettings from './settings.js'
 import Charting from './charts.js'
 import TableWidgets from './widgets/Tables.js'
@@ -25,193 +25,11 @@ class Dashboards {
      */
     constructor(env) {
         this.env = env
-        this.util = new DOCXUtilities(env)
+        this.util = new Utilities(env)
         this.charting = new Charting(env)
         this.tableWidgets = new TableWidgets(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
-        
-        // Define specifics for table borders
-        this.noneStyle = {
-            style: this.generalStyle.noBorderStyle
-        }
-        this.borderStyle = {
-            style: this.generalStyle.tableBorderStyle,
-            size: this.generalStyle.tableBorderSize,
-            color: this.themeStyle.tableBorderColor
-        }
-        // No borders
-        this.noBorders = {
-            left: this.noneStyle,
-            right: this.noneStyle,
-            top: this.noneStyle,
-            bottom: this.noneStyle
-        }
-        // Right border only
-        this.rightBorder = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.noneStyle,
-            bottom: this.noneStyle
-        }
-        // Bottom border only
-        this.bottomBorder = {
-            left: this.noneStyle,
-            right: this.noneStyle,
-            top: this.noneStyle,
-            bottom: this.borderStyle
-        }
-        // Bottom and right borders
-        this.bottomAndRightBorders = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.noneStyle,
-            bottom: this.borderStyle
-        }
-        // Top and right borders
-        this.topAndRightBorders = {
-            left: this.noneStyle,
-            right: this.borderStyle,
-            top: this.borderStyle,
-            bottom: this.noneStyle
-        }
-        // All borders, helpful for debugging
-        this.allBorders = {
-            left: this.borderStyle,
-            right: this.borderStyle,
-            top: this.borderStyle,
-            bottom: this.borderStyle
-        }
-
-        // TODO need baseDir to be passed in or defined in the constructor
-    
-    }
-
-    /**
-     * 
-     * 
-     * @param {*} statistics
-     * @returns
-     * @todo turn into a loop instead of having the code repeated
-     * @todo if the length of any number is greater than 3 digits shrink the font size by 15% and round down
-     * @todo add a check for the length of the title and shrink the font size by 15% and round down
-     * @todo add a check for the length of the value and shrink the font size by 15% and round down
-     */
-    descriptiveStatisticsTable(statistics) {
-        let myRows = []
-        for(const stat in statistics) {
-            myRows.push(
-                new docx.TableRow({
-                    children: [
-                        new docx.TableCell({
-                            children: [
-                                this.util.makeParagraph(
-                                    statistics[stat].value,
-                                    {
-                                        fontSize: this.generalStyle.metricFontSize,
-                                        fontColor: this.themeStyle.titleFontColor,
-                                        font: this.generalStyle.heavyFont,
-                                        bold: true,
-                                        center: true
-                                    }
-                                )
-                            ],
-                            borders: this.bottomBorder,
-                            margins: {
-                                top: this.generalStyle.tableMargin
-                            }
-                        }),
-                    ]
-                }),
-                new docx.TableRow({
-                    children: [
-                        new docx.TableCell({
-                            children: [
-                                this.util.makeParagraph(
-                                    statistics[stat].title,
-                                    {
-                                        fontSize: this.generalStyle.metricFontSize/2,
-                                        fontColor: this.themeStyle.titleFontColor,
-                                        bold: false,
-                                        center: true
-                                    }
-                                )
-                            ],
-                            borders: this.noBorders,
-                            margins: {
-                                bottom: this.generalStyle.tableMargin,
-                                top: this.generalStyle.tableMargin
-                            }
-                        }),
-                    ]
-                })
-            )
-        }
-        return new docx.Table({
-            columnWidths: [95],
-            borders: this.noBorders,
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
-    }
-
-    twoCellRow (name, data) {
-        // return the row
-        return new docx.TableRow({
-            children: [
-                new docx.TableCell({
-                    width: {
-                        size: 20,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [this.util.makeParagraph(name, {fontSize: this.generalStyle.dashFontSize, bold: true})],
-                    borders: this.bottomBorder,
-                    margins: {
-                        top: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin
-                    },
-                }),
-                new docx.TableCell({
-                    width: {
-                        size: 80,
-                        type: docx.WidthType.PERCENTAGE
-                    },
-                    children: [this.util.makeParagraph(data, {fontSize: this.generalStyle.dashFontSize})],
-                    borders: this.bottomAndRightBorders,
-                    margins: {
-                        top: this.generalStyle.tableMargin,
-                        right: this.generalStyle.tableMargin
-                    },
-                })
-            ]
-        })
-    }
-
-    // Using DOCXUtilties basicRow method create a similar method for all dashboards that returns a table with a single row
-    /**
-     * 
-     * @param {*} data 
-     * @returns 
-     */
-    simpleDescriptiveTable(title, text) {
-        return new docx.Table({
-            columnWidths: [95],
-            borders: this.noBorders,
-            margins: {
-                left: this.generalStyle.tableMargin,
-                right: this.generalStyle.tableMargin,
-                bottom: this.generalStyle.tableMargin,
-                top: this.generalStyle.tableMargin
-            },
-            rows: [this.twoCellRow(title, text)],
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
     }
 
     // Create a utility that takes text as an input, and an integer called numSentences, splits the text into sentences and returns the first numSentences as a string
@@ -286,99 +104,16 @@ class InteractionDashboard extends Dashboards {
         // Loop through the top 2 topics and create a table row for each topic
         for (const topic in top2Topics) {
             myTopics.push(
-                super.simpleDescriptiveTable('Priority Proto-requirement', top2Topics[topic].label)
+                this.tableWidgets.oneRowTwoColumnsTable(
+                    ['Priority Proto-requirement', top2Topics[topic].label]
+                )
             )
         }
         return myTopics
     }
 
-    _mergeLeftContents (contents) {
-        let myRows = []
-        for (const content in contents) {
-            myRows.push(
-                new docx.TableRow({
-                    children: [
-                        new docx.TableCell({
-                            children: [contents[content]],
-                            borders: this.noBorders,
-                            width: {
-                                size: 100,
-                                type: docx.WidthType.PERCENTAGE
-                            },
-                        }),
-                    ]
-                })
-            )
-        }
-        return new docx.Table({
-            columnWidths: [95],
-            borders: this.noBorders,
-            margins: {
-                left: this.generalStyle.tableMargin,
-                right: this.generalStyle.tableMargin,
-                bottom: this.generalStyle.tableMargin,
-                top: this.generalStyle.tableMargin
-            },
-            rows: myRows,
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
-    }
-
-    // Create the dashboard shell which will contain all of the outputs
-    _createDashboardShell (leftContents, rightContents) {
-        return new docx.Table({
-            columnWidths: [70, 30],
-            rows: [
-                new docx.TableRow({
-                    children: [
-                        new docx.TableCell({
-                            children: [leftContents],
-                            borders: this.noBorders
-                        }),
-                        new docx.TableCell({
-                            children: [rightContents],
-                            borders: this.noBorders
-                        }),
-                    ]
-                })
-            ],
-            width: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            },
-            height: {
-                size: 100,
-                type: docx.WidthType.PERCENTAGE
-            }
-        })
-    }
-
     async makeDashboard(interaction, company) {
-        // Define the right contents
-        // Add key metadata for the interaction to fit within the right contents
-        /*
-           ------------
-           |   Meta   |
-           | -------- |
-           |   Data   |
-           |          |
-           |   Meta   |
-           | -------- |
-           |   Data   |
-           |          |
-           |   Meta   |
-           | -------- |
-           |   Data   |
-           |          |
-           |   Meta   |
-           | -------- |
-           |   Data   |
-           ------------
-        */
-        const rightContents = super.descriptiveStatisticsTable([
+        const rightContents = this.tableWidgets.descriptiveStatisticsTable([
             {title: 'Type', value: interaction.interaction_type},
             {title: 'Est. reading time (min)', value: interaction.reading_time},
             {title: 'Page(s)', value: interaction.page_count},
@@ -386,23 +121,21 @@ class InteractionDashboard extends Dashboards {
             {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
         ])
 
-        // Create individual tables for name, description and company
-        /*
-             ------------------------------
-            |      |                       |
-             ------------------------------
-
-        */
-        const interactionNameTable = super.simpleDescriptiveTable('Name', interaction.name)
-        const interactionDescriptionTable = super.simpleDescriptiveTable('Description', super.shortenText(interaction.description))
-        const associatedCompanyTable = super.simpleDescriptiveTable(`Linked company: ${company.name}`, super.shortenText(company.description))
+        const interactionNameTable = this.tableWidgets.oneColumnTwoRowsTable(
+            ['Name', interaction.name]
+        )
+        const interactionDescriptionTable = this.tableWidgets.oneColumnTwoRowsTable(
+            ['Description', super.shortenText(interaction.description)]
+        )
+        const associatedCompanyTable = this.tableWidgets.oneColumnTwoRowsTable(
+            [`Linked company: ${company.name}`, super.shortenText(company.description)]
+        )
 
         const top2Topics = this._getTopTwoTopics(interaction.topics)
         const protorequirementsTable = this._priorityTopicsTable(top2Topics)[0]
-        const leftContents = this._mergeLeftContents([interactionNameTable, interactionDescriptionTable, associatedCompanyTable, protorequirementsTable])
+        const leftContents = this.tableWidgets.packContents([interactionNameTable, interactionDescriptionTable, associatedCompanyTable, protorequirementsTable])
 
-
-        return this._createDashboardShell(leftContents, rightContents)
+        return this.tableWidgets.createDashboardShell(leftContents, rightContents, {leftWidth: 80, rightWidth: 20})
     }
 }
 
@@ -477,6 +210,7 @@ class CompanyDashbord extends Dashboards {
         const chartsTable = this._createChartsTable(bubbleChartFile, pieChartFile)
 
         // Create the most similar company description table
+        // TODO this needs to be fixed because the Ecludian distance doesn't match the most similar company
         const mostSimilarCompanyDescTable = this.tableWidgets.oneColumnTwoRowsTable([
             `Most similar company to ${company.name}: ${competitors.mostSimilar.name}`, 
             this.shortenText(competitors.mostSimilar.description, 3)
@@ -515,7 +249,6 @@ class CompanyDashbord extends Dashboards {
             {title: 'Total Interactions', value: totalInteractions},
             {title: 'Total Companies', value: totalCompanies},
         ])
-
 
         return this.tableWidgets.createDashboardShell(leftContents, rightContents, {leftWidth: 85, rightWidth: 15})
     }

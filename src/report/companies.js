@@ -2,32 +2,35 @@
  * Two classes to create sections and documents for company objects in mediumroast.io
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file companies.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 1.2.0
  */
 
 // Import required modules
 import docx from 'docx'
 import boxPlot from 'box-plot'
-import DOCXUtilities from './common.js'
+import Utilities from './helpers.js'
 import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
-import { getMostSimilarCompany } from './tools.js'
+import { getMostSimilarCompany } from './deprecate_tools.js'
 import TextWidgets from './widgets/Text.js'
 import TableWidgets from './widgets/Tables.js'
 
 class BaseCompanyReport {
-    constructor(company, env) {
-        this.company = company
+    constructor(companyName, companies, interactions, env) {
+        this.util = new Utilities(env)
+        const sourceData = this.util.initializeCompanyData(companyName, companies, interactions)
+        // console.log('sourceData>>>', sourceData)
+        this.sourceData = sourceData
+        this.company = sourceData.company
+        this.companyName = companyName
+        this.companies = companies
+        this.interactions = interactions
         this.env = env
-        this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
-            this.companyType = 'Private' :
-            this.companyType = 'Public'
-        this.util = new DOCXUtilities(env)
         this.baseDir = this.env.outputDir
         this.workDir = this.env.workDir
-        this.baseName = company.name.replace(/ /g,"_")
+        this.baseName = companyName.replace(/ /g,"_")
         this.textWidgets = new TextWidgets(env)
         this.tableWidgets = new TableWidgets(env)
     }
@@ -46,8 +49,8 @@ class CompanySection extends BaseCompanyReport {
      * @todo Since the ingestion function detects the companyType this property is deprecated and should be removed
      * @todo separate this class into a separate file
      */
-    constructor(company, env) {
-        super(company, env)
+    constructor(companyName, companies, interactions, env) {
+        super(companyName, companies, interactions, env)
     }
 
     // Create a URL on Google maps to search for the address
@@ -96,6 +99,9 @@ class CompanySection extends BaseCompanyReport {
      * @returns {Object} A docx table is return to the caller
      */
     makeFirmographicsDOCX() {
+        this.company.stock_symbol === 'Unknown' && this.company.cik === 'Unknown' ? 
+            this.companyType = 'Private' :
+            this.companyType = 'Public'
         return new docx.Table({
             columnWidths: [20, 80],
             rows: [
@@ -131,12 +137,9 @@ class CompanySection extends BaseCompanyReport {
     _rankComparisons (comparisons, competitors) {
         // Set up a blank object to help determine the top score
         let rankPicker = {}
-
-        // Using the Euclidean distance find the closest company
-        const rankedCompanies = getMostSimilarCompany(comparisons, competitors)
         
         // const ranges = boxPlot(similarityScores)
-        const ranges = boxPlot(rankedCompanies.distances)
+        const ranges = boxPlot(competitors.distances)
 
         // Restructure the objects into the final object for return
         let finalComparisons = {}
@@ -146,9 +149,9 @@ class CompanySection extends BaseCompanyReport {
             // if in between Q2 and Q3 then the ranking is Nearby
             // if < Q3 then the ranking is Closest
             let rank = null
-            if (rankedCompanies.companyMap[compare] >= ranges.upperQuartile) {
+            if (competitors.companyMap[compare] >= ranges.upperQuartile) {
                 rank = 'Furthest'
-            } else if (rankedCompanies.companyMap[compare] <= ranges.lowerQuartile) {
+            } else if (competitors.companyMap[compare] <= ranges.lowerQuartile) {
                 rank = 'Closest'
             // NOTE: this should work, but for some reason it isn't, head scratcher
             // } else if (ranges.lowerQuartile < comparisons[compare].similarity < ranges.upperQuartile) {
@@ -157,12 +160,12 @@ class CompanySection extends BaseCompanyReport {
             }
 
             // Populate the rank picker to determine the top score
-            rankPicker[rankedCompanies.companyMap[compare]] = compare
+            rankPicker[competitors.companyMap[compare]] = compare
             
             // Build the final comparison object
             finalComparisons[compare] = {
                 // Normalize to two decimal places and turn into %
-                score: Math.ceil(rankedCompanies.companyMap[compare] * 10), 
+                score: Math.ceil(competitors.companyMap[compare] * 10), 
                 rank: rank,
                 role: comparisons[compare].role,
                 name: comparisons[compare].name
@@ -227,7 +230,8 @@ class CompanySection extends BaseCompanyReport {
         let competitivePage = []
 
         // Construct the object to create company related document sections
-        const comp = new CompanySection(similarCompany, this.env)
+        // NOTE: We are here and will need to think about how to handle the call, perhaps we need similarCompany.name, allCompanies, and allInteractions for the call.  Should think more about it.
+        const comp = new CompanySection(similarCompany.name, this.companies, this.interactions, this.env)
         // Create the company firmographics table
         const firmographicsTable = comp.makeFirmographicsDOCX() 
         const tagsTable = this.tableWidgets.tagsTable(similarCompany.tags)
@@ -235,10 +239,10 @@ class CompanySection extends BaseCompanyReport {
         // Create a section for the most/least similar interactions
         const mostSimIntName = similarity[similarCompany.name].most_similar.name
         const mostSimIntScore = Math.round(parseFloat(similarity[similarCompany.name].most_similar.score) * 100)
-        const mostSimInt = interactions.filter(interaction => interaction.name === mostSimIntName)[0]
+        const mostSimInt = this.interactions.filter(interaction => interaction.name === mostSimIntName)[0]
         const leastSimIntName = similarity[similarCompany.name].least_similar.name
         const leastSimIntScore = Math.round(parseFloat(similarity[similarCompany.name].least_similar.score) * 100)
-        const leastSimInt = interactions.filter(interaction => interaction.name === leastSimIntName)[0]
+        const leastSimInt = this.interactions.filter(interaction => interaction.name === leastSimIntName)[0]
 
         // Compute reading time
         const totalReadingTime = parseInt(mostSimInt.reading_time) + parseInt(leastSimInt.reading_time)
@@ -308,26 +312,24 @@ class CompanyStandalone extends BaseCompanyReport {
      * @todo Rename this class as report and rename the file as companyDocx.js
      * @todo Adapt to settings.js for consistent application of settings, follow dashboard.js
      */
-    constructor(sourceData, env, author='Mediumroast for GitHub') {
-        super(sourceData.company[0], env)
-        this.sourceData = sourceData
+    constructor(companyName, companies, interactions, env, author='Mediumroast for GitHub') {
+        super(companyName, companies, interactions, env)
         this.objectType = 'Company'
         this.creator = author
         this.author = author
         this.authoredBy = author
-        this.title = `${this.company.name} Company Report`
-        this.companyInteractions = sourceData.interactions
-        this.interactions = sourceData.allInteractions
-        this.competitors = sourceData.competitors.all
-        this.mostSimilar = sourceData.competitors.mostSimilar
-        this.leastSimilar = sourceData.competitors.leastSimilar
+        this.title = `${this.companyName} Company Report`
+        this.companyInteractions = this.sourceData.interactions
+        this.competitors = this.sourceData.competitors
+        this.mostSimilar = this.sourceData.competitors.mostSimilar
+        this.leastSimilar = this.sourceData.competitors.leastSimilar
         this.description = `A Company report for ${this.company.name} that includes firmographics, key information on competitors, and Interactions data.`
         this.introduction = `Mediumroast for GitHub automatically generated this document. It includes company firmographics, key information on competitors, and Interactions data for ${this.company.name}. If this report is produced as a package, then the hyperlinks are active and will link to documents on the local folder after the package is opened.`
         this.similarity = this.company.similarity,
         this.noInteractions = String(Object.keys(this.company.linked_interactions).length)
-        this.totalInteractions = sourceData.totalInteractions
-        this.totalCompanies = sourceData.totalCompanies
-        this.averageInteractions = sourceData.averageInteractionsPerCompany
+        this.totalInteractions = this.sourceData.totalInteractions
+        this.totalCompanies = this.sourceData.totalCompanies
+        this.averageInteractions = this.sourceData.averageInteractionsPerCompany
     }
 
     /**
@@ -341,7 +343,7 @@ class CompanyStandalone extends BaseCompanyReport {
      */
     async makeDOCX(fileName, isPackage) {
         // Initialize the working directories to create a package and/or download relevant images
-        this.util.initDirectories()
+        this.util.initReportWorkspace()
 
         // Set the file name
         fileName = fileName ? fileName : `${this.env.outputDir}/${this.baseName}.docx`
@@ -360,10 +362,10 @@ class CompanyStandalone extends BaseCompanyReport {
         const preparedFor = `${this.authoredBy} report for: `
         
         // Construct the companySection and interactionSection objects
-        const companySection = new CompanySection(this.company, this.env)
+        const companySection = new CompanySection(this.companyName, this.companies, this.interactions, this.env)
         const interactionSection = new InteractionSection(
             this.companyInteractions, 
-            this.company.name,
+            this.companyName,
             this.objectType,
             this.env
         )
@@ -385,7 +387,7 @@ class CompanyStandalone extends BaseCompanyReport {
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.util.makeIntro(this.introduction),
+            this.textWidgets.makeIntro(this.introduction),
             // Generate the firmographics and tags sections for the Company being reported on
             [
                 this.textWidgets.makeHeading1('Firmographics'), 
@@ -419,10 +421,10 @@ class CompanyStandalone extends BaseCompanyReport {
             title: this.title,
             description: this.description,
             background: {
-                color: this.util.documentColor,
+                color: this.textWidgets.themeSettings.documentColor,
             },
-            styles: {default: this.util.styling.default},
-            numbering: this.util.styling.numbering,
+            styles: {default: this.textWidgets.styles.default},
+            numbering: this.textWidgets.styles.numbering,
             sections: [
                 {
                     properties: {
@@ -433,11 +435,11 @@ class CompanyStandalone extends BaseCompanyReport {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.company.name, preparedFor, {landscape: true})
+                        default: this.textWidgets.makeHeader(this.company.name, preparedFor, {landscape: true})
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter(authoredBy, preparedOn, {landscape: true})]
+                            children: [this.textWidgets.makeFooter(authoredBy, preparedOn, {landscape: true})]
                         })
                     },
                     children: [
@@ -455,11 +457,11 @@ class CompanyStandalone extends BaseCompanyReport {
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.company.name, preparedFor)
+                        default: this.textWidgets.makeHeader(this.company.name, preparedFor)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter(authoredBy, preparedOn)]
+                            children: [this.textWidgets.makeFooter(authoredBy, preparedOn)]
                         })
                     },
                     children: myDocument,

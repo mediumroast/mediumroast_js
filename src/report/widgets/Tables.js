@@ -1,4 +1,25 @@
-// report/widgets/TableWidget.js
+/**
+ * @module TableWidgets
+ * @description This class contains row and column primitives for creating tables in a docx document and specific table structures
+ * @extends Widgets
+ * @requires Widgets
+ * @requires TextWidgets
+ * @requires docx
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file Text.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @license Apache-2.0
+ * @version 1.2.0
+ * 
+ * @example
+ * import TableWidgets from './Table.js'
+ * const tableWidgets = new TableWidgets()
+ * const myTable = tableWidgets.twoColumnRowBasic(["Name", "Michael Hay"], {firstColumnBold: true, allColumnsBold: false})
+ * 
+ */
+
+// Import required modules
 import Widgets from './Widgets.js'
 import TextWidgets from './Text.js'
 import docx from 'docx'
@@ -130,7 +151,7 @@ class TableWidgets extends Widgets {
     /**
      * @function twoColumnRowWithHyperlink
      * @description Hyperlink table row to produce a name/value pair table with 2 columns and an external hyperlink
-     @param {Array} cols - an array of 3 strings for the row first column, second column text, and the hyperlink URL
+     * @param {Array} cols - an array of 3 strings for the row first column, second column text, and the hyperlink URL
      * @param {Object} options - options for the cell to control bolding in the first column and all columns and border styles
      * @returns {Object} a new docx TableRow object with an external hyperlink
      */
@@ -474,7 +495,7 @@ class TableWidgets extends Widgets {
             lengths[minIndex] += tag.length
         })
     
-        return result;
+        return result
     }
 
     /**
@@ -496,6 +517,10 @@ class TableWidgets extends Widgets {
      * })
      */
     tagsTable(tags) {
+        // If there are no tags, return a message saying so
+        if (Object.keys(tags).length === 0) {
+            return this.textWidgets.makeParagraph('No proto-requirements were discovered or are associated to this interaction.')
+        }
         // Get the length of the tags
         const tagsList = Object.keys(tags)
         const distributedTags = this._distributeTags(tagsList)
@@ -629,6 +654,17 @@ class TableWidgets extends Widgets {
         return new docx.Table({
             columnWidths: [95],
             rows: tableRows,
+            width: {
+                size: 100,
+                type: docx.WidthType.PERCENTAGE
+            }
+        })
+    }
+
+    oneRowTwoColumnsTable(cols) {
+        return new docx.Table({
+            columnWidths: [50, 50],
+            rows: [this.twoColumnRowBasic(cols)],
             width: {
                 size: 100,
                 type: docx.WidthType.PERCENTAGE

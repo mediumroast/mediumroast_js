@@ -9,7 +9,7 @@ const docxSettings = {
         fontFactor: 1,
         dashFontSize: 22,
         tableFontSize: 9 * 2, // Note these are in half points, so 9 * 2 = 18
-        titleFontSize: 30 * 2,
+        titleFontSize: 30,
         companyNameFontSize: 11.5,
         metricFontTitleSize: 11,
         metricFontSize: 48,
@@ -26,7 +26,6 @@ const docxSettings = {
         font: "Avenir Next",
         heavyFont: "Avenir Next Heavy",
         lightFont: "Avenir Next Light"
-
     },
     coffee: {
         tableBorderColor: "4A7E92", // Light Blue
@@ -50,12 +49,12 @@ const docxSettings = {
         documentColor: "0F0D0E", // Coffee black
         titleFontColor: "C7701E", // Saturated Light Blue
         textFontColor: "C7701E", // Ultra light Blue
-        chartAxisLineColor: "#374246",
+        chartAxisLineColor: "rgba(134,84,28, 0.9)",
         chartAxisFontColor: "rgba(199,112,30, 0.7)",
         chartAxisTickFontColor: "rgba(199,112,30, 0.6)",
         chartItemFontColor: "rgba(199,112,30, 0.9)",
         chartSeriesColor: "rgb(199,112,30, 0.7)",
-        chartSeriesBorderColor: "rgba(199,112,30, 0.9)", 
+        chartSeriesBorderColor: "rgba(90,56,19, 0.9)", 
         highlightFontColor: ""
     },
     latte: {
@@ -65,12 +64,12 @@ const docxSettings = {
         documentColor: "F1F0EE", // Coffee black
         titleFontColor: "25110f", // Saturated Light Blue
         textFontColor: "25110f", // Ultra light Blue
-        chartAxisLineColor: "#374246",
+        chartAxisLineColor: "rgba(66,24,17, 0.9)",
         chartAxisFontColor: "rgba(37,17,15, 0.7)",
-        chartAxisTickFontColor: "rgba(37,17,15, 0.6)",
-        chartItemFontColor: "rgba(37,17,15, 0.9)",
+        chartAxisTickFontColor: "rgba(205,183,160, 0.6)",
+        chartItemFontColor: "rgb(27,12,10, 0.7)",
         chartSeriesColor: "rgb(27,12,10, 0.7)",
-        chartSeriesBorderColor: "rgba(27,12,10, 0.9)", 
+        chartSeriesBorderColor: "rgba(205,183,160, 0.9)", 
         highlightFontColor: ""
     } 
 } 
