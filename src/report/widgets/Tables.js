@@ -388,7 +388,8 @@ class TableWidgets extends Widgets {
             allRowsBold = false,
             allBorders = false,
             bottomBorders = true,
-            centerFirstRow = false
+            centerFirstRow = false,
+            includesHyperlink = false
         } = options
 
         // Desctructure the rows array
@@ -407,6 +408,12 @@ class TableWidgets extends Widgets {
             borderStyle = this.bottomBorders
         } else {
             borderStyle = this.bottomAndRightBorders
+        }
+
+        // If the second row is a hyperlink then create a hyperlink object else create a paragraph object
+        let row2Object = this.textWidgets.makeParagraph(row2, {fontSize: this.generalSettings.tableFontSize, bold: allRowsBold})
+        if (includesHyperlink) {
+            row2Object = new docx.Paragraph({children:[row2]})
         }
 
         // return the row
@@ -436,7 +443,7 @@ class TableWidgets extends Widgets {
                                 size: 100,
                                 type: docx.WidthType.PERCENTAGE,
                             },
-                            children: [this.textWidgets.makeParagraph(row2, {fontSize: this.generalSettings.tableFontSize, bold: allRowsBold})],
+                            children: [row2Object],
                             borders: this.bottomAndRightBorders,
                             margins: {
                                 bottom: this.generalSettings.tableMargin,
@@ -649,8 +656,8 @@ class TableWidgets extends Widgets {
         })
     }
 
-    oneColumnTwoRowsTable(rows) {
-        const tableRows = this.oneColumnTwoRowsBasic(rows)
+    oneColumnTwoRowsTable(rows, options={}) {
+        const tableRows = this.oneColumnTwoRowsBasic(rows, options)
         return new docx.Table({
             columnWidths: [95],
             rows: tableRows,

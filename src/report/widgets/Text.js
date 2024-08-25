@@ -260,12 +260,33 @@ class TextWidgets extends Widgets {
                     text: String(text),
                     style: 'Hyperlink',
                     font: this.generalSettings.font,
-                    size: this.fullFontSize,
+                    size: this.generalSettings.fullFontSize,
                 }),
             ],
             anchor: link,
         })
         return myLink
+    }
+
+    /**
+     * @function makeExternalHyperLink
+     * @description Create an external hyperlink
+     * @param {String} text - text/prose for the function
+     * @param {String} link - the URL for the hyperlink
+     * @returns {Object} a new docx ExternalHyperlink object
+     */ 
+    makeExternalHyperLink(text, link) {
+        return new docx.ExternalHyperlink({
+            children: [
+                new docx.TextRun({
+                    text: String(text),
+                    style: 'Hyperlink',
+                    font: this.generalSettings.font,
+                    size: this.generalSettings.fullFontSize,
+                }),
+            ],
+            link: link
+        })
     }
 
     /**

@@ -13,7 +13,6 @@ import boxPlot from 'box-plot'
 import Utilities from './helpers.js'
 import { InteractionSection } from './interactions.js'
 import { CompanyDashbord } from './dashboard.js'
-import { getMostSimilarCompany } from './deprecate_tools.js'
 import TextWidgets from './widgets/Text.js'
 import TableWidgets from './widgets/Tables.js'
 

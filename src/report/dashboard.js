@@ -14,6 +14,7 @@ import Utilities from './helpers.js'
 import docxSettings from './settings.js'
 import Charting from './charts.js'
 import TableWidgets from './widgets/Tables.js'
+import TextWidgets from './widgets/Text.js'
 
 class Dashboards {
     /**
@@ -28,6 +29,7 @@ class Dashboards {
         this.util = new Utilities(env)
         this.charting = new Charting(env)
         this.tableWidgets = new TableWidgets(env)
+        this.textWidgets = new TextWidgets(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
     }
@@ -104,7 +106,7 @@ class InteractionDashboard extends Dashboards {
         // Loop through the top 2 topics and create a table row for each topic
         for (const topic in top2Topics) {
             myTopics.push(
-                this.tableWidgets.oneRowTwoColumnsTable(
+                this.tableWidgets.oneColumnTwoRowsTable(
                     ['Priority Proto-requirement', top2Topics[topic].label]
                 )
             )
@@ -112,7 +114,7 @@ class InteractionDashboard extends Dashboards {
         return myTopics
     }
 
-    async makeDashboard(interaction, company) {
+    async makeDashboard(interaction, company, isPackage=false) {
         const rightContents = this.tableWidgets.descriptiveStatisticsTable([
             {title: 'Type', value: interaction.interaction_type},
             {title: 'Est. reading time (min)', value: interaction.reading_time},
@@ -120,9 +122,23 @@ class InteractionDashboard extends Dashboards {
             {title: 'Region', value: interaction.region},
             {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
         ])
-
+        let interactionName = interaction.name
+        let interactionOptions = { includesHyperlink: false }
+        if (isPackage) {
+            let myObj = interaction.url.split('/').pop()
+            console.log(myObj)
+            // Replace spaces with underscores and keep the file extension
+            myObj = myObj.replace(/ /g, '_')
+            console.log(myObj)
+            interactionName = this.textWidgets.makeExternalHyperLink(
+                interaction.name, 
+                `./interactions/${myObj}`
+            )
+            interactionOptions = { includesHyperlink: true }
+        }
         const interactionNameTable = this.tableWidgets.oneColumnTwoRowsTable(
-            ['Name', interaction.name]
+            ['Name', interactionName],
+            interactionOptions
         )
         const interactionDescriptionTable = this.tableWidgets.oneColumnTwoRowsTable(
             ['Description', super.shortenText(interaction.description)]

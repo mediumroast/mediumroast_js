@@ -20,6 +20,7 @@
  */
 
 import { Octokit } from "octokit"
+import axios from "axios"
 
 
 class GitHubFunctions {
@@ -510,6 +511,39 @@ class GitHubFunctions {
             return [true, `SUCCESS: Unlocked the container [${containerName}]`, unlockResponse]
         } else {
             return [false, `FAILED: Unable to unlock the container [${containerName}]`, null]
+        }
+    }
+
+    /**
+     * Read a blob (file) from a container (directory) in a specific branch.
+     *
+     * @param {string} fileName - The name of the blob to read with a complete path to the file (e.g. dirname/filename.ext).
+     * @returns {Array} A list containing a boolean indicating success or failure, a status message, and the blob's raw data (or the error message in case of failure).
+     */
+    async readBlob(fileName) {
+    
+        const encodedFileName = encodeURIComponent(fileName)
+        const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        const headers = { 'Authorization': `token ${this.token}` }
+    
+        try {
+            const result = await axios.get(objectUrl, { headers })
+            const resultJson = result.data
+            const downloadUrl = resultJson.download_url
+            const downloadResult = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+            const binFile = downloadResult.data
+    
+            return [
+                true,
+                { status_code: 200, status_msg: `read object [${fileName}] from container [${fileName}]` },
+                binFile
+            ]
+        } catch (e) {
+            return [
+                false,
+                { status_code: 503, status_msg: `unable to read object [${fileName}] due to [${e}].` },
+                e
+            ]
         }
     }
 

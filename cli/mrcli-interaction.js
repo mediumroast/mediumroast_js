@@ -6,7 +6,7 @@
  * @file interactions.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 3.1.0
+ * @version 3.2.0
  */
 
 
@@ -18,6 +18,7 @@ import GitHubFunctions from '../src/api/github.js'
 import AddInteraction from '../src/cli/interactionWizard.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
+import CLIUtilities from '../src/cli/common.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
@@ -57,7 +58,7 @@ const objectType = 'Interactions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.1.0',
+   '3.2.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -75,6 +76,9 @@ const processName = 'mrcli-interaction'
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
+
+// CLI Utilities object
+const cliUtils = new CLIUtilities()
 
 // Common wizard utilities
 const wutils = new WizardUtils(objectType)
@@ -94,25 +98,33 @@ let results = Array() || []
 
 // Process the cli options
 if (myArgs.report) {
-   // Retrive the interaction by Id
-   const [int_success, int_stat, int_results] = await interactionCtl.findByName(myArgs.report)
-   const companyName = Object.keys(int_results[0].linked_companies)[0]
-   // Retrive the company by Name
-   const [comp_success, comp_stat, comp_results] = await companyCtl.findByName(companyName)
+   // Use CLIUtils to get all objects
+   const allObjects = await cliUtils.getAllObjects({interactions: interactionCtl, companies: companyCtl})
+   if(!allObjects[0]) {
+      console.error(`ERROR: ${allObjects[1].status_msg}`)
+      process.exit(-1)
+   }
+
+   // Get the interaction by name
+   const interaction = cliUtils.getObject(myArgs.report, allObjects[2].interactions)
+   const companyName = Object.keys(interaction[0].linked_companies)[0]
+   // Get the company by Name
+   const company = cliUtils.getObject(companyName, allObjects[2].companies)
    // Set the root name to be used for file and directory names in case of packaging
-   const baseName = int_results[0].name.replace(/ /g,"_")
+   const baseName = interaction[0].name.replace(/ /g,"_")
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
-   let fileName = process.env.HOME + '/Documents/' + int_results[0].name.replace(/ /g,"_") + '.docx'
+   let fileName = process.env.HOME + '/Documents/' + interaction[0].name.replace(/ /g,"_") + '.docx'
    
    // Set up the document controller
    const docController = new InteractionStandalone(
-      int_results[0], // Interaction to report on
-      comp_results[0], // The company associated to the interaction
-      'Mediumroast for GitHub robot', // The author
-      'Mediumroast, Inc.', // The authoring company/org
-      myEnv // The environment settings
+      interaction, // Interaction to report on
+      company, // The company associated to the interaction
+      myEnv, // The environment settings
+      allObjects, // All objects
+      fileName, // The file name
+      myArgs.package // The package flag
    )
 
    if(myArgs.package) {
@@ -122,16 +134,15 @@ if (myArgs.report) {
       // If the directory creations was successful download the interaction
       if(dir_success) {
          fileName = baseDir + '/' + baseName + '_report.docx'
-         /* 
-         TODO the below only assumes we're storing data in S3, this is intentionally naive.
-             In the future we will need to be led by the URL string to determine where and what
-             to download from.  Today we only support S3, but this could be Sharepoint, 
-             a local file system, OneDrive, GDrive, etc.  There might be an initial less naive
-             implementation that looks at OneDrive, GDrive, DropBox, etc. as local file system
-             access points, but the tradeoff would be that caffeine would need to run on a
-             system with file system access to these objects.
-         */
-         // await s3.s3DownloadObjs(int_results, baseDir + '/interactions', sourceBucket)
+         // Resolve the file name which is in int_results[0].url and it is everything after the last '/'
+         const interactionFileName = interaction[0].url.split('/').pop()
+         const downloadResults = await gitHubCtl.readBlob(interaction[0].url, baseDir + '/interactions')
+         if(downloadResults[0]) {
+            fileSystem.saveTextFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
+         } else {
+            console.error(`ERROR: ${downloadResults[1]}`)
+            process.exit(-1)
+         }
       // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
