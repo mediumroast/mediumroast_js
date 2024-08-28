@@ -12,6 +12,7 @@
 import { CompanyStandalone } from '../src/report/companies.js'
 import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
 import DOCXUtilities from '../src/report/helpers.js'
+import CLIUtilities from '../src/cli/common.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
@@ -56,6 +57,9 @@ const processName = 'mrcli-company'
 // Construct the DOCXUtilities object
 const docxUtils = new DOCXUtilities(myEnv)
 
+// Construct the CLIUtilities object
+const cliUtils = new CLIUtilities()
+
 // Output object
 const output = new CLIOutput(myEnv, objectType)
 
@@ -69,21 +73,21 @@ const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
 // const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
 const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
-async function fetchData() {
-   const [intStatus, intMsg, allInteractions] = await interactionCtl.getAll()
-   const [compStatus, compMsg, allCompanies] = await companyCtl.getAll()
-   return { allInteractions, allCompanies }
-}
-
 // Predefine the results variable
 let [success, stat, results] = [null, null, null]
 
 // Process the cli options
 // TODO consider moving this out into at least a separate function to make main clean
 if (myArgs.report) {
-   // Prepare the data for the report
-   // const reportData = await _prepareData(myArgs.report)
-   const { allInteractions, allCompanies } = await fetchData()
+   // Use CLIUtils to get all objects
+   const allObjects = await cliUtils.getAllObjects({interactions: interactionCtl, companies: companyCtl})
+   if(!allObjects[0]) {
+      console.error(`ERROR: ${allObjects[1].status_msg}`)
+      process.exit(-1)
+   }
+   const allInteractions = allObjects[2].interactions
+   const allCompanies = allObjects[2].companies
+
    // Set the root name to be used for file and directory names in case of packaging
    const baseName = myArgs.report.replace(/ /g, "_")
    // Set the directory name for the package
@@ -93,32 +97,47 @@ if (myArgs.report) {
    // Set up the document controller
    const docController = new CompanyStandalone(
       myArgs.report,
-      allCompanies.mrJson,
-      allInteractions.mrJson,
+      allCompanies,
+      allInteractions,
       myEnv
    )
 
+   let mySpinner = null
    if (myArgs.package) {
+      mySpinner = new ora(`Generating report package for [${myArgs.report}] ...`)
+      mySpinner.start()
       // Create the working directory
       const [dir_success, dir_msg, dir_res] = fileSystem.safeMakedir(baseDir + '/interactions')
 
       // If the directory creations was successful download the interaction
       if (dir_success) {
          fileName = baseDir + '/' + baseName + '_report.docx'
-         /* 
-         TODO the below only assumes we're storing data in S3, this is intentionally naive.
-             In the future we will need to be led by the URL string to determine where and what
-             to download from.  Today we only support S3, but this could be Sharepoint, 
-             a local file system, OneDrive, GDrive, etc.  There might be an initial less naive
-             implementation that looks at OneDrive, GDrive, DropBox, etc. as local file system
-             access points, but the tradeoff would be that caffeine would need to run on a
-             system with file system access to these objects.
-         */
-         // Append the competitive interactions on the list and download all
+         // Get the company interactions
+         let interactions = docController.sourceData.interactions
+         // Get the competitive interactions
+         const competitiveInteractions = [
+            ...docController.sourceData.competitors.mostSimilar.interactions, 
+            ...docController.sourceData.competitors.leastSimilar.interactions
+         ]
+         // Add the competitive interactions to the interactions
          interactions = [...interactions, ...competitiveInteractions]
+         // Download the interactions
+         for (const interaction of interactions) {
+            let interactionFileName = interaction.url.split('/').pop()
+            // Replace all spaces with underscores in the file name
+            interactionFileName = interactionFileName.replace(/ /g, '_')
+            const downloadResults = await gitHubCtl.readBlob(interaction.url)
+            if(downloadResults[0]) {
+               fileSystem.saveTextOrBlobFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
+            } else {
+               console.error(`ERROR: ${downloadResults[1]}`)
+               process.exit(-1)
+            }
+         }
+
          // TODO: We need to rewrite the logic for obtaining the interactions as they are from GitHub
          // await s3.s3DownloadObjs(interactions, baseDir + '/interactions', sourceBucket)
-         null
+
          // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
@@ -128,7 +147,7 @@ if (myArgs.report) {
    }
 
    // Create the document
-   const [report_success, report_stat, report_result] = await docController.makeDOCX(fileName, myArgs.package)
+   const [report_success, sourceData] = await docController.makeDOCX(fileName, myArgs.package)
 
 
    // Create the package and cleanup as needed
@@ -136,12 +155,14 @@ if (myArgs.report) {
       const archiver = new ArchivePackage(myEnv.outputDir + '/' + baseName + '.zip')
       const [package_success, package_stat, package_result] = await archiver.createZIPArchive(baseDir)
       if (package_success) {
-         console.log(package_stat)
          fileSystem.rmDir(baseDir)
+         mySpinner.stop()
+         console.log(package_stat)
          process.exit(0)
       } else {
-         console.error(package_stat, -1)
          fileSystem.rmDir(baseDir)
+         mySpinner.stop()
+         console.error(package_stat, -1)
          process.exit(-1)
       }
 
@@ -155,9 +176,6 @@ if (myArgs.report) {
       console.error(report_stat, -1)
       process.exit(-1)
    }
-   // NOTICE: For Now we won't have any ids available for companies, so we'll need to use names
-   /* } else if (myArgs.find_by_id) {
-      [success, stat, results] = await companyCtl.findById(myArgs.find_by_id) */
 } else if (myArgs.find_by_name) {
    [success, stat, results] = await companyCtl.findByName(myArgs.find_by_name)
    // TODO: Need to reimplment the below to account for GitHub

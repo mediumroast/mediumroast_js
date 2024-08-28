@@ -205,7 +205,7 @@ class CLIOutput {
         const csvParser = new Parser()
         try {
             const csv = csvParser.parse(objects)
-            this.fileSystem.saveTextFile(myFile, csv)
+            this.fileSystem.saveTextOrBlobFile(myFile, csv)
             return [true, {status_code: 200, status_msg: `wrote [${this.objectType}] objects to [${myFile}]`}, null]
         } catch (err) {
             return [false, {}, err]

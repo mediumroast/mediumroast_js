@@ -20,7 +20,6 @@ class BaseCompanyReport {
     constructor(companyName, companies, interactions, env) {
         this.util = new Utilities(env)
         const sourceData = this.util.initializeCompanyData(companyName, companies, interactions)
-        // console.log('sourceData>>>', sourceData)
         this.sourceData = sourceData
         this.company = sourceData.company
         this.companyName = companyName

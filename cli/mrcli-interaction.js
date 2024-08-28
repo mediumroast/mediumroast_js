@@ -133,12 +133,12 @@ if (myArgs.report) {
       
       // If the directory creations was successful download the interaction
       if(dir_success) {
-         fileName = baseDir + '/' + baseName + '_report.docx'
+         fileName = `${baseDir}/${baseName}_report.docx`
          // Resolve the file name which is in int_results[0].url and it is everything after the last '/'
          const interactionFileName = interaction[0].url.split('/').pop()
-         const downloadResults = await gitHubCtl.readBlob(interaction[0].url, baseDir + '/interactions')
+         const downloadResults = await gitHubCtl.readBlob(interaction[0].url)
          if(downloadResults[0]) {
-            fileSystem.saveTextFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
+            fileSystem.saveTextOrBlobFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
          } else {
             console.error(`ERROR: ${downloadResults[1]}`)
             process.exit(-1)

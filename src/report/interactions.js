@@ -269,17 +269,21 @@ class InteractionSection extends BaseInteractionsReport {
                 // isPackage version of the strip
                 // Create the link to the underlying interaction document
                 // TODO consider making this a hyperlink to the interaction document in GitHub
-                const myObj = this.interactions[interaction].url.split('/').pop()
-                let interactionLink = this.util.makeExternalHyperLink(
+                // creation_date is of this format 2024-05-24T12:29:22.053Z, create a substring of the date only
+                const myDate = this.interactions[interaction].creation_date.substring(0, 10)
+                let myObj = this.interactions[interaction].url.split('/').pop()
+                // Replace spaces with underscores
+                myObj = myObj.replace(/ /g, '_')
+                // NOTE: Need to follow how this was done in tables with the two column that includes a hyperlink
+                let interactionLink = this.textWidgets.makeExternalHyperLink(
                     'Document', 
                     `./interactions/${myObj}`
                 )
-                metadataRow = this.tableWidgets.fourColumnRowBasic(
+                metadataRow = this.tableWidgets.threeColumnRowBasic(
                     [
-                        interactionLink,
-                        `Created on: ${this.interactions[interaction].creation_date}`,
+                        `Created on: ${myDate}`,
                         `Est. reading time: ${this.interactions[interaction].reading_time} min`,
-                        descriptionsLink
+                        new docx.Paragraph({children:[interactionLink]})
                     ],
                     {firstColumnBold: false}
                 )

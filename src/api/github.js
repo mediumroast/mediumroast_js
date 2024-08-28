@@ -521,30 +521,101 @@ class GitHubFunctions {
      * @returns {Array} A list containing a boolean indicating success or failure, a status message, and the blob's raw data (or the error message in case of failure).
      */
     async readBlob(fileName) {
-    
+        // Encode the file name including files with special characters like question marks
+        // Custom encoding function to handle special characters
+        const customEncodeURIComponent = (str) => {
+            return str.split('').map(char => {
+                return encodeURIComponent(char).replace(/[!'()*]/g, (c) => {
+                    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+                });
+            }).join('');
+        }
+        const originalFileNameEncoded = customEncodeURIComponent(fileName)
+
+
+        // Try to download the file from the repository using the download URL
+        const downloadFile = async (url) => {
+            try {
+                const downloadResult = await axios.get(url, { responseType: 'arraybuffer' })
+                return [true, downloadResult.data]
+            } catch (e) {
+                if (e instanceof TypeError && (e.message.includes('Request path contains unescaped characters') || e.message.includes('ERR_UNESCAPED_CHARACTERS'))) {
+                    // Handle the specific error here
+                    // For example, you can re-encode the URL or log the error
+                    return [false, 'ERR_UNESCAPED_CHARACTERS']
+                }
+                return [false, e]
+            }
+        }
+
+        // Re-encode the download URL
+        const reEncodeDownloadUrl = (url, originalFileName) => {
+            // Extract the base URL and the file name part
+            let urlParts = url.split('/');
+            const lastPart = urlParts.pop(); // Get the last part of the URL which contains the file name and possibly query parameters
+            // Remove the last item from the URL parts
+            urlParts.pop()
+        
+            // Find the position of the first question mark that indicates the start of query parameters
+            const altLastPart = lastPart.split('?')
+            const queryParams = altLastPart[altLastPart.length - 1]
+        
+            // Encode the file name part using encodeURIComponent
+            // const encodedFileNamePart = encodeURIComponent(fileNamePart);
+        
+            // Reconstruct the download URL
+            return `${urlParts.join('/')}/${originalFileName}${queryParams ? '?' + queryParams : ''}`;
+        }
+        
+
+        // Encode the file name and obtain the download URL
         const encodedFileName = encodeURIComponent(fileName)
+        
+        // Set the object URL
         const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+        // Set the headers
         const headers = { 'Authorization': `token ${this.token}` }
-    
-        try {
-            const result = await axios.get(objectUrl, { headers })
-            const resultJson = result.data
-            const downloadUrl = resultJson.download_url
-            const downloadResult = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-            const binFile = downloadResult.data
-    
+        
+        // Obtain the download URL
+        const result = await axios.get(objectUrl, { headers })
+        let downloadUrl = result.data.download_url
+
+        // Attempt to download the file from the repository
+        let blobData = await downloadFile(downloadUrl)
+
+        // Check if the file was downloaded successfully
+        if (blobData[0]) {
             return [
                 true,
-                { status_code: 200, status_msg: `read object [${fileName}] from container [${fileName}]` },
-                binFile
+                { status_code: 200, status_msg: `read object [${fileName}]` },
+                blobData[1]
             ]
-        } catch (e) {
-            return [
-                false,
-                { status_code: 503, status_msg: `unable to read object [${fileName}] due to [${e}].` },
-                e
-            ]
+        
+        // In this case, the error is due to unescaped characters in the URL and we need to re-encode the file name 
+        } else {
+            // Put an if statement here to check if the error is due to unescaped characters by checking the error message
+            if (blobData[1] === 'ERR_UNESCAPED_CHARACTERS') {
+
+                downloadUrl = reEncodeDownloadUrl(downloadUrl, originalFileNameEncoded)
+
+                // Try to download the file from the repository again
+                blobData = await downloadFile(downloadUrl)
+                if (blobData[0]) {
+                    return [
+                        true,
+                        { status_code: 200, status_msg: `read object [${fileName}]` },
+                        blobData[1]
+                    ]
+                } 
+            }    
         }
+        return [
+            false,
+            { status_code: 503, status_msg: `unable to read object [${fileName}] due to [${blobData[1]}].` },
+            blobData[1]
+        ]
+
     }
 
     // Create a method using the octokit called deleteBlob to delete a file from the repo

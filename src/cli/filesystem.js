@@ -17,15 +17,15 @@ class FilesystemOperators {
      */
 
     /**
-     * @function saveTextFile
-     * @description Save textual data to a file
+     * @function saveTextOrBlobFile
+     * @description Save textual or BLOB data to a file
      * @param {String} fileName - full path to the file and the file name to save to
-     * @param {String} text - the string content to save to a file which could be JSON, XML, TXT, etc.
+     * @param {*} data - the content to save to a file which could be JSON, XML, TXT, etc.
      * @returns {Array} containing the status of the save operation, status message and null/error
      * 
      * @example
      * const myFile = new FilesystemOperators()
-     * const myFileData = await myFile.saveTextFile('myFile.txt', 'This is my file data')
+     * const myFileData = await myFile.saveTextOrBlobFile('myFile.txt', 'This is my file data')
      * if(myFileData[0]) {
      *  console.log(myFileData[1])
      * } else {
@@ -33,13 +33,13 @@ class FilesystemOperators {
      * }
      * 
      */
-    saveTextFile(fileName, text) {
-        fs.writeFileSync(fileName, text, err => {
+    saveTextOrBlobFile(fileName, data) {
+        fs.writeFileSync(fileName, data, err => {
             if (err) {
-                return [false, 'Did not save file [' + fileName + '] because: ' + err, null]
+                return [false, `Did not save file [${fileName}] because: ${err}`, null]
             }
         })
-        return [true, 'Saved file [' + fileName + ']', null]
+        return [true, `Saved file [${fileName}]`, null]
     }
 
     /**

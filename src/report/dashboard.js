@@ -126,10 +126,9 @@ class InteractionDashboard extends Dashboards {
         let interactionOptions = { includesHyperlink: false }
         if (isPackage) {
             let myObj = interaction.url.split('/').pop()
-            console.log(myObj)
             // Replace spaces with underscores and keep the file extension
+            // NOTE: This may not work, need to text on other interactions
             myObj = myObj.replace(/ /g, '_')
-            console.log(myObj)
             interactionName = this.textWidgets.makeExternalHyperLink(
                 interaction.name, 
                 `./interactions/${myObj}`
