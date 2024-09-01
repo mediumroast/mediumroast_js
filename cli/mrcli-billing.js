@@ -12,11 +12,6 @@ import chalk from 'chalk'
 console.log(chalk.bold.yellow('WARNING: The billing subcommand is deprecated in this release, and replaced by actions and storage subcommands,\n\ttry \'mrcli actions --help\' or \'mrcli storage --help\' for more information.'))
 process.exit()
 
-// Import required modules
-// import { Billings } from '../src/api/gitHubServer.js'
-// import Environmentals from '../src/cli/env.js'
-// import CLIOutput from '../src/cli/output.js'
-
 
 
 // Related object type

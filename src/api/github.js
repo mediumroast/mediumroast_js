@@ -618,6 +618,30 @@ class GitHubFunctions {
 
     }
 
+    // async readBlob(fileName) {
+    //     // Encode the file name and obtain the download URL
+    //     const encodedFileName = encodeURIComponent(fileName)
+        
+    //     // Set the object URL
+    //     const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+    //     // Set the headers
+    //     const headers = { 'Authorization': `token ${this.token}` }
+        
+    //     // Obtain the download URL
+    //     const result = await axios.get(objectUrl, { headers })
+    //     console.log(result)
+    //     let downloadUrl = result.data.download_url
+    //     // try {
+    //         const downloadResult = await axios.get(downloadUrl, { responseType: 'arraybuffer' })
+    //         // console.log(downloadResult)
+    //         return [true, downloadResult, downloadUrl]
+    //     // } catch (e) {
+    //         // console.log(e)
+    //         // return [false, e, downloadUrl]
+    //     // }
+    // }
+
     // Create a method using the octokit called deleteBlob to delete a file from the repo
     async deleteBlob(containerName, fileName, branchName, sha) {
         // Using the github API delete a file from the container

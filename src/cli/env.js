@@ -4,7 +4,7 @@
  * @file env.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 2.3.1
+ * @version 2.4.0
  */
 
 // Import required modules
@@ -281,6 +281,7 @@ class Environmentals {
         env.deviceCodeUrl = config.get('GitHub', 'deviceCodeUrl')
         env.accessTokenUrl = config.get('GitHub', 'accessTokenUrl')
         env.gitHubOrg = config.get('GitHub', 'org')
+        env.authType = config.get('GitHub', 'authType')
         env.deviceCode = config.get('GitHub', 'deviceCode')
 
         // Setup options with cli settings only
@@ -295,68 +296,70 @@ class Environmentals {
      * @description Verify the access token is valid and if not get a new one
      * @todo there is a bug in the persistence of the expiresAt value in the config file
      */
-    async verifyAccessToken (fromSetup=false) {
-        // Get configuration information from the config file
-        const configFile = this.checkConfigDir()
-        let env = this.readConfig(configFile)
+    // async verifyAccessToken (fromSetup=false) {
+    //     // Get configuration information from the config file
+    //     const configFile = this.checkConfigDir()
+    //     let env = this.readConfig(configFile)
 
-        // Construct the GitHub authoirzation object
-        const githubAuth = new GitHubAuth()
+    //     // Construct the GitHub authoirzation object
+    //     const githubAuth = new GitHubAuth({clientId: env.get('GitHub', 'clientId'), authType: env.get('GitHub', 'authType')})
         
-        // Define needed variables to housekeep the accessToken and the config file
-        let accessToken = env.get('GitHub', 'token')
-        let updateConfig = false
-        let deviceCode
-        let expiresAt
+    //     // Define needed variables to housekeep the accessToken and the config file
+    //     let authType = env.get('GitHub', 'authType')
+    //     let accessToken = env.get('GitHub', 'token')
+    //     let updateConfig = false
+    //     let deviceCode
+    //     let expiresAt
 
-        // Check to see if the GitHub section is available
-        if (env.hasSection('GitHub')) {
-            // Check to see if the expiration date is available
-            env.hasKey('GitHub', 'expiresAt') ? expiresAt = env.get('GitHub', 'expiresAt') : expiresAt = 0
+    //     // Check to see if the GitHub section is available
+    //     if (env.hasSection('GitHub')) {
+    //         // Check to see if the expiration date is available
+    //         env.hasKey('GitHub', 'expiresAt') ? expiresAt = env.get('GitHub', 'expiresAt') : expiresAt = 0
 
-            // Convert the access token expirations into Date objects
-            let accessExpiry 
-            expiresAt === 'undefined' ? accessExpiry = 0 : accessExpiry = new Date(expiresAt)
-            const now = new Date()
+    //         // Convert the access token expirations into Date objects
+    //         let accessExpiry 
+    //         expiresAt === 'undefined' ? accessExpiry = 0 : accessExpiry = new Date(expiresAt)
+    //         const now = new Date()
         
-            // Check to see if the access token is valid
-            if (accessExpiry < now) {
-                const myEnv = {
-                    clientId: env.get('GitHub', 'clientId'), 
-                    clientType: env.get('GitHub', 'clientType')
-                }
-                accessToken = await githubAuth.getAccessToken(myEnv)
-                env = this.updateConfigSetting(env, 'GitHub', 'token', accessToken.token)
-                env = this.updateConfigSetting(env[1], 'GitHub', 'expiresAt', accessToken.expiresAt)
-                env = this.updateConfigSetting(env[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
-                updateConfig = true
-                env = env[1]
-                accessToken = accessToken.token
-                expiresAt = accessToken.expiresAt
-                deviceCode = accessToken.deviceCode
-            }
-        } else {
-            // Section GitHub not available perform complete authorization flow
-            // Get the access token and add a GitHub section to the env
-            accessToken = await githubAuth.getAccessToken(env)
-            // Create the GitHub section
-            env = this.addConfigSection(env, 'GitHub', accessToken)
-            env = this.removeConfigSetting(env[1], 'GitHub', 'contentType')
-            env = this.removeConfigSetting(env[1], 'GitHub', 'grantType')
-            updateConfig = true
-            env = env[1]
-        }
+    //         // Check to see if the access token is valid
+    //         if (accessExpiry < now) {
+    //             const myEnv = {
+    //                 clientId: env.get('GitHub', 'clientId'), 
+    //                 clientType: env.get('GitHub', 'clientType')
+    //             }
 
-        // Save the config file if needed
-        if (updateConfig) {
-            await env.write(configFile)
-        }
+    //             accessToken = await githubAuth.getAccessTokenDeviceFlow(myEnv)
+    //             env = this.updateConfigSetting(env, 'GitHub', 'token', accessToken.token)
+    //             env = this.updateConfigSetting(env[1], 'GitHub', 'expiresAt', accessToken.expiresAt)
+    //             env = this.updateConfigSetting(env[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
+    //             updateConfig = true
+    //             env = env[1]
+    //             accessToken = accessToken.token
+    //             expiresAt = accessToken.expiresAt
+    //             deviceCode = accessToken.deviceCode
+    //         }
+    //     } else {
+    //         // Section GitHub not available perform complete authorization flow
+    //         // Get the access token and add a GitHub section to the env
+    //         accessToken = await githubAuth.getAccessTokenDeviceFlow(env)
+    //         // Create the GitHub section
+    //         env = this.addConfigSection(env, 'GitHub', accessToken)
+    //         env = this.removeConfigSetting(env[1], 'GitHub', 'contentType')
+    //         env = this.removeConfigSetting(env[1], 'GitHub', 'grantType')
+    //         updateConfig = true
+    //         env = env[1]
+    //     }
 
-        if (fromSetup) {
-            return {token: accessToken, expiry: expiresAt ,device: deviceCode}
-        }
-        return accessToken
-    }
+    //     // Save the config file if needed
+    //     if (updateConfig) {
+    //         await env.write(configFile)
+    //     }
+
+    //     if (fromSetup) {
+    //         return {token: accessToken, expiry: expiresAt ,device: deviceCode}
+    //     }
+    //     return accessToken
+    // }
 }
 
 export default Environmentals

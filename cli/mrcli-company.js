@@ -16,6 +16,7 @@ import CLIUtilities from '../src/cli/common.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
+import { GitHubAuth } from '../src/api/authorize.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
@@ -51,7 +52,15 @@ myArgs = myArgs.opts()
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
 myEnv.company = 'Unknown'
-const accessToken = await environment.verifyAccessToken()
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file)
+const verifiedToken = await myAuth.verifyAccessToken()
+let accessToken = null
+if (!verifiedToken[0]) {
+   console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+   process.exit(-1)
+} else {
+   accessToken = verifiedToken[2].token
+}
 const processName = 'mrcli-company'
 
 // Construct the DOCXUtilities object

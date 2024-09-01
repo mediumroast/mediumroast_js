@@ -23,6 +23,7 @@ import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
 import WizardUtils from "../src/cli/commonWizard.js"
+import { GitHubAuth } from '../src/api/authorize.js'
 
 // Reset the status of objects for caffiene reprocessing
 async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
@@ -58,7 +59,7 @@ const objectType = 'Interactions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.2.0',
+   '3.3.0',
    `${objectType}`,
    `Command line interface for mediumroast.io ${objectType} objects.`,
    objectType
@@ -71,7 +72,15 @@ const fileSystem = new FilesystemOperators()
 const myArgs = environment.parseCLIArgs()
 const myConfig = environment.readConfig(myArgs.conf_file)
 const myEnv = environment.getEnv(myArgs, myConfig)
-const accessToken = await environment.verifyAccessToken()
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file)
+const verifiedToken = await myAuth.verifyAccessToken()
+let accessToken = null
+if (!verifiedToken[0]) {
+   console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+   process.exit(-1)
+} else {
+   accessToken = verifiedToken[2].token
+}
 const processName = 'mrcli-interaction'
 
 // Output object

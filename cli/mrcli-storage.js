@@ -13,15 +13,15 @@
 import { Storage } from '../src/api/gitHubServer.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
-import ora from "ora"
-import chalk from 'chalk'
+import { GitHubAuth } from '../src/api/authorize.js'
+
 
 // Related object type
 const objectType = 'Storage'
 
 // Environmentals object
 const environment = new Environmentals(
-   '1.0.0',
+   '1.1.0',
    `${objectType}`,
    `Command line interface to report on and update actions.`,
    objectType
@@ -68,7 +68,15 @@ myArgs = myArgs.opts()
 
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
-const accessToken = await environment.verifyAccessToken()
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file)
+const verifiedToken = await myAuth.verifyAccessToken()
+let accessToken = null
+if (!verifiedToken[0]) {
+   console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+   process.exit(-1)
+} else {
+   accessToken = verifiedToken[2].token
+}
 const processName = 'mrcli-storage'
 
 // Construct the controller objects
