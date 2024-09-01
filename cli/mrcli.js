@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * The wrapping CLI to engage all mediumroast.io CLIs
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file mrcli.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @fileoverview The wrapping CLI for Mediumroast for GitHub
  * @license Apache-2.0
- * @version 1.2.0
+ * @version 1.2.1
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-user.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 // Import required modules

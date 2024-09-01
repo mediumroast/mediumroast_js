@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility to setup the configuration file to talk to the mediumroast.io
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file mr_setup.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to perform initial configuration and setup of Mediumroast for GitHub
  * @license Apache-2.0
- * @version 3.0.0
+ * @version 3.1.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-setup.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 // Import required modules
@@ -255,16 +257,13 @@ async function installActions(actionsManifest) {
     ----------------------------------------------------------------------- 
 */
 // Global variables
-const VERSION = '3.0.0'
+const VERSION = '3.1.0'
 const NAME = 'setup'
-const DESC = 'Set up the Mediumroast application.'
+const DESC = 'A CLI utility to perform initial configuration and setup of Mediumroast for GitHub'
 const defaultConfigFile = `${process.env.HOME}/.mediumroast/config.ini`
 
 // Construct the file system utility object
 const fsUtils = new FilesystemOperators()
-
-// Construct the authorization object
-const githubAuth = new GitHubAuth()
 
 // Parse the commandline arguements
 const myArgs = parseCLIArgs(NAME, VERSION, DESC)
@@ -284,6 +283,9 @@ let myConfig = {
 // Assign the env data to the configuration
 myConfig.DEFAULT = myEnv.DEFAULT
 myConfig.GitHub = myEnv.GitHub
+
+// Construct the authorization object
+const githubAuth = new GitHubAuth(myConfig, environment, defaultConfigFile)
 
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
@@ -323,26 +325,60 @@ cliOutput.printLine()
 
 
 /* ----------------------------------------- */
-/* ---- Begin device flow authorization ---- */
+/* ----       Begin authorization       ---- */
 
 // If the GitHub section exists in the config file then we can skip the device flow authorization
 let accessToken
+let authType
 if(configExists[0]) {
-    accessToken = await environment.verifyAccessToken(true)
-    myConfig.GitHub.token = accessToken.token
-    myConfig.GitHub.expiresAt = accessToken.expiry
-    myConfig.GitHub.deviceCode = accessToken.device
+    const credential = await githubAuth.verifyAccessToken(false)
+    if(!credential[0]) {
+        console.log(chalk.red.bold(`ERROR: ${credential[1].status_msg}`))
+        process.exit(-1)
+    }
+    accessToken = credential[2].token
+    authType = credential[2].authType
+    myConfig.GitHub.token = accessToken
+    myConfig.GitHub.authType = authType
 } else {
-    // Obtain the access token
-    accessToken = await githubAuth.getAccessToken(myConfig.GitHub)
-    // Pull in only necessary settings from the access token
-    myConfig.GitHub.token = accessToken.token
-    myConfig.GitHub.expiresAt = accessToken.expiresAt
-    myConfig.GitHub.deviceCode = accessToken.deviceCode
-    cliOutput.printLine()
-}
+    const authTypes = {
+        'Personal Access Token': 'pat',
+        'Device Flow': 'deviceFlow',
+    }
+    
+    // Using map iterate through the keys of types and create an array of objects where each object looks like {name: key}
+    const authArray = Object.keys(authTypes).map((authType) => {
+        return { name: authType }
+    })
+    
+    // Use doList in wizardUtils to prompt the user to select a theme
+    let authChoice = await wizardUtils.doList(
+        'Please select a theme for your Mediumroast reports',
+        authArray
+    )
 
-/* ----- End device flow authorization ----- */
+    // Decode the theme value from the themes object
+    myConfig.GitHub.authType = authTypes[authChoice]
+    authType = myConfig.GitHub.authType
+
+    // If the user selects pat we will need to prompt for the token
+    if(myConfig.GitHub.authType === 'pat') {
+        // Prompt the user for the PAT
+        myConfig.GitHub.token = await simplePrompt('Please enter your GitHub Personal Access Token.')
+        // Set access token to myConfig.GitHub.token
+        accessToken = myConfig.GitHub.token
+    } else {
+        const credential = await githubAuth.verifyAccessToken(false)
+        if(!credential[0]) {
+            console.log(chalk.red.bold(`ERROR: ${credential[1].status_msg}`))
+            process.exit(-1)
+        }
+        accessToken = credential[2].token
+    }
+}
+cliOutput.printLine()
+
+/* -----       End authorization       ----- */
 /* ----------------------------------------- */
 
 
@@ -379,6 +415,27 @@ if(prevInstallComp[0]) {
 /* ------- End check for prev install ------ */
 /* ----------------------------------------- */
 
+/* ----------------------------------------- */
+/* --------- Begin prompt for theme -------- */
+const themes = {
+    'Electric coffee': 'coffee',
+    'Bright espresso': 'espresso',
+    'Double shot latte': 'latte',
+}
+
+// Using map iterate through the keys of themes and create an array of objects where each object looks like {name: key}
+const themeArray = Object.keys(themes).map((theme) => {
+    return { name: theme }
+})
+
+// Use doList in wizardUtils to prompt the user to select a theme
+const theme = await wizardUtils.doList(
+    'Please select a theme for your Mediumroast reports',
+    themeArray
+)
+
+// Decode the theme value from the themes object
+myConfig.DEFAULT.theme = themes[theme]
 
 /* ----------------------------------------- */
 /* ----------- Save config file ------------ */

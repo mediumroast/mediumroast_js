@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility used for accessing and reporting on mediumroast.io user objects
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file user.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to report on Mediumroast for GitHub Storage authorized users
  * @license Apache-2.0
- * @verstion 2.0.0
+ * @version 2.1.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-user.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 // Import required modules
@@ -22,7 +24,7 @@ const objectType = 'Users'
 const environment = new Environmentals(
    '2.1.0',
    `${objectType}`,
-   `Command line interface for mediumroast.io ${objectType} objects.`,
+   `A CLI utility to report on Mediumroast for GitHub Storage authorized users`,
    objectType
 )
 

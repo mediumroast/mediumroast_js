@@ -7,11 +7,6 @@
  * @version 1.1.0
  */
 
-// Import required modules
-import axios from 'axios'
-import * as fs from 'fs'
-import * as path from 'path'
-
 class CLIUtilities {
 
     /**

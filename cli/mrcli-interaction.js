@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility used for accessing and reporting on mediumroast.io interaction objects
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file interactions.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Interaction objects
  * @license Apache-2.0
- * @version 3.2.0
+ * @version 3.3.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-interaction.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 
@@ -61,7 +63,7 @@ const objectType = 'Interactions'
 const environment = new Environmentals(
    '3.3.0',
    `${objectType}`,
-   `Command line interface for mediumroast.io ${objectType} objects.`,
+   `A CLI utility to manage and report on Mediumroast for GitHub Interaction objects`,
    objectType
 )
 

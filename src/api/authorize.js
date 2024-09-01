@@ -35,6 +35,12 @@ import FilesystemOperators from '../cli/filesystem.js'
 
 
 class GitHubAuth {
+    /**
+     * @constructor
+     * @param {Object} env - The environment object
+     * @param {Object} environ - The environmentals object
+     * @param {String} configFile - The configuration file
+     */
     constructor (env, environ, configFile) {
         this.env = env
         this.clientType = 'github-app'

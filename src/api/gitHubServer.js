@@ -4,12 +4,18 @@
  * @file gitHubServer.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * @class baseObjects
  * @classdesc An implementation for interacting with the GitHub backend.
  * 
  * @requires GitHubFunctions
+ * @requires crypto
+ * @requires fs
+ * @requires path
+ * @requires fileURLToPath
+ * 
+ * @exports {Studies, Companies, Interactions, Users, Storage, Actions}
  * 
  * @example
  * import {Companies, Interactions, Users, Billings} from './api/gitHubServer.js'
@@ -525,7 +531,7 @@ class Actions extends baseObjects {
                 blobData = fs.readFileSync(action.srcURL, 'base64')
                 status = true
             } catch (err) {
-                console.log(`Unable to read file [${action.fileName}] because: ${err}`)
+                // console.log(`Unable to read file [${action.fileName}] because: ${err}`)
                 return [false,{status_code: 500, status_msg: `Unable to read file [${action.fileName}] because: ${err}`}, installStatus]
             }
             if(status) {

@@ -11,6 +11,7 @@
  * @classdesc Core functions needed to interact with the GitHub API for mediumroast.io.
  * 
  * @requires octokit
+ * @requires axios
  * 
  * @exports GitHubFunctions
  * 

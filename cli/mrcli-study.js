@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility used for accessing and reporting on mediumroast.io study objects
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file study.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Study objects
  * @license Apache-2.0
- * @verstion 3.0.0
+ * @version 3.0.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-study.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 
@@ -28,7 +30,7 @@ const objectType = 'Studies'
 const environment = new Environmentals (
    '3.0',
    `${objectType}`,
-   `Command line interface for mediumroast.io ${objectType} objects.`,
+   `A CLI utility to manage and report on Mediumroast for GitHub Study objects`,
    objectType
 )
 

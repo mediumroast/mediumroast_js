@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility used for accessing and reporting on mediumroast.io user objects
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file actions.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to report on and update Mediumroast for GitHub Actions/Workflows 
  * @license Apache-2.0
- * @verstion 1.0.0
+ * @version 1.1.1
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-actions.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 // Import required modules
@@ -22,9 +24,9 @@ const objectType = 'Actions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '1.1.0',
+   '1.1.1',
    `${objectType}`,
-   `Command line interface to report on and update actions.`,
+   `A CLI utility to report on an update GitHub Actions/Workflows Mediumroast for GitHub`,
    objectType
 )
 
