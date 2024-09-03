@@ -74,7 +74,7 @@ const fileSystem = new FilesystemOperators()
 const myArgs = environment.parseCLIArgs()
 const myConfig = environment.readConfig(myArgs.conf_file)
 const myEnv = environment.getEnv(myArgs, myConfig)
-const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file)
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file, true)
 const verifiedToken = await myAuth.verifyAccessToken()
 let accessToken = null
 if (!verifiedToken[0]) {

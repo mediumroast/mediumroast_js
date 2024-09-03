@@ -55,7 +55,7 @@ myArgs = myArgs.opts()
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
 myEnv.company = 'Unknown'
-const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file)
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file, true)
 const verifiedToken = await myAuth.verifyAccessToken()
 let accessToken = null
 if (!verifiedToken[0]) {

@@ -41,16 +41,21 @@ class GitHubAuth {
      * @param {Object} environ - The environmentals object
      * @param {String} configFile - The configuration file
      */
-    constructor (env, environ, configFile) {
+    constructor (env, environ, configFile, configExists) {
         this.env = env
         this.clientType = 'github-app'
         this.configFile = configFile
-        this.environ = environ
-        this.config = environ.readConfig(configFile)
+        this.configExists = configExists
         this.filesystem = new FilesystemOperators()
+        this.environ = environ
+        // Use ternary operator to determine if the config file exists and if it does read it else set it to null
+        this.config = configExists ? environ.readConfig(configFile) : null
     }
 
     verifyGitHubSection () {
+        if (!this.config) {
+            return false
+        }
         return this.config.hasSection('GitHub')
     }
 
@@ -96,11 +101,13 @@ class GitHubAuth {
      * @returns {Object} The access token object
      */
     async getAccessTokenDeviceFlow() {
+        // Set the clientId depending on if the config file exists
+        const clientId = this.configExists ? this.env.clientId : this.env.GitHub.clientId
         // Construct the oAuth device flow object which starts the browser
         let deviceCode // Provide a place for the device code to be captured
         const deviceauth = octoDevAuth.createOAuthDeviceAuth({
             clientType: this.clientType,
-            clientId: this.env.clientId,
+            clientId: clientId,
             onVerification(verifier) {
                 deviceCode = verifier.device_code
                 // Print the verification artifact to the console
@@ -120,12 +127,6 @@ class GitHubAuth {
 
         // Call GitHub to obtain the token
         let accessToken = await deviceauth({type: 'oauth'})
-
-        // NOTE: The token is not returned with the expires_in and expires_at fields, this is a workaround
-        // let now = new Date()
-        // now.setHours(now.getHours() + 8)
-        // accessToken.expiresAt = now.toUTCString()
-        // Add the device code to the accessToken object
         accessToken.deviceCode = deviceCode
         return accessToken
     }
@@ -137,22 +138,36 @@ class GitHubAuth {
      * @param {Boolean} saveToConfig - Save to the configuration file, default is true
      */
     async verifyAccessToken (saveToConfig=true) {
-        // Get key variables from the config file
-        const hasGitHubSection = this.verifyGitHubSection()
-        // If the GitHub section is not available, then the token is not available, return false.
-        // This is only to be used when called from a function that intendes to setup the configuration file, but
-        // just in case this condition occurs we want to return clearly to the caller.
-        if (!hasGitHubSection) {
-            return [false, {status_code: 500, status_msg: 'The GitHub section is not available in the configuration file'}, null]
+
+        if (this.configExists) {
+            // Get key variables from the config file
+            const hasGitHubSection = this.verifyGitHubSection()
+            // If the GitHub section is not available, then the token is not available, return false.
+            // This is only to be used when called from a function that intendes to setup the configuration file, but
+            // just in case this condition occurs we want to return clearly to the caller.
+            if (!hasGitHubSection) {
+                return [false, {status_code: 500, status_msg: 'The GitHub section is not available in the configuration file'}, null]
+            }
         }
 
         // Get the access token and authType from the config file since the section is available
-        let accessToken = this.getAccessTokenFromConfig()
-        const authType = this.getAuthTypeFromConfig()
+        let accessToken
+        // If the configuration exists then we can obtain the token and authType from the config file, but if
+        // the configuration is not present and the intention is to use PAT this code won't be executed. Therefore,
+        // prompting the user for the PAT, verifyin the PAT, and saving the PAT to the config file will be done in the
+        // caller. However, if the intention is to use deviceFlow then we can support that here and return the token to the
+        // caller which will then save the token and the authType to the config file.
+        let authType = 'deviceFlow' 
+        if (this.configExists) {
+            accessToken = this.getAccessTokenFromConfig()
+            authType = this.getAuthTypeFromConfig()
+        }
         
-        // Check to see if the token is valid
-        const validToken = await this.checkTokenExpiration(accessToken)
-        if (validToken[0]) {
+        // Check to see if the token is valid but if the config isn't present then we can't check the token
+        const validToken = this.configExists ? 
+            await this.checkTokenExpiration(accessToken) : 
+            [false, {status_code: 500, status_msg: 'The configuration file isn\'t present'}, null]
+        if (validToken[0] && this.configExists) {
             return [
                 true, 
                 {status_code: 200, status_msg: validToken[1].status_msg},
@@ -172,15 +187,18 @@ class GitHubAuth {
             } else if (authType === 'deviceFlow') {
                 // Get the new access token
                 accessToken = await this.getAccessTokenDeviceFlow()
-                // Update the config
-                let tmpConfig = this.environ.updateConfigSetting(this.config, 'GitHub', 'token', accessToken.token)
-                tmpConfig = this.environ.updateConfigSetting(tmpConfig[1], 'GitHub', 'authType', authType)
-                tmpConfig = this.environ.updateConfigSetting(tmpConfig[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
                 
-                // Save the config file if needed
-                this.config = tmpConfig[1]
-                if (saveToConfig) {
-                    await this.config.write(this.configFile)
+                // Update the config if the config file exists and if saveToConfig is true
+                if (this.configExists && this.config && this.saveToConfig) {
+                    let tmpConfig = this.environ.updateConfigSetting(this.config, 'GitHub', 'token', accessToken.token)
+                    tmpConfig = this.environ.updateConfigSetting(tmpConfig[1], 'GitHub', 'authType', authType)
+                    tmpConfig = this.environ.updateConfigSetting(tmpConfig[1], 'GitHub', 'deviceCode', accessToken.deviceCode)
+                    
+                    // Save the config file if needed
+                    this.config = tmpConfig[1]
+                    if (saveToConfig) {
+                        await this.config.write(this.configFile)
+                    }
                 }
 
                 return [

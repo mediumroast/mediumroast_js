@@ -284,9 +284,6 @@ let myConfig = {
 myConfig.DEFAULT = myEnv.DEFAULT
 myConfig.GitHub = myEnv.GitHub
 
-// Construct the authorization object
-const githubAuth = new GitHubAuth(myConfig, environment, defaultConfigFile)
-
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
 const wizardUtils = new WizardUtils('all')
@@ -326,6 +323,8 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* ----       Begin authorization       ---- */
+// Construct the authorization object
+const githubAuth = new GitHubAuth(myConfig, environment, defaultConfigFile, configExists[0])
 
 // If the GitHub section exists in the config file then we can skip the device flow authorization
 let accessToken
@@ -353,7 +352,7 @@ if(configExists[0]) {
     
     // Use doList in wizardUtils to prompt the user to select a theme
     let authChoice = await wizardUtils.doList(
-        'Please select a theme for your Mediumroast reports',
+        'Please select the authorization type used to access GitHub',
         authArray
     )
 
@@ -367,6 +366,11 @@ if(configExists[0]) {
         myConfig.GitHub.token = await simplePrompt('Please enter your GitHub Personal Access Token.')
         // Set access token to myConfig.GitHub.token
         accessToken = myConfig.GitHub.token
+        const isTokenValid = await githubAuth.checkTokenExpiration(accessToken)
+        if(!isTokenValid[0]) {
+            console.log(chalk.red.bold(`ERROR: Unable to verify the GitHub Personal Access Token with error [${isTokenValid[1].status_msg}].`))
+            process.exit(-1)
+        }
     } else {
         const credential = await githubAuth.verifyAccessToken(false)
         if(!credential[0]) {
@@ -374,6 +378,7 @@ if(configExists[0]) {
             process.exit(-1)
         }
         accessToken = credential[2].token
+        myConfig.GitHub.token = accessToken
     }
 }
 cliOutput.printLine()
@@ -440,7 +445,7 @@ myConfig.DEFAULT.theme = themes[theme]
 /* ----------------------------------------- */
 /* ----------- Save config file ------------ */
 // Confirm that the configuration directory exists only if we don't already have one
-if(!configExists[0]) { 
+// if(!configExists[0]) { 
     const configFile = environment.checkConfigDir()
     process.stdout.write(chalk.bold.blue(`Saving configuration to file [${configFile}] ... `))
 
@@ -458,7 +463,7 @@ if(!configExists[0]) {
     }
 
     cliOutput.printLine()
-}
+// }
 // Confirm that Document directory exists and if not create it
 const docDir = myConfig.DEFAULT.report_output_dir
 const reportDirExists = fsUtils.safeMakedir(docDir)
