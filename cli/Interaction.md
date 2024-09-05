@@ -120,7 +120,7 @@ Optionally, if the `--package` switch is used the report is zipped and stored in
 - `mrcli i --report="Atlassian Corp" --package`
 
 ### Screenshot of the report dashboard
-
+![Screenshot 2024-09-04 at 8 30 25 PM](https://github.com/user-attachments/assets/19c614a5-ed58-4687-aff8-a619ea693398)
 
 
 
