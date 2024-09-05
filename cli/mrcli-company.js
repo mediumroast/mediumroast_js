@@ -1,39 +1,46 @@
 #!/usr/bin/env node
 
 /**
- * A CLI utility used for accessing and reporting on mediumroast.io company objects
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file company.js
- * @copyright 2022 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Company objects
  * @license Apache-2.0
- * @version 2.2.0
+ * @version 3.2.0
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file mrcli-company.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
  */
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
 import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import DOCXUtilities from '../src/report/helpers.js'
+import CLIUtilities from '../src/cli/common.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
+import { GitHubAuth } from '../src/api/authorize.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
 import WizardUtils from '../src/cli/commonWizard.js'
 
+
 // Related object type
 const objectType = 'Companies'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.0',
+   '3.2.0',
    `${objectType}`,
-   `Command line interface for mediumroast.io ${objectType} objects.`,
+   `A CLI utility to manage and report on Mediumroast for GitHub Company objects`,
    objectType
 )
 
 // Filesystem object
 const fileSystem = new FilesystemOperators()
+
 
 // Process the command line options
 let myProgram = environment.parseCLIArgs(true)
@@ -48,8 +55,22 @@ myArgs = myArgs.opts()
 const myConfig = environment.readConfig(myArgs.conf_file)
 let myEnv = environment.getEnv(myArgs, myConfig)
 myEnv.company = 'Unknown'
-const accessToken = await environment.verifyAccessToken()
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file, true)
+const verifiedToken = await myAuth.verifyAccessToken()
+let accessToken = null
+if (!verifiedToken[0]) {
+   console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+   process.exit(-1)
+} else {
+   accessToken = verifiedToken[2].token
+}
 const processName = 'mrcli-company'
+
+// Construct the DOCXUtilities object
+const docxUtils = new DOCXUtilities(myEnv)
+
+// Construct the CLIUtilities object
+const cliUtils = new CLIUtilities()
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
@@ -61,7 +82,6 @@ const wutils = new WizardUtils()
 const companyCtl = new Companies(accessToken, myEnv.gitHubOrg, processName)
 const interactionCtl = new Interactions(accessToken, myEnv.gitHubOrg, processName)
 const gitHubCtl = new GitHubFunctions(accessToken, myEnv.gitHubOrg, processName)
-
 // const studyCtl = new Studies(accessToken, myEnv.gitHubOrg, processName)
 const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 
@@ -71,101 +91,66 @@ let [success, stat, results] = [null, null, null]
 // Process the cli options
 // TODO consider moving this out into at least a separate function to make main clean
 if (myArgs.report) {
-   console.error('ERROR (%d): Report not implemented.', -1)
-   process.exit(-1)
-   // Retrive the interaction by Id
-   const [comp_success, comp_stat, comp_results] = await companyCtl.findById(myArgs.report)
-   // Retrive the company by Name
-   const interactionNames = Object.keys(comp_results[0].linked_interactions)
-   // Obtain relevant interactions
-   let interactions = []
-   for (const interactionName in interactionNames) {
-      const [mySuccess, myStat, myInteraction] = await interactionCtl.findByName(
-         interactionNames[interactionName]
-      )
-      interactions.push(myInteraction[0])
+   // Use CLIUtils to get all objects
+   const allObjects = await cliUtils.getAllObjects({interactions: interactionCtl, companies: companyCtl})
+   if(!allObjects[0]) {
+      console.error(`ERROR: ${allObjects[1].status_msg}`)
+      process.exit(-1)
    }
-   // Obtain the competitors
-   let competitors = []
-   let competitiveInteractions = []
-   const competitorIdxs = Object.keys(comp_results[0].comparison)
-   for (const compIdx in competitorIdxs) {
-      // const competitor = competitorIds[comp]
-      // console.log(comp_results[0].comparison[competitor].name)
-      const competitorIndex = competitorIdxs[compIdx] // Index in the comparison property for the company
-      const competitorName = comp_results[0].comparison[competitorIndex].name // Actual company name
-      const [compSuccess, compStat, myCompetitor] = await companyCtl.findByName(competitorName)
-      const [mostSuccess, mostStat, myMost] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitorIndex].most_similar.name
-      )
-      const [leastSuccess, leastStat, myLeast] = await interactionCtl.findByName(
-         comp_results[0].comparison[competitorIndex].least_similar.name
-      )
-      // Format the scores and names
-      const leastScore = String(
-         Math.round(comp_results[0].comparison[competitorIndex].least_similar.score * 100)
-      ) + '%'
-      const mostScore = String(
-         Math.round(comp_results[0].comparison[competitorIndex].most_similar.score * 100)
-      ) + '%'
-      const leastName = comp_results[0].comparison[competitorIndex].least_similar.name.slice(0,40) + '...'
-      const mostName = comp_results[0].comparison[competitorIndex].most_similar.name.slice(0,40) + '...'
-      competitors.push(
-         {
-            company: myCompetitor[0],
-            mostSimilar: {
-               score: mostScore,
-               name: comp_results[0].comparison[competitorIndex].most_similar.name,
-               interaction: myMost[0]
-            },
-            leastSimilar: {
-               score: leastScore,
-               name: comp_results[0].comparison[competitorIndex].least_similar.name,
-               interaction: myLeast[0]
-            }
-         }
-      )
-      competitiveInteractions.push(myMost[0], myLeast[0])
-   }
+   const allInteractions = allObjects[2].interactions
+   const allCompanies = allObjects[2].companies
+
    // Set the root name to be used for file and directory names in case of packaging
-   const baseName = comp_results[0].name.replace(/ /g,"_")
+   const baseName = myArgs.report.replace(/ /g, "_")
    // Set the directory name for the package
    const baseDir = myEnv.workDir + '/' + baseName
    // Define location and name of the report output, depending upon the package switch this will change
    let fileName = process.env.HOME + '/Documents/' + baseName + '.docx'
-   
    // Set up the document controller
    const docController = new CompanyStandalone(
-      comp_results[0], // Company to report on
-      interactions, // The interactions associated to the company
-      competitors, // Relevant competitors for the company
-      myEnv,
-      'mediumroast.io barrista robot', // The author
-      'Mediumroast, Inc.' // The authoring company/org
+      myArgs.report,
+      allCompanies,
+      allInteractions,
+      myEnv
    )
-   
-   if(myArgs.package) {
+
+   let mySpinner = null
+   if (myArgs.package) {
+      mySpinner = new ora(`Generating report package for [${myArgs.report}] ...`)
+      mySpinner.start()
       // Create the working directory
       const [dir_success, dir_msg, dir_res] = fileSystem.safeMakedir(baseDir + '/interactions')
-      
+
       // If the directory creations was successful download the interaction
-      if(dir_success) {
+      if (dir_success) {
          fileName = baseDir + '/' + baseName + '_report.docx'
-         /* 
-         TODO the below only assumes we're storing data in S3, this is intentionally naive.
-             In the future we will need to be led by the URL string to determine where and what
-             to download from.  Today we only support S3, but this could be Sharepoint, 
-             a local file system, OneDrive, GDrive, etc.  There might be an initial less naive
-             implementation that looks at OneDrive, GDrive, DropBox, etc. as local file system
-             access points, but the tradeoff would be that caffeine would need to run on a
-             system with file system access to these objects.
-         */
-      // Append the competitive interactions on the list and download all
+         // Get the company interactions
+         let interactions = docController.sourceData.interactions
+         // Get the competitive interactions
+         const competitiveInteractions = [
+            ...docController.sourceData.competitors.mostSimilar.interactions, 
+            ...docController.sourceData.competitors.leastSimilar.interactions
+         ]
+         // Add the competitive interactions to the interactions
          interactions = [...interactions, ...competitiveInteractions]
+         // Download the interactions
+         for (const interaction of interactions) {
+            let interactionFileName = interaction.url.split('/').pop()
+            // Replace all spaces with underscores in the file name
+            interactionFileName = interactionFileName.replace(/ /g, '_')
+            const downloadResults = await gitHubCtl.readBlob(interaction.url)
+            if(downloadResults[0]) {
+               fileSystem.saveTextOrBlobFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
+            } else {
+               console.error(`ERROR: ${downloadResults[1]}`)
+               process.exit(-1)
+            }
+         }
+
          // TODO: We need to rewrite the logic for obtaining the interactions as they are from GitHub
          // await s3.s3DownloadObjs(interactions, baseDir + '/interactions', sourceBucket)
-         null
-      // Else error out and exit
+
+         // Else error out and exit
       } else {
          console.error('ERROR (%d): ' + dir_msg, -1)
          process.exit(-1)
@@ -174,7 +159,7 @@ if (myArgs.report) {
    }
 
    // Create the document
-   const [report_success, report_stat, report_result] = await docController.makeDOCX(fileName, myArgs.package)
+   const [report_success, report_stat, report_results] = await docController.makeDOCX(fileName, myArgs.package)
 
 
    // Create the package and cleanup as needed
@@ -182,12 +167,14 @@ if (myArgs.report) {
       const archiver = new ArchivePackage(myEnv.outputDir + '/' + baseName + '.zip')
       const [package_success, package_stat, package_result] = await archiver.createZIPArchive(baseDir)
       if (package_success) {
-         console.log(package_stat)
          fileSystem.rmDir(baseDir)
+         mySpinner.stop()
+         console.log(package_stat)
          process.exit(0)
       } else {
-         console.error(package_stat, -1)
          fileSystem.rmDir(baseDir)
+         mySpinner.stop()
+         console.error(package_stat, -1)
          process.exit(-1)
       }
 
@@ -201,12 +188,9 @@ if (myArgs.report) {
       console.error(report_stat, -1)
       process.exit(-1)
    }
-// NOTICE: For Now we won't have any ids available for companies, so we'll need to use names
-/* } else if (myArgs.find_by_id) {
-   [success, stat, results] = await companyCtl.findById(myArgs.find_by_id) */
 } else if (myArgs.find_by_name) {
    [success, stat, results] = await companyCtl.findByName(myArgs.find_by_name)
-// TODO: Need to reimplment the below to account for GitHub
+   // TODO: Need to reimplment the below to account for GitHub
 } else if (myArgs.find_by_x) {
    const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
    const foundObjects = await companyCtl.findByX(myKey, myValue)
@@ -215,7 +199,7 @@ if (myArgs.report) {
    results = foundObjects[2]
 } else if (myArgs.update) {
    const lockResp = await companyCtl.checkForLock()
-   if(lockResp[0]) {
+   if (lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
    }
@@ -224,52 +208,52 @@ if (myArgs.report) {
    mySpinner.start()
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
    mySpinner.stop()
-   if(success) {
+   if (success) {
       console.log(`SUCCESS: ${stat.status_msg}`)
       process.exit(0)
-   } else { 
+   } else {
       console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
-// TODO: Need to reimplement the below to account for GitHub
+   // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
-      const lockResp = await companyCtl.checkForLock()
-      if(lockResp[0]) {
-         console.log(`ERROR: ${lockResp[1].status_msg}`)
-         process.exit(-1)
-      }
-      // Use operationOrNot to confirm the delete
-      const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
-      if(!deleteOrNot) {
-         console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
-         process.exit(0)
-      }
-      // If allow_orphans is set log a warning to the user that they are allowing orphaned interactions
-      if(myArgs.allow_orphans) {
-         console.log(chalk.bold.yellow(`WARNING: Allowing orphaned interactions to remain in the system.`))
-      }
-      // Delete the object
-      const mySpinner = new ora(`Deleting company [${myArgs.delete}] ...`)
-      mySpinner.start()
-      const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete, myArgs.allow_orphans)
-      mySpinner.stop()
-      if(success) {
-         console.log(`SUCCESS: ${stat.status_msg}`)
-         process.exit(0)
-      } else {
-         console.log(`ERROR: ${stat.status_msg}`)
-         process.exit(-1)
-      }
-} else if (myArgs.add_wizard) {
    const lockResp = await companyCtl.checkForLock()
-   if(lockResp[0]) {
+   if (lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
    }
-   myEnv.DEFAULT = {company: 'Unknown'}
-   const newCompany = new AddCompany(myEnv, {github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl})
+   // Use operationOrNot to confirm the delete
+   const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
+   if (!deleteOrNot) {
+      console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
+      process.exit(0)
+   }
+   // If allow_orphans is set log a warning to the user that they are allowing orphaned interactions
+   if (myArgs.allow_orphans) {
+      console.log(chalk.bold.yellow(`WARNING: Allowing orphaned interactions to remain in the system.`))
+   }
+   // Delete the object
+   const mySpinner = new ora(`Deleting company [${myArgs.delete}] ...`)
+   mySpinner.start()
+   const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete, myArgs.allow_orphans)
+   mySpinner.stop()
+   if (success) {
+      console.log(`SUCCESS: ${stat.status_msg}`)
+      process.exit(0)
+   } else {
+      console.log(`ERROR: ${stat.status_msg}`)
+      process.exit(-1)
+   }
+} else if (myArgs.add_wizard) {
+   const lockResp = await companyCtl.checkForLock()
+   if (lockResp[0]) {
+      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      process.exit(-1)
+   }
+   myEnv.DEFAULT = { company: 'Unknown' }
+   const newCompany = new AddCompany(myEnv, { github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl })
    const result = await newCompany.wizard()
-   if(result[0]) {
+   if (result[0]) {
       console.log(`SUCCESS: ${result[1].status_msg}`)
       process.exit(0)
    } else {
@@ -280,11 +264,11 @@ if (myArgs.report) {
    console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
    process.exit(-1)
    const lockResp = companyCtl.checkForLock()
-   if(lockResp[0]) {
+   if (lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
    }
-// TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
+   // TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
 } else {
    [success, stat, results] = await companyCtl.getAll()
    results = results.mrJson

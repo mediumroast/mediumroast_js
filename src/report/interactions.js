@@ -9,10 +9,12 @@
 
 // Import required modules
 import docx from 'docx'
-import DOCXUtilities from './common.js'
+import Utilities from './helpers.js'
 import { CompanySection } from './companies.js'
 import { InteractionDashboard } from './dashboard.js' 
 import docxSettings from './settings.js'
+import TextWidgets from './widgets/Text.js'
+import TableWidgets from './widgets/Tables.js'
 
 class BaseInteractionsReport {
     constructor(interactions, objectType, objectName, env) {
@@ -26,7 +28,9 @@ class BaseInteractionsReport {
         this.objectName = objectName
         this.objectType = objectType
         this.env = env
-        this.util = new DOCXUtilities(env)
+        this.util = new Utilities(env)
+        this.textWidgets = new TextWidgets(env)
+        this.tableWidgets = new TableWidgets(env)
         this.themeStyle = docxSettings[env.theme] // Set the theme for the report
         this.generalStyle = docxSettings.general // Pull in all of the general settings
         
@@ -47,12 +51,21 @@ class BaseInteractionsReport {
         }
     }
 
+    /**
+     * @function protorequirementsTable
+     * @todo Determine if the existing TableWidgets class can be used for this
+     */
     protorequirementsTable(topics) {
+        // If the length of the topics is zero, then return a simple message
+        if (Object.keys(topics).length === 0) {
+            return this.textWidgets.makeParagraph('No proto-requirements were discovered or are associated to this interaction.')
+        }
+
         let myRows = [
             new docx.TableRow({
                 children: [
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Id', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Id', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -63,7 +76,7 @@ class BaseInteractionsReport {
                         },
                     }),
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Frequency', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Frequency', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -74,7 +87,7 @@ class BaseInteractionsReport {
                         }
                     }),
                     new docx.TableCell({
-                        children: [this.util.makeParagraph('Proto-requirement', {bold: true, fontSize: this.generalStyle.dashFontSize})],
+                        children: [this.textWidgets.makeParagraph('Proto-requirement', {bold: true, fontSize: this.generalStyle.tableFontSize})],
                         borders: this.bottomBorder,
                         margins: {
                             top: this.generalStyle.tableMargin
@@ -92,7 +105,10 @@ class BaseInteractionsReport {
                 new docx.TableRow({
                     children: [
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topic, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(
+                                String(topic), 
+                                {fontSize: this.generalStyle.tableFontSize})
+                            ],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -103,7 +119,10 @@ class BaseInteractionsReport {
                             },
                         }),
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topics[topic].frequency, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(
+                                String(topics[topic].frequency), 
+                                {fontSize: this.generalStyle.tableFontSize})
+                            ],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -114,7 +133,10 @@ class BaseInteractionsReport {
                             },
                         }),
                         new docx.TableCell({
-                            children: [this.util.makeParagraph(topics[topic].label, {fontSize: this.generalStyle.dashFontSize})],
+                            children: [this.textWidgets.makeParagraph(
+                                String(topics[topic].label), 
+                                {fontSize: this.generalStyle.tableFontSize})
+                            ],
                             borders: this.bottomBorder,
                             margins: {
                                 top: this.generalStyle.tableMargin
@@ -169,24 +191,38 @@ class InteractionSection extends BaseInteractionsReport {
         const noInteractions = this.interactions.length
 
         // Create the header row for the descriptions
-        let myRows = [this.util.descriptionRow('Id', 'Description', true)]
+        let myRows = [this.tableWidgets.twoColumnRowBasic(['Name', 'Description'], {allColumnsBold: true})]
         
-        // Loop over the interactions and pull out the interaction ids and descriptions
+        // Loop over the interactions and pull out the interaction names and descriptions
         for (const interaction in this.interactions) {
-            myRows.push(this.util.descriptionRow(
-                // Create the internal hyperlink for the interaction reference
-                this.util.makeInternalHyperLink(
-                    this.interactions[interaction].id, 'interaction_' + String(this.interactions[interaction].id)
-                ), 
-                // Pull in the description
-                this.interactions[interaction].description
+            // const interactionBaseLink = String(`interaction_${this.interactions[interaction].file_hash}`).substring(0, 20)
+            myRows.push(this.tableWidgets.twoColumnRowBasic(
+                    [
+                        this.interactions[interaction].name,
+                        this.interactions[interaction].description
+                    ],
+                    // NOTE: This is the original code that was replaced by the line above
+                    //       because the hyperlink was not working in the DOCX format.  If we can
+                    //       figure out how to make the hyperlink work in the DOCX format, we can
+                    //       switch back to this code in the future.
+                    // 
+                    //       Note that this works in a development environment, but not in the
+                    //       production environment, and unsure why.  The hyperlink is not
+                    //       visible in the production environment.
+                    // [
+                    //     this.textWidgets.makeInternalHyperLink(
+                    //         this.interactions[interaction].name, interactionBaseLink
+                    //     ), 
+                    //     this.interactions[interaction].description
+                    // ],
+                    {firstColumnBold: false}
                 )
             )
         }
 
         // define the table with the summary theme information
         const myTable = new docx.Table({
-            columnWidths: [10, 90],
+            columnWidths: [30, 70],
             rows: myRows,
             width: {
                 size: 100,
@@ -196,10 +232,8 @@ class InteractionSection extends BaseInteractionsReport {
 
         // Return the results as an array
         return [
-            this.util.makeParagraph(
-                'This section contains descriptions for the ' + noInteractions + ' interactions associated to the ' +
-                this.objectName + ' ' + this.objectType + ' object.  Additional detail is in ' +
-                'the References section of this document.'
+            this.textWidgets.makeParagraph(
+                `This section contains descriptions for the ${noInteractions} interactions associated to the ${this.objectName} ${this.objectType}.  Additional detail is in the References section of this document.`
             ),
             myTable
         ]
@@ -211,12 +245,13 @@ class InteractionSection extends BaseInteractionsReport {
      * @param  {Boolean} isPackage - When set to true links are set up for connecting to interaction documents
      * @returns {Array} An array containing a section description and a table of interaction references
      */
-    makeReferencesDOCX(isPackage) {
-        // Link this back to the descriptions section
-        const descriptionsLink = this.util.makeInternalHyperLink(
-            'Back to Interaction Summaries', 
-            'interaction_summaries'
-        )
+    makeReferencesDOCX(isPackage, bookmark={}) {
+        const {
+            bookmarkName = 'Back to Interaction Descriptions',
+            bookmarkLink ='interaction_descriptions'
+        } = bookmark
+
+        const descriptionsLink = this.textWidgets.makeInternalHyperLink(bookmarkName, bookmarkLink)
 
         // Create the array for the references starting with the introduction
         let references = []
@@ -227,99 +262,94 @@ class InteractionSection extends BaseInteractionsReport {
             // Calculate the aggregate reading time
             totalReadingTime += parseInt(this.interactions[interaction].reading_time)
             
-            // Create the link to the underlying interaction document
-            const objWithPath = this.interactions[interaction].url.split('://').pop()
-            const myObj = objWithPath.split('/').pop()
-            let interactionLink = this.util.makeExternalHyperLink(
-                'Document', 
-                './interactions/' + myObj
-            )
-            
             // Depending upon if this is a package or not create the metadata strip with/without document link
-            let metadataStrip = null
+            let metadataRow
+            let metadataStrip
             if(isPackage) { 
                 // isPackage version of the strip
-                metadataStrip = new docx.Paragraph({
-                    spacing: {
-                        before: 100,
-                    },
-                    children: [
-                        this.util.makeTextrun('[ '),
-                        interactionLink,
-                        this.util.makeTextrun(
-                            ' | Created on: ' + 
-                            this.interactions[interaction].creation_date + 
-                            ' | '
-                        ),
-                        this.util.makeTextrun(
-                            ' Est. Reading Time: ' + 
-                            this.interactions[interaction].reading_time + ' min' + 
-                            ' | '
-                        ),
-                        descriptionsLink,
-                        this.util.makeTextrun(' ]'),
-                    ]
+                // Create the link to the underlying interaction document
+                // TODO consider making this a hyperlink to the interaction document in GitHub
+                // creation_date is of this format 2024-05-24T12:29:22.053Z, create a substring of the date only
+                const myDate = this.interactions[interaction].creation_date.substring(0, 10)
+                let myObj = this.interactions[interaction].url.split('/').pop()
+                // Replace spaces with underscores
+                myObj = myObj.replace(/ /g, '_')
+                // NOTE: Need to follow how this was done in tables with the two column that includes a hyperlink
+                let interactionLink = this.textWidgets.makeExternalHyperLink(
+                    'Document', 
+                    `./interactions/${myObj}`
+                )
+                metadataRow = this.tableWidgets.threeColumnRowBasic(
+                    [
+                        `Created on: ${myDate}`,
+                        `Est. reading time: ${this.interactions[interaction].reading_time} min`,
+                        new docx.Paragraph({children:[interactionLink]})
+                    ],
+                    {firstColumnBold: false}
+                )
+                metadataStrip = new docx.Table({
+                    columnWidths: [25, 25, 25, 25],
+                    rows: [metadataRow],
+                    width: {
+                        size: 100,
+                        type: docx.WidthType.PERCENTAGE
+                    }
                 })
             } else {
                 // Non isPackage version of the strip
-                metadataStrip = new docx.Paragraph({
-                    spacing: {
-                        before: 100,
-                    },
-                    children: [
-                        this.util.makeTextrun('[ '),
-                        this.util.makeTextrun(
-                            'Creation Date: ' + 
-                            this.interactions[interaction].creation_date + 
-                            ' | '
-                        ),
-                        this.util.makeTextrun(
-                            ' Est. Reading Time: ' + 
-                            this.interactions[interaction].reading_time + ' min' + 
-                            ' | '
-                        ),
-                        descriptionsLink,
-                        this.util.makeTextrun(' ]'),
-                    ]
+                metadataRow = this.tableWidgets.threeColumnRowBasic(
+                    [
+                        `Created on: ${this.interactions[interaction].creation_date}`,
+                        `Est. reading time: ${this.interactions[interaction].reading_time} min`,
+                        descriptionsLink
+                    ],
+                    {firstColumnBold: false}
+                )
+                metadataStrip = new docx.Table({
+                    columnWidths: [50, 25, 25],
+                    rows: [metadataRow],
+                    width: {
+                        size: 100,
+                        type: docx.WidthType.PERCENTAGE
+                    }
                 })
             }
+            
 
-            // NOTE: Early reviews by users show topcis are confusing
-            // Generate the topic table
-            // const topics = this.util.rankTags(this.interactions[interaction].topics)
-            // const topicTable = this.util.topicTable(topics)
+            // Create the tags table for the interaction
+            const tagsTable = this.tableWidgets.tagsTable(this.interactions[interaction].tags)
+
+            // Generate the proto-requirements table
+            const protoRequirementsTable = this.protorequirementsTable(this.interactions[interaction].topics)
             
             // Push all of the content into the references array
             references.push(
                 // Create the bookmark for the interaction
-                this.util.makeHeadingBookmark2(
+                this.textWidgets.makeHeadingBookmark2(
                     this.interactions[interaction].name, 
                     String(
                         'interaction_' +
-                        String(this.interactions[interaction].id)
-                    ).substring(0, 40)
+                        String(this.interactions[interaction].file_hash)
+                    ).substring(0, 20)
                 ),
                 // Create the abstract for the interaction
-                this.util.makeParagraph(
-                    this.interactions[interaction].abstract,
-                    {fontSize: this.util.halfFontSize * 1.5}
-                ),
-                // NOTE: Early reviews by users show topcis are confusing
-                // this.util.makeHeading2('Topics'), 
-                // topicTable,
-                metadataStrip
+                this.textWidgets.makeParagraph(this.interactions[interaction].abstract),
+                metadataStrip,
+                this.textWidgets.makeHeading2('Tags'),
+                tagsTable,
+                this.textWidgets.makeHeading2('Proto-Requirements'),
+                protoRequirementsTable
             )
         }
 
         references.splice(0,0,
             // Section intro
-            this.util.makeParagraph(
-                'The Mediumroast for GitHub automatically generated this section.' +
-                ' It includes key metadata from each interaction associated to the object ' + this.objectName +
-                '.  If this report document is produced as a package, instead of standalone, then the' +
-                ' hyperlinks are active and will link to documents on the local folder after the' +
-                ' package is opened. ' +
-                `Note that the total estimated reading time for all interactions is ${totalReadingTime} minutes.`
+            this.textWidgets.makeParagraph(
+                'The Mediumroast for GitHub automatically generated this section. ' +
+                `It includes key metadata from each interaction associated to the company ${this.objectName}. ` +
+                'If this report is produced as a package, then hyperlinks are present and will link to documents ' +
+                'on the local system. ' +
+                `Note the total estimated reading time for all interactions is ${totalReadingTime} minutes.`
             )
         )
 
@@ -340,23 +370,24 @@ class InteractionStandalone extends BaseInteractionsReport {
      * @param {String} creator - A string defining the creator for this document
      * @param {String} authorCompany - A string containing the company who authored the document
      */
-    constructor(interaction, company, creator, authorCompany, env) {
-        super([interaction], 'Interaction', interaction.name, env)
-        this.creator = creator
-        this.author = authorCompany
-        this.authorCompany = authorCompany
-        this.authoredBy = 'Mediumroast for GitHub'
-        this.title = interaction.name + ' Interaction Report'
-        this.interaction = interaction
-        this.company = company
-        this.description = `An Interaction report summarizing ${interaction.name}.`
+    constructor(interaction, company, env, allObjects, author='Mediumroast for GitHub') {
+        super(interaction, 'Interaction', interaction[0].name, env)
+        this.creator = author
+        this.author = author
+        this.authorCompany = author
+        this.authoredBy = author
+        this.title = `${interaction[0].name} Interaction Report`
+        this.interaction = interaction[0]
+        this.company = company[0]
+        this.allObjects = allObjects
+        this.description = `An Interaction report summarizing ${this.interaction.name}.`
         this.introduction = 'This document was automatically generated by Mediumroast for GitHub.' +
             ' It includes an abstract, tags and proto-requirement for this Interaction.' + 
             '  If this report is produced as a package, then the' +
             ' hyperlinks are active and will link to documents on the local folder after the' +
             ' package is opened.'
-        this.abstract = interaction.abstract
-        this.tags = this.util.rankTags(this.interaction.tags)
+        this.abstract = this.interaction.abstract
+        this.tags = this.interaction.tags
         this.topics = this.interaction.topics
     }
 
@@ -396,7 +427,7 @@ class InteractionStandalone extends BaseInteractionsReport {
      */
     async makeDOCX(fileName, isPackage) {
         // Initialize the working directories
-        this.util.initDirectories()
+        this.util.initReportWorkspace()
 
         // If fileName isn't specified create a default
         fileName = fileName ? fileName : `${this.env.outputDir}/${this.interaction.name.replace(/ /g,"_")}.docx`
@@ -414,21 +445,18 @@ class InteractionStandalone extends BaseInteractionsReport {
         const authoredBy = `Authored by: ${this.authoredBy}`
         const preparedFor = `${this.objectType}: `
 
-        // Construct the company section
-        const companySection = new CompanySection(this.company, this.env)
-
         // Construct the dashboard section
         const myDash = new InteractionDashboard(this.env)
 
         // Set up the default options for the document
         const myDocument = [].concat(
-            this.util.makeIntro(this.introduction),
+            this.textWidgets.makeIntro(this.introduction),
             [
-                this.util.makeHeading1('Abstract'),
-                this.util.makeParagraph(this.abstract),
-                this.util.makeHeading1('Tags'),
-                this.util.tagsTable(this.tags),
-                this.util.makeHeading1('Proto-Requirements'),
+                this.textWidgets.makeHeading1('Abstract'),
+                this.textWidgets.makeParagraph(this.abstract),
+                this.textWidgets.makeHeading1('Tags'),
+                this.tableWidgets.tagsTable(this.tags),
+                this.textWidgets.makeHeading1('Proto-Requirements'),
                 super.protorequirementsTable(this.topics),
             ])
     
@@ -439,10 +467,10 @@ class InteractionStandalone extends BaseInteractionsReport {
             title: this.title,
             description: this.description,
             background: {
-                color: this.util.documentColor,
+                color: this.textWidgets.themeSettings.documentColor,
             },
-            styles: {default: this.util.styling.default},
-            numbering: this.util.styling.numbering,
+            styles: {default: this.textWidgets.styles.default},
+            numbering: this.textWidgets.styles.numbering,
             sections: [
                 {
                     properties: {
@@ -453,28 +481,29 @@ class InteractionStandalone extends BaseInteractionsReport {
                         },
                     },
                     headers: {
-                        default: this.util.makeHeader(this.interaction.name, preparedFor, {landscape: true})
+                        default: this.textWidgets.makeHeader(this.interaction.name, preparedFor, {landscape: true})
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter(authoredBy, preparedOn, {landscape: true})]
+                            children: [this.textWidgets.makeFooter(authoredBy, preparedOn, {landscape: true})]
                         })
                     },
                     children: [
                         await myDash.makeDashboard(
                             this.interaction, 
-                            this.company
+                            this.company,
+                            isPackage
                         )
                     ],
                 },
                 {
                     properties: {},
                     headers: {
-                        default: this.util.makeHeader(this.interaction.name, preparedFor)
+                        default: this.textWidgets.makeHeader(this.interaction.name, preparedFor)
                     },
                     footers: {
                         default: new docx.Footer({
-                            children: [this.util.makeFooter(authoredBy, preparedOn)]
+                            children: [this.textWidgets.makeFooter(authoredBy, preparedOn)]
                         })
                     },
                     children: myDocument,

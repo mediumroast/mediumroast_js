@@ -43,14 +43,20 @@ function createCompanyWebLinkList (company) {
     ]
     // If the company is public then add the public properties
     if (company.company_type === 'Public') {
-        listItems.push(
-            [mrMarkdownBuilder.link(`Google Finance`, company.google_finance_url)],
-            [mrMarkdownBuilder.link(`Most Recent 10-K Filing`, company.recent10k_url)],
-            [mrMarkdownBuilder.link(`Most Recent 10-Q Filing`, company.recent10q_url)],
-            [mrMarkdownBuilder.link(`SEC EDGAR Firmographics`, company.firmographics_url)],
-            [mrMarkdownBuilder.link(`All Filings for ${company.name}`, company.filings_url)],
-            [mrMarkdownBuilder.link(`Shareholder Transactions`, company.owner_transactions_url)]
-        )
+        const propertyToName = {
+            google_finance_url: 'Google Finance', 
+            recent10k_url: 'Most Recent 10-K Filing', 
+            recent10q_url: 'Most Recent 10-Q Filing', 
+            firmographics_url: 'SEC EDGAR Firmographics', 
+            filings_url: `All Filings for ${company.name}`, 
+            owner_transactions_url: 'Shareholder Transactions'
+        }
+        for (const property in [
+            'google_finance_url', 'recent10k_url', 'recent10q_url', 'firmographics_url', 'filings_url', 'owner_transactions_url']
+        ) {
+            if (company[property] !== 'Unknown') { continue }
+            listItems.push([mrMarkdownBuilder.link(propertyToName[property], company[property])])
+        }
     }
     // Create the table
     return mrMarkdownBuilder.h2('Key Web Links') + "\n" + mrMarkdownBuilder.ul(listItems)

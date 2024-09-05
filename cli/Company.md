@@ -1,5 +1,5 @@
 ## Companies
-Company objects are central to Mediumroast for GitHub. Interaction sand in the future Studies rely on Companies to function. After setup is run, via `mrcli setup`, two companies are present to work with.  Additional Companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
+Company objects are central to Mediumroast for GitHub. Interactions and in the future Studies rely on Companies to function. After setup is run, via `mrcli setup`, two companies are present to work with.  Additional Companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
 
 ### Notice
 Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
@@ -100,6 +100,17 @@ A command line prompt based wizard steps the user through either a semi-automate
 
 <img width="1178" alt="companies_add" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d948fce2-6c31-4537-983d-9dad4c04c248">
 
+## Report on a company
+Produce a MS Word document report on a company.  The report includes a dashboard with a company similarity report, company firmographics, detail on similar companies, and summaries for all interactions associated to the company reported on.  The report is stored in the `$HOME/Documents` directory as `<company_name>.docx`.
 
+Optionally, if the `--package` switch is used the report is zipped and stored in the $HOME/Documents directory as `<company_name>.zip` including all of the interactions associated to the company and the set of most and least similar companies. 
+
+### Command(s) run
+- `mrcli c --report="Atlassian Corp"`
+- `mrcli c --report="Atlassian Corp" --package`
+
+### Screenshot of the report dashboard
+
+![Screenshot 2024-09-03 at 8 23 29 AM](https://github.com/user-attachments/assets/bd1141cc-53c6-4cac-8e56-ed50601dcbb6)
 
 

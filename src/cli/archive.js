@@ -1,18 +1,32 @@
 /**
- * A class used to create or restore from a ZIP based arhive package
- * @author Michael Hay <michael.hay@mediumroast.io>
- * @file archive.js
- * @copyright 2023 Mediumroast, Inc. All rights reserved.
+ * @fileoverview A class used to create or restore from a ZIP based arhive package
  * @license Apache-2.0
  * @version 2.0.1
+ * 
+ * @author Michael Hay <michael.hay@mediumroast.io>
+ * @file archive.js
+ * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * 
+ * @class ArchivePackage
+ * @classdesc A class designed to enable consistent ZIP packaging for mediumroat.io archives/backups
+ * 
+ * @requires adm-zip
+ * 
+ * @exports ArchivePackage
+ * 
+ * @example
+ * import ArchivePackage from './archive.js'
+ * const archive = new ArchivePackage('myArchive.zip')
+ * const createStatus = await archive.createZIPArchive('myDirectory')
+ * const extractStatus = await archive.extractZIPArchive('myDirectory')
+ * 
  */
 
 // Import required modules
 import zip from 'adm-zip'
 
 class ArchivePackage {    
-    /**
-     * A class designed to enable consistent ZIP packaging for mediumroat.io archives/backups 
+    /** 
      * @constructor
      * @classdesc Apply consistent operations to ZIP packages to enable users to backup and restore
      * @param {String} packageName - the name of the package to either create or extract depending upoon the operation called

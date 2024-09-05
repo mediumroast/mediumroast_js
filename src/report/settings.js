@@ -3,13 +3,13 @@ import docx from 'docx'
 const docxSettings = {
     general: {
         halfFontSize: 11,
-        fullFontSize: 22,
+        fullFontSize: 11 * 2, // Note these are in half points, so 22 * 2 = 44
         headerFontSize: 18,
         footerFontSize: 18,
         fontFactor: 1,
         dashFontSize: 22,
-        tableFontSize: 8,
-        titleFontSize: 18,
+        tableFontSize: 9 * 2, // Note these are in half points, so 9 * 2 = 18
+        titleFontSize: 30,
         companyNameFontSize: 11.5,
         metricFontTitleSize: 11,
         metricFontSize: 48,
@@ -26,7 +26,6 @@ const docxSettings = {
         font: "Avenir Next",
         heavyFont: "Avenir Next Heavy",
         lightFont: "Avenir Next Light"
-
     },
     coffee: {
         tableBorderColor: "4A7E92", // Light Blue
@@ -50,12 +49,12 @@ const docxSettings = {
         documentColor: "0F0D0E", // Coffee black
         titleFontColor: "C7701E", // Saturated Light Blue
         textFontColor: "C7701E", // Ultra light Blue
-        chartAxisLineColor: "#374246",
-        chartAxisFontColor: "rgba(71,121,140, 0.7)",
-        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
-        chartItemFontColor: "rgba(149,181,192, 0.9)",
-        chartSeriesColor: "rgb(71,113,128)",
-        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
+        chartAxisLineColor: "rgba(134,84,28, 0.9)",
+        chartAxisFontColor: "rgba(199,112,30, 0.7)",
+        chartAxisTickFontColor: "rgba(199,112,30, 0.6)",
+        chartItemFontColor: "rgba(199,112,30, 0.9)",
+        chartSeriesColor: "rgb(199,112,30, 0.7)",
+        chartSeriesBorderColor: "rgba(90,56,19, 0.9)", 
         highlightFontColor: ""
     },
     latte: {
@@ -65,12 +64,12 @@ const docxSettings = {
         documentColor: "F1F0EE", // Coffee black
         titleFontColor: "25110f", // Saturated Light Blue
         textFontColor: "25110f", // Ultra light Blue
-        chartAxisLineColor: "#374246",
-        chartAxisFontColor: "rgba(71,121,140, 0.7)",
-        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
-        chartItemFontColor: "rgba(149,181,192, 0.9)",
-        chartSeriesColor: "rgb(71,113,128)",
-        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
+        chartAxisLineColor: "rgba(66,24,17, 0.9)",
+        chartAxisFontColor: "rgba(37,17,15, 0.7)",
+        chartAxisTickFontColor: "rgba(205,183,160, 0.6)",
+        chartItemFontColor: "rgb(27,12,10, 0.7)",
+        chartSeriesColor: "rgb(27,12,10, 0.7)",
+        chartSeriesBorderColor: "rgba(205,183,160, 0.9)", 
         highlightFontColor: ""
     } 
 } 

@@ -11,6 +11,7 @@
  * @classdesc Core functions needed to interact with the GitHub API for mediumroast.io.
  * 
  * @requires octokit
+ * @requires axios
  * 
  * @exports GitHubFunctions
  * 
@@ -20,6 +21,7 @@
  */
 
 import { Octokit } from "octokit"
+import axios from "axios"
 
 
 class GitHubFunctions {
@@ -181,6 +183,120 @@ class GitHubFunctions {
         } catch (err) {
             return[false, err.message]
         }
+    }
+
+    /**
+     * @async
+     * @function getWorkflowRuns
+     * @description Gets all of the workflow runs for the repository
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the response or error message.
+     */
+    async getWorkflowRuns () {
+        let workflows
+        try {
+            workflows = await this.octCtl.rest.actions.listWorkflowRunsForRepo({
+                owner: this.orgName,
+                repo: this.repoName
+            })
+        } catch (err) {
+            return [false, {status_code: 500, status_msg: err.message}, err]
+        }
+    
+        const workflowList = []
+        let totalRunTimeThisMonth = 0
+        for (const workflow of workflows.data.workflow_runs) {
+            // Get the current month
+            const currentMonth = new Date().getMonth()
+            
+            // Compute the runtime and if the time is less than 60s round it to 1m
+            const runTime = Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60) < 1 ? 1 : Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60)
+    
+            // If the month of the workflow is not the current month, then skip it
+            if (new Date(workflow.updated_at).getMonth() !== currentMonth) {
+                continue
+            }
+            totalRunTimeThisMonth += runTime
+    
+            // Add the workflow to the workflowList
+            workflowList.push({
+                // Create name where the path is the name of the workflow, but remove the path and the .yml extension
+                name: workflow.path.replace('.github/workflows/', '').replace('.yml', ''),
+                title: workflow.display_title,
+                id: workflow.id,
+                workflowId: workflow.workflow_id,
+                runTimeMinutes: runTime,
+                status: workflow.status,
+                conclusion: workflow.conclusion,
+                event: workflow.event,
+                path: workflow.path,
+            })
+        }
+    
+        // Sort the worflowList to put the most recent workflows first
+        workflowList.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+        
+        return [true, {
+            status_code: 200, 
+            status_msg: `discovered [${workflowList.length}] workflow runs for [${this.repoName}]`,}, 
+            workflowList
+        ]
+    }
+
+    // Create a method using the octokit to get the size of the repository and return the size in MB
+    async getRepoSize() {
+        let repoData = {
+            size: 0,
+            numFiles: 0,
+            name: this.repoName,
+            org: this.orgName,
+        }
+        // Count the number of files in the repository
+        const countFiles = async (path = '') => {
+            try {
+                const response = await this.octCtl.rest.repos.getContent({
+                    owner: this.orgName,
+                    repo: this.repoName,
+                    path: path
+                })
+    
+                let fileCount = 0;
+                for (const item of response.data) {
+                    if (item.type === 'file') {
+                        fileCount += 1;
+                    } else if (item.type === 'dir') {
+                        fileCount += await countFiles(item.path)
+                    }
+                }
+                return fileCount
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.numFiles = await countFiles()
+        } catch (err) {
+            repoData.numFiles = 'Unknown'
+        }
+
+        const getRepoSize = async () => {
+            try {
+                const response = await this.octCtl.rest.repos.get({
+                    owner: this.orgName,
+                    repo: this.repoName
+                })
+                const sizeInKB = response.data.size;
+                const sizeInMB = sizeInKB / 1024;
+                return sizeInMB.toFixed(2); // Convert to MB and format to 2 decimal places
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.size = await getRepoSize()
+        } catch (err) {
+            repoData.size = 'Unknown'
+        }
+        return [true, {status_code: 200, status_msg: `discovered size of [${this.repoName}]`}, repoData]
     }
 
     /**
@@ -398,6 +514,134 @@ class GitHubFunctions {
             return [false, `FAILED: Unable to unlock the container [${containerName}]`, null]
         }
     }
+
+    /**
+     * Read a blob (file) from a container (directory) in a specific branch.
+     *
+     * @param {string} fileName - The name of the blob to read with a complete path to the file (e.g. dirname/filename.ext).
+     * @returns {Array} A list containing a boolean indicating success or failure, a status message, and the blob's raw data (or the error message in case of failure).
+     */
+    async readBlob(fileName) {
+        // Encode the file name including files with special characters like question marks
+        // Custom encoding function to handle special characters
+        const customEncodeURIComponent = (str) => {
+            return str.split('').map(char => {
+                return encodeURIComponent(char).replace(/[!'()*]/g, (c) => {
+                    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+                });
+            }).join('');
+        }
+        const originalFileNameEncoded = customEncodeURIComponent(fileName)
+
+
+        // Try to download the file from the repository using the download URL
+        const downloadFile = async (url) => {
+            try {
+                const downloadResult = await axios.get(url, { responseType: 'arraybuffer' })
+                return [true, downloadResult.data]
+            } catch (e) {
+                if (e instanceof TypeError && (e.message.includes('Request path contains unescaped characters') || e.message.includes('ERR_UNESCAPED_CHARACTERS'))) {
+                    // Handle the specific error here
+                    // For example, you can re-encode the URL or log the error
+                    return [false, 'ERR_UNESCAPED_CHARACTERS']
+                }
+                return [false, e]
+            }
+        }
+
+        // Re-encode the download URL
+        const reEncodeDownloadUrl = (url, originalFileName) => {
+            // Extract the base URL and the file name part
+            let urlParts = url.split('/');
+            const lastPart = urlParts.pop(); // Get the last part of the URL which contains the file name and possibly query parameters
+            // Remove the last item from the URL parts
+            urlParts.pop()
+        
+            // Find the position of the first question mark that indicates the start of query parameters
+            const altLastPart = lastPart.split('?')
+            const queryParams = altLastPart[altLastPart.length - 1]
+        
+            // Encode the file name part using encodeURIComponent
+            // const encodedFileNamePart = encodeURIComponent(fileNamePart);
+        
+            // Reconstruct the download URL
+            return `${urlParts.join('/')}/${originalFileName}${queryParams ? '?' + queryParams : ''}`;
+        }
+        
+
+        // Encode the file name and obtain the download URL
+        const encodedFileName = encodeURIComponent(fileName)
+        
+        // Set the object URL
+        const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+        // Set the headers
+        const headers = { 'Authorization': `token ${this.token}` }
+        
+        // Obtain the download URL
+        const result = await axios.get(objectUrl, { headers })
+        let downloadUrl = result.data.download_url
+
+        // Attempt to download the file from the repository
+        let blobData = await downloadFile(downloadUrl)
+
+        // Check if the file was downloaded successfully
+        if (blobData[0]) {
+            return [
+                true,
+                { status_code: 200, status_msg: `read object [${fileName}]` },
+                blobData[1]
+            ]
+        
+        // In this case, the error is due to unescaped characters in the URL and we need to re-encode the file name 
+        } else {
+            // Put an if statement here to check if the error is due to unescaped characters by checking the error message
+            if (blobData[1] === 'ERR_UNESCAPED_CHARACTERS') {
+
+                downloadUrl = reEncodeDownloadUrl(downloadUrl, originalFileNameEncoded)
+
+                // Try to download the file from the repository again
+                blobData = await downloadFile(downloadUrl)
+                if (blobData[0]) {
+                    return [
+                        true,
+                        { status_code: 200, status_msg: `read object [${fileName}]` },
+                        blobData[1]
+                    ]
+                } 
+            }    
+        }
+        return [
+            false,
+            { status_code: 503, status_msg: `unable to read object [${fileName}] due to [${blobData[1]}].` },
+            blobData[1]
+        ]
+
+    }
+
+    // async readBlob(fileName) {
+    //     // Encode the file name and obtain the download URL
+    //     const encodedFileName = encodeURIComponent(fileName)
+        
+    //     // Set the object URL
+    //     const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+    //     // Set the headers
+    //     const headers = { 'Authorization': `token ${this.token}` }
+        
+    //     // Obtain the download URL
+    //     const result = await axios.get(objectUrl, { headers })
+    //     console.log(result)
+    //     let downloadUrl = result.data.download_url
+    //     // try {
+    //         const downloadResult = await axios.get(downloadUrl, { responseType: 'arraybuffer' })
+    //         // console.log(downloadResult)
+    //         return [true, downloadResult, downloadUrl]
+    //     // } catch (e) {
+    //         // console.log(e)
+    //         // return [false, e, downloadUrl]
+    //     // }
+    // }
 
     // Create a method using the octokit called deleteBlob to delete a file from the repo
     async deleteBlob(containerName, fileName, branchName, sha) {
@@ -902,68 +1146,6 @@ class GitHubFunctions {
     
         // Return success with number of objects written
         return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
-    }
-
-    // Use fs to read all the files in the actions directory recursively
-    generateActionsManifest(dir, filelist) {
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename)
-        dir = dir || path.resolve(path.join(__dirname, './actions') )
-        const files = fs.readdirSync(dir)
-        filelist = filelist || []
-        files.forEach((file) => {
-            // Skip .DS_Store files and node_modules directories
-            if (file === '.DS_Store' || file === 'node_modules') {
-                return
-            }
-            if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                filelist = generateActionsManifest(path.join(dir, file), filelist) 
-            }
-            else {
-                // Substitute .github for the first part of the path, in the variable dir
-                // Log dir to the console including if there are any special characters
-                if (dir.includes('./')) {
-                    dir = dir.replace('./', '')
-                }
-                // This will be the repository name
-                let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
-
-                filelist.push({
-                    fileName: file,
-                    containerName: dotGitHub,
-                    srcURL: new URL(path.join(dir, file), import.meta.url)
-                })
-            }
-        })
-        return filelist
-    } 
-
-    async installActions() {
-        let actionsManifest = this.generateActionsManifest()
-        // Loop through the actionsManifest and install each action
-        await actionsManifest.forEach(async (action) => {
-            let status = false
-            let blobData
-            try {
-                // Read in the blob file
-                blobData = fs.readFileSync(action.srcURL, 'base64')
-                status = true
-            } catch (err) {
-                return [false, 'Unable to read file [' + action.fileName + '] because: ' + err, null]
-            }
-            if(status) {
-                // Install the action
-                const installResp = await this.writeBlob(
-                    action.containerName, 
-                    action.fileName, 
-                    blobData, 
-                    'main'
-                )
-            } else {
-                return [false, 'Failed to read item [' + action.fileName + ']', null]
-            }
-        })
-        return [true, 'All actions installed', null]
     }
 
 }
