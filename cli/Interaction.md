@@ -110,7 +110,16 @@ A command line prompt based wizard steps the user through a semi-automated proce
 
 https://github.com/mediumroast/mediumroast_js/assets/10818650/0b28db90-d6ba-4224-a9ae-4c301c2b9614
 
+## Report on an interaction
+Produce a MS Word document report on an interaction.  The report includes a dashboard with interaction metadata, interaction abstract, and proto-requirements.  The report is stored in the `$HOME/Documents` directory as `<interaction_name>.docx`.
 
+Optionally, if the `--package` switch is used the report is zipped and stored in the $`HOME/Documents` directory as `<interaction_name>.zip` including the interaction content. 
+
+### Command(s) run
+- `mrcli i --report="Atlassian Corp"`
+- `mrcli i --report="Atlassian Corp" --package`
+
+### Screenshot of the report dashboard
 
 
 

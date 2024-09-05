@@ -134,8 +134,6 @@ if (myArgs.report) {
       company, // The company associated to the interaction
       myEnv, // The environment settings
       allObjects, // All objects
-      fileName, // The file name
-      myArgs.package // The package flag
    )
 
    if(myArgs.package) {

@@ -250,6 +250,7 @@ class Charting {
 
         // Send to the chart server
         const putResult = await this._postToChartServer(myChart, this.env.echartsServer)
+        // console.log(putResult)
         const myFullPath = path.resolve(this.workingImageDir, chartFile)
         fs.writeFileSync(myFullPath, putResult[2])
         return myFullPath
