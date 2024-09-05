@@ -111,5 +111,6 @@ Optionally, if the `--package` switch is used the report is zipped and stored in
 
 ### Screenshot of the report dashboard
 
+![Screenshot 2024-09-03 at 8 23 29 AM](https://github.com/user-attachments/assets/bd1141cc-53c6-4cac-8e56-ed50601dcbb6)
 
 
