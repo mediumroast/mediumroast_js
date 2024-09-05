@@ -26,11 +26,18 @@ Reports storage consumed by **Mediumroast for GitHub**. A screenshot showing the
 - `mrcli t`
 - `mrcli storage`
 
+### Screenshot with ouput
+![Screenshot 2024-09-04 at 8 23 17 PM](https://github.com/user-attachments/assets/dba9738f-e093-4415-9ec7-1031f66cf6d1)
+
 ## Actions
 Reports actions minutes consumed by **Mediumroast for GitHub** and enables a user to update their repository as new versions of actions are released. A screenshot showing the usage information and outputs for major functions is included below.
 ### Command(s) run
 - `mrcli actions`
 - `mrcli a --update`
+
+### Screenshot with ouput
+![Screenshot 2024-09-04 at 8 23 55 PM](https://github.com/user-attachments/assets/d9ea51fc-7609-4abb-9cbe-6e010baacb50)
+
 
 ## User reporting
 Reports on all users who can access the repository that contains the **Mediumroast for GitHub**. A screenshot showing the usage information and outputs for major functions is included below, and notice, user names and other personally identifiable information has been redacted from the screenshot below.
