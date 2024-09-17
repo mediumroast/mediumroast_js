@@ -2,7 +2,7 @@
 Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.
 
 ### Notices 
-- A new version of the CLI is available and documentation is in progress.  The major focus of this version is to add in Competitive Similarity Analysis, Interaction summarization and Interaction Proto-requirements discovery. 
+- A new version of the CLI is available and the major focus of this version is to add in Competitive Similarity Analysis, Interaction summarization and Interaction Proto-requirements discovery. 
 - You can review the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display. 
 
 ## Installation and configuration
@@ -34,13 +34,13 @@ Assuming the preinstallation requirements, installation of *node.js* and *npm*, 
 #### For WinOS
 Coming soon.
 
-## Step 3.1 - Upgrade the CLI
+### Step 3.1 - Upgrade the CLI
 After installation there are times when you may want to upgrade the CLI to the latest version, run the following.
 
 1. Global upgrade for all users: `sudo npm i -g mediumroast_js`
 2. Local upgrade for a developer or single user: `npm i mediumroast_js`
 
-## Step 3.2 - Upgrade Actions
+### Step 3.2 - Upgrade Actions
 After upgrading the CLI it may be necessary to upgrade the actions in the repository.  To do this run `mrcli actions --update` and the actions will be updated to the latest version.
 
 ### Step 4.1 - Setup the CLI
@@ -48,14 +48,23 @@ Before you can use the Mediumroast for GitHub [CLI](https://github.com/mediumroa
 
 Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` to contain all interactions and companies, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
 
-## Step 4.2 - Setup the CLI after initial setup
+### Step 4.2 - Setup the CLI after initial setup
 Running `mrcli setup` a second time on an existing repository will not create a new one, instead it will detect the existing repository and prompt to update your authentication method and report theme. This is used typically when another user in your organization needs to access the repository. 
 
-### Warning
-Since Mediumroast for GitHub creates a regular repository you can interact with it as normal, but **doing so is not recommended**. If you interact with the repository, in regular ways, this could result in Mediumroast for GitHub becoming inoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
+### Step 5.1 - Verify your installation via the CLI
+After the setup process is complete you can verify the installation by running `mrcli company` to see the companies in the repository.
 
-### Example screenshot of in repository companies report
+#### Exzmple screenshot of companies table
+<img width="1178" alt="companies_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/af9d22d8-4161-4ae9-9c57-06b65769a54e">
+
+### Step 5.2 - Verify your installation via GitHub actions
+Additionally, two GitHub Actions are installed in the repository, one to clean up branches and the other to generate reports.  To verify the actions are installed browse to the repository and click on the `Actions` tab to see the actions running. These actions are set to run on a schedule, but can be run manually.  When a run you'll find an automatically generated `README.md` file in the repository and links to company reports in the `README.md`, an example screenshot of the repository companies report is below.
+
+#### Example screenshot of in repository companies report
 <img width="1001" alt="companies" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/23fbd53f-dbfe-4106-a18d-5d13e0b5ce2b">
+
+## Warning
+Since Mediumroast for GitHub creates a regular repository you can interact with it as normal, but **doing so is not recommended**. If you interact with the repository, in regular ways, this could result in Mediumroast for GitHub becoming inoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
 
 ## Contributing
 If you're interested in contributing to the Mediumroast for GitHub project, please review the [CONTRIBUTING.md](https://github.com/mediumroast/mediumroast_js/blob/.github/CONTRIBUTING.md) file in the `.github` directory of the repository.  The file contains information on how to get started, how to clone the repository, and how to install the SDK for development.
