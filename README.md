@@ -1,4 +1,4 @@
-## Welcome to Open Source Mediumroast for GitHub.
+## Welcome Mediumroast for GitHub
 Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.
 
 ### Notices 
@@ -34,21 +34,22 @@ Assuming the preinstallation requirements, installation of *node.js* and *npm*, 
 #### For WinOS
 Coming soon.
 
-### Step 3 - Setup the CLI
-Before you can use the Mediumroast for GitHub [CLI](https://github.com/mediumroast/mediumroast_js/blob/main/cli/README.md) the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in CLI README.
-
-## Step 4 - Upgrade the CLI
+## Step 3.1 - Upgrade the CLI
 After installation there are times when you may want to upgrade the CLI to the latest version, run the following.
 
 1. Global upgrade for all users: `sudo npm i -g mediumroast_js`
 2. Local upgrade for a developer or single user: `npm i mediumroast_js`
 
-Once you have upgraded the CLI you may need to update the GitHub Actions in your repository.  To do this, run `mrcli actions --update`. This will install the latest actions in your repository.
+## Step 3.2 - Upgrade Actions
+After upgrading the CLI it may be necessary to upgrade the actions in the repository.  To do this run `mrcli actions --update` and the actions will be updated to the latest version.
 
-## What's provided
+### Step 4.1 - Setup the CLI
+Before you can use the Mediumroast for GitHub [CLI](https://github.com/mediumroast/mediumroast_js/blob/main/cli/README.md) the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in CLI README.
+
 Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` to contain all interactions and companies, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
 
-Note, if you run the `mrcli setup` command more than once, it will detect the existing repository and not create a new one. However, it will prompt you to update your authentication method and report theme.  Finally, if someone has already run `setup` in your organization, the CLI will detect this and not create a new repository, but instead prompt you for your authentication method and report theme.
+## Step 4.2 - Setup the CLI after initial setup
+Running `mrcli setup` a second time on an existing repository will not create a new one, instead it will detect the existing repository and prompt to update your authentication method and report theme. This is used typically when another user in your organization needs to access the repository. 
 
 ### Warning
 Since Mediumroast for GitHub creates a regular repository you can interact with it as normal, but **doing so is not recommended**. If you interact with the repository, in regular ways, this could result in Mediumroast for GitHub becoming inoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
