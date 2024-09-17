@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK and CLI Module: GitHubFunctions</title>
+	<title>Mediumroast for GitHub SDK and CLI Module: baseObjects</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,7 +80,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Module: GitHubFunctions</h1>
+	<h1 class="page-title">Module: baseObjects</h1>
 <section>
 
 <header>
@@ -92,7 +92,7 @@
     <div class="container-overview">
     
         
-            <div class="description"><p>github.js</p></div>
+            <div class="description"><p>gitHubServer.js</p></div>
         
 
         
@@ -103,7 +103,7 @@
 	<dt class="tag-version method-doc-label method-doc-details-label">Version:</dt>
 	<dd class="tag-version">
 		<ul class="dummy">
-			<li>1.0.0</li>
+			<li>2.0.0</li>
 		</ul>
 	</dd>
 	
@@ -158,8 +158,8 @@
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-1">line 1</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-1">line 1</a>
 			</li>
 		</ul>
 	</dd>
@@ -176,8 +176,20 @@
         
             <h3>Example</h3>
             
-    <pre class="sunlight-highlight-javascript">const gitHubCtl = new GitHubFunctions(accessToken, myOrgName, &#x27;mr-cli-setup&#x27;)
-const createRepoResp = await gitHubCtl.createRepository()</pre>
+    <pre class="sunlight-highlight-javascript">import {Companies, Interactions, Users, Billings} from &#x27;./api/gitHubServer.js&#x27;
+const companies = new Companies(token, org, processName)
+const interactions = new Interactions(token, org, processName)
+const users = new Users(token, org, processName)
+const billings = new Billings(token, org, processName)
+
+const allCompanies = await companies.getAll()
+const allInteractions = await interactions.getAll()
+const allUsers = await users.getAll()
+const allBillings = await billings.getAll()
+
+const company = await companies.findByName(&#x27;myCompany&#x27;)
+const interaction = await interactions.findByName(&#x27;myInteraction&#x27;)
+const user = await users.findByName(&#x27;myUser&#x27;)</pre>
 
 
         
@@ -190,12 +202,40 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
         <h3 class="subsection-title">Requires</h3>
 
         <ul>
-            <li>module:octokit</li>
+            <li><a href="module-GitHubFunctions.html">module:GitHubFunctions</a></li>
         
-            <li>module:axios</li>
+            <li>module:crypto</li>
+        
+            <li>module:fs</li>
+        
+            <li>module:path</li>
+        
+            <li>module:fileURLToPath</li>
         </ul>
     
 
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-baseObjects-Actions.html">Actions</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-baseObjects-Companies.html">Companies</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-baseObjects-Interactions.html">Interactions</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-baseObjects-Storage.html">Storage</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-baseObjects-Studies.html">Studies</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-baseObjects-Users.html">Users</a></dt>
+            <dd></dd>
+        </dl>
     
 
     
@@ -211,7 +251,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
             
 <hr>
 <dt>
-    <h4 class="name" id="~createContainers"><span class="type-signature">&lt;inner> </span>createContainers()</h4>
+    <h4 class="name" id="~createObj"><span class="type-signature">&lt;async, inner> </span>createObj(objs)</h4>
     
     
 </dt>
@@ -219,7 +259,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 
     
     <div class="description">
-        <p>Creates the top level Study, Company and Interaction containers for all mediumroast.io assets</p>
+        <p>Create objects in the mediumroast.io application</p>
     </div>
     
 
@@ -228,6 +268,56 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>objs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the objects to create in the backend</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -265,8 +355,8 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-302">line 302</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-134">line 134</a>
 			</li>
 		</ul>
 	</dd>
@@ -295,7 +385,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
             
 <div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the responses or error messages.</p>
+    <p>the results from the called function mrRest class</p>
 </div>
 
 
@@ -323,7 +413,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
             
 <hr>
 <dt>
-    <h4 class="name" id="~createRepository"><span class="type-signature">&lt;inner> </span>createRepository()</h4>
+    <h4 class="name" id="~deleteObj"><span class="type-signature">&lt;async, inner> </span>deleteObj(id, endpoint)</h4>
     
     
 </dt>
@@ -331,7 +421,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 
     
     <div class="description">
-        <p>Creates a repository, at the organization level, for keeping track of all mediumroast.io assets</p>
+        <p>Delete an object in the mediumroast.io application</p>
     </div>
     
 
@@ -340,6 +430,80 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the object to be deleted in the mediumroast.io application</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>endpoint</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>defaults to findbyx and is combined with credential and version info</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -377,8 +541,8 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-152">line 152</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-204">line 204</a>
 			</li>
 		</ul>
 	</dd>
@@ -392,7 +556,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dt class="tag-todo method-doc-label method-doc-details-label">To Do:</dt>
 	<dd class="tag-todo">
 		<ul>
-			<li>Make sure the repo is not public</li>
+			<li>implment when available in the backend</li>
 			</ul>
 	</dd>
 	
@@ -414,7 +578,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
             
 <div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the created repo or error message.</p>
+    <p>the results from the called function mrRest class</p>
 </div>
 
 
@@ -442,7 +606,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
             
 <hr>
 <dt>
-    <h4 class="name" id="~getActionsBillings"><span class="type-signature">&lt;async, inner> </span>getActionsBillings()</h4>
+    <h4 class="name" id="~findById"><span class="type-signature">&lt;async, inner> </span>findById(id, endpoint)</h4>
     
     
 </dt>
@@ -450,7 +614,550 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 
     
     <div class="description">
-        <p>Gets the complete billing status for actions from the GitHub API</p>
+        <p>Find all objects by id from the mediumroast.io application</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the id of the object to find</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>endpoint</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>defaults to findbyx and is combined with credential and version info</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+	<dt class="important tag-deprecated method-doc-label method-doc-details-label">Deprecated:</dt>
+	
+    <dd class="yes-def tag-deprecated">
+        <ul class="dummy">
+            <li>Yes</li>
+        </ul>
+    </dd>
+    
+    
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-80">line 80</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>the results from the called function mrRest class</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="~findByName"><span class="type-signature">&lt;async, inner> </span>findByName(name)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Find all objects by name from the mediumroast.io application</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the name of the object to find</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-69">line 69</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>the results from the called function mrRest class</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="~findByX"><span class="type-signature">&lt;async, inner> </span>findByX(attribute, value)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Find all objects by attribute and value pair from the mediumroast.io application</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>attribute</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the attribute used to find objects</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the value for the defined attribute</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-96">line 96</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>the results from the called function mrRest class</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="~getAll"><span class="type-signature">&lt;async, inner> </span>getAll()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get all objects from the mediumroast.io application</p>
     </div>
     
 
@@ -496,8 +1203,8 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-116">line 116</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-59">line 59</a>
 			</li>
 		</ul>
 	</dd>
@@ -526,7 +1233,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
             
 <div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.</p>
+    <p>the results from the called function mrRest class</p>
 </div>
 
 
@@ -554,7 +1261,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
             
 <hr>
 <dt>
-    <h4 class="name" id="~getAllUsers"><span class="type-signature">&lt;async, inner> </span>getAllUsers()</h4>
+    <h4 class="name" id="~linkObj"><span class="type-signature">&lt;async, inner> </span>linkObj(objs)</h4>
     
     
 </dt>
@@ -562,7 +1269,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 
     
     <div class="description">
-        <p>Gets all of the users from the GitHub API</p>
+        <p>Link objects in the mediumroast.io application</p>
     </div>
     
 
@@ -571,6 +1278,56 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>objs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the objects to link in the backend</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -608,8 +1365,8 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-96">line 96</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-217">line 217</a>
 			</li>
 		</ul>
 	</dd>
@@ -638,7 +1395,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
             
 <div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.</p>
+    <p>the results from the called function mrRest class</p>
 </div>
 
 
@@ -666,7 +1423,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
             
 <hr>
 <dt>
-    <h4 class="name" id="~getGitHubOrg"><span class="type-signature">&lt;inner> </span>getGitHubOrg()</h4>
+    <h4 class="name" id="~updateObj"><span class="type-signature">&lt;async, inner> </span>updateObj(obj, endpoint)</h4>
     
     
 </dt>
@@ -674,7 +1431,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 
     
     <div class="description">
-        <p>If the GitHub organization exists retrieves the detail about it and returns to the caller</p>
+        <p>Update an object in the mediumroast.io application</p>
     </div>
     
 
@@ -683,6 +1440,80 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the object to update in the backend which includes the id and, the attribute and value to be updated</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>endpoint</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>defaults to findbyx and is combined with credential and version info</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -720,8 +1551,8 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-172">line 172</a>
+				<a href="gitHubServer.js.html">gitHubServer.js</a>,
+				 <a href="gitHubServer.js.html#sunlight-1-line-192">line 192</a>
 			</li>
 		</ul>
 	</dd>
@@ -750,352 +1581,7 @@ const createRepoResp = await gitHubCtl.createRepository()</pre>
     
             
 <div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the org or error message.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Array</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="~getStorageBillings"><span class="type-signature">&lt;async, inner> </span>getStorageBillings()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Gets the complete billing status for actions from the GitHub API</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-134">line 134</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Array</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="~getUser"><span class="type-signature">&lt;async, inner> </span>getUser()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Gets the authenticated user from the GitHub API</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-78">line 78</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-	<dt class="tag-todo method-doc-label method-doc-details-label">To Do:</dt>
-	<dd class="tag-todo">
-		<ul>
-			<li>Add a check to see if the user is a member of the organization</li>
-			
-			<li>Add a check to see if the user has admin rights to the organization</li>
-			</ul>
-	</dd>
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the user info or error message.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Array</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="~getWorkflowRuns"><span class="type-signature">&lt;async, inner> </span>getWorkflowRuns()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Gets all of the workflow runs for the repository</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="github.js.html">github.js</a>,
-				 <a href="github.js.html#sunlight-1-line-188">line 188</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>An array with position 0 being boolean to signify success/failure and position 1 being the response or error message.</p>
+    <p>the results from the called function mrRest class</p>
 </div>
 
 

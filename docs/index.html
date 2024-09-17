@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK Index</title>
+	<title>Mediumroast for GitHub SDK and CLI Index</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -21,7 +21,7 @@
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
-		alt="logo"/>Mediumroast for GitHub SDK</a>
+		alt="logo"/>Mediumroast for GitHub SDK and CLI</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -34,28 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu inline">
-					<li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -92,8 +85,6 @@
 
 
 
-    <h3>mediumroast_js 0.4.48</h3>
-
 
 
 
@@ -112,12 +103,16 @@
     <section class="readme-section">
         <article><h2>Welcome to Open Source Mediumroast for GitHub.</h2>
 <p>Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.</p>
-<p><strong>Notice:</strong> You can review the <a href="https://mediumroast.github.io/mediumroast_js/">GitHub Page Version</a> rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display.</p>
+<h3>Notices</h3>
+<ul>
+<li>A new version of the CLI is available and documentation is in progress.  The major focus of this version is to add in Competitive Similarity Analysis, Interaction summarization and Interaction Proto-requirements discovery.</li>
+<li>You can review the <a href="https://mediumroast.github.io/mediumroast_js/">GitHub Page Version</a> rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display.</li>
+</ul>
 <h2>Installation and configuration</h2>
 <p>Mediumroast for GitHub includes a <a href="https://github.com/apps/mediumroast-for-github">GitHub Application</a>, a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.</p>
 <h3>Preinstallation requirements</h3>
 <ol>
-<li>A GitHub organization, please</li>
+<li>A GitHub organization</li>
 <li>Permissions in your GitHub organization to install a GitHub application.</li>
 <li>Access to a command line terminal on Linux or MacOS.</li>
 <li><a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm">Node.js installed</a>, ideally globally for all users.</li>
@@ -143,12 +138,22 @@
 <p>Coming soon.</p>
 <h3>Step 3 - Setup the CLI</h3>
 <p>Before you can use the Mediumroast for GitHub <a href="https://github.com/mediumroast/mediumroast_js/blob/main/cli/README.md">CLI</a> the environment must be setup.  With the CLI installed please run <code>mrcli setup</code> to start the setup process, note there's a video of the setup process in CLI README.</p>
+<h2>Step 4 - Upgrade the CLI</h2>
+<p>After installation there are times when you may want to upgrade the CLI to the latest version, run the following.</p>
+<ol>
+<li>Global upgrade for all users: <code>sudo npm i -g mediumroast_js</code></li>
+<li>Local upgrade for a developer or single user: <code>npm i mediumroast_js</code></li>
+</ol>
+<p>Once you have upgraded the CLI you may need to update the GitHub Actions in your repository.  To do this, run <code>mrcli actions --update</code>. This will install the latest actions in your repository.</p>
 <h2>What's provided</h2>
-<p>Running <code>mrcli setup</code> creates a repository in your oganization called <code>&lt;organization_name&gt;_discovery</code> for all interactions and objects, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.</p>
+<p>Running <code>mrcli setup</code> creates a repository in your oganization called <code>&lt;organization_name&gt;_discovery</code> to contain all interactions and companies, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.</p>
+<p>Note, if you run the <code>mrcli setup</code> command more than once, it will detect the existing repository and not create a new one. However, it will prompt you to update your authentication method and report theme.  Finally, if someone has already run <code>setup</code> in your organization, the CLI will detect this and not create a new repository, but instead prompt you for your authentication method and report theme.</p>
 <h3>Warning</h3>
 <p>Since Mediumroast for GitHub creates a regular repository you can interact with it as normal, but <strong>doing so is not recommended</strong>. If you interact with the repository, in regular ways, this could result in Mediumroast for GitHub becoming inoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.</p>
 <h3>Example screenshot of in repository companies report</h3>
 <img width="1001" alt="companies" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/23fbd53f-dbfe-4106-a18d-5d13e0b5ce2b">
+<h2>Contributing</h2>
+<p>If you're interested in contributing to the Mediumroast for GitHub project, please review the <a href="https://github.com/mediumroast/mediumroast_js/blob/.github/CONTRIBUTING.md">CONTRIBUTING.md</a> file in the <code>.github</code> directory of the repository.  The file contains information on how to get started, how to clone the repository, and how to install the SDK for development.</p>
 <h2>Issues</h2>
 <p>If you detect a problem or want to suggest an improvement open an <a href="https://github.com/mediumroast/mediumroast_js/issues">issue</a> and we will work with you to resolve or respond.</p></article>
     </section>
@@ -200,7 +205,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Sun Mar 17th 2024
+		on Mon Sep 16th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

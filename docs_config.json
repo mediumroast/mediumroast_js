@@ -10,7 +10,7 @@
       "dateFormat": "ddd MMM Do YYYY",
       "outputSourceFiles": true,
       "outputSourcePath": true,
-      "systemName": "Mediumroast for GitHub SDK",
+      "systemName": "Mediumroast for GitHub SDK and CLI",
       "footer": "",
       "copyright": "© 2023-2024 Mediumroast, Inc. All rights reserved.",
       "navType": "inline",
@@ -26,7 +26,8 @@
       "hardwrap": true
     },
     "opts": {
-        "template": "node_modules/ink-docstrap/template"
-      }
+      "template": "node_modules/ink-docstrap/template",
+      "destination": "./docs/"
+    }
   }
   

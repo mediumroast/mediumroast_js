@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK Source: gitHubServer.js</title>
+	<title>Mediumroast for GitHub SDK and CLI Source: gitHubServer.js</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -21,7 +21,7 @@
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
-		alt="logo"/>Mediumroast for GitHub SDK</a>
+		alt="logo"/>Mediumroast for GitHub SDK and CLI</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -34,28 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu inline">
-					<li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -98,12 +91,18 @@
  * @file gitHubServer.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * @class baseObjects
  * @classdesc An implementation for interacting with the GitHub backend.
  * 
  * @requires GitHubFunctions
+ * @requires crypto
+ * @requires fs
+ * @requires path
+ * @requires fileURLToPath
+ * 
+ * @exports {Studies, Companies, Interactions, Users, Storage, Actions}
  * 
  * @example
  * import {Companies, Interactions, Users, Billings} from './api/gitHubServer.js'
@@ -127,6 +126,9 @@
 // Import required modules
 import GitHubFunctions from './github.js'
 import { createHash } from 'crypto'
+import fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 
 
 class baseObjects {
@@ -379,7 +381,7 @@ class Users extends baseObjects {
 }
 
 // Create a subclass called Users that inherits from baseObjects
-class Billings extends baseObjects {
+class Storage extends baseObjects {
     /**
      * @constructor
      * @classdesc A subclass of baseObjects that construct the user objects
@@ -393,31 +395,7 @@ class Billings extends baseObjects {
 
     // Create a new method for getAll that is specific to the Billings class using getBillings() in github.js
     async getAll() {
-        const storageBillingsResp = await this.serverCtl.getStorageBillings()
-        const actionsBillingsResp = await this.serverCtl.getActionsBillings()
-        const allBillings = [
-            {
-                resourceType: 'Storage',
-                includedUnits: Math.abs(
-                        storageBillingsResp[2].estimated_paid_storage_for_month - 
-                        storageBillingsResp[2].estimated_storage_for_month
-                    ) + ' GiB',
-                paidUnitsUsed: storageBillingsResp[2].estimated_paid_storage_for_month + ' GiB',
-                totalUnitsUsed: storageBillingsResp[2].estimated_storage_for_month + ' GiB'
-            },
-            {
-                resourceType: 'Actions',
-                includedUnits: actionsBillingsResp[2].total_minutes_used + ' min',
-                paidUnitsUsed: actionsBillingsResp[2].total_paid_minutes_used + ' min',
-                totalUnitsUsed: actionsBillingsResp[2].total_minutes_used + actionsBillingsResp[2].total_paid_minutes_used + ' min'
-            }
-        ]
-        return [true, {status_code: 200, status_msg: `found all billings`}, allBillings]
-    }
-
-    // Create a new method of to get the actions billing status only
-    async getActionsBilling() {
-        return await this.serverCtl.getActionsBillings()
+        return await this.serverCtl.getRepoSize()
     }
 
     // Create a new method of to get the storage billing status only
@@ -568,8 +546,123 @@ class Interactions extends baseObjects {
     }
 }
 
+class Actions extends baseObjects {
+    /**
+     * @constructor
+     * @classdesc A subclass of baseObjects that construct the interaction objects
+     * @param {String} token - the token for the GitHub application
+     * @param {String} org - the organization for the GitHub application
+     * @param {String} processName - the process name for the GitHub application
+     */
+    constructor (token, org, processName) {
+        super(token, org, processName, 'Actions')
+    }
+
+    _generateManifest(dir, filelist) {
+        // Define which content to skip
+        const skipContent = ['.DS_Store', 'node_modules']
+        const __filename = fileURLToPath(import.meta.url)
+        const __dirname = path.dirname(__filename);
+        // Use regex to prune everything after mediumroast_js/
+        const basePath = __dirname.match(/.*mediumroast_js\//)[0];
+        // Append cli/actions to the base path
+        dir = dir || path.resolve(path.join(basePath, 'cli/actions'))
+        
+        
+        const files = fs.readdirSync(dir)
+        filelist = filelist || [];
+        files.forEach((file) => {
+            // Skip unneeded directories
+            if (skipContent.includes(file)) {
+                return
+            }
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+                filelist = this._generateManifest(path.join(dir, file), filelist)
+            } else {
+                // Substitute .github for the first part of the path, in the variable dir
+                if (dir.includes('./')) {
+                    dir = dir.replace('./', '')
+                }
+                // This will be the repository name
+                let dotGitHub = dir.replace(/.*(workflows|actions)/, '.github/$1')
+    
+                filelist.push({
+                    fileName: file,
+                    containerName: dotGitHub,
+                    srcURL: new URL(`file://${fullPath}`)
+                })
+                
+            }
+        })
+        return filelist
+    } 
+
+    async updateActions() {
+        // Discover the manifest
+        const actionsManifest = this._generateManifest()
+        // Capture detailed install status
+        let installStatus = {
+            successCount: 0,
+            failCount: 0,
+            success: [],
+            fail: [],
+            total: actionsManifest.length
+        }
+        for (const action of actionsManifest) {
+        // Loop through the actionsManifest and install each action
+            let status = false
+            let blobData
+            try {
+                // Read in the blob file
+                blobData = fs.readFileSync(action.srcURL, 'base64')
+                status = true
+            } catch (err) {
+                // console.log(`Unable to read file [${action.fileName}] because: ${err}`)
+                return [false,{status_code: 500, status_msg: `Unable to read file [${action.fileName}] because: ${err}`}, installStatus]
+            }
+            if(status) {
+                // Get the sha for the current branch/object
+                const sha = await this.serverCtl.getSha(
+                    action.containerName, 
+                    action.fileName, 
+                    'main'
+                )
+                // Keep action update failures
+                // Install the action
+                const installResp = await this.serverCtl.writeBlob(
+                    action.containerName, 
+                    action.fileName, 
+                    blobData, 
+                    'main',
+                    sha[2]
+                )
+                if(installResp[0]){
+                    installStatus.success.push({fileName: action.fileName, containerName: action.catchContainer, installMsg: installResp[1].status_msg})
+                    installStatus.successCount++
+                } else { 
+                    installStatus.fail.push({fileName: action.fileName, containerName: action.catchContainer, installMsg: installResp[1].status_msg})
+                    installStatus.failCount++
+                }
+            } else {
+                return [false, {status_code: 503,status_msg:`Failed to read item [${action.fileName}]`}, installStatus]
+            }
+        }
+        return [true, {status_code: 200, status_msg:`All actions installed`}, installStatus]
+    }
+
+    // Create a new method of to get the actions billing status only
+    async getActionsBilling() {
+        return await this.serverCtl.getActionsBillings()
+    }
+
+    async getAll() {
+        return await this.serverCtl.getWorkflowRuns()
+    }
+}
+
 // Export classes for consumers
-export { Studies, Companies, Interactions, Users, Billings }</pre>
+export { Studies, Companies, Interactions, Users, Storage, Actions }</pre>
     </article>
 </section>
 
@@ -614,7 +707,7 @@ export { Studies, Companies, Interactions, Users, Billings }</pre>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Sun Mar 17th 2024
+		on Mon Sep 16th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
