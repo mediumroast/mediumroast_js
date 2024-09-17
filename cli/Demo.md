@@ -1,4 +1,26 @@
 ## Introduction
 To help users get started with Mediumroast for GitHub, a demo repository has been created in the organization `MegaRoast`. The demo repository is a clone of our repository, but without actions that automatically generate reports and clean up branches. Further, the demo repository is regularly cloned to reflect the latest changes from our main repository on a weekly basis.  So while you can make changes to the demo repository, they will be overwritten on the next clone.  This is to ensure that the demo repository is always in sync with the main repository.
 
-To gain access to the demo repository, please follow the steps below in the [CLI README](./README.md) to install the CLI and then run the `mrcli setup` command.  Because the demo repository is a clone of our repository the setup will not create a new repository, but instead prompt you for your authentication method and report theme.  Once you've completed the setup process you will have access to the demo repository and can begin to explore the capabilities of Mediumroast for GitHub.
+To gain access to the demo repository, please follow the steps in the [main README](https://github.com/mediumroast/mediumroast_js/blob/main/README.md#step-4---upgrade-the-cli) to install the CLI. From there run  `mrcli setup` and when prompted enter the GitHub organization `MegaRoast`.  Because the demo repository is a clone of our repository the setup will not create a new repository, but instead prompt you for your authentication method and report theme.  Once you've completed the setup process you will have access to the demo repository and can begin to explore the capabilities of Mediumroast for GitHub.
+
+However, if you've installed the CLI and run `mrcli setup` you can merely modify your `$HOME/.mediumroast/config.ini` file to point to the `MegaRoast` organization.  This will enable you to access the demo repository without running `mrcli setup` again.
+
+### Example config.ini file
+With this configuration file by updating the `org` value to `MegaRoast` you can access the demo repository without running `mrcli setup` again.
+```ini
+[DEFAULT]
+company_dns=https://company-dns.mediumroast.io
+company_logos=https://icon-server.mediumroast.io/allicons.json?url=
+echarts=https://echart-server.mediumroast.io:11000
+nominatim=https://nominatim.openstreetmap.org/search?addressdetails=1&q=
+working_directory=working
+report_output_dir=Documents
+theme=coffee
+
+[GitHub]
+clientId=Iv1.f5c0a4eb1f0606f8
+appId=650476
+authType=deviceFlow
+org=<ORGANIZATION>
+token=<TOKEN>
+```
