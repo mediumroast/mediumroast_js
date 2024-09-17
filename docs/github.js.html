@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK Source: github.js</title>
+	<title>Mediumroast for GitHub SDK and CLI Source: github.js</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -21,7 +21,7 @@
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
-		alt="logo"/>Mediumroast for GitHub SDK</a>
+		alt="logo"/>Mediumroast for GitHub SDK and CLI</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -34,28 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu inline">
-					<li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -105,6 +98,7 @@
  * @classdesc Core functions needed to interact with the GitHub API for mediumroast.io.
  * 
  * @requires octokit
+ * @requires axios
  * 
  * @exports GitHubFunctions
  * 
@@ -114,6 +108,7 @@
  */
 
 import { Octokit } from "octokit"
+import axios from "axios"
 
 
 class GitHubFunctions {
@@ -278,6 +273,120 @@ class GitHubFunctions {
     }
 
     /**
+     * @async
+     * @function getWorkflowRuns
+     * @description Gets all of the workflow runs for the repository
+     * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the response or error message.
+     */
+    async getWorkflowRuns () {
+        let workflows
+        try {
+            workflows = await this.octCtl.rest.actions.listWorkflowRunsForRepo({
+                owner: this.orgName,
+                repo: this.repoName
+            })
+        } catch (err) {
+            return [false, {status_code: 500, status_msg: err.message}, err]
+        }
+    
+        const workflowList = []
+        let totalRunTimeThisMonth = 0
+        for (const workflow of workflows.data.workflow_runs) {
+            // Get the current month
+            const currentMonth = new Date().getMonth()
+            
+            // Compute the runtime and if the time is less than 60s round it to 1m
+            const runTime = Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60) &lt; 1 ? 1 : Math.ceil((new Date(workflow.updated_at) - new Date(workflow.created_at)) / 1000 / 60)
+    
+            // If the month of the workflow is not the current month, then skip it
+            if (new Date(workflow.updated_at).getMonth() !== currentMonth) {
+                continue
+            }
+            totalRunTimeThisMonth += runTime
+    
+            // Add the workflow to the workflowList
+            workflowList.push({
+                // Create name where the path is the name of the workflow, but remove the path and the .yml extension
+                name: workflow.path.replace('.github/workflows/', '').replace('.yml', ''),
+                title: workflow.display_title,
+                id: workflow.id,
+                workflowId: workflow.workflow_id,
+                runTimeMinutes: runTime,
+                status: workflow.status,
+                conclusion: workflow.conclusion,
+                event: workflow.event,
+                path: workflow.path,
+            })
+        }
+    
+        // Sort the worflowList to put the most recent workflows first
+        workflowList.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+        
+        return [true, {
+            status_code: 200, 
+            status_msg: `discovered [${workflowList.length}] workflow runs for [${this.repoName}]`,}, 
+            workflowList
+        ]
+    }
+
+    // Create a method using the octokit to get the size of the repository and return the size in MB
+    async getRepoSize() {
+        let repoData = {
+            size: 0,
+            numFiles: 0,
+            name: this.repoName,
+            org: this.orgName,
+        }
+        // Count the number of files in the repository
+        const countFiles = async (path = '') => {
+            try {
+                const response = await this.octCtl.rest.repos.getContent({
+                    owner: this.orgName,
+                    repo: this.repoName,
+                    path: path
+                })
+    
+                let fileCount = 0;
+                for (const item of response.data) {
+                    if (item.type === 'file') {
+                        fileCount += 1;
+                    } else if (item.type === 'dir') {
+                        fileCount += await countFiles(item.path)
+                    }
+                }
+                return fileCount
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.numFiles = await countFiles()
+        } catch (err) {
+            repoData.numFiles = 'Unknown'
+        }
+
+        const getRepoSize = async () => {
+            try {
+                const response = await this.octCtl.rest.repos.get({
+                    owner: this.orgName,
+                    repo: this.repoName
+                })
+                const sizeInKB = response.data.size;
+                const sizeInMB = sizeInKB / 1024;
+                return sizeInMB.toFixed(2); // Convert to MB and format to 2 decimal places
+            } catch (err) {
+                return 0
+            }
+        }
+        try {
+            repoData.size = await getRepoSize()
+        } catch (err) {
+            repoData.size = 'Unknown'
+        }
+        return [true, {status_code: 200, status_msg: `discovered size of [${this.repoName}]`}, repoData]
+    }
+
+    /**
      * @function createContainers
      * @description Creates the top level Study, Company and Interaction containers for all mediumroast.io assets
      * @returns {Array} An array with position 0 being boolean to signify success/failure and position 1 being the responses or error messages.
@@ -306,7 +415,7 @@ class GitHubFunctions {
      * @description Creates a new branch from the main branch.
      * @function createBranchFromMain
      * @async
-     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;Array&lt;boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the main branch reference or creating the new branch.
      * @memberof GitHubFunctions
      */
@@ -343,7 +452,7 @@ class GitHubFunctions {
      * @param {string} branchName - The name of the branch to merge into main.
      * @param {string} mySha - The SHA of the commit to use as the head of the pull request.
      * @param {string} [commitDescription='Performed CRUD operation on objects.'] - The description of the commit.
-     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;Aray&lt;boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while creating the branch or the pull request.
      * @memberof GitHubFunctions
      */
@@ -388,7 +497,7 @@ class GitHubFunctions {
      * @function checkForLock
      * @async
      * @param {string} containerName - The name of the container to check for a lock.
-     * @returns {Promise&lt;[boolean, string]>} A promise that resolves to an array containing a boolean indicating success and a message.
+     * @returns {Promise&lt;Array&lt;boolean, string>>} A promise that resolves to an array containing a boolean indicating success and a message.
      * @throws {Error} If an error occurs while getting the latest commit or the contents of the container.
      * @memberof GitHubFunctions
      * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
@@ -430,7 +539,7 @@ class GitHubFunctions {
      * @function lockContainer
      * @async
      * @param {string} containerName - The name of the container to lock.
-     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;Array&lt;boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or creating the lock file.
      * @memberof GitHubFunctions
     */
@@ -467,7 +576,7 @@ class GitHubFunctions {
      * @async
      * @param {string} containerName - The name of the container to unlock.
      * @param {string} commitSha - The SHA of the commit to use as the head of the pull request.
-     * @returns {Promise&lt;[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise&lt;Array&lt;boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or deleting the lock file.
      * @memberof GitHubFunctions
     */
@@ -492,6 +601,134 @@ class GitHubFunctions {
             return [false, `FAILED: Unable to unlock the container [${containerName}]`, null]
         }
     }
+
+    /**
+     * Read a blob (file) from a container (directory) in a specific branch.
+     *
+     * @param {string} fileName - The name of the blob to read with a complete path to the file (e.g. dirname/filename.ext).
+     * @returns {Array} A list containing a boolean indicating success or failure, a status message, and the blob's raw data (or the error message in case of failure).
+     */
+    async readBlob(fileName) {
+        // Encode the file name including files with special characters like question marks
+        // Custom encoding function to handle special characters
+        const customEncodeURIComponent = (str) => {
+            return str.split('').map(char => {
+                return encodeURIComponent(char).replace(/[!'()*]/g, (c) => {
+                    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+                });
+            }).join('');
+        }
+        const originalFileNameEncoded = customEncodeURIComponent(fileName)
+
+
+        // Try to download the file from the repository using the download URL
+        const downloadFile = async (url) => {
+            try {
+                const downloadResult = await axios.get(url, { responseType: 'arraybuffer' })
+                return [true, downloadResult.data]
+            } catch (e) {
+                if (e instanceof TypeError &amp;&amp; (e.message.includes('Request path contains unescaped characters') || e.message.includes('ERR_UNESCAPED_CHARACTERS'))) {
+                    // Handle the specific error here
+                    // For example, you can re-encode the URL or log the error
+                    return [false, 'ERR_UNESCAPED_CHARACTERS']
+                }
+                return [false, e]
+            }
+        }
+
+        // Re-encode the download URL
+        const reEncodeDownloadUrl = (url, originalFileName) => {
+            // Extract the base URL and the file name part
+            let urlParts = url.split('/');
+            const lastPart = urlParts.pop(); // Get the last part of the URL which contains the file name and possibly query parameters
+            // Remove the last item from the URL parts
+            urlParts.pop()
+        
+            // Find the position of the first question mark that indicates the start of query parameters
+            const altLastPart = lastPart.split('?')
+            const queryParams = altLastPart[altLastPart.length - 1]
+        
+            // Encode the file name part using encodeURIComponent
+            // const encodedFileNamePart = encodeURIComponent(fileNamePart);
+        
+            // Reconstruct the download URL
+            return `${urlParts.join('/')}/${originalFileName}${queryParams ? '?' + queryParams : ''}`;
+        }
+        
+
+        // Encode the file name and obtain the download URL
+        const encodedFileName = encodeURIComponent(fileName)
+        
+        // Set the object URL
+        const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+        // Set the headers
+        const headers = { 'Authorization': `token ${this.token}` }
+        
+        // Obtain the download URL
+        const result = await axios.get(objectUrl, { headers })
+        let downloadUrl = result.data.download_url
+
+        // Attempt to download the file from the repository
+        let blobData = await downloadFile(downloadUrl)
+
+        // Check if the file was downloaded successfully
+        if (blobData[0]) {
+            return [
+                true,
+                { status_code: 200, status_msg: `read object [${fileName}]` },
+                blobData[1]
+            ]
+        
+        // In this case, the error is due to unescaped characters in the URL and we need to re-encode the file name 
+        } else {
+            // Put an if statement here to check if the error is due to unescaped characters by checking the error message
+            if (blobData[1] === 'ERR_UNESCAPED_CHARACTERS') {
+
+                downloadUrl = reEncodeDownloadUrl(downloadUrl, originalFileNameEncoded)
+
+                // Try to download the file from the repository again
+                blobData = await downloadFile(downloadUrl)
+                if (blobData[0]) {
+                    return [
+                        true,
+                        { status_code: 200, status_msg: `read object [${fileName}]` },
+                        blobData[1]
+                    ]
+                } 
+            }    
+        }
+        return [
+            false,
+            { status_code: 503, status_msg: `unable to read object [${fileName}] due to [${blobData[1]}].` },
+            blobData[1]
+        ]
+
+    }
+
+    // async readBlob(fileName) {
+    //     // Encode the file name and obtain the download URL
+    //     const encodedFileName = encodeURIComponent(fileName)
+        
+    //     // Set the object URL
+    //     const objectUrl = `https://api.github.com/repos/${this.orgName}/${this.repoName}/contents/${encodedFileName}`
+        
+    //     // Set the headers
+    //     const headers = { 'Authorization': `token ${this.token}` }
+        
+    //     // Obtain the download URL
+    //     const result = await axios.get(objectUrl, { headers })
+    //     console.log(result)
+    //     let downloadUrl = result.data.download_url
+    //     // try {
+    //         const downloadResult = await axios.get(downloadUrl, { responseType: 'arraybuffer' })
+    //         // console.log(downloadResult)
+    //         return [true, downloadResult, downloadUrl]
+    //     // } catch (e) {
+    //         // console.log(e)
+    //         // return [false, e, downloadUrl]
+    //     // }
+    // }
 
     // Create a method using the octokit called deleteBlob to delete a file from the repo
     async deleteBlob(containerName, fileName, branchName, sha) {
@@ -997,6 +1234,7 @@ class GitHubFunctions {
         // Return success with number of objects written
         return [true, {status_code: 200, status_msg: `Released [${repoMetadata.containers.length}] containers.`}, null]
     }
+
 }
 
 export default GitHubFunctions</pre>
@@ -1044,7 +1282,7 @@ export default GitHubFunctions</pre>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Sun Mar 17th 2024
+		on Mon Sep 16th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

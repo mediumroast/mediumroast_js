@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK Tutorial: Company Subcommand</title>
+	<title>Mediumroast for GitHub SDK and CLI Tutorial: Company Subcommand</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -21,7 +21,7 @@
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
-		alt="logo"/>Mediumroast for GitHub SDK</a>
+		alt="logo"/>Mediumroast for GitHub SDK and CLI</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -34,28 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu inline">
-					<li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -95,7 +88,7 @@
 
 <article>
     <h2>Companies</h2>
-<p>Company objects are central to Mediumroast for GitHub. Interaction sand in the future Studies rely on Companies to function. After setup is run, via <code>mrcli setup</code>, two companies are present to work with.  Additional Companies can be added, updated, or removed; essentially, <code>company</code> is an <code>mrcli</code> sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for <code>mrcli company</code> are described in this document.</p>
+<p>Company objects are central to Mediumroast for GitHub. Interactions and in the future Studies rely on Companies to function. After setup is run, via <code>mrcli setup</code>, two companies are present to work with.  Additional Companies can be added, updated, or removed; essentially, <code>company</code> is an <code>mrcli</code> sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for <code>mrcli company</code> are described in this document.</p>
 <h3>Notice</h3>
 <p>Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.</p>
 <h2>Help</h2>
@@ -180,6 +173,16 @@
 </ul>
 <h3>Screenshot with output</h3>
 <img width="1178" alt="companies_add" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/d948fce2-6c31-4537-983d-9dad4c04c248">
+<h2>Report on a company</h2>
+<p>Produce a MS Word document report on a company.  The report includes a dashboard with a company similarity report, company firmographics, detail on similar companies, and summaries for all interactions associated to the company reported on.  The report is stored in the <code>$HOME/Documents</code> directory as <code>&lt;company_name&gt;.docx</code>.</p>
+<p>Optionally, if the <code>--package</code> switch is used the report is zipped and stored in the $HOME/Documents directory as <code>&lt;company_name&gt;.zip</code> including all of the interactions associated to the company and the set of most and least similar companies.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli c --report=&quot;Atlassian Corp&quot;</code></li>
+<li><code>mrcli c --report=&quot;Atlassian Corp&quot; --package</code></li>
+</ul>
+<h3>Screenshot of the report dashboard</h3>
+<p><img src="https://github.com/user-attachments/assets/bd1141cc-53c6-4cac-8e56-ed50601dcbb6" alt="Screenshot 2024-09-03 at 8 23 29 AM"></p>
 </article>
 
 </section>
@@ -221,7 +224,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Sun Mar 17th 2024
+		on Mon Sep 16th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

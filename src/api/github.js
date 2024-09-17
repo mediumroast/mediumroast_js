@@ -328,7 +328,7 @@ class GitHubFunctions {
      * @description Creates a new branch from the main branch.
      * @function createBranchFromMain
      * @async
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise<Array<boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the main branch reference or creating the new branch.
      * @memberof GitHubFunctions
      */
@@ -365,7 +365,7 @@ class GitHubFunctions {
      * @param {string} branchName - The name of the branch to merge into main.
      * @param {string} mySha - The SHA of the commit to use as the head of the pull request.
      * @param {string} [commitDescription='Performed CRUD operation on objects.'] - The description of the commit.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise<Aray<boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while creating the branch or the pull request.
      * @memberof GitHubFunctions
      */
@@ -410,7 +410,7 @@ class GitHubFunctions {
      * @function checkForLock
      * @async
      * @param {string} containerName - The name of the container to check for a lock.
-     * @returns {Promise<[boolean, string]>} A promise that resolves to an array containing a boolean indicating success and a message.
+     * @returns {Promise<Array<boolean, string>>} A promise that resolves to an array containing a boolean indicating success and a message.
      * @throws {Error} If an error occurs while getting the latest commit or the contents of the container.
      * @memberof GitHubFunctions
      * @todo Add a check to see if the lock file is older than 24 hours and if so delete it.
@@ -452,7 +452,7 @@ class GitHubFunctions {
      * @function lockContainer
      * @async
      * @param {string} containerName - The name of the container to lock.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise<Array<boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or creating the lock file.
      * @memberof GitHubFunctions
     */
@@ -489,7 +489,7 @@ class GitHubFunctions {
      * @async
      * @param {string} containerName - The name of the container to unlock.
      * @param {string} commitSha - The SHA of the commit to use as the head of the pull request.
-     * @returns {Promise<[boolean, string, object]>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
+     * @returns {Promise<Array<boolean, string, object>>} A promise that resolves to an array containing a boolean indicating success, a success message, and the response from the GitHub API.
      * @throws {Error} If an error occurs while getting the latest commit or deleting the lock file.
      * @memberof GitHubFunctions
     */

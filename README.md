@@ -37,14 +37,27 @@ Coming soon.
 ### Step 3 - Setup the CLI
 Before you can use the Mediumroast for GitHub [CLI](https://github.com/mediumroast/mediumroast_js/blob/main/cli/README.md) the environment must be setup.  With the CLI installed please run `mrcli setup` to start the setup process, note there's a video of the setup process in CLI README.
 
+## Step 4 - Upgrade the CLI
+After installation there are times when you may want to upgrade the CLI to the latest version, run the following.
+
+1. Global upgrade for all users: `sudo npm i -g mediumroast_js`
+2. Local upgrade for a developer or single user: `npm i mediumroast_js`
+
+Once you have upgraded the CLI you may need to update the GitHub Actions in your repository.  To do this, run `mrcli actions --update`. This will install the latest actions in your repository.
+
 ## What's provided
 Running `mrcli setup` creates a repository in your oganization called `<organization_name>_discovery` to contain all interactions and companies, creates two intitial companies, and installs two GitHub Actions to control the number of branches and provide some basic out of the box reporting -- see example screenshot below.
+
+Note, if you run the `mrcli setup` command more than once, it will detect the existing repository and not create a new one. However, it will prompt you to update your authentication method and report theme.  Finally, if someone has already run `setup` in your organization, the CLI will detect this and not create a new repository, but instead prompt you for your authentication method and report theme.
 
 ### Warning
 Since Mediumroast for GitHub creates a regular repository you can interact with it as normal, but **doing so is not recommended**. If you interact with the repository, in regular ways, this could result in Mediumroast for GitHub becoming inoperable.  There are cases where it may become necessary to directly work with the repository, but that should be rare.
 
 ### Example screenshot of in repository companies report
 <img width="1001" alt="companies" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/23fbd53f-dbfe-4106-a18d-5d13e0b5ce2b">
+
+## Contributing
+If you're interested in contributing to the Mediumroast for GitHub project, please review the [CONTRIBUTING.md](https://github.com/mediumroast/mediumroast_js/blob/.github/CONTRIBUTING.md) file in the `.github` directory of the repository.  The file contains information on how to get started, how to clone the repository, and how to install the SDK for development.
 
 ## Issues
 If you detect a problem or want to suggest an improvement open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve or respond.

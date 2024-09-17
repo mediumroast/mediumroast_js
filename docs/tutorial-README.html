@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK Tutorial: Administrative Subcommands</title>
+	<title>Mediumroast for GitHub SDK and CLI Tutorial: Administrative Subcommands</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -21,7 +21,7 @@
 <div class="container">
 	<div class="navbar-header">
 		<a class="navbar-brand" href="index.html"><img class="branding-logo" src="img/logo.png"
-		alt="logo"/>Mediumroast for GitHub SDK</a>
+		alt="logo"/>Mediumroast for GitHub SDK and CLI</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -34,28 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="baseObjects.html">baseObjects</a></li><li><a href="Billings.html">Billings</a></li><li><a href="Companies.html">Companies</a></li><li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Studies.html">Studies</a></li><li><a href="Users.html">Users</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu inline">
-					<li><a href="global.html#createObj">createObj</a></li><li><a href="global.html#deleteObj">deleteObj</a></li><li><a href="global.html#findById">findById</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findByX">findByX</a></li><li><a href="global.html#getAll">getAll</a></li><li><a href="global.html#linkObj">linkObj</a></li><li><a href="global.html#updateObj">updateObj</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
 				</ul>
 			</li>
 			
@@ -96,8 +89,39 @@
 <article>
     <h1>Mediumroast for GitHub CLI (Command Line Interface)</h1>
 <p>The CLI is divided into two sets one for administrative interactions with the system and another for interacting with <strong>Mediumroast for GitHub</strong> objects like Companies and Interactions.  This document covers both the administrative CLI and makes reference to the CLI set for <strong>Mediumroast for GitHub</strong> objects.</p>
+<h1>Authentication</h1>
+<p><strong>Mediumroast for GitHub</strong> uses either Device Flow or a Personal Access Token for authentication.  The setup CLI will prompt you to choose the type of authentication and then store the necessary information in the <code>${HOME}/.mediumroast/config.ini</code> file.  If you need to change the authentication configuration you can run <code>mrcli setup</code> to reset the configuration file.</p>
+<h2>Required permissions for the Personal Access Token (PAT)</h2>
+<p>If you create a PAT before the <strong>Mediumroast for GitHub</strong> repository exists the required scope is for <strong>all repositories</strong> in your organization. At PAT renewal or if you want to reduce the scope to only the <strong>Mediumroast for GitHub</strong> repository this can be done later. The Personal Access Token must have the following permissions on all repositories to perform the necessary actions including setup.</p>
+<ul>
+<li><code>Actions</code>: read/write</li>
+<li><code>Administration</code>: read/write</li>
+<li><code>Contents</code>: read/write</li>
+<li><code>Metadata</code>: read</li>
+<li><code>Pull requests</code>: read/write</li>
+<li><code>Workflows</code>: read/write</li>
+</ul>
+<p>For background and directions on creating a PAT see the <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens">GitHub documentation</a>.</p>
 <h1>Administrative CLIs</h1>
 <p>To enable setup and operational reporting of <strong>Mediumroast for GitHub</strong> several CLIs are available, each is described below.</p>
+<h2>Storage reporting</h2>
+<p>Reports storage consumed by <strong>Mediumroast for GitHub</strong>. A screenshot showing the usage information and outputs for major functions is included below.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli t</code></li>
+<li><code>mrcli storage</code></li>
+</ul>
+<h3>Screenshot with ouput</h3>
+<p><img src="https://github.com/user-attachments/assets/dba9738f-e093-4415-9ec7-1031f66cf6d1" alt="Screenshot 2024-09-04 at 8 23 17 PM"></p>
+<h2>Actions</h2>
+<p>Reports actions minutes consumed by <strong>Mediumroast for GitHub</strong> and enables a user to update their repository as new versions of actions are released. A screenshot showing the usage information and outputs for major functions is included below.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli actions</code></li>
+<li><code>mrcli a --update</code></li>
+</ul>
+<h3>Screenshot with ouput</h3>
+<p><img src="https://github.com/user-attachments/assets/d9ea51fc-7609-4abb-9cbe-6e010baacb50" alt="Screenshot 2024-09-04 at 8 23 55 PM"></p>
 <h2>User reporting</h2>
 <p>Reports on all users who can access the repository that contains the <strong>Mediumroast for GitHub</strong>. A screenshot showing the usage information and outputs for major functions is included below, and notice, user names and other personally identifiable information has been redacted from the screenshot below.</p>
 <h3>Command(s) run</h3>
@@ -107,16 +131,6 @@
 </ul>
 <h3>Screenshot with ouput</h3>
 <img width="1178" alt="users_util" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/994787aa-ec26-4cb0-99a1-b670b9d929ff">
-<h2>Billing reporting</h2>
-<p>Provides reports for consumed actions and repository storage consumed by the organization that has installed and is using <strong>Mediumroast for GitHub</strong>. A screenshot showing the usage information and outputs for major functions is included below.</p>
-<h3>Command(s) run</h3>
-<ul>
-<li><code>mrcli b</code></li>
-<li><code>mrcli b --storage</code></li>
-<li><code>mrcli b --actions</code></li>
-</ul>
-<h3>Screenshot with ouput</h3>
-<img width="1178" alt="billings_util" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/4a715d07-b168-41ce-9054-33bf70af8086">
 <h2>Setup</h2>
 <p>To help users quickly get on board with <strong>Mediumroast for GitHub</strong> the setup CLI is used.  This CLI creates the <code>${HOME}/.mediumroast/config.ini</code> file, creates the repository including key directories, and creates two initial companies.  A screencast video showing the process for setting up the CLI environment and creating two companies is available below.</p>
 <h3>Command(s) run</h3>
@@ -126,6 +140,15 @@
 <h3>Screencast showing setup process</h3>
 <p><strong>Notice</strong>: Only the markdown version rendered through the GitHub web interface will display the screencast.  If you're viewing these files through the <a href="https://mediumroast.github.io/mediumroast_js/tutorial-README.html">GitHub Page Version</a> the link below will just show up as text.</p>
 <p>https://github.com/mediumroast/mediumroast_js/assets/10818650/68c08502-4f59-4981-a001-0d9c9bd1d4d2</p>
+<h1>Deprecated commands</h1>
+<p>The following commands are deprecated, are disabled and will be removed in a future release of the CLI.</p>
+<h2>Billing reporting</h2>
+<p>Is replaced by <code>storage</code> and <code>actions</code> commands in <strong>Mediumroast for GitHub</strong>. If you run this command it will immediately exit stating it is no longer supported.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli b</code></li>
+<li><code>mrcli billing</code></li>
+</ul>
 <hr>
 <p>[<a href="https://github.com/mediumroast/mediumroast_js/blob/main/cli/Company.md">Company Subcommand</a>] | [<a href="https://github.com/mediumroast/mediumroast_js/blob/main/cli/Interaction.md">Interaction Subcommand</a>]</p>
 </article>
@@ -169,7 +192,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
 	
-		on Sun Mar 17th 2024
+		on Mon Sep 16th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
