@@ -65,9 +65,9 @@ class Utilities {
             await docx.Packer.toBuffer(docObj).then((buffer) => {
                 fs.writeFileSync(fileName, buffer)
             })
-            return [true, 'SUCCESS: Created file [' + fileName + '] for object.', null]
+            return [true, 'SUCCESS: Created report file [' + fileName + '].', null]
         } catch (err) {
-            return [false, 'ERROR: Failed to create report for object.', null]
+            return [false, 'ERROR: Failed to create report.', null]
         }
     }
 
@@ -119,7 +119,6 @@ class Utilities {
     }
     // Retrieve the interactions for a company
     getInteractions(company, interactions) {
-        // console.log(interactions)
         const interactionNames = Object.keys(company[0].linked_interactions);
         return interactionNames.map(interactionName =>
             interactions.find(interaction => interaction.name === interactionName)

@@ -83,7 +83,6 @@ class TextWidgets extends Widgets {
     }
 
     makeFooter(documentAuthor, datePrepared, options={}) {
-        console.log(documentAuthor, datePrepared)
         const {
             landscape = false,
             fontColor = this.themeSettings.textFontColor,

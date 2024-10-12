@@ -158,17 +158,70 @@ async function createInteractionList(interaction, isMostSimilar) {
     return interactionSection
 }
 
+// Retrieve the company by name
+function getCompany(companyName, companies) {
+    return companies.filter(company => company.name === companyName)
+}
+// Retrieve the interactions for a company
+function getInteractions(company, interactions) {
+    // console.log(interactions)
+    const interactionNames = Object.keys(company[0].linked_interactions);
+    return interactionNames.map(interactionName =>
+        interactions.find(interaction => interaction.name === interactionName)
+    ).filter(interaction => interaction !== undefined)
+}
+
+function getCompetitors(similarities, companies, interactions) {
+    // x1 = 1 and y1 = 1 because this the equivalent of comparing a company to itself
+    const x1 = 1
+    const y1 = 1
+    let distanceToCompany = {}
+    let companyToDistance = {}
+    for (const companyName in similarities) {
+        // Compute the distance using d = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+        const myDistance = Math.sqrt(
+            (similarities[companyName].most_similar.score - x1) ** 2 +
+            (similarities[companyName].least_similar.score - y1) ** 2
+        )
+        distanceToCompany[myDistance] = companyName
+        companyToDistance[companyName] = myDistance
+    }
+
+    // Obtain the closest company using max, note min returns the least similar
+    const leastSimilarName = distanceToCompany[Math.max(...Object.keys(distanceToCompany))]
+    let leastSimilarCompany = getCompany(leastSimilarName, companies)
+    leastSimilarCompany[0].interactions = getInteractions(leastSimilarCompany, interactions)
+
+    const mostSimilarName = distanceToCompany[Math.min(...Object.keys(distanceToCompany))]
+    let mostSimilarCompany = getCompany(mostSimilarName, companies)
+    mostSimilarCompany[0].interactions = getInteractions(mostSimilarCompany, interactions)
+
+    // Transform the strings into floats prior to return
+    const allDistances = Object.keys(distanceToCompany).map(
+        (distance) => {
+            return parseFloat(distance)
+        }
+    )
+    // return both the most similar id and all computed distanceToCompany
+    return {
+        mostSimilar: mostSimilarCompany[0],
+        leastSimilar: leastSimilarCompany[0],
+        distances: allDistances,
+        companyMap: companyToDistance,
+        all: companies
+    }
+}
+
 async function createSimilarCompanies(similarCompanies, companies, interactions) {
-    // Create a list of similar companies to process
-    const mostSimilarCompany = Object.keys(similarCompanies).reduce((a, b) => similarCompanies[a] > similarCompanies[b] ? a : b)
-    // Append the most similar company to the list from the companies array
-    const companyObject = companies.find((company) => company.name === mostSimilarCompany)
-    // Create the most similar company markdown
+    // Get all competitors
+    const competitors = getCompetitors(similarCompanies, companies, interactions)
+    const companyObject = competitors.mostSimilar
+    const mostSimilarCompany = competitors.mostSimilar.name
+    // Create the most similar company section
     const mostSimilarCompanySection = await createSimilarCompany(companyObject)
     // Get the most and least similar interactions from the similarCompanies object using companyObject name
     const mostSimilarInteraction = interactions.find((interaction) => interaction.name === similarCompanies[mostSimilarCompany].most_similar.name)
     const leastSimilarInteraction = interactions.find((interaction) => interaction.name === similarCompanies[mostSimilarCompany].least_similar.name)
-    console.log(mostSimilarInteraction)
     // Create the most and least similar interactions markdown
     const mostSimilar = await createInteractionList(mostSimilarInteraction, true)
     const leastSimilar = await createInteractionList(leastSimilarInteraction, false)
