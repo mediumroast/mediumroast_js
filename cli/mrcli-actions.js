@@ -53,7 +53,7 @@ let myProgram = environment.parseCLIArgs(true)
 // Remove command line options for reset_by_type, delete, update, and add_wizard by calling the removeArgByName method in the environmentals class
 myProgram = environment.removeArgByName(myProgram, '--delete')
 myProgram = environment.removeArgByName(myProgram, '--add_wizard')
-myProgram = environment.removeArgByName(myProgram, '--reset_by_type')
+myProgram = environment.removeArgByName(myProgram, '--reset_by_name')
 myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--find_by_name')
 myProgram = environment.removeArgByName(myProgram, '--find_by_x')
@@ -62,6 +62,8 @@ myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--splash')
 myProgram = environment.removeArgByName(myProgram, '--update')
+myProgram = environment.removeArgByName(myProgram, '--persona')
+
 myProgram
    .option('-u, --update', 'Update actions and workflows from Mediumroast for GitHub package')
    .option('-b, --billing', 'Return all actions billing information for the GitHub organization')

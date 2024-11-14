@@ -62,6 +62,7 @@ myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--splash')
 myProgram = environment.removeArgByName(myProgram, '--update')
+myProgram = environment.removeArgByName(myProgram, '--persona')
 myProgram
    .option('-b, --billing', 'Return all actions billing information for the GitHub organization')
 
