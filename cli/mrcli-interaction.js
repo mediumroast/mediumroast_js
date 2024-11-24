@@ -3,7 +3,7 @@
 /**
  * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Interaction objects
  * @license Apache-2.0
- * @version 3.3.0
+ * @version 3.4.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-interaction.js
@@ -27,29 +27,26 @@ import ora from 'ora'
 import WizardUtils from "../src/cli/commonWizard.js"
 import { GitHubAuth } from '../src/api/authorize.js'
 
-// Reset the status of objects for caffiene reprocessing
-async function resetStatuses(interactionType, interactionCtl, objStatus=0) {
-   let interactionResults = {successful: [], failed: []}
-   const myInteractions = await interactionCtl.findByX('interaction_type', interactionType)
-   if(myInteractions[0]) {
-      for(const myInteraction in myInteractions[2]) {
-         const myId = myInteractions[2][myInteraction].id
-         const resetResults = await interactionCtl.updateObj({id: myId, status: objStatus})
-         if(resetResults[0]){
-            interactionResults.successful.push({id: myId, value: objStatus, success: resetResults[0]})
-         } else {
-            interactionResults.failed.push({id: myId, value: objStatus, success: resetResults[0]})
-         }
-      }
+// Reset the status of an object for caffiene reprocessing
+async function resetStatus(interactionName, interactionCtl, objStatus=0) {
+   const myUpdate = {name: interactionName, value: objStatus, key: 'status'}
+   const updateResult = await interactionCtl.updateObj(myUpdate)
+   if(updateResult[0]){
       return [
          true,
-         {status_code: myInteractions[1].status_code, status_msg: myInteractions[1].status_msg},
-         interactionResults
+         {
+            status_code: updateResult[1].status_code, 
+            status_msg: updateResult[1].status_msg
+         },
+         updateResult
       ]
    } else {
       return [
          false,
-         {status_code: myInteractions[1].status_code, status_msg: myInteractions[1].status_msg},
+         {
+            status_code: updateResult[1].status_code, 
+            status_msg: updateResult[1].status_msg
+         },
          null
       ]
    }
@@ -254,20 +251,21 @@ if (myArgs.report) {
       console.log(`ERROR: ${result[1].status_msg}.`)
       process.exit(-1)
    }
-} else if (myArgs.reset_by_type) {
-   console.log('ERROR: Reset by type not implemented.')
-   process.exit(-1)
+} else if (myArgs.reset_by_name) {
    const lockResp = interactionCtl.checkForLock()
    if(lockResp[0]) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
    }
-   const resetResponses = await resetStatuses(myArgs.reset_by_type, interactionCtl)
-   if(resetResponses[0]) {
-      console.log(`SUCCESS: Reset status of ${resetResponses[2].successful.length} interactions.`)
+   const mySpinner = new ora(`Resetting status for interaction [${myArgs.reset_by_name}] ...`)
+   mySpinner.start()
+   const resetResponse = await resetStatus(myArgs.reset_by_name, interactionCtl)
+   mySpinner.stop()
+   if(resetResponse[0]) {
+      console.log(`SUCCESS: Reset status of interaction "${myArgs.reset_by_name}".`)
       process.exit(0)
    } else {
-      console.error(`ERROR: Failed to reset statuses of interactions with type ${myArgs.reset_by_type} and error: %d`, resetResponses[1].status_code)
+      console.error(`ERROR: Failed to reset statuse for interaction ${myArgs.reset_by_name} error: %d`, resetResponse[1].status_code)
       process.exit(-1)
    }
 } else {
