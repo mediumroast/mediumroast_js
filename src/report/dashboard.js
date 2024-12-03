@@ -228,10 +228,11 @@ class CompanyDashbord extends Dashboards {
         noInteractions, 
         totalInteractions, 
         totalCompanies, 
-        averageInteractions) {
+        averageInteractions,
+        allCompetitors) {
 
         // Create bubble and pie charts and the associated wrapping table
-        const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company})
+        const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company, competitors: allCompetitors})
         const pieChartFile = await this.charting.pieChart({company: company})
         const chartsTable = this._createChartsTable(bubbleChartFile, pieChartFile)
 

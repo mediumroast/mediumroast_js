@@ -5,7 +5,7 @@ const docxSettings = {
         halfFontSize: 11,
         fullFontSize: 11 * 2, // Note these are in half points, so 22 * 2 = 44
         headerFontSize: 18,
-        footerFontSize: 18,
+        footerFontSize: 14,
         fontFactor: 1,
         dashFontSize: 22,
         tableFontSize: 9 * 2, // Note these are in half points, so 9 * 2 = 18
@@ -17,7 +17,7 @@ const docxSettings = {
         chartFontSize: 10,
         chartAxesFontSize: 12,
         chartTickFontSize: 10,
-        chartSymbolSize: 30,
+        chartSymbolSize: 20,
         tableBorderSize: 8,
         tableBorderStyle: docx.BorderStyle.SINGLE,
         noBorderStyle: docx.BorderStyle.NIL,
@@ -35,11 +35,13 @@ const docxSettings = {
         titleFontColor: "41A6CE", // Saturated Light Blue
         textFontColor: "41A6CE", // Ultra light Blue
         chartAxisLineColor: "#374246",
-        chartAxisFontColor: "rgba(71,121,140, 0.7)",
-        chartAxisTickFontColor: "rgba(149,181,192, 0.6)",
+        chartAxisFontColor: "rgba(71,121,140, 0.9)",
+        chartAxisTickFontColor: "rgba(149,181,192, 0.9)",
         chartItemFontColor: "rgba(149,181,192, 0.9)",
-        chartSeriesColor: "rgb(71,113,128)",
-        chartSeriesBorderColor: "rgba(149,181,192, 0.9)", 
+        chartSeriesColor: "rgba(91,216,255, 1)",
+        chartSeriesPieColor: "rgba(77,163,187, 1)",
+        chartSeriesBorderColor: "rgba(149,181,192, 1)", 
+        chartSeriesPieBorderColor: "rgba(53,101,112, 1)", 
         highlightFontColor: ""
     },
     espresso: {
@@ -50,11 +52,11 @@ const docxSettings = {
         titleFontColor: "C7701E", // Saturated Light Blue
         textFontColor: "C7701E", // Ultra light Blue
         chartAxisLineColor: "rgba(134,84,28, 0.9)",
-        chartAxisFontColor: "rgba(199,112,30, 0.7)",
-        chartAxisTickFontColor: "rgba(199,112,30, 0.6)",
+        chartAxisFontColor: "rgba(199,112,30, 0.9)",
+        chartAxisTickFontColor: "rgba(199,112,30, 0.9)",
         chartItemFontColor: "rgba(199,112,30, 0.9)",
-        chartSeriesColor: "rgb(199,112,30, 0.7)",
-        chartSeriesBorderColor: "rgba(90,56,19, 0.9)", 
+        chartSeriesColor: "rgb(199,112,30, 1)",
+        chartSeriesBorderColor: "rgba(90,56,19, 1)", 
         highlightFontColor: ""
     },
     latte: {

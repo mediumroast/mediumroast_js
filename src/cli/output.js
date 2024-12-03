@@ -8,7 +8,7 @@
  */
 
 // Import required modules
-import Table from 'cli-table'
+import Table from 'cli-table3'
 import {Parser} from '@json2csv/plainjs'
 import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
@@ -97,8 +97,8 @@ class CLIOutput {
         // Study, Company and Interaction objects output
         } else if (this.objectType === 'Companies') {
             table = new Table({
-                head: ['Name', 'Role', 'Interaction No.', 'Region', 'Description'],
-                colWidths: [27, 15, 17, 8, 60]
+                head: ['Name', 'Role', 'Interaction Count', 'Region', 'Description'],
+                colWidths: [27, 12, 19, 8, 50]
             })
             
             for (const myObj in objects) {
@@ -118,7 +118,7 @@ class CLIOutput {
         } else if (this.objectType === 'Interactions') {
             table = new Table({
                 head: ['Name', 'Creator Name', 'Region', 'Linked Company'],
-                colWidths: [80, 15, 10, 25]
+                colWidths: [70, 15, 10, 25]
             })
             for (const myObj in objects) {
                 let linkedCompany = 'Orphaned'

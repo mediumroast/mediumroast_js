@@ -10,7 +10,7 @@
 // Import required modules
 import docx from 'docx'
 import Utilities from './helpers.js'
-import { CompanySection } from './companies.js'
+// import { CompanySection } from './companies.js'
 import { InteractionDashboard } from './dashboard.js' 
 import docxSettings from './settings.js'
 import TextWidgets from './widgets/Text.js'
