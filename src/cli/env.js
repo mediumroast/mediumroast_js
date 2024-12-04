@@ -99,11 +99,11 @@ class Environmentals {
                 `Update ${this.objectType} from the backend by specifying the object\'s name plus attribute and value to update in JSON`
             )
             .option(
-                '--delete <NAME>',
+                '--delete <name>',
                 `Delete ${this.objectType} from the backend by specifying the object\'s id`
             )
             .option(
-                '--report <NAME>',
+                '--report <name>',
                 `Create an MS word document for ${this.objectType} by specifying the object\'s id`
             )
             .option(
@@ -115,8 +115,14 @@ class Environmentals {
                 `Run the CLI wizard to add ${this.objectType} to the mediumroast.io backend.`
             )
             .option(
-                '--reset_by_type <OBJECT_TYPE>',
-                'Reset the status of objects to reprocesses them in the caffeine service.'
+                '--reset_by_name <name>',
+                'Reset the status of an individual object by name to 0.'
+            )
+            .option(
+                '--persona [type]',
+                'Select the persona type: product or analyst.',
+                'product',
+                'analyst'
             )
         
         // If returnIncomplete is set to true return the program object directly
@@ -303,6 +309,7 @@ class Environmentals {
 
         // Setup options with cli settings only
         env.splash = cliArgs.splash
+        env.persona = cliArgs.persona || 'product'
 
         // Return the environmental settings needed for the CLI to operate
         return env

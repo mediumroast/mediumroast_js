@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import FilesystemOperators from '../cli/filesystem.js'
+import FilesystemOperators from '../../cli/filesystem.js'
 
 /**
  * @function getMostSimilarCompany 

@@ -6,7 +6,7 @@ Products organizations must build robust product plans from competitive and cust
 - You can review the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display. 
 
 ## Installation and configuration
-Mediumroast for GitHub includes a [GitHub Application](https://github.com/apps/mediumroast-for-github), a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.
+Mediumroast for GitHub includes a [GitHub Application](https://github.com/marketplace/mediumroast-for-github), a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.
 
 ### Preinstallation requirements
 1. A GitHub organization
@@ -16,7 +16,7 @@ Mediumroast for GitHub includes a [GitHub Application](https://github.com/apps/m
 5. [NPM installed](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm), ideally globally for all users.
 
 ### Step 1 - Install the GitHub App
-Browse to the Mediumroast for GitHub [GitHub Application](https://github.com/apps/mediumroast-for-github) and: 
+Browse to the Mediumroast for GitHub [GitHub Application](https://github.com/marketplace/mediumroast-for-github) and: 
 
 1. Click install,
 2. Choose the location for the installation, usually your organization,
@@ -54,7 +54,7 @@ Running `mrcli setup` a second time on an existing repository will not create a 
 ### Step 5.1 - Verify your installation via the CLI
 After the setup process is complete you can verify the installation by running `mrcli company` to see the companies in the repository.
 
-#### Exzmple screenshot of companies table
+#### Example screenshot of companies table
 <img width="1178" alt="companies_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/af9d22d8-4161-4ae9-9c57-06b65769a54e">
 
 ### Step 5.2 - Verify your installation via GitHub actions

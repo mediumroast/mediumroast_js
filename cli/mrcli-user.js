@@ -54,11 +54,13 @@ myProgram
 myProgram = environment.removeArgByName(myProgram, '--delete')
 myProgram = environment.removeArgByName(myProgram, '--update')
 myProgram = environment.removeArgByName(myProgram, '--add_wizard')
-myProgram = environment.removeArgByName(myProgram, '--reset_by_type')
+myProgram = environment.removeArgByName(myProgram, '--reset_by_name')
 myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--find_by_id')
 myProgram = environment.removeArgByName(myProgram, '--splash')
+myProgram = environment.removeArgByName(myProgram, '--persona')
+myProgram = environment.removeArgByName(myProgram, '--update')
 
 // Parse the command line arguments into myArgs and obtain the options
 let myArgs = myProgram.parse(process.argv)

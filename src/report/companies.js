@@ -448,7 +448,8 @@ class CompanyStandalone extends BaseCompanyReport {
                             this.noInteractions,
                             this.totalInteractions,
                             this.totalCompanies,
-                            this.averageInteractions
+                            this.averageInteractions,
+                            this.competitors
                         )
                     ],
                 },

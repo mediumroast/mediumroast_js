@@ -103,11 +103,18 @@ class InteractionDashboard extends Dashboards {
 
     _priorityTopicsTable (top2Topics) {
         let myTopics = []
+        // Create the column header for insights
+        let insightsColumnHeader = 'Proto-Requirement'
+        let insightsCellKey = 'pm_label'
+        if (this.env.persona == 'analyst') {
+            insightsColumnHeader = 'Competitive Insight'
+            insightsCellKey = 'analyst_label'
+        }
         // Loop through the top 2 topics and create a table row for each topic
         for (const topic in top2Topics) {
             myTopics.push(
                 this.tableWidgets.oneColumnTwoRowsTable(
-                    ['Priority Proto-requirement', top2Topics[topic].label]
+                    [`Priority ${insightsColumnHeader}`, top2Topics[topic][insightsCellKey]]
                 )
             )
         }
@@ -115,12 +122,16 @@ class InteractionDashboard extends Dashboards {
     }
 
     async makeDashboard(interaction, company, isPackage=false) {
+        // Define the header for the insights table
+        const insightsTableHeader = this.env.persona == 'analyst' ? "Competitive Insights" : "Proto-Requirements"
+
+        console.log(`The insights table header is: ${this.env.persona}`)
         const rightContents = this.tableWidgets.descriptiveStatisticsTable([
             {title: 'Type', value: interaction.interaction_type},
             {title: 'Est. reading time (min)', value: interaction.reading_time},
             {title: 'Page(s)', value: interaction.page_count},
             {title: 'Region', value: interaction.region},
-            {title: 'Proto-requirements', value: Object.keys(interaction.topics).length},
+            {title: insightsTableHeader, value: Object.keys(interaction.topics).length},
         ])
         let interactionName = interaction.name
         let interactionOptions = { includesHyperlink: false }
@@ -217,10 +228,11 @@ class CompanyDashbord extends Dashboards {
         noInteractions, 
         totalInteractions, 
         totalCompanies, 
-        averageInteractions) {
+        averageInteractions,
+        allCompetitors) {
 
         // Create bubble and pie charts and the associated wrapping table
-        const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company})
+        const bubbleChartFile = await this.charting.bubbleChart({similarities: company.similarity, company: company, competitors: allCompetitors})
         const pieChartFile = await this.charting.pieChart({company: company})
         const chartsTable = this._createChartsTable(bubbleChartFile, pieChartFile)
 
