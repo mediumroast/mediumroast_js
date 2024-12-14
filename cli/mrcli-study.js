@@ -19,6 +19,7 @@ import GitHubFunctions from '../src/api/github.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import CLIUtilities from '../src/cli/common.js'
+import { SourceInsights } from '../src/report/studies.js'
 import ora from 'ora'
 import { GitHubAuth } from '../src/api/authorize.js'
 
@@ -111,10 +112,26 @@ if (myArgs.find_by_name) {
       console.log(`ERROR: ${result[1].status_msg}`)
       process.exit(-1)
    }
-} else if (myArgs.rest_by_name) {
+} else if (myArgs.reset_by_name) {
    console.error('ERROR (%d): Reset by name not implemented.', -1)
    process.exit(-1)
    //results = await studyCtl.delete(myArgs.delete)
+} else if (myArgs.report) {
+   
+   const studyName = myArgs.report || 'Foundation'
+   const studyResults = await studyCtl.findByName(studyName)
+   const study = studyResults[2][0]
+
+   const docController = new SourceInsights(
+      studyName,
+      study,
+      myEnv
+   )
+
+   const writeResult = await docController.generateTop5InsightsReport()
+   console.log(`SUCCESS: ${writeResult[1].status_msg}`)
+   process.exit(0)
+
 } else {
    [success, stat, results] = await studyCtl.getAll()
    results = results.mrJson
