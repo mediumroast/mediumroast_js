@@ -109,12 +109,12 @@ class SourceInsights extends BaseStudyReport {
                 worksheet.getRow(3).height = 30;
 
                 // Add headers starting from C4
-                worksheet.getCell('C4').value = 'Insight';
-                worksheet.getCell('D4').value = 'Source Interaction';
-                worksheet.getCell('E4').value = 'Type';
-                worksheet.getCell('F4').value = 'Count';
-                worksheet.getCell('G4').value = 'Avg. Similarity Score';
-                worksheet.getCell('H4').value = 'Excerpts';
+                worksheet.getCell('C4').value = 'Source Interaction';
+                worksheet.getCell('D4').value = 'Interaction Frequency';
+                worksheet.getCell('E4').value = 'Insight Text';
+                worksheet.getCell('F4').value = 'Insight Type';
+                worksheet.getCell('G4').value = 'Insight Avg. Similarity Score';
+                worksheet.getCell('H4').value = 'Insight Excerpts';
 
                 // Apply styles to headers
                 ['C4', 'D4', 'E4', 'F4', 'G4', 'H4'].forEach(cell => {
@@ -141,10 +141,10 @@ class SourceInsights extends BaseStudyReport {
                     const rowIndex = index + 5;
                     const fillColor = index % 2 === 0 ? 'FFFFFFFF' : 'FFD3D3D3'; // Alternate row colors
 
-                    worksheet.getCell(`C${rowIndex}`).value = data.insight;
-                    worksheet.getCell(`D${rowIndex}`).value = data.source_interaction;
-                    worksheet.getCell(`E${rowIndex}`).value = data.type;
-                    worksheet.getCell(`F${rowIndex}`).value = data.count;
+                    worksheet.getCell(`C${rowIndex}`).value = data.source_interaction;
+                    worksheet.getCell(`D${rowIndex}`).value = data.count;
+                    worksheet.getCell(`E${rowIndex}`).value = data.insight;
+                    worksheet.getCell(`F${rowIndex}`).value = data.type;
                     worksheet.getCell(`G${rowIndex}`).value = data.avgSimilarityScore;
                     worksheet.getCell(`H${rowIndex}`).value = data.excerpts;
 
@@ -165,15 +165,16 @@ class SourceInsights extends BaseStudyReport {
                 });
 
                 // Set column widths
-                worksheet.getColumn('C').width = 80;
-                worksheet.getColumn('D').width = 70;
-                worksheet.getColumn('E').width = 15;
-                worksheet.getColumn('F').width = 10;
-                worksheet.getColumn('G').width = 20;
-                worksheet.getColumn('H').width = 80;
+                worksheet.getColumn('C').width = 50;
+                worksheet.getColumn('D').width = 30;
+                worksheet.getColumn('E').width = 70;
+                worksheet.getColumn('F').width = 30;
+                worksheet.getColumn('G').width = 30;
+                worksheet.getColumn('H').width = 70;
 
                 // Wrap text in columns C (Insight) and H (Excerpts)
                 worksheet.getColumn('C').alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+                worksheet.getColumn('E').alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
                 worksheet.getColumn('H').alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
 
                 // Apply autoFilter to the range

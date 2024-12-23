@@ -84,6 +84,47 @@ class CLIUtilities {
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
         return packageJson.version
     }
+
+    /**
+     * @async
+     * @function resetStatus
+     * @description Reset the status of an object
+     * @param {String} objName - the name of the object to reset
+     * @param {Object} apiCtl - the controller for the object
+     * @param {Number} objStatus - the status to reset to
+     * @returns {Array} an array containing if the operation succeeded, the message, and the object
+     * 
+     * @example
+     * const resetResult = await utilities.resetStatus(objName, apiCtl, objStatus)
+     * if(resetResult[0]) {
+     *    console.log(`SUCCESS: ${resetResult[1].status_msg}`)
+     * } else {
+     *   console.log(`ERROR: ${resetResult[1].status_msg}`)
+     * }
+     */
+    async resetStatus(objName, apiCtl, objStatus=0) {
+        const myUpdate = {name: objName, value: objStatus, key: 'status'}
+        const updateResult = await apiCtl.updateObj(myUpdate)
+        if(updateResult[0]){
+        return [
+            true,
+            {
+                status_code: updateResult[1].status_code, 
+                status_msg: updateResult[1].status_msg
+            },
+            updateResult
+        ]
+        } else {
+            return [
+                false,
+                {
+                    status_code: updateResult[1].status_code, 
+                    status_msg: updateResult[1].status_msg
+                },
+                null
+            ]
+        }
+    }
 }
 
 export default CLIUtilities

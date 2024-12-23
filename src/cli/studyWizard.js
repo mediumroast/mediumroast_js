@@ -53,12 +53,28 @@ class AddStudy {
         return `This Foundation Study for ${myCompany.name} is automatically created by Mediumroast for GitHub to provide an out of the box analysis. It analyzes all companies in the ${myCompany.name} discovery repository to surface interesting competitive insights, proto-requirements, Interactions, and Companies.  Once surfaced the intention of the Foundation Study is to guide the user on important things to act upon.`
     }
 
+    _setCompanies(companies) {
+        const allCompanies = companies.map(company => company.name);
+        const allCompaniesString = allCompanies.join(" ");
+        const allCompaniesHash = crypto.createHash('sha256').update(allCompaniesString).digest('hex');
+        
+        const timestamp = (new Date()).toISOString();
+        const timeStampKey = Date.now() / 1000;
+    
+        return {
+            [timeStampKey]: {
+                hash: allCompaniesHash,
+                included_companies: allCompanies
+            }
+        };
+    }
+
     _getStudyPrototype(myUser, myCompany, myDateString, studyName="Foundation", isFoundation=true) {
         return {
             name: {consoleString: "", value: studyName}, // Assigned by the user
             sourceTopics: {consoleString: "", value: {}}, // Empty, assigned by caffeine
             processTopics: {consoleString: "", value: {}}, // Empty, assigned by caffeine
-            companies: {consoleString: "", value: {}}, // Empty, assigned by caffeine
+            companies: {consoleString: "", value: _this._setCompanies(this.companies)}, // TODO: Need to assign the companies and create the hash
             status: {consoleString: "", value: 0}, // Set to zero, changed by caffeine
             project: {consoleString: "", value: this.defaultValue}, // Default value, assigned by caffeine
             syncStatus: {consoleString: "", value: this.defaultValue}, // Default value, changed by future project sync service

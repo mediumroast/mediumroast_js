@@ -1,4 +1,4 @@
-#!/usr/bin/env node --no-deprecation
+#!/usr/bin/env -S node --no-deprecation
 
 /**
  * @fileoverview The wrapping CLI for Mediumroast for GitHub

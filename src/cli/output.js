@@ -10,7 +10,7 @@
 // Import required modules
 import Table from 'cli-table3'
 import {Parser} from '@json2csv/plainjs'
-import * as XLSX from 'xlsx'
+// import * as XLSX from 'xlsx'
 import logo from 'asciiart-logo'
 import FilesystemOperators from './filesystem.js'
 
@@ -206,8 +206,10 @@ class CLIOutput {
         try {
             const csv = csvParser.parse(objects)
             this.fileSystem.saveTextOrBlobFile(myFile, csv)
+            console.log(`SUCCESS: wrote [${this.objectType}] objects to [${myFile}]`)
             return [true, {status_code: 200, status_msg: `wrote [${this.objectType}] objects to [${myFile}]`}, null]
         } catch (err) {
+            console.error(`ERROR: Unable to write [${this.objectType}] objects to [${myFile}] due to [${err}]`)
             return [false, {}, err]
         }
     }
@@ -215,17 +217,20 @@ class CLIOutput {
     // NOTE: Not exterally facing doesn't require JSDoc signture
     // Purpose: Output an XLSX file to this.env.outputDir containing all object metadata
     outputXLS(objects) {
-        const fileName = 'Mr_' + this.objectType + '.xlsx'
-        const myFile = this.env.outputDir + '/' + fileName
-        try {
-            const mySheet = XLSX.utils.json_to_sheet(objects)
-            const myWorkbook = XLSX.utils.book_new()
-            XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
-            XLSX.writeFile(myWorkbook, myFile)
-            return [true, null]
-        } catch (err) {
-            return [false, err]
-        }
+        console.log('NOTICE: XLSX output is presently disabled, a future version will reenable it.')
+        return [false, {status_code: 501, status_msg: 'ERROR: XLSX output is presently disabled'}, null]
+        // NOTE: 
+        // const fileName = 'Mr_' + this.objectType + '.xlsx'
+        // const myFile = this.env.outputDir + '/' + fileName
+        // try {
+        //     const mySheet = XLSX.utils.json_to_sheet(objects)
+        //     const myWorkbook = XLSX.utils.book_new()
+        //     XLSX.utils.book_append_sheet(myWorkbook, mySheet, this.objectType)
+        //     XLSX.writeFile(myWorkbook, myFile)
+        //     return [true, null]
+        // } catch (err) {
+        //     return [false, err]
+        // }
     }
 
     /**

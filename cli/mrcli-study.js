@@ -41,7 +41,9 @@ myProgram = environment.removeArgByName(myProgram, '--persona')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--delete')
 myProgram = environment.removeArgByName(myProgram, '--add_wizard')
-myProgram.option('-i, --init_foundation', 'Initialize Foundation Study.')
+myProgram = environment.removeArgByName(myProgram, '--report')
+myProgram.option('-i, --init_foundation ', 'Initialize Foundation Study.')
+myProgram.option('--report <name>', 'Generate a report for the specified study.')
 // Parse the command line arguments
 let myArgs = myProgram.parse(process.argv)
 myArgs = myArgs.opts()
@@ -113,12 +115,16 @@ if (myArgs.find_by_name) {
       process.exit(-1)
    }
 } else if (myArgs.reset_by_name) {
-   console.error('ERROR (%d): Reset by name not implemented.', -1)
-   process.exit(-1)
-   //results = await studyCtl.delete(myArgs.delete)
+   const resetResp = await cliUtils.resetStatus(myArgs.reset_by_name, studyCtl)
+   if (resetResp[0]) {
+      console.log(`SUCCESS: ${resetResp[1].status_msg}`)
+      process.exit(0)
+   } else {
+      console.log(`ERROR: ${resetResp[1].status_msg}`)
+      process.exit(-1)
+   }
 } else if (myArgs.report) {
-   
-   const studyName = myArgs.report || 'Foundation'
+   const studyName = myArgs.report
    const studyResults = await studyCtl.findByName(studyName)
    const study = studyResults[2][0]
 
@@ -129,6 +135,10 @@ if (myArgs.find_by_name) {
    )
 
    const writeResult = await docController.generateTop5InsightsReport()
+   if (!writeResult[0]) {
+      console.error(`ERROR: ${writeResult[1].status_msg}`)
+      process.exit(-1)
+   }
    console.log(`SUCCESS: ${writeResult[1].status_msg}`)
    process.exit(0)
 

@@ -72,10 +72,9 @@ class Environmentals {
             )
             .option(
                 '-o --output <choose the output type to emit>',
-                'Select output type: table, json, xls or csv. xls & csv will save to a file.',
+                'Select output type: table, json, or csv, csv output saves to a file. Note, xlsx output is presently disabled it will be reenabled in the future.',
                 'table',
                 'json',
-                'xls',
                 'csv'
             )
             .option(
