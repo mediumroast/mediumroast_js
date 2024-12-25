@@ -78,14 +78,15 @@ async function readBranches () {
 
     // Loop through the branches to obtain the latest commit comment, author, and date added to the branch, and then add them to the branches array
     for (const branch of branches) {
-        const { data: commit } = await octokit.rest.repos.getBranch({
+        const { data: branchCommit } = await octokit.rest.repos.getBranch({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             branch: branch.name
         })
-        branch.commit = commit.commit.sha
-        branch.author = commit.commit.author.name
-        branch.date = commit.commit.author.date
+        branch.commit = branchCommit.commit.sha
+        branch.author = branchCommit.commit.commit.author.name
+        branch.date = branchCommit.commit.commit.author.date
+        branch.last_commit = branchCommit.commit.commit.message
     }
 
     return branches
@@ -141,6 +142,7 @@ async function saveReports (reports, inputs) {
 
     // Create or update each file in a single commit
     for (const report of reports) {
+
         // Get the sha of the file if it exists
         try {
             const { data: file } = await octokit.rest.repos.getContent({

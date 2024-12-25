@@ -217,7 +217,13 @@ async function createSimilarCompanies(similarCompanies, companies, interactions)
     const competitors = getCompetitors(similarCompanies, companies, interactions)
     const companyObject = competitors.mostSimilar
     const mostSimilarCompany = competitors.mostSimilar.name
-    // Create the most similar company section
+    
+    
+    // Create a list of similar companies to process
+    // const mostSimilarCompany = Object.keys(similarCompanies).reduce((a, b) => similarCompanies[a] > similarCompanies[b] ? a : b)
+    // Append the most similar company to the list from the companies array
+    // const companyObject = companies.find((company) => company.name === mostSimilarCompany)
+    // Create the most similar company markdown
     const mostSimilarCompanySection = await createSimilarCompany(companyObject)
     // Get the most and least similar interactions from the similarCompanies object using companyObject name
     const mostSimilarInteraction = interactions.find((interaction) => interaction.name === similarCompanies[mostSimilarCompany].most_similar.name)
