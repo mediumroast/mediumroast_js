@@ -34,21 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li><li><a href="module-baseObjects.html">baseObjects</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li><li><a href="tutorial-Study.html">Study Subcommand</a></li>
 				</ul>
 			</li>
 			
@@ -89,8 +89,11 @@
 <article>
     <h2>Interactions</h2>
 <p>After running <code>mrcli setup</code> you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. Additional Interactions can be added, updated, or removed; essentially, <code>interaction</code> is an <code>mrcli</code> sub-command that affords users Create, Read, Update and Delete capabilities. Each of the major functions for <code>mrcli interaction</code> are described in this document.</p>
-<h3>Notice</h3>
-<p>Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.</p>
+<h3>Notice(s)</h3>
+<ul>
+<li>Some command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.</li>
+<li>Summarization of Interaction contents and generating proto-requirements plus competitive insights requires a run of the Mediumroast for GitHub Caffeine Machine Intelligence service.  If you're interested in running the Caffeine Machine Intelligence service please contact the Mediumroast for GitHub team via <a href="https://discord.gg/ebM4Cf8meK">Discord</a> or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).</li>
+</ul>
 <h2>Help</h2>
 <p>Prints the usage for the <code>interaction</code> sub-command and exits.</p>
 <h3>Command(s) run</h3>
@@ -119,12 +122,12 @@
 </ul>
 <h4>Screenshot with output</h4>
 <img width="1178" alt="interactions_json" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/060656ff-8272-4574-a546-d28b9a351dab">
-<h3>List all interaction objects and output to a CSV or XLSX</h3>
-<p>Interaction data can be output in either a CSV or XLSX files to enable consumption in common tools like Microsoft Excel. The resulting files will be stored in $HOME/Documents directory as <code>Mr_Interactions.csv</code> or <code>Mr_Interactions.xlsx</code> depending on your intended output.</p>
+<h3>List all interaction objects and output to a CSV</h3>
+<p>Interaction data can be output in CSV files to enable consumption in common tools like Microsoft Excel or Apple Numbers. The resulting files will be stored in $HOME/Documents directory as <code>Mr_Interactions.csv</code>.</p>
 <h4>Command(s) run</h4>
 <ul>
 <li><code>mrcli i --output=csv</code></li>
-<li><code>mrcli i --output=xls</code></li>
+<li><code>mrcli interaction --output=csv</code></li>
 </ul>
 <h4>Screenshot of commands being run</h4>
 <img width="1178" alt="interactions_csv" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/621064e0-33a1-4136-988d-ec4f68c07330">
@@ -223,9 +226,9 @@
 	</span>
 
 <span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.4</a>
 	
-		on Tue Sep 17th 2024
+		on Sat Dec 28th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

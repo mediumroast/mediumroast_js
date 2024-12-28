@@ -34,21 +34,21 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-baseObjects.html">baseObjects</a></li><li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li>
+					<li><a href="module-GitHubAuth.html">GitHubAuth</a></li><li><a href="module-GitHubFunctions.html">GitHubFunctions</a></li><li><a href="module-baseObjects.html">baseObjects</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li>
+					<li><a href="GitHubFunctions.GitHubFunctions.html">GitHubFunctions.GitHubFunctions</a></li><li><a href="module-GitHubAuth-GitHubAuth.html">GitHubAuth~GitHubAuth</a></li><li><a href="module-baseObjects-Actions.html">baseObjects~Actions</a></li><li><a href="module-baseObjects-Companies.html">baseObjects~Companies</a></li><li><a href="module-baseObjects-Interactions.html">baseObjects~Interactions</a></li><li><a href="module-baseObjects-Storage.html">baseObjects~Storage</a></li><li><a href="module-baseObjects-Studies.html">baseObjects~Studies</a></li><li><a href="module-baseObjects-Users.html">baseObjects~Users</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li>
+					<li><a href="tutorial-Company.html">Company Subcommand</a></li><li><a href="tutorial-Demo.html">Demo</a></li><li><a href="tutorial-Interaction.html">Interaction Subcommand</a></li><li><a href="tutorial-README.html">Administrative Subcommands</a></li><li><a href="tutorial-Study.html">Study Subcommand</a></li>
 				</ul>
 			</li>
 			
@@ -102,14 +102,10 @@
 
     <section class="readme-section">
         <article><h2>Welcome Mediumroast for GitHub</h2>
-<p>Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.</p>
-<h3>Notices</h3>
-<ul>
-<li>A new version of the CLI is available and the major focus of this version is to add in Competitive Similarity Analysis, Interaction summarization and Interaction Proto-requirements discovery.</li>
-<li>You can review the <a href="https://mediumroast.github.io/mediumroast_js/">GitHub Page Version</a> rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display.</li>
-</ul>
+<p>Products organizations must build evidence based product plans from competitive and customer interactions.  Using Artificial Intelligence and Machine Learning, Mediumroast for GitHub realizes an active product planning repository for Product Managers and Developers everyone can see, use, and reference. The repository is built on GitHub and is accessible via Command Line Interface (CLI) and a Software Development Kit (SDK).  This CLI and SDK are built on Node.js and is available for Linux and MacOS operating systems.</p>
+<p>A <a href="https://mediumroast.github.io/mediumroast_js/">GitHub Page Version</a> of this content is also available, but the screencasts and videos won't display.</p>
 <h2>Installation and configuration</h2>
-<p>Mediumroast for GitHub includes a <a href="https://github.com/apps/mediumroast-for-github">GitHub Application</a>, a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.</p>
+<p>Mediumroast for GitHub includes a <a href="https://github.com/marketplace/mediumroast-for-github">GitHub Application</a>, a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.</p>
 <h3>Preinstallation requirements</h3>
 <ol>
 <li>A GitHub organization</li>
@@ -119,7 +115,7 @@
 <li><a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm">NPM installed</a>, ideally globally for all users.</li>
 </ol>
 <h3>Step 1 - Install the GitHub App</h3>
-<p>Browse to the Mediumroast for GitHub <a href="https://github.com/apps/mediumroast-for-github">GitHub Application</a> and:</p>
+<p>Browse to the Mediumroast for GitHub <a href="https://github.com/marketplace/mediumroast-for-github">GitHub Application</a> and:</p>
 <ol>
 <li>Click install,</li>
 <li>Choose the location for the installation, usually your organization,</li>
@@ -151,7 +147,7 @@
 <p>Running <code>mrcli setup</code> a second time on an existing repository will not create a new one, instead it will detect the existing repository and prompt to update your authentication method and report theme. This is used typically when another user in your organization needs to access the repository.</p>
 <h3>Step 5.1 - Verify your installation via the CLI</h3>
 <p>After the setup process is complete you can verify the installation by running <code>mrcli company</code> to see the companies in the repository.</p>
-<h4>Exzmple screenshot of companies table</h4>
+<h4>Example screenshot of companies table</h4>
 <img width="1178" alt="companies_table" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/af9d22d8-4161-4ae9-9c57-06b65769a54e">
 <h3>Step 5.2 - Verify your installation via GitHub actions</h3>
 <p>Additionally, two GitHub Actions are installed in the repository, one to clean up branches and the other to generate reports.  To verify the actions are installed browse to the repository and click on the <code>Actions</code> tab to see the actions running. These actions are set to run on a schedule, but can be run manually.  When a run you'll find an automatically generated <code>README.md</code> file in the repository and links to company reports in the <code>README.md</code>, an example screenshot of the repository companies report is below.</p>
@@ -162,7 +158,17 @@
 <h2>Contributing</h2>
 <p>If you're interested in contributing to the Mediumroast for GitHub project, please review the <a href="https://github.com/mediumroast/mediumroast_js/blob/.github/CONTRIBUTING.md">CONTRIBUTING.md</a> file in the <code>.github</code> directory of the repository.  The file contains information on how to get started, how to clone the repository, and how to install the SDK for development.</p>
 <h2>Issues</h2>
-<p>If you detect a problem or want to suggest an improvement open an <a href="https://github.com/mediumroast/mediumroast_js/issues">issue</a> and we will work with you to resolve or respond.</p></article>
+<p>If you detect a problem or want to suggest an improvement open an <a href="https://github.com/mediumroast/mediumroast_js/issues">issue</a> and we will work with you to resolve or respond.</p>
+<h2>Support</h2>
+<p>If you need support or would like to have Mediumroast run the Caffeine Machine Intelligence service on your repository please contact the Mediumroast team via <a href="https://discord.gg/ebM4Cf8meK">Discord</a> or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).</p>
+<h3>Release notes</h3>
+<h4>Version 0.8.06.01</h4>
+<ul>
+<li>The latest version of the SDK and CLI package now includes an initial implementation of Studies with the Foundation study.</li>
+<li>The SDK and CLI may run on for Windows OS, but it has not been tested. If you choose to install and run into problems please open an issue and we will work with you to resolve the matter.</li>
+<li><code>cli-table</code> has been replaced by <code>cli-table3</code> to ensure that CLI tabular outputs are on a stable and maintained package.</li>
+<li>The <code>xlsx</code> package has been removed and replaced with <code>exceljs</code> for improved output to Excel files, and due to the security vulnerability in the <code>xlsx</code> package.</li>
+</ul></article>
     </section>
 
 
@@ -210,9 +216,9 @@
 	</span>
 
 <span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.4</a>
 	
-		on Tue Sep 17th 2024
+		on Sat Dec 28th 2024
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
