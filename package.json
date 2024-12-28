@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.8.03.00",
+  "version": "0.8.06.01",
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with Mediumroast for GitHub.",
   "main": "cli/mrcli.js",
   "scripts": {
@@ -45,7 +45,9 @@
     "chalk": "^5.0.0",
     "cli-table3": "^0.6.5",
     "echarts": "^5.5.1",
+    "exceljs": "^4.4.0",
     "ink-docstrap": "^1.3.2",
+    "jsdocs": "^1.0.0",
     "node-geocoder": "^4.4.1",
     "rollup": "^2.66.1",
     "rollup-plugin-babel": "^4.4.0",
@@ -70,18 +72,22 @@
     "asciiart-logo": "^0.2.7",
     "axios": "^1.4.0",
     "box-plot": "^1.0.0",
+    "chalk": "^5.0.0",
     "cli-progress": "^3.11.2",
+    "cli-table3": "^0.6.5",
     "commander": "^8.3.0",
     "configparser": "^0.3.9",
     "docx": "^7.4.1",
+    "exceljs": "^4.4.0",
     "inquirer": "^9.1.2",
     "mediumroast_js": "^0.8.0-0.0",
     "node-fetch": "^3.2.10",
+    "node-geocoder": "^4.4.1",
     "octokit": "^4.0.2",
     "open": "^9.1.0",
     "ora": "^6.1.2",
+    "taffydb": "^2.7.3",
     "uninstall": "^0.0.0",
-    "wrap-ansi": "^8.1.0",
-    "xlsx": "^0.18.5"
+    "wrap-ansi": "^8.1.0"
   }
 }

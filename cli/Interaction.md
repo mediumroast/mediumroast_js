@@ -1,8 +1,9 @@
 ## Interactions
 After running `mrcli setup` you can start adding Interactions. An Interaction can be as simple as an email thread between an account team and a customer, a detailed customer interview or even documentation about a competitor. Additional Interactions can be added, updated, or removed; essentially, `interaction` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities. Each of the major functions for `mrcli interaction` are described in this document.
 
-### Notice
-Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+### Notice(s)
+- Some command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+- Summarization of Interaction contents and generating proto-requirements plus competitive insights requires a run of the Mediumroast for GitHub Caffeine Machine Intelligence service.  If you're interested in running the Caffeine Machine Intelligence service please contact the Mediumroast for GitHub team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).
 
 ## Help
 Prints the usage for the `interaction` sub-command and exits.
@@ -40,12 +41,12 @@ Output a list of company objects in properly formatted JSON to STDOUT which can 
 <img width="1178" alt="interactions_json" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/060656ff-8272-4574-a546-d28b9a351dab">
 
 
-### List all interaction objects and output to a CSV or XLSX
-Interaction data can be output in either a CSV or XLSX files to enable consumption in common tools like Microsoft Excel. The resulting files will be stored in $HOME/Documents directory as `Mr_Interactions.csv` or `Mr_Interactions.xlsx` depending on your intended output.
+### List all interaction objects and output to a CSV
+Interaction data can be output in CSV files to enable consumption in common tools like Microsoft Excel or Apple Numbers. The resulting files will be stored in $HOME/Documents directory as `Mr_Interactions.csv`.
 
 #### Command(s) run
 - `mrcli i --output=csv`
-- `mrcli i --output=xls`
+- `mrcli interaction --output=csv`
 
 #### Screenshot of commands being run
 <img width="1178" alt="interactions_csv" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/621064e0-33a1-4136-988d-ec4f68c07330">

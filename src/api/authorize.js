@@ -14,7 +14,7 @@
  * @requires open
  * @requires octoDevAuth
  * @requires chalk
- * @requires cli-table
+ * @requires cli-table3
  * @requires configparser
  * @requires FilesystemOperators
  * 
@@ -30,7 +30,7 @@
 import open from "open"
 import * as octoDevAuth from '@octokit/auth-oauth-device'
 import chalk from "chalk"
-import Table from 'cli-table'
+import Table from 'cli-table3'
 import FilesystemOperators from '../cli/filesystem.js'
 
 
@@ -112,15 +112,30 @@ class GitHubAuth {
                 deviceCode = verifier.device_code
                 // Print the verification artifact to the console
                 console.log(
-                    chalk.blue.bold(`If your OS supports it, opening your browser, otherwise, navigate to the Authorization website. Then, please copy and paste the Authorization code into your browser.\n`)
+                    chalk.blue.bold(`If supported opening your browser to the Authorization website.\nIf your browser doesn't open, please copy and paste the Authorization website URL into your browser's address bar.\n`)
                 )
+                const authWebsitePrefix = `Authorization website:`
+                const authCodePrefix = `Authorization code:`
+                const authWebsite = chalk.bold.red(verifier.verification_uri)
+                const authCode = chalk.bold.red(verifier.user_code)
                 const table = new Table({
                     rows: [
-                        [chalk.blue.bold(`Authorization website:`), chalk.bold.red(verifier.verification_uri)],
-                        [chalk.blue.bold(`Authorization code:`), chalk.bold.red(verifier.user_code)]
+                        [authWebsitePrefix, authWebsite],
+                        [authCodePrefix, authCode]
                     ]
                 })
-                console.log(table.toString())
+                // Get the table as a string
+                const tableString = table.toString()
+                // Check to see if the table string is empty
+                if (tableString !== '') {
+                    // Print the table to the console, since not empty
+                    console.log(tableString)
+                } else {
+                    // Print strings to the console, since empty
+                    console.log(`\t${authWebsitePrefix} ${authWebsite}`)
+                    console.log(`\t${authCodePrefix} ${authCode}`)
+                }
+                console.log(`\nCopy and paste the Authorization code into correct field on the Authorization website. Once authorized setup will continue.\n`)
                 open(verifier.verification_uri)
             }
         })

@@ -71,7 +71,7 @@ Is replaced by `storage` and `actions` commands in **Mediumroast for GitHub**. I
 
 ---
 
-[[Company Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Company.md)] | [[Interaction Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Interaction.md)]
+[[Company Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Company.md)] | [[Interaction Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Interaction.md) | [[Studies Subcommand](https://github.com/mediumroast/mediumroast_js/blob/main/cli/Study.md)]
 
 
 

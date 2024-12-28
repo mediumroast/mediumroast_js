@@ -20,8 +20,8 @@ function createMainReport (inputs) {
     readme += mrMarkdownBuilder.h2(`Interactions`)
     readme += `Interaction objects are essentially content related to a company.  They can include meeting notes, emails, product documentation, blog posts, audio transcripts, and more.  While each interaction is linked to a company access to the interaction is presented handled by the company that owns it.`
 
-    readme += mrMarkdownBuilder.h2(`Studies`)
-    readme += `Study objects will be a part of a future release of Mediumroast and will be a part of a paid subscription. Stay tuned for more information on this feature and a way to gain access to it.`
+    readme += mrMarkdownBuilder.h2(`Studies [${mrMarkdownBuilder.link('View Studies', './Studies/README.md')}]`)
+    readme += `The first implementation of studies is available via the \`Foundation\` study.  The \`Foundation\` study includes all Companies, and their associated Interactions, building atop the analysis that Caffeine performed on Interactions data.  To initialize the \`Foundation\` study please run \`mrcli study --init_foundation\` and then reach out to your Mediumroast team via ${mrMarkdownBuilder.link('Discord', 'https://discord.gg/ebM4Cf8meK')} or email us at ${mrMarkdownBuilder.link('hello@mediumroast.io', 'mailto:hello@mediumroast.io')}. Note that activating studies requires a professional services engagement with your Mediumroast crew. Finally, support for user defined studies will come in a future release.\n`
 
     readme += mrMarkdownBuilder.h2('Navigation and Modification')  
     readme +=`Direct navigation and modifcation of repository contents is not recommended. Instead this README file, and accompanying markdown files, will guide you through its contents.  Additionally, the open source node module and CLI \`mediumroast_js\` [${mrMarkdownBuilder.link('GitHub', 'https://github.com/mediumroast/mediumroast_js')}, ${mrMarkdownBuilder.link('NPM', 'https://www.npmjs.com/package/mediumroast_js')}] can be used to create, update, and delete content in the repository.`
@@ -37,7 +37,7 @@ function createMainReport (inputs) {
     const month = date.toLocaleString('default', { month: 'long' })
     const year = date.getFullYear()
 
-    readme += `The repository contains \`2\` active workflows. As of \`${month}-${year}\` \`${inputs.workflows.runTime} minutes\` have been consumed. A GitHub free plan has \`2000 minutes\` available per month meaning there is \`${2000 - inputs.workflows.runTime}\` remaining minutes for the month. Assuming a repository with 10s of company objects, each workflow runs about a minute at midnight everyday. This means a good hueristic for how many minutes are consumed in a month is 2 workflows/day x 1 min/workflow x 30 days/month or \`${2*1*30} min/month\`. To get an accurate view of your consumed minutes for your planning please run \`mrcli billing\`. The statuses of five most recent workflow runs are provided below, links are included to enable more information on the workflows.\n`
+    readme += `The repository contains \`2\` active workflows. As of \`${month}-${year}\` \`${inputs.workflows.runTime} minutes\` have been consumed. A GitHub free plan has \`2000 minutes\` available per month meaning there is \`${2000 - inputs.workflows.runTime}\` remaining minutes for the month. Assuming a repository with 10s of company objects, each workflow runs about a minute at midnight everyday. A good estimate for how many minutes are typically consumed in a month is 2 workflows/day x 1 min/workflow x 30 days/month or \`${2*1*30} min/month\`. To get an accurate view of your consumed minutes for your planning please run \`mrcli actions\`. The statuses of five most recent workflow runs are provided below, links are included to enable more information on the workflows.\n`
     // Create the table header
     const workflowTableHeader = mrMarkdownBuilder.tableHeader(['Workflow Name', 'Last Status', 'Run Time Message', 'Run Time'])
     // Create the table rows
@@ -63,11 +63,13 @@ function createMainReport (inputs) {
     readme += mrMarkdownBuilder.h2('Branches')
     readme += `The repository contains \`${inputs.branches.length}\` branches.  The last commit of each branch is listed below.  Click on the branch name to view the branch.\n`
     // Create the table header
-    const branchTableHeader = mrMarkdownBuilder.tableHeader(['Branch Name', 'Last Commit'])
+    const branchTableHeader = mrMarkdownBuilder.tableHeader(['Branch Name', 'Commit Author', 'Commit Date', 'Last Commit Message'])
     // Create the table rows
     const branchTableRows = inputs.branches.map((branch) => {
         const branchRow = [
             mrMarkdownBuilder.link(branch.name, `./tree/${branch.name}`),
+            branch.author,
+            branch.date,
             branch.last_commit
         ]
         return branchRow

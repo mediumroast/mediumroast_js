@@ -1,9 +1,7 @@
 ## Welcome Mediumroast for GitHub
-Products organizations must build robust product plans from competitive and customer interactions everyone can see, use, and reference. Therefore, Mediumroast for GitHub intends to help Products oranizations construct an active interactions repository close to the action of development and issue management in GitHub.
+Products organizations must build evidence based product plans from competitive and customer interactions.  Using Artificial Intelligence and Machine Learning, Mediumroast for GitHub realizes an active product planning repository for Product Managers and Developers everyone can see, use, and reference. The repository is built on GitHub and is accessible via Command Line Interface (CLI) and a Software Development Kit (SDK).  This CLI and SDK are built on Node.js and is available for Linux and MacOS operating systems.
 
-### Notices 
-- A new version of the CLI is available and the major focus of this version is to add in Competitive Similarity Analysis, Interaction summarization and Interaction Proto-requirements discovery. 
-- You can review the [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) rather than the repository version of this documentation, but the screencasts of several of the CLI tutorials will not display. 
+A [GitHub Page Version](https://mediumroast.github.io/mediumroast_js/) of this content is also available, but the screencasts and videos won't display.
 
 ## Installation and configuration
 Mediumroast for GitHub includes a [GitHub Application](https://github.com/marketplace/mediumroast-for-github), a Command Line Interface, and a Software Development Kit.  The following steps show you how to install the App and the CLI with SDK.
@@ -72,7 +70,15 @@ If you're interested in contributing to the Mediumroast for GitHub project, plea
 ## Issues
 If you detect a problem or want to suggest an improvement open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve or respond.
 
+## Support
+If you need support or would like to have Mediumroast run the Caffeine Machine Intelligence service on your repository please contact the Mediumroast team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).
 
+### Release notes
+#### Version 0.8.06.01
+- The latest version of the SDK and CLI package now includes an initial implementation of Studies with the Foundation study. 
+- The SDK and CLI may run on for Windows OS, but it has not been tested. If you choose to install and run into problems please open an issue and we will work with you to resolve the matter.
+- `cli-table` has been replaced by `cli-table3` to ensure that CLI tabular outputs are on a stable and maintained package.
+- The `xlsx` package has been removed and replaced with `exceljs` for improved output to Excel files, and due to the security vulnerability in the `xlsx` package.
 
 
 

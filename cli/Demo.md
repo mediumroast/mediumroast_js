@@ -31,5 +31,3 @@ The following limitations are in place for the demo repository:
 1. The demo repository is a clone of the main repository and is updated weekly.
 2. The demo repository does not have the actions that automatically generate reports and clean up branches, which means that `mrcli actions` will not work as expected.
 3. The demo repository is a shared read-only repository, meaning you can't push changes to it. If you need to test changes, please use your own repository.
-
-If you have any questions or need help, please open an [issue](https://github.com/mediumroast/mediumroast_js/issues)

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * A class used to build CLIs for accessing and reporting on mediumroast.io objects
+ * A class used to build CLIs for constructing Interaction objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file interactionCLIwizard.js
  * @copyright 2022 Mediumroast, Inc. All rights reserved.
@@ -19,6 +19,7 @@ import * as progress from 'cli-progress'
 import ora from 'ora'
 import crypto from 'crypto'
 import { resolve } from 'path'
+import CLIUtilities from './common.js'
 
 class AddInteraction {
     /**
@@ -39,24 +40,30 @@ class AddInteraction {
      * @param {Object} cli - the already constructed CLI object
      */
     constructor(env, controllers){
+        // Set the environment
         this.env = env
 
+        // Construct commmon utilities
+        this.cliUtils = new CLIUtilities()
+        this.wutils = new WizardUtils(this.objectType)
+        this.output = new CLIOutput(this.env, this.objectType)
+        this.fileSystem = new FilesystemOperators()
+
         // Splash screen elements
-        this.name = "mediumroast.io Interaction Wizard"
-        this.version = "version 2.0.0"
-        this.description = "Prompt based interaction object creation for the mediumroast.io."
+        this.name = "Mediumroast for GitHub"
+        this.version = `version ${this.cliUtils.getVersionFromPackageJson()}`
+        this.description = "Commandline Interaction wizard"
         this.processName = "mrcli-interaction-wizard"
 
         // Class globals
         this.defaultValue = "Unknown"
         this.objectType = "Interactions"
-        this.wutils = new WizardUtils(this.objectType) // Utilities from common wizard
-        this.output = new CLIOutput(this.env, this.objectType)
-        this.fileSystem = new FilesystemOperators()
         this.progressBar = new progress.SingleBar(
             {format: '\tProgress [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'}, 
             progress.Presets.rect
         )
+
+        // Set the controllers
         this.companyCtl = controllers.company
         this.interactionCtl = controllers.interaction
         this.userCtl = controllers.user
@@ -64,7 +71,6 @@ class AddInteraction {
 
         // NOTE: These follow the APA style guide for references. These will be used to dynamically create
         //       the interaction_type attribute for the interaction object.
-        // this.interactionTypes = this.fileSystem.readJSONFile('./interactionTypes.json')[2]
         this.interactionTypes = this.fileSystem.importJSONFile('./interactionTypes.json')[2]
     }
 
@@ -271,6 +277,8 @@ class AddInteraction {
      * @function wizard
      * @description Invoke the text based wizard process to add an interaction to the mediumroast.io application
      * @returns {List} - a list containing the result of the interaction with the mediumroast.io backend
+     * 
+     * @todo Remove properties variable after checking to see if it is needed or not
      */
     async wizard() {
         // Unless we suppress this print out the splash screen.
@@ -301,10 +309,10 @@ class AddInteraction {
         // prototype below contains strings that are easier to read.  Additionally, should 
         // we wish to set some defaults for each one it is also feasible within this 
         // prototype object to do so.
-        let properties = [
-            "organization_id", //
+        // let properties = [
+        //     "organization_id", //
 
-        ]
+        // ]
 
         // Capture the current data and converto to an ISO string
         const myDate = new Date()

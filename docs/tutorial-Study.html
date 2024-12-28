@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Mediumroast for GitHub SDK and CLI Tutorial: Demo</title>
+	<title>Mediumroast for GitHub SDK and CLI Tutorial: Study Subcommand</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -83,39 +83,100 @@
 <header>
     
 
-    <h2>Demo</h2>
+    <h2>Study Subcommand</h2>
 </header>
 
 <article>
-    <h2>Introduction</h2>
-<p>To help users get started with Mediumroast for GitHub, a demo repository has been created in the organization <code>MegaRoast</code>. The demo repository is a clone of our repository, but without actions that automatically generate reports and clean up branches. Further, the demo repository is regularly cloned to reflect the latest changes from our main repository on a weekly basis.  So while you can make changes to the demo repository, they will be overwritten on the next clone.  This is to ensure that the demo repository is always in sync with the main repository.</p>
-<p>To gain access to the demo repository, please follow the steps in the <a href="https://github.com/mediumroast/mediumroast_js#step-42---setup-the-cli-after-initial-setup">main README</a> to install the CLI. From there run  <code>mrcli setup</code> and when prompted enter the GitHub organization <code>MegaRoast</code>.  Because the demo repository is a clone of our repository the setup will not create a new repository, but instead prompt you for your authentication method and report theme.  Once you've completed the setup process you will have access to the demo repository and can begin to explore the capabilities of Mediumroast for GitHub.</p>
-<p>However, if you've installed the CLI and run <code>mrcli setup</code> you can merely modify your <code>$HOME/.mediumroast/config.ini</code> file to point to the <code>MegaRoast</code> organization.  This will enable you to access the demo repository without running <code>mrcli setup</code> again.</p>
-<h3>Example config.ini file</h3>
-<p>With this configuration file by updating the <code>org</code> value to <code>MegaRoast</code> you can access the demo repository without running <code>mrcli setup</code> again.</p>
-<pre class="prettyprint source lang-ini"><code>[DEFAULT]
-company_dns=https://company-dns.mediumroast.io
-company_logos=https://icon-server.mediumroast.io/allicons.json?url=
-echarts=https://echart-server.mediumroast.io:11000
-nominatim=https://nominatim.openstreetmap.org/search?addressdetails=1&q=
-working_directory=working
-report_output_dir=Documents
-theme=coffee
-
-[GitHub]
-clientId=Iv1.f5c0a4eb1f0606f8
-appId=650476
-authType=deviceFlow
-org=&lt;ORGANIZATION>
-token=&lt;TOKEN>
-</code></pre>
-<h3>Limitations</h3>
-<p>The following limitations are in place for the demo repository:</p>
-<ol>
-<li>The demo repository is a clone of the main repository and is updated weekly.</li>
-<li>The demo repository does not have the actions that automatically generate reports and clean up branches, which means that <code>mrcli actions</code> will not work as expected.</li>
-<li>The demo repository is a shared read-only repository, meaning you can't push changes to it. If you need to test changes, please use your own repository.</li>
-</ol>
+    <h2>Studies</h2>
+<p>Study objects are central to Mediumroast for GitHub. Studies rely on Interactions and Companies to function.  At this time only the <strong>Foundation study</strong> is implemented; a future update will add support for user defined studies. To enable the Foundation study run <code>mrcli study --init_foundation</code>, which will create the basic structures of the study in the repository. Each of the major functions for <code>mrcli study</code> are described in this document.</p>
+<h3>Notice(s)</h3>
+<ul>
+<li>Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.</li>
+<li>Study deletion is not yet implemented and not present.</li>
+<li>The only update possible to the Foundation study is to reset its status to cause Caffeine to reprocess the study.</li>
+<li>Populating the Foundation study requires a run of the Mediumroast for GitHub Caffeine Machine Intelligence service.  If you're interested in running the Caffeine Machine Intelligence service please contact the Mediumroast for GitHub team via <a href="https://discord.gg/ebM4Cf8meK">Discord</a> or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).</li>
+</ul>
+<h2>Help</h2>
+<p>Prints the usage for the <code>study</code> sub-command and exits.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli study --help</code></li>
+</ul>
+<h3>Screenshot with output</h3>
+<!-- Add screenshot here -->
+<h2>List study objects</h2>
+<p>Print out one or more Studies to the command line or an alternative output mechanism like a CSV file. Filtering can be applied to find Studies with specific attributes.</p>
+<h3>List all study objects in a table format</h3>
+<p>This is the default output when running <code>mrcli s</code> or <code>mrcli study</code> which prints a text table to STDOUT.</p>
+<h4>Command(s) run</h4>
+<ul>
+<li><code>mrcli s</code></li>
+<li><code>mrcli study</code></li>
+</ul>
+<h4>Screenshot with output</h4>
+<!-- Add screenshot here -->
+<h3>List all study objects in JSON format</h3>
+<p>Output a list of study objects in properly formatted JSON to STDOUT which can be viewed, redirected to a file, or piped to another command.</p>
+<h4>Command(s) run</h4>
+<ul>
+<li><code>mrcli s --output=json</code></li>
+<li><code>mrcli study --output=json</code></li>
+</ul>
+<h4>Screenshot with output</h4>
+<!-- Add screenshot here -->
+<h3>List all study objects and output to a CSV</h3>
+<p>Study data can be output in a CSV file to enable consumption in common tools like Microsoft Excel. The resulting file will be stored in $HOME/Documents directory as <code>Mr_Studies.csv</code>.</p>
+<h4>Command(s) run</h4>
+<ul>
+<li><code>mrcli s --output=csv</code></li>
+<li><code>mrcli study --output=csv</code></li>
+</ul>
+<h4>Screenshot of commands being run</h4>
+<!-- Add screenshot here -->
+<h3>Screenshot of CSV imported into MacOS numbers</h3>
+<!-- Add screenshot here -->
+<h3>Filter study outputs</h3>
+<p>The CLI offers the ability to filter outputs by almost any study attribute. This is manifest by two switches on the study sub-command one specific to finding studies by name, <code>--find_by_name</code> and the other by an arbitrary attribute, <code>--find_by_x</code>. Note all output format options, like JSON, CSV, etc., are available when the outputs are filtered. Finally, only exact matches are supported, meaning if you want to search for a study using any attribute you have to fully provide the attribute's value (i.e., &quot;Med&quot; would not match &quot;Mediumroast Study&quot;, but &quot;Mediumroast Study&quot; would).</p>
+<h4>Filter a study by name</h4>
+<p>To zero in on a specific study using the find by name switch is provided.</p>
+<h4>Command(s) run</h4>
+<ul>
+<li><code>mrcli s --find_by_name=&quot;Foundation&quot;</code></li>
+</ul>
+<h4>Screenshot with output</h4>
+<!-- Add screenshot here -->
+<h4>Filter a study by attribute</h4>
+<p>Find a specific study by a particular attribute in the example below the switch filters on the attribute <code>status</code>.</p>
+<h4>Command(s) run</h4>
+<ul>
+<li><code>mrcli s --find_by_x='{&quot;status&quot;: &quot;0&quot;}'</code></li>
+</ul>
+<h4>Screenshot with output</h4>
+<!-- Add screenshot here -->
+<h2>Initialize the Foundation study</h2>
+<p>Initializes the Foundation study with core attributes and data.  This is the first step in setting up the Foundation study.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli s --init_foundation</code></li>
+</ul>
+<h3>Screenshot with output</h3>
+<!-- Add screenshot here -->
+<h2>Report on a study</h2>
+<p>Produce a report on a study. The report provides the most important insights per company in Microsoft Excel format as of the current release. The report is stored in the <code>$HOME/Documents</code> directory as <code>&lt;study_name&gt;.xlsx</code>.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli s --report=&quot;Foundation&quot;</code></li>
+</ul>
+<h3>Screenshot of the report</h3>
+<!-- Add screenshot here -->
+<h2>Reset the status of a study</h2>
+<p>Reset the status of a study will cause Caffeine to reprocess the study on its next run. This is useful when the study has been updated and needs to be reprocessed.</p>
+<h3>Command(s) run</h3>
+<ul>
+<li><code>mrcli s --reset_by_name=&quot;Foundation&quot;</code></li>
+</ul>
+<h3>Screenshot with output</h3>
+<!-- Add screenshot here -->
 </article>
 
 </section>

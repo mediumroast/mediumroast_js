@@ -1,4 +1,4 @@
-#!/usr/bin/env node --no-deprecation
+#!/usr/bin/env -S node --no-deprecation
 
 /**
  * @fileoverview The wrapping CLI for Mediumroast for GitHub
@@ -13,23 +13,11 @@
 
 // Import required modules
 import program from 'commander'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url';
+import CLIUtilities from '../src/cli/common.js'
 
-// Function to update version from package.json
-function updateVersionFromPackageJson() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const packageJsonPath = path.join(__dirname, '..', 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  const versionNumber = packageJson.version;
-
-  program.version(versionNumber);
-}
-
-// Update the version from package.json
-updateVersionFromPackageJson()
+// Construct the CLIUtilities object & set the version
+const cliUtils = new CLIUtilities()
+program.version(cliUtils.getVersionFromPackageJson())
 
 program
   .name('mrcli')

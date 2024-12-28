@@ -1,5 +1,5 @@
 /**
- * A class used to build CLIs for accessing and reporting on mediumroast.io objects
+ * A class used to build CLIs for constructing Company objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file companyCLIwizard.js
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
@@ -15,6 +15,7 @@ import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
 import axios from "axios"
 import NodeGeocoder from 'node-geocoder'
+import CLIUtilities from './common.js'
 
 
 class AddCompany {
@@ -42,6 +43,7 @@ class AddCompany {
         this.userCtl = apiControllers.user
         this.githubCtl = apiControllers.github
         this.default = this.env.DEFAULT
+        this.cliUtils = new CLIUtilities()
         
         this.firmographicsEndpoint = "/V3.0/global/company/merged/firmographics/"
         this.sicEndpoint = "/V3.0/na/sic/description/"
@@ -51,9 +53,10 @@ class AddCompany {
         this.default.nominatim ? this.nominatim = this.default.nominatim : this.nominatim = this.env.nominatim
 
         // Splash screen elements
-        this.name = "mediumroast.io Company Wizard"
-        this.version = "version 2.0.0"
-        this.description = "Prompt based company object creation for the mediumroast.io."
+        this.name = "Mediumroast for GitHub"
+        this.version = `version ${this.cliUtils.getVersionFromPackageJson()}`
+        this.description = "Command line Company wizard"
+        this.processName = "mrcli-company-wizard"
 
         // Class globals
         this.defaultValue = "Unknown"

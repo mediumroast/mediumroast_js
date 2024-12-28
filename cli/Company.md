@@ -1,8 +1,9 @@
 ## Companies
 Company objects are central to Mediumroast for GitHub. Interactions and in the future Studies rely on Companies to function. After setup is run, via `mrcli setup`, two companies are present to work with.  Additional Companies can be added, updated, or removed; essentially, `company` is an `mrcli` sub-command that affords users Create, Read, Update and Delete capabilities.  Each of the major functions for `mrcli company` are described in this document.
 
-### Notice
-Some of the command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+### Notice(s)
+- Some command line options and switches may not yet be implemented; therefore, if a switch or option is not yet implemented the CLI will inform the user and then exit.
+- Similarity comparisons of Companies requires a run of the Mediumroast for GitHub Caffeine Machine Intelligence service.  If you're interested in running the Caffeine Machine Intelligence service please contact the Mediumroast for GitHub team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).
 
 ## Help
 Prints the usage for the `company` sub-command and exits.
@@ -36,12 +37,12 @@ Output a list of company objects in properly formatted JSON to STDOUT which can 
 #### Screenshot with output
 <img width="1178" alt="companies_json" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/22d46cd2-952f-4c3b-8e74-37bdceefee2a">
 
-### List all company objects and output to a CSV or XLSX
-Company data can be output in either a CSV or XLSX files to enable consumption in common tools like Microsoft Excel. The resulting files will be stored in $HOME/Documents directory as `Mr_Companies.csv` or `Mr_Companies.xlsx` depending on your intended output.
+### List all company objects and output to a CSV
+Company data can be output in CSV files to enable consumption in common tools like Microsoft Excel or Apple Numbers. The resulting files will be stored in $HOME/Documents directory as `Mr_Companies.csv`.
 
 #### Command(s) run
 - `mrcli c --output=csv`
-- `mrcli c --output=xls`
+- `mrcli company --output=csv`
 
 #### Screenshot of commands being run
 <img width="1178" alt="companies_csv" src="https://github.com/mediumroast/mediumroast_js/assets/10818650/f135de7a-aba8-4ed0-9198-64ff50797d4c">

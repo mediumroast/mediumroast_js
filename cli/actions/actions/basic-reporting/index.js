@@ -2,6 +2,8 @@
 const { readObjects, readBranches, readWorkflows, saveReports } = require('./github.js')
 const { createCompaniesReport } = require('./companies.js')
 const { createCompanyReport } = require('./company.js')
+const { createStudiesReport } = require('./studies.js')
+const { createStudyReport } = require('./study.js')
 const { createMainReport } = require('./main.js')
 
 
@@ -11,6 +13,7 @@ async function run () {
     const inputs = {
         companies: await readObjects('/Companies/Companies.json'),
         interactions: await readObjects('/Interactions/Interactions.json'),
+        studies: await readObjects('/Studies/Studies.json'),
         branches: await readBranches(),
         workflows: await readWorkflows()
     }
@@ -24,6 +27,8 @@ async function run () {
     const reports = {
         companies: `Companies/README.md`,
         company: `Companies/`,
+        studies: `Studies/README.md`,
+        study: `Studies/`,
         main: `README.md`,
     }
 
@@ -31,8 +36,16 @@ async function run () {
     const companyFiles = await createCompanyReport(inputs.companies, inputs.interactions, reports)
     // Create the companies file
     const companiesFile = createCompaniesReport(inputs.companies)
-    // Create the main file
+    
+    
+    // Create the main report
     const mainFile = createMainReport(inputs)
+
+    // Create the study files
+    const studyFiles = await createStudyReport(inputs.studies, inputs.companies, reports)
+    // Create the studies file
+    const studiesFile = await createStudiesReport(inputs.studies)
+    
     // Create the reports array
     const markdownReports = [
         {
@@ -45,7 +58,13 @@ async function run () {
             path: reports.main,
             content: mainFile
         },
-        ...companyFiles
+        {
+            name: 'Studies',
+            path: reports.studies,
+            content: studiesFile
+        },
+        ...companyFiles,
+        ...studyFiles
     ]
 
     // Write the reports
