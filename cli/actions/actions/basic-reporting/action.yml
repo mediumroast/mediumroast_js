@@ -1,5 +1,5 @@
 name: 'Basic Reporting'
-description: 'Generates basic reports for companies plus wrapping README.md files in the repository'
+description: 'Generates basic reports for companies and studies plus wrapping README.md files in the repository'
 inputs:
   github-token:
     description: 'GitHub token'
