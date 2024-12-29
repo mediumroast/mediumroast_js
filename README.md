@@ -71,7 +71,7 @@ If you're interested in contributing to the Mediumroast for GitHub project, plea
 If you detect a problem or want to suggest an improvement open an [issue](https://github.com/mediumroast/mediumroast_js/issues) and we will work with you to resolve or respond.
 
 ## Support
-If you need support or would like to have Mediumroast run the Caffeine Machine Intelligence service on your repository please contact the Mediumroast team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).
+If you need support or would like to have Mediumroast run the Caffeine Machine Intelligence service on your repository please contact the Mediumroast team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io](mailto:hello@mediumroast.io).
 
 ### Release notes
 #### Version 0.8.06.02
