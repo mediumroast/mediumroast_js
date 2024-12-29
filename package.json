@@ -1,6 +1,6 @@
 {
   "name": "mediumroast_js",
-  "version": "0.8.06.02",
+  "version": "0.8.06.03",
   "description": "A Command Line Interface (CLI) and Javascript SDK to interact with Mediumroast for GitHub.",
   "main": "cli/mrcli.js",
   "scripts": {
@@ -80,7 +80,6 @@
     "docx": "^7.4.1",
     "exceljs": "^4.4.0",
     "inquirer": "^9.1.2",
-    "mediumroast_js": "^0.8.0-0.0",
     "node-fetch": "^3.2.10",
     "node-geocoder": "^4.4.1",
     "octokit": "^4.0.2",
