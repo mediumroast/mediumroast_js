@@ -167,12 +167,10 @@ async function createStudyReport (studies, companies, reports) {
 
         // ---- Check if the study is caffinated ----
         const [caffinated, caffinatedMessage] = _checkCaffinated(study)
-        console.log('CAFFINATED STATUS>>>',caffinated)
         if (caffinated === true) {
             // ---- BEGIN Top Insights ----
             // Get the top insights
             const topInsights = await _getTopInsights(study)
-            console.log('TOP INSIGHTS>>>',topInsights)
             studyFile += topInsights
             // ---- END Top Insights ----
         } else {

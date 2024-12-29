@@ -74,6 +74,11 @@ If you detect a problem or want to suggest an improvement open an [issue](https:
 If you need support or would like to have Mediumroast run the Caffeine Machine Intelligence service on your repository please contact the Mediumroast team via [Discord](https://discord.gg/ebM4Cf8meK) or email us at [hello@mediumroast.io], (mailto:hello@mediumroast.io).
 
 ### Release notes
+#### Version 0.8.06.02
+- Resolved documentation errata for Demo.md
+- Updated text for basic reporting workflow and action to show both companies and study reports are running.
+- Removed debugging logging statements from basic reporting action.
+
 #### Version 0.8.06.01
 - The latest version of the SDK and CLI package now includes an initial implementation of Studies with the Foundation study. 
 - The SDK and CLI may run on for Windows OS, but it has not been tested. If you choose to install and run into problems please open an issue and we will work with you to resolve the matter.

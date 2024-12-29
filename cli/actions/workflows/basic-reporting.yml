@@ -18,7 +18,7 @@ jobs:
           - name: Install dependencies
             run: npm install
             working-directory: ./.github/actions/basic-reporting
-          - name: Generate basic reports for companies
+          - name: Generate basic reports for companies and studies
             uses: ./.github/actions/basic-reporting
             with:
               github-token: ${{ secrets.GITHUB_TOKEN }}

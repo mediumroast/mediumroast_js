@@ -11,18 +11,18 @@ With this configuration file by updating the `org` value to `MegaRoast` you can 
 [DEFAULT]
 company_dns=https://company-dns.mediumroast.io
 company_logos=https://icon-server.mediumroast.io/allicons.json?url=
-echarts=https://echart-server.mediumroast.io:11000
+echarts=https://chart-server.mediumroast.io:11000
 nominatim=https://nominatim.openstreetmap.org/search?addressdetails=1&q=
 working_directory=working
 report_output_dir=Documents
-theme=coffee
+theme=latte
 
 [GitHub]
 clientId=Iv1.f5c0a4eb1f0606f8
 appId=650476
-authType=deviceFlow
-org=<ORGANIZATION>
 token=<TOKEN>
+authType=deviceFlow
+org=MegaRoast
 ```
 
 ### Limitations
