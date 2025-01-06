@@ -127,30 +127,6 @@ if (myArgs.find_by_name) {
    const studyName = myArgs.report
    const studyResults = await studyCtl.findByName(studyName)
    const study = studyResults[2][0]
-
-   // const srcDocController = new SourceInsights(
-   //    studyName,
-   //    study,
-   //    myEnv
-   // )
-   // const writeResult = await srcDocController.generateTop5InsightsReport()
-   // if (!writeResult[0]) {
-   //    console.error(`ERROR: ${writeResult[1].status_msg}`)
-   //    process.exit(-1)
-   // }
-   // console.log(`SUCCESS: ${writeResult[1].status_msg}`)
-
-   // const procDocController = new ProcessInsights(
-   //    studyName,
-   //    study,
-   //    myEnv
-   // )
-   // const writeProcResult = await procDocController.generateReport()
-   // if (!writeProcResult[0]) {
-   //    console.error(`ERROR: ${writeProcResult[1].status_msg}`)
-   //    process.exit(-1)
-   // }
-   // console.log(`SUCCESS: ${writeProcResult[1].status_msg}`)
    const companies = await companyCtl.getAll()
    const studyReport = new StudyReport(study, companies[2].mrJson, myEnv)
    const reportResult = await studyReport.generate()
@@ -158,6 +134,7 @@ if (myArgs.find_by_name) {
       console.error(`ERROR: ${reportResult[1].status_msg}`)
       process.exit(-1)
    }
+   console.log(`SUCCESS: ${reportResult[1].status_msg}`)
    
    process.exit(0)
 

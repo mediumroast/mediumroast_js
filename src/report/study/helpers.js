@@ -69,3 +69,34 @@ export function getContenderDirection(data) {
 
     return directionMap
 }
+
+export function getInteractionLookupTable(companies) {
+    let lookupTable = {}
+    companies.forEach(company => {
+        // linked_interactions is an object and we need to iterate over the keys
+        for (const interaction in company.linked_interactions) {
+            lookupTable[interaction] = company.name
+        }
+    })
+    return lookupTable
+}
+
+export function getInsigntUniquenessMap(data) {
+    const ranges = boxPlot(data)
+    // uniquenessMap: Object, key = score & value = Unique, Common, or Overused
+    // ranges.upperQuartile -> Overused
+    // ranges.lowerQuartile -> Unique
+    // else -> Common
+    let uniquenessMap = {}
+    for (const score in data) {
+        if (data[score] >= ranges.upperQuartile) {
+            uniquenessMap[data[score]] = 'Overused'
+        } else if (data[score] <= ranges.lowerQuartile) {
+            uniquenessMap[data[score]] = 'Unique'
+        } else {
+            uniquenessMap[data[score]] = 'Common'
+        }
+    }
+
+    return uniquenessMap
+}

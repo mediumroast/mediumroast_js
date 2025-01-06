@@ -35,15 +35,17 @@ class StudyReport {
     delete sourceData[this.sourceCompany.name]
 
     // Create the initial section for the source company
-    workbook = Sections.topInsights(sourceCompanyDetails, workbook, this.sourceCompany.name)
+    workbook = Sections.topInsights(sourceCompanyDetails, workbook, {name: this.sourceCompany.name, source: true})
+
+    // Create the sections for most and least similar insights
+    workbook = Sections.mostLeastSimilarInsights(processData, workbook, this.companies)
 
     // Create the prioritized companies section
-    // console.log(processData)
-    workbook = Sections.prioritizeCompanies(processData, workbook)
+    workbook = Sections.prioritizeCompanies(processData, workbook, sourceData)
 
     // Iterate through the source data and create a section for each company
     for (const company in sourceData) {
-      workbook = Sections.topInsights(sourceData[company], workbook, company)
+      workbook = Sections.topInsights(sourceData[company], workbook, {name: company, source: false})
     }
 
     // Write the workbook to a file
