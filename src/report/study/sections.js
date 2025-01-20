@@ -42,10 +42,10 @@ class Sections {
         worksheet.getCell('F4').value = 'Type';
         worksheet.getCell('G4').value = 'Uniqueness';
         worksheet.getCell('H4').value = 'Rank';
-        worksheet.getCell('I4').value = 'Most important interaction';
-        worksheet.getCell('J4').value = 'Least important interaction';
-        worksheet.getCell('K4').value = 'Most important company';
-        worksheet.getCell('L4').value = 'Least important company';
+        worksheet.getCell('I4').value = 'Most related interaction';
+        worksheet.getCell('J4').value = 'Least related interaction';
+        worksheet.getCell('K4').value = 'Most related company';
+        worksheet.getCell('L4').value = 'Important (Yes/No)';
 
         // Apply styles to headers
         ['C4', 'D4', 'E4', 'F4', 'G4', 'H4', 'I4', 'J4', 'K4', 'L4'].forEach(cell => {
@@ -94,7 +94,18 @@ class Sections {
             worksheet.getCell(`I${rowIndex}`).value = data.mostSimilarInteraction;
             worksheet.getCell(`J${rowIndex}`).value = data.leastSimilarInteraction;
             worksheet.getCell(`K${rowIndex}`).value = data.mostSimilarCompany;
-            worksheet.getCell(`L${rowIndex}`).value = data.leastSimilarCompany;
+            // worksheet.getCell(`L${rowIndex}`).value = data.leastSimilarCompany;
+
+            // Add data validation for column L
+            worksheet.getCell(`L${rowIndex}`).dataValidation = {
+                type: 'list',
+                allowBlank: true,
+                formulae: ['"Yes,No"'],
+                showDropDown: true,
+                showErrorMessage: true,
+                errorTitle: 'Invalid Selection',
+                error: 'Please select either "Yes" or "No".'
+            };
 
             // Apply styles to data cells
             ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].forEach(col => {
@@ -124,7 +135,7 @@ class Sections {
         // Apply autoFilter to the range
         worksheet.autoFilter = {
             from: 'C4',
-            to: 'H4'
+            to: 'L4'
         };
 
         // Apply bolded outside borders
@@ -394,7 +405,7 @@ class Sections {
         worksheet.addRow([]);
 
         // Add title
-        worksheet.mergeCells('C3:H3');
+        worksheet.mergeCells('C3:I3');
         const titleRow = worksheet.getCell('C3');
         titleRow.value = reportTitle;
         titleRow.font = { size: 16, bold: true };
@@ -410,9 +421,10 @@ class Sections {
         worksheet.getCell('F4').value = 'Type';
         worksheet.getCell('G4').value = 'Priority';
         worksheet.getCell('H4').value = 'Rank';
+        worksheet.getCell('I4').value = 'Important';
 
         // Apply styles to headers
-        ['C4', 'D4', 'E4', 'F4', 'G4', 'H4'].forEach(cell => {
+        ['C4', 'D4', 'E4', 'F4', 'G4', 'H4', 'I4'].forEach(cell => {
             worksheet.getCell(cell).font = { bold: true, color: { argb: 'FFFFFFFF' } };
             worksheet.getCell(cell).alignment = { vertical: 'top', horizontal: 'left' };
             worksheet.getCell(cell).fill = {
@@ -443,8 +455,19 @@ class Sections {
             worksheet.getCell(`G${rowIndex}`).value = data.priority;
             worksheet.getCell(`H${rowIndex}`).value = data.rank;
 
+            // Add data validation for column I
+            worksheet.getCell(`I${rowIndex}`).dataValidation = {
+                type: 'list',
+                allowBlank: true,
+                formulae: ['"Yes,No"'],
+                showDropDown: true,
+                showErrorMessage: true,
+                errorTitle: 'Invalid Selection',
+                error: 'Please select either "Yes" or "No".'
+            };
+
             // Apply styles to data cells
-            ['C', 'D', 'E', 'F', 'G', 'H'].forEach(col => {
+            ['C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(col => {
                 const cell = worksheet.getCell(`${col}${rowIndex}`);
                 cell.font = { color: { argb: 'FF000000' } };
                 cell.alignment = { vertical: 'top', horizontal: 'left' };
@@ -466,6 +489,7 @@ class Sections {
         worksheet.getColumn('F').width = 30; // Insight type
         worksheet.getColumn('G').width = 30; // Priority
         worksheet.getColumn('H').width = 30; // Rank
+        worksheet.getColumn('I').width = 30; // Rank
 
         // Wrap text in columns C (Insight) and H (Excerpts)
         worksheet.getColumn('C').alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
@@ -475,12 +499,12 @@ class Sections {
         // Apply autoFilter to the range
         worksheet.autoFilter = {
             from: 'C4',
-            to: 'H4'
+            to: 'I4'
         };
 
         // Apply bolded outside borders
         const lastRow = worksheet.lastRow.number;
-        ['C', 'D', 'E', 'F', 'G', 'H'].forEach(col => {
+        ['C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(col => {
             worksheet.getCell(`${col}4`).border = {
                 top: { style: 'thick' },
                 left: { style: 'thick' },
@@ -495,14 +519,14 @@ class Sections {
                 left: { style: 'thick' },
                 bottom: { style: 'thin' }
             };
-            worksheet.getCell(`H${rowIndex}`).border = {
+            worksheet.getCell(`I${rowIndex}`).border = {
                 right: { style: 'thick' },
                 bottom: { style: 'thin' }
             };
         }
 
         // Apply bottom borders to the last row
-        ['C', 'D', 'E', 'F', 'G', 'H'].forEach(col => {
+        ['C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(col => {
             worksheet.getCell(`${col}${lastRow}`).border = {
                 bottom: { style: 'thick' },
             };
@@ -515,7 +539,7 @@ class Sections {
         };
 
         // Set the right and bottom border of the last cell on the right
-        worksheet.getCell(`H${lastRow}`).border = {
+        worksheet.getCell(`I${lastRow}`).border = {
             right: { style: 'thick' },
             bottom: { style: 'thick' }
         };
@@ -526,7 +550,7 @@ class Sections {
             left: { style: 'thick' },
             right: { style: 'thick' }
         };
-        worksheet.getCell('H3').border = {
+        worksheet.getCell('I3').border = {
             top: { style: 'thick' },
             right: { style: 'thick' },
             left: { style: 'thick' }
