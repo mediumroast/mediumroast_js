@@ -19,7 +19,7 @@ import GitHubFunctions from '../src/api/github.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import CLIUtilities from '../src/cli/common.js'
-import { SourceInsights } from '../src/report/studies.js'
+import StudyReport from '../src/report/study/report.js'
 import ora from 'ora'
 import { GitHubAuth } from '../src/api/authorize.js'
 
@@ -127,19 +127,15 @@ if (myArgs.find_by_name) {
    const studyName = myArgs.report
    const studyResults = await studyCtl.findByName(studyName)
    const study = studyResults[2][0]
-
-   const docController = new SourceInsights(
-      studyName,
-      study,
-      myEnv
-   )
-
-   const writeResult = await docController.generateTop5InsightsReport()
-   if (!writeResult[0]) {
-      console.error(`ERROR: ${writeResult[1].status_msg}`)
+   const companies = await companyCtl.getAll()
+   const studyReport = new StudyReport(study, companies[2].mrJson, myEnv)
+   const reportResult = await studyReport.generate()
+   if (!reportResult[0]) {
+      console.error(`ERROR: ${reportResult[1].status_msg}`)
       process.exit(-1)
    }
-   console.log(`SUCCESS: ${writeResult[1].status_msg}`)
+   console.log(`SUCCESS: ${reportResult[1].status_msg}`)
+   
    process.exit(0)
 
 } else {
