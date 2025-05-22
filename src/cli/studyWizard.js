@@ -14,6 +14,7 @@ import ora from "ora"
 import WizardUtils from "./commonWizard.js"
 import CLIOutput from "./output.js"
 import CLIUtilities from './common.js'
+import crypto from 'crypto'
 
 class AddStudy {
     constructor(env, controllers, objects) {
@@ -74,7 +75,7 @@ class AddStudy {
             name: {consoleString: "", value: studyName}, // Assigned by the user
             sourceTopics: {consoleString: "", value: {}}, // Empty, assigned by caffeine
             processTopics: {consoleString: "", value: {}}, // Empty, assigned by caffeine
-            companies: {consoleString: "", value: _this._setCompanies(this.companies)}, // TODO: Need to assign the companies and create the hash
+            companies: {consoleString: "", value: this._setCompanies(this.companies)}, // TODO: Need to assign the companies and create the hash
             status: {consoleString: "", value: 0}, // Set to zero, changed by caffeine
             project: {consoleString: "", value: this.defaultValue}, // Default value, assigned by caffeine
             syncStatus: {consoleString: "", value: this.defaultValue}, // Default value, changed by future project sync service
