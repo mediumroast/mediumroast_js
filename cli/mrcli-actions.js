@@ -1,51 +1,33 @@
 #!/usr/bin/env node
 
 /**
+ * 
  * @fileoverview A CLI utility to report on and update Mediumroast for GitHub Actions/Workflows 
  * @license Apache-2.0
- * @version 1.1.1
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-actions.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
 // Import required modules
-import { Actions } from '../src/api/gitHubServer.js'
+import { Actions, GitHubAuth } from 'mediumroast_api'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
 import ora from "ora"
 import chalk from 'chalk'
-import { GitHubAuth } from '../src/api/authorize.js'
 
 // Related object type
 const objectType = 'Actions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '1.1.1',
+   '1.2.0',
    `${objectType}`,
    `A CLI utility to report on an update GitHub Actions/Workflows Mediumroast for GitHub`,
    objectType
 )
-
-/* 
-    -----------------------------------------------------------------------
-
-    FUNCTIONS - Key functions needed for MAIN
-
-    ----------------------------------------------------------------------- 
-*/
-
-
-/* 
-    -----------------------------------------------------------------------
-
-    MAIN - Steps below represent the main function of the program
-
-    ----------------------------------------------------------------------- 
-*/
 
 // Create the environmental settings
 let myProgram = environment.parseCLIArgs(true)
@@ -104,14 +86,17 @@ if (myArgs.update) {
       process.exit(-1)
    }
 } else if (myArgs.billing) {
+   if (myEnv.authType === 'pat') {
+      console.log(chalk.bold.yellow('NOTE:\tYou are using a Personal Access Token (PAT) for authentication.\n\tThis may not have sufficient permissions to retrieve billing information.\n\tIf you encounter issues, please ensure your PAT has the necessary scopes or use device flow.'))
+   }
    [success, stat, results] = await actionsCtl.getActionsBilling()
    const myUserOutput = new CLIOutput(myEnv, 'ActionsBilling')
-   myUserOutput.outputCLI([results], myArgs.output)
+   myUserOutput.outputCLI(results, myArgs.output)
    process.exit()
 } else {
    [success, stat, results] = await actionsCtl.getAll()
    const myUserOutput = new CLIOutput(myEnv, 'Workflows')
-   myUserOutput.outputCLI(results, myArgs.output)
+   myUserOutput.outputCLI(results.workflowList, myArgs.output)
    process.exit()
 }
 

@@ -135,27 +135,23 @@ class CLIOutput {
             }
         } else if (this.objectType === 'ActionsBilling') {
             table = new Table({
-                head: ['Minutes Used', 'Paid Minutes Used', 'Minutes Remaining', 'Included Minutes'],
+                head: ['Minutes Used', 'Paid Minutes Used', 'Minutes Remaining', 'Included Minutes', 'Repository', 'Billing Month'],
             })
-            for (const myObj in objects) {       
-                table.push([
-                    objects[myObj].total_minutes_used + ' min',
-                    objects[myObj].total_paid_minutes_used + ' min',
-                    objects[myObj].included_minutes - objects[myObj].total_minutes_used + objects[myObj].total_paid_minutes_used + ' min',
-                    objects[myObj].included_minutes + ' min',
-                ])
-            }
-        } else if (this.objectType === 'StorageBilling') {
+            table.push([
+                objects.billing.total_minutes_used + ' min',
+                objects.billing.total_paid_minutes_used + ' min',
+                objects.billing.total_minutes_remaining + ' min',
+                objects.billing.included_minutes + ' min',
+                objects.repository !== null ? objects.repository : 'No Repository',
+                objects.period.current_month !== null ? objects.period.current_month : 'No Billing Month'
+            ])
+
+        } else if (this.objectType === 'StorageContainers') {
             table = new Table({
-                head: ['Storage Used', 'Paid Storage Used', 'Estimated Storage Used', 'Days Left in Cycle'],
+                head: ['Container Name', 'Object Count', 'Metadata Size', 'Size', 'Last Updated'],
             })
-            for (const myObj in objects) {       
-                table.push([
-                    Math.abs(objects[myObj].estimated_paid_storage_for_month - objects[myObj].estimated_storage_for_month)  + ' GiB',
-                    objects[myObj].estimated_storage_for_month + ' GiB',
-                    objects[myObj].estimated_paid_storage_for_month + ' GiB',
-                    objects[myObj].days_left_in_billing_cycle + ' days',
-                ])
+            for (const myObj in objects) {
+                table.push(objects[myObj])
             }
         } else if (this.objectType === 'Workflows') {
             table = new Table({
@@ -172,16 +168,9 @@ class CLIOutput {
             }
         } else if (this.objectType === 'Storage') {
             table = new Table({
-                head: ['Reposistory', 'Organization', 'File Count', 'Size (MB)'],
+                head: ['Organization', 'Plan', 'Cycle Days Left', 'Total Space', 'Consumed', 'Remaining', 'Remaining %'],
             })
-            for (const myObj in objects.slice(-5)) {
-                table.push([
-                    objects[myObj].name,
-                    objects[myObj].org,
-                    objects[myObj].numFiles,
-                    objects[myObj].size + ' MB',
-                ])
-            }
+            table.push(objects)
         } else {
             table = new Table({
                 head: ['Name', 'Description'],
