@@ -3,23 +3,22 @@
 /**
  * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Company objects
  * @license Apache-2.0
- * @version 3.2.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-company.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
-import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+// import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import { Interactions, Companies, Studies, Users, GitHubAuth } from 'mediumroast_api'
 import DOCXUtilities from '../src/report/helpers.js'
 import CLIUtilities from '../src/cli/common.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
-import { GitHubAuth } from '../src/api/authorize.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
@@ -215,7 +214,6 @@ if (myArgs.report) {
       console.log(`ERROR: ${stat.status_msg}`)
       process.exit(-1)
    }
-   // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
    const lockResp = await companyCtl.checkForLock()
    if (lockResp[0]) {
@@ -268,11 +266,9 @@ if (myArgs.report) {
       console.log(`ERROR: ${lockResp[1].status_msg}`)
       process.exit(-1)
    }
-   // TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
 } else {
    [success, stat, results] = await companyCtl.getAll()
    results = results.mrJson
-   // console.log(JSON.stringify(obj, null, 2))
 }
 
 // Emit the output

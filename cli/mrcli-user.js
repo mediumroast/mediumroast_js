@@ -1,49 +1,33 @@
 #!/usr/bin/env node
 
 /**
+ * 
  * @fileoverview A CLI utility to report on Mediumroast for GitHub Storage authorized users
  * @license Apache-2.0
- * @version 2.1.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-user.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
 // Import required modules
-import { Users } from '../src/api/gitHubServer.js'
+import { Users, GitHubAuth } from 'mediumroast_api'
+// import { Users } from '../src/api/gitHubServer.js'
 import Environmentals from '../src/cli/env.js'
 import CLIOutput from '../src/cli/output.js'
-import { GitHubAuth } from '../src/api/authorize.js'
+// import { GitHubAuth } from '../src/api/authorize.js'
 
 // Related object type
 const objectType = 'Users'
 
 // Environmentals object
 const environment = new Environmentals(
-   '2.1.0',
+   '2.2.0',
    `${objectType}`,
    `A CLI utility to report on Mediumroast for GitHub Storage authorized users`,
    objectType
 )
-
-/* 
-    -----------------------------------------------------------------------
-
-    FUNCTIONS - Key functions needed for MAIN
-
-    ----------------------------------------------------------------------- 
-*/
-
-
-/* 
-    -----------------------------------------------------------------------
-
-    MAIN - Steps below represent the main function of the program
-
-    ----------------------------------------------------------------------- 
-*/
 
 // Create the environmental settings
 let myProgram = environment.parseCLIArgs(true)
@@ -58,6 +42,8 @@ myProgram = environment.removeArgByName(myProgram, '--reset_by_name')
 myProgram = environment.removeArgByName(myProgram, '--report')
 myProgram = environment.removeArgByName(myProgram, '--package')
 myProgram = environment.removeArgByName(myProgram, '--find_by_id')
+myProgram = environment.removeArgByName(myProgram, '--find_by_x')
+myProgram = environment.removeArgByName(myProgram, '--find_by_name')
 myProgram = environment.removeArgByName(myProgram, '--splash')
 myProgram = environment.removeArgByName(myProgram, '--persona')
 myProgram = environment.removeArgByName(myProgram, '--update')
@@ -89,21 +75,11 @@ const userCtl = new Users(accessToken, myEnv.gitHubOrg, processName)
 let [success, stat, results] = [null, null, null]
 
 if (myArgs.my_user) {
-   [success, stat, results] = await userCtl.getMyself()
-   const myUserOutput = new CLIOutput(myEnv, 'MyUser')
-   myUserOutput.outputCLI([results], myArgs.output)
+   const userResults = await userCtl.getAuthenticatedUser()
+   const myResults = [userResults[2]]
+   const userOutput = new CLIOutput(myEnv, 'MyUser')
+   userOutput.outputCLI(myResults, myArgs.output)
    process.exit()
-} else if (myArgs.find_by_name) {
-   const foundObjects = await userCtl.findByName(myArgs.find_by_name)
-   success = foundObjects[0]
-   stat = foundObjects[1]
-   results = foundObjects[2]
-} else if (myArgs.find_by_x) {
-   const [myKey, myValue] = Object.entries(JSON.parse(myArgs.find_by_x))[0]
-   const foundObjects = await userCtl.findByX(myKey, myValue)
-   success = foundObjects[0]
-   stat = foundObjects[1]
-   results = foundObjects[2]
 } else {
    [success, stat, results] = await userCtl.getAll()
 }

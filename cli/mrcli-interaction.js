@@ -3,11 +3,10 @@
 /**
  * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Interaction objects
  * @license Apache-2.0
- * @version 3.4.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-interaction.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
@@ -15,7 +14,8 @@
 
 // Import required modules
 import { InteractionStandalone } from '../src/report/interactions.js'
-import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+// import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import { Interactions, Companies, Studies, Users, GitHubAuth } from 'mediumroast_api'
 import GitHubFunctions from '../src/api/github.js'
 import AddInteraction from '../src/cli/interactionWizard.js'
 import Environmentals from '../src/cli/env.js'
@@ -25,7 +25,6 @@ import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
 import ora from 'ora'
 import WizardUtils from "../src/cli/commonWizard.js"
-import { GitHubAuth } from '../src/api/authorize.js'
 
 // Reset the status of an object for caffiene reprocessing
 async function resetStatus(interactionName, interactionCtl, objStatus=0) {
@@ -58,7 +57,7 @@ const objectType = 'Interactions'
 
 // Environmentals object
 const environment = new Environmentals(
-   '3.3.0',
+   '3.4.0',
    `${objectType}`,
    `A CLI utility to manage and report on Mediumroast for GitHub Interaction objects`,
    objectType
