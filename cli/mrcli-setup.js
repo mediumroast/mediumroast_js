@@ -3,7 +3,7 @@
 /**
  * @fileoverview A CLI utility to perform initial configuration and setup of Mediumroast for GitHub
  * @license Apache-2.0
- * @version 3.1.0
+ * @version 3.2.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-setup.js
@@ -25,9 +25,7 @@ import ConfigParser from 'configparser'
 import inquirer from "inquirer"
 
 import Environmentals from '../src/cli/env.js'
-import { GitHubAuth } from '../src/api/authorize.js'
-import  { Companies, Users } from '../src/api/gitHubServer.js'
-import GitHubFunctions from "../src/api/github.js"
+import { GitHubAuth, Companies, Users, GitHubFunctions } from 'mediumroast_api'
 import ora from "ora"
 
 import * as fs from 'fs'
@@ -41,26 +39,6 @@ import { fileURLToPath, URL } from 'url'
 
     ----------------------------------------------------------------------- 
 */
-
-function parseCLIArgs(name, version, description) {
-    // Define commandline options
-    program
-        .name(name)
-        .version(version)
-        .description(description)
-
-    program
-        // System command line switches
-        .requiredOption(
-            '-s --splash <yes | no>',
-            'Whether or not to include the splash screen at startup.',
-            'yes',
-            'no'
-        )   
-
-    program.parse(process.argv)
-    return program.opts()
-}
 
 // Define the key environmental variables to create the appropriate settings
 function getEnv () {
@@ -129,62 +107,70 @@ function installActionsToGitHub(fsUtils, gitHubCtl, myConfig, myEnv, actionsDir)
 }
 
 async function confirmGitHubOrg(token, env) {
-    // 
     const output = new CLIOutput(env, 'Org')
     // Prompt and confirm user's the GitHub organization
     let gitHubOrgName = await simplePrompt('Please enter your GitHub organization.')
-    // URL encode the organization name
-    gitHubOrgName = encodeURI(gitHubOrgName)
+    // Clean up the organization name (don't URL encode it)
+    gitHubOrgName = gitHubOrgName.trim()
     
-    // Construct the GitHubFunctions object
-    let gitHubCtl = new GitHubFunctions(myConfig.token, gitHubOrgName)
+    // Construct the GitHubFunctions object with correct parameter order
+    let gitHubCtl = new GitHubFunctions(token, gitHubOrgName, 'mrcli-setup')
 
     // Set the tryAgain variable initially to false
     let tryAgain = false
 
     // Obtain the intel based upon the organization the user input
+    console.log(`\nLooking up GitHub organization: ${gitHubOrgName}...`)
     const gitHubOrg = await gitHubCtl.getGitHubOrg()
 
     if(!gitHubOrg[0]){
+        console.log(chalk.red(`Error: ${gitHubOrg[1]}`))
         tryAgain = await wizardUtils.operationOrNot(
             `Unfortunately, no organization matching [${gitHubOrgName}] was found. Maybe you mistyped it, try again?`
         )
         if(tryAgain) {
-            gitHubCtl = await confirmGitHubOrg(token)
+            gitHubCtl = await confirmGitHubOrg(token, env)
         } else {
             console.log(chalk.red.bold('\t> Ok, please find the right organization, until then exiting setup.'))
             process.exit()
         }
     }
-    // Only print the table if we're not trying again
-    if (!tryAgain) {output.outputCLI([gitHubOrg[1]])}
+    // Only print the table if we're not trying again and we found the org
+    if (!tryAgain && gitHubOrg[0]) {
+        const orgData = gitHubOrg[2]
+        const orgName = orgData.name || orgData.login || 'Unknown'
+        console.log(chalk.green(`\nFound organization: ${orgName}`))
+        output.outputCLI([gitHubOrg[2]])
+    }
 
     // Confirm that the organization is correct
-    tryAgain = await wizardUtils.operationOrNot(
-        `Based on your information this is the organization we found, does it look correct?`
-    )
-    if(!tryAgain) {
-        const tryAgain = await wizardUtils.operationOrNot(
-            `Ok this was not the correct organization, try again?`
+    if (!tryAgain) {
+        const confirmed = await wizardUtils.operationOrNot(
+            `Based on your information this is the organization we found, does it look correct?`
         )
-        if(tryAgain) {
-            gitHubCtl = await confirmGitHubOrg(token)
-        } else {
-            console.log(chalk.red.bold('\t> Ok, please find the right organization, until then exiting setup.'))
-            process.exit()
+        if(!confirmed) {
+            const tryAgain = await wizardUtils.operationOrNot(
+                `Ok this was not the correct organization, try again?`
+            )
+            if(tryAgain) {
+                gitHubCtl = await confirmGitHubOrg(token, env)
+            } else {
+                console.log(chalk.red.bold('\t> Ok, please find the right organization, until then exiting setup.'))
+                process.exit()
+            }
         }
     }
-    return new GitHubFunctions(myConfig.token, gitHubOrgName)
+    return gitHubCtl
 }
 
 // Verify the configuration was written
-function verifyConfiguration(myConfig, configFile) {
+function verifyConfiguration(myEnv, configFile) {
     const configurator = new ConfigParser()
     // Read in the config file and check to see if things are ok by confirming the rest_server value matches
     configurator.read(configFile)
     const clientId = configurator.get('GitHub', 'clientId')
     let success = false
-    if(clientId === myConfig.GitHub.clientId) { success = true }
+    if(clientId === myEnv.GitHub.clientId) { success = true }
     return success
 }
 
@@ -249,6 +235,196 @@ async function installActions(actionsManifest) {
     return [true, 'All actions installed', null]
 }
 
+// New pre-flight check functions for GitHub App installation and resource detection
+
+/**
+ * Check if the Mediumroast for GitHub App is properly installed on the organization
+ * @param {GitHubFunctions} github - The GitHub functions instance
+ * @param {string} orgName - The organization name
+ * @returns {Promise<boolean>} - True if app is installed, false otherwise
+ */
+async function checkGitHubAppInstallation(github, orgName) {
+    console.log(`🔍 Checking Mediumroast for GitHub App installation for organization: ${orgName}`)
+    
+    try {
+        const result = await github.checkGitHubAppInstallation()
+        
+        if (!result[0]) {
+            console.error('❌ Failed to check GitHub App installations')
+            console.error(`Error: ${result[1].status_msg || result[1]}`)
+            
+            if (result[2]?.error) {
+                console.log('\n📋 To proceed, please:')
+                console.log('1. Install the app from: https://github.com/apps/mediumroast-for-github')
+                console.log('2. Grant it access to your organization')
+                console.log('3. Ensure it has permissions for repository management')
+            }
+            return false
+        }
+
+        const installationData = result[2]
+        if (installationData.installed) {
+            console.log(`✅ Mediumroast for GitHub App is properly installed`)
+            console.log(`📊 Repository access: ${installationData.repositoryAccess} repositories`)
+            console.log(`🔧 Repository selection: ${installationData.repositorySelection}`)
+            return true
+        } else {
+            console.error(`❌ Mediumroast for GitHub App is not properly installed`)
+            console.log('\n📋 To proceed, please:')
+            console.log('1. Install the app from: https://github.com/apps/mediumroast-for-github')
+            console.log('2. Grant it access to your organization')
+            console.log('3. Ensure it has permissions for repository management')
+            return false
+        }
+    } catch (error) {
+        console.error(`❌ Error checking GitHub App installation: ${error.message}`)
+        return false
+    }
+}
+
+/**
+ * Check for existing installations of repository, containers, and actions
+ * @param {GitHubFunctions} github - The GitHub functions instance
+ * @param {Object} config - Configuration object with org and resource names
+ * @returns {Promise<Object>} - Object containing existence status of resources
+ */
+async function checkExistingInstallations(github, config) {
+    const results = {
+        repository: null,
+        containers: null,
+        actions: null
+    }
+
+    try {
+        // Check repository
+        console.log('🔍 Checking for existing repository...')
+        const repoResult = await github.repositoryManager.getByName(
+            config.org, 
+            'mr_backend'  // Default repository name used by mediumroast
+        )
+        
+        if (repoResult[0] && repoResult[2]) {
+            results.repository = repoResult[2]
+            console.log(`✅ Repository "mr_backend" already exists`)
+        } else {
+            console.log(`📝 Repository "mr_backend" not found - will be created`)
+        }
+
+        // Check containers
+        console.log('🔍 Checking for existing containers...')
+        const containerResult = await github.containerManager.getAll()
+        
+        if (containerResult[0] && containerResult[2] && containerResult[2].length > 0) {
+            results.containers = containerResult[2]
+            console.log(`✅ Containers already exist (${containerResult[2].length} found)`)
+        } else {
+            console.log(`📦 No containers found - will be created`)
+        }
+
+        // Check actions installation
+        if (results.repository) {
+            console.log('🔍 Checking for existing GitHub Actions...')
+            const actionsCheck = await github.actionsManager.getCurrentVersion()
+            
+            if (actionsCheck[0] && actionsCheck[2]?.installed) {
+                results.actions = actionsCheck[2]
+                console.log(`✅ GitHub Actions already installed (version: ${actionsCheck[2].version_file?.content?.version || 'Unknown'})`)
+            } else {
+                console.log('🚀 GitHub Actions not found - will be installed')
+            }
+        }
+    } catch (error) {
+        console.log(`⚠️  Error checking existing installations: ${error.message}`)
+    }
+
+    return results
+}
+
+/**
+ * Prompt user for actions when existing installations are detected
+ * @param {Object} existingInstallations - Object containing existing installation status
+ * @returns {Promise<Object>} - Object containing user preferences for operations
+ */
+async function promptForExistingInstallations(existingInstallations) {
+    const operations = {
+        createRepository: true,
+        setupContainers: true,
+        installActions: true,
+        actionsOperation: 'install'
+    }
+
+    if (existingInstallations.repository) {
+        const answer = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'proceed',
+            message: '⚠️  Repository already exists. Skip repository creation?',
+            default: true
+        }])
+        operations.createRepository = !answer.proceed
+    }
+
+    if (existingInstallations.containers && existingInstallations.containers.length > 0) {
+        const answer = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'proceed',
+            message: '⚠️  Containers already exist. Skip container setup?',
+            default: true
+        }])
+        operations.setupContainers = !answer.proceed
+    }
+
+    if (existingInstallations.actions) {
+        const choices = [
+            { name: 'Skip actions installation', value: 'skip' },
+            { name: 'Update to latest version', value: 'update' },
+            { name: 'Reinstall from scratch', value: 'reinstall' }
+        ]
+
+        const answer = await inquirer.prompt([{
+            type: 'list',
+            name: 'action',
+            message: '⚠️  GitHub Actions already installed. What would you like to do?',
+            choices: choices,
+            default: 'skip'
+        }])
+
+        operations.installActions = answer.action !== 'skip'
+        operations.actionsOperation = answer.action
+    }
+
+    return operations
+}
+
+/**
+ * Enhanced error handling wrapper for operations
+ * @param {string} operationName - Name of the operation for logging
+ * @param {Function} operation - The operation function to execute
+ * @returns {Promise<any>} - Result of the operation
+ */
+async function safeOperation(operationName, operation) {
+    try {
+        console.log(`🔄 Starting: ${operationName}`)
+        const result = await operation()
+        console.log(`✅ Completed: ${operationName}`)
+        return result
+    } catch (error) {
+        console.error(`❌ Failed: ${operationName}`)
+        console.error(`   Error: ${error.message}`)
+        
+        // Provide specific guidance based on error type
+        if (error.message.includes('App not installed')) {
+            console.log('\n🔧 Solution: Install the Mediumroast for GitHub App')
+            console.log('   https://github.com/apps/mediumroast-for-github')
+        } else if (error.message.includes('permission')) {
+            console.log('\n🔧 Solution: Check app permissions and organization access')
+        } else if (error.message.includes('already exists')) {
+            console.log('\n🔧 Solution: Use the existence check and prompt features')
+        }
+        
+        throw error
+    }
+}
+
 /* 
     -----------------------------------------------------------------------
 
@@ -257,7 +433,7 @@ async function installActions(actionsManifest) {
     ----------------------------------------------------------------------- 
 */
 // Global variables
-const VERSION = '3.1.0'
+const VERSION = '3.2.0'
 const NAME = 'setup'
 const DESC = 'A CLI utility to perform initial configuration and setup of Mediumroast for GitHub'
 const defaultConfigFile = `${process.env.HOME}/.mediumroast/config.ini`
@@ -265,24 +441,43 @@ const defaultConfigFile = `${process.env.HOME}/.mediumroast/config.ini`
 // Construct the file system utility object
 const fsUtils = new FilesystemOperators()
 
-// Parse the commandline arguements
-const myArgs = parseCLIArgs(NAME, VERSION, DESC)
-
-// Get the key settings to create the configuration file
-let myEnv = getEnv()
-
-// Get configuration information from the config file
+// Get configuration information from the config file - create environment first
 const environment = new Environmentals(VERSION, NAME, DESC, 'all')
 
-// Define the basic structure of the new object to store to the config file
-let myConfig = {
-    DEFAULT: null,
-    GitHub: null
-}
+// Parse the commandline arguments using the standardized environment method
+let myProgram = environment.parseCLIArgs(true)
+myProgram
+    .requiredOption(
+        '-s --splash <yes | no>',
+        'Whether or not to include the splash screen at startup.',
+        'yes',
+        'no'
+    )
 
-// Assign the env data to the configuration
-myConfig.DEFAULT = myEnv.DEFAULT
-myConfig.GitHub = myEnv.GitHub
+myProgram.parse(process.argv)
+const myArgs = myProgram.opts()
+
+// Read the environmental settings
+const myConfig = environment.readConfig(myArgs.conf_file)
+let myEnv = environment.getEnv(myArgs, myConfig)
+myEnv.company = 'Unknown'
+const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file, true)
+const verifiedToken = await myAuth.verifyAccessToken()
+let accessToken = null
+if (!verifiedToken[0]) {
+    console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+    process.exit(-1)
+} else {
+    accessToken = verifiedToken[2].token
+}
+const processName = 'mrcli-setup'
+
+// Get the key settings to create the configuration file
+const configEnv = getEnv()
+
+// Update myEnv with configuration defaults
+myEnv.DEFAULT = configEnv.DEFAULT
+myEnv.GitHub = configEnv.GitHub
 
 // Construct needed classes
 const cliOutput = new CLIOutput(myEnv)
@@ -323,64 +518,11 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* ----       Begin authorization       ---- */
-// Construct the authorization object
-const githubAuth = new GitHubAuth(myConfig, environment, defaultConfigFile, configExists[0])
+// Authorization is already handled above with the modern pattern
+// Store authentication information in configuration
+myEnv.GitHub.token = accessToken
+myEnv.GitHub.authType = verifiedToken[2].authType
 
-// If the GitHub section exists in the config file then we can skip the device flow authorization
-let accessToken
-let authType
-if(configExists[0]) {
-    const credential = await githubAuth.verifyAccessToken(false)
-    if(!credential[0]) {
-        console.log(chalk.red.bold(`ERROR: ${credential[1].status_msg}`))
-        process.exit(-1)
-    }
-    accessToken = credential[2].token
-    authType = credential[2].authType
-    myConfig.GitHub.token = accessToken
-    myConfig.GitHub.authType = authType
-} else {
-    const authTypes = {
-        'Personal Access Token': 'pat',
-        'Device Flow': 'deviceFlow',
-    }
-    
-    // Using map iterate through the keys of types and create an array of objects where each object looks like {name: key}
-    const authArray = Object.keys(authTypes).map((authType) => {
-        return { name: authType }
-    })
-    
-    // Use doList in wizardUtils to prompt the user to select a theme
-    let authChoice = await wizardUtils.doList(
-        'Please select the authorization type used to access GitHub',
-        authArray
-    )
-
-    // Decode the theme value from the themes object
-    myConfig.GitHub.authType = authTypes[authChoice]
-    authType = myConfig.GitHub.authType
-
-    // If the user selects pat we will need to prompt for the token
-    if(myConfig.GitHub.authType === 'pat') {
-        // Prompt the user for the PAT
-        myConfig.GitHub.token = await simplePrompt('Please enter your GitHub Personal Access Token.')
-        // Set access token to myConfig.GitHub.token
-        accessToken = myConfig.GitHub.token
-        const isTokenValid = await githubAuth.checkTokenExpiration(accessToken)
-        if(!isTokenValid[0]) {
-            console.log(chalk.red.bold(`ERROR: Unable to verify the GitHub Personal Access Token with error [${isTokenValid[1].status_msg}].`))
-            process.exit(-1)
-        }
-    } else {
-        const credential = await githubAuth.verifyAccessToken(false)
-        if(!credential[0]) {
-            console.log(chalk.red.bold(`ERROR: ${credential[1].status_msg}`))
-            process.exit(-1)
-        }
-        accessToken = credential[2].token
-        myConfig.GitHub.token = accessToken
-    }
-}
 cliOutput.printLine()
 
 /* -----       End authorization       ----- */
@@ -390,10 +532,53 @@ cliOutput.printLine()
 /* ----------------------------------------- */
 /* ----- Begin GitHub org confirmation ----- */
 // Gather and confirm the GitHub organization
-let gitHubCtl = await confirmGitHubOrg(myConfig.GitHub.token, myEnv)
+let gitHubCtl = await confirmGitHubOrg(accessToken, myEnv)
 
 // Capture the GitHub organization name should we need it later
-myConfig.GitHub.org = gitHubCtl.orgName
+myEnv.GitHub.org = gitHubCtl.orgName
+
+// Step 1: Pre-flight check for GitHub App installation
+console.log('\n🚀 Performing pre-flight checks...')
+const appInstalled = await safeOperation('GitHub App Installation Check', async () => {
+    return await checkGitHubAppInstallation(gitHubCtl, myEnv.GitHub.org)
+})
+
+if (!appInstalled) {
+    console.log('\n❌ Cannot proceed without proper GitHub App installation')
+    console.log('Please install the Mediumroast for GitHub App and try again.')
+    process.exit(-1)
+}
+
+// Step 2: Check for existing installations
+console.log('\n📋 Checking existing installations...')
+const existingInstallations = await safeOperation('Existing Installation Check', async () => {
+    return await checkExistingInstallations(gitHubCtl, {
+        org: myEnv.GitHub.org,
+        repoName: 'mr_backend'
+    })
+})
+
+// Step 3: Get user preferences for existing resources
+let operations = { 
+    createRepository: true, 
+    setupContainers: true, 
+    installActions: true,
+    actionsOperation: 'install'
+}
+if (existingInstallations.repository || existingInstallations.containers || existingInstallations.actions) {
+    console.log('\n⚠️  Existing installations detected')
+    operations = await promptForExistingInstallations(existingInstallations)
+}
+
+// Ensure all operation flags have defaults
+operations.createRepository = operations.createRepository !== undefined ? operations.createRepository : true
+operations.setupContainers = operations.setupContainers !== undefined ? operations.setupContainers : true
+operations.installActions = operations.installActions !== undefined ? operations.installActions : true
+operations.actionsOperation = operations.actionsOperation || 'install'
+
+// Store operations in environment for later use
+myEnv.operations = operations
+
 // TODO: Add the GitHub organization Identifier to the config file
 
 cliOutput.printLine()
@@ -406,10 +591,10 @@ cliOutput.printLine()
 // Set the flags to false to indicate that we have not installed fully or partially
 let prevInstall = false
 let partialInstall = false
-// Construct the controller objects
-const companyCtl = new Companies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
-const userCtl = new Users(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
-// const studyCtl = new Studies(myConfig.GitHub.token, myConfig.GitHub.org, `mrcli-setup`)
+// Construct the controller objects using modern pattern
+const companyCtl = new Companies(accessToken, myEnv.GitHub.org, processName)
+const userCtl = new Users(accessToken, myEnv.GitHub.org, processName)
+// const studyCtl = new Studies(accessToken, myEnv.GitHub.org, processName)
 
 // Check to see if the company and study objects exist
 const prevInstallComp = await companyCtl.getAll()
@@ -440,35 +625,35 @@ const theme = await wizardUtils.doList(
 )
 
 // Decode the theme value from the themes object
-myConfig.DEFAULT.theme = themes[theme]
+myEnv.DEFAULT.theme = themes[theme]
 
 /* ----------------------------------------- */
 /* ----------- Save config file ------------ */
 // Confirm that the configuration directory exists only if we don't already have one
 // if(!configExists[0]) { 
     const configFile = environment.checkConfigDir()
-    process.stdout.write(chalk.bold.blue(`Saving configuration to file [${configFile}] ... `))
+    process.stdout.write(chalk.blue(`Saving configuration to file [${configFile}] ... `))
 
     // Write the config file
     const configurator = new ConfigParser()
-    environment.writeConfig(configurator, myConfig, configFile)
+    environment.writeConfig(configurator, myEnv, configFile)
 
     // Verify configuration
-    const verifyConfig = verifyConfiguration(myConfig, configFile)
+    const verifyConfig = verifyConfiguration(myEnv, configFile)
     if(verifyConfig) {
-        console.log(chalk.bold.green('Ok'))
+        console.log(chalk.green('SUCCESS: Configuration saved successfully'))
     } else {
-        console.log(chalk.bold.red(`Failed, configuration file written incorrectly.`))
+        console.log(chalk.red(`ERROR: Configuration file written incorrectly.`))
         process.exit(-1)
     }
 
     cliOutput.printLine()
 // }
 // Confirm that Document directory exists and if not create it
-const docDir = myConfig.DEFAULT.report_output_dir
+const docDir = myEnv.DEFAULT.report_output_dir
 const reportDirExists = fsUtils.safeMakedir(docDir)
 if(!reportDirExists[0]) {
-    console.log(chalk.bold.red(`ERROR: Unable to create report directory [${docDir}].`))
+    console.log(chalk.red(`ERROR: Unable to create report directory [${docDir}].`))
 }
 
 /* --------- End save config file ---------- */
@@ -478,7 +663,7 @@ if(!reportDirExists[0]) {
 /* --------- Inform prev install ----------- */
 // If we have a previous installation then we need to exit and let the user know
 if(prevInstall) {
-    console.log(chalk.bold.yellow(`WARNING: Previous installation detected, skipping initial object creation.`))
+    console.log(chalk.yellow(`WARNING: Previous installation detected, skipping initial object creation.`))
     printNextSteps()
     process.exit()
 }
@@ -489,34 +674,48 @@ if(prevInstall) {
 
 /* ----------------------------------------- */
 /* --------- Create the repository --------- */
-if (!partialInstall) {
-    process.stdout.write(chalk.bold.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
-    gitHubCtl = new GitHubFunctions(myConfig.GitHub.token, myConfig.GitHub.org, NAME)
-    const repoResp = await gitHubCtl.createRepository(myConfig.GitHub.token)
-    if(repoResp[0]) {
-        console.log(chalk.bold.green('Ok'))
-    } else {
-        console.log(chalk.bold.red(`Failed, exiting with error: [${repoResp[1]}]`))
-        process.exit(-1)
-    }
+if (!partialInstall && myEnv.operations.createRepository) {
+    await safeOperation('Repository Creation', async () => {
+        process.stdout.write(chalk.blue(`Creating mediumroast app repository for all objects and artifacts ... `))
+        gitHubCtl = new GitHubFunctions(accessToken, myEnv.GitHub.org, processName)
+        const repoResp = await gitHubCtl.createRepository(accessToken)
+        if(repoResp[0]) {
+            console.log(chalk.green('SUCCESS: Repository created successfully'))
+            return repoResp
+        } else {
+            console.log(chalk.red(`ERROR: Failed to create repository: [${repoResp[1]}]`))
+            throw new Error(`Repository creation failed: ${repoResp[1]}`)
+        }
+    })
+} else if (!myEnv.operations.createRepository) {
+    console.log(chalk.yellow('⏭️  Skipping repository creation (user choice)'))
+} else if (partialInstall) {
+    console.log(chalk.yellow(`NOTICE: Partial installation detected, repository may already exist.`))
+}
 
-    cliOutput.printLine()
-    /* --------- End create repository --------- */
-    /* ----------------------------------------- */
+cliOutput.printLine()
+/* --------- End create repository --------- */
+/* ----------------------------------------- */
 
 
-    /* ----------------------------------------- */
-    /* --------- Create the containers --------- */
-    process.stdout.write(chalk.bold.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
-    const containerResp = await gitHubCtl.createContainers()
-    if(containerResp[0]) {
-        console.log(chalk.bold.green('Ok'))
-    } else {
-        console.log(chalk.bold.red(`Failed, exiting with error: [${containerResp[1]}]`))
-        process.exit(-1)
-    }
-} else {
-    console.log(chalk.bold.yellow(`NOTICE: Partial installation detected, skipping container creation and picking up where we left off.`))
+/* ----------------------------------------- */
+/* --------- Create the containers --------- */
+if (!partialInstall && myEnv.operations.setupContainers) {
+    await safeOperation('Container Creation', async () => {
+        process.stdout.write(chalk.blue(`Creating app containers for Study, Company and Interaction artifacts ... `))
+        const containerResp = await gitHubCtl.createContainers()
+        if(containerResp[0]) {
+            console.log(chalk.green('SUCCESS: Containers created successfully'))
+            return containerResp
+        } else {
+            console.log(chalk.red(`ERROR: Failed to create containers: [${containerResp[1]}]`))
+            throw new Error(`Container creation failed: ${containerResp[1]}`)
+        }
+    })
+} else if (!myEnv.operations.setupContainers) {
+    console.log(chalk.yellow('⏭️  Skipping container setup (user choice)'))
+} else if (partialInstall) {
+    console.log(chalk.yellow(`NOTICE: Partial installation detected, skipping container creation and picking up where we left off.`))
 }
 
 cliOutput.printLine()
@@ -525,14 +724,74 @@ cliOutput.printLine()
 
 /* ----------------------------------------- */
 /* ------------ Install actions ------------ */
-process.stdout.write(chalk.bold.blue(`Installing actions and workflows ... `))
-const actionsManifest = generateActionsManifest()
-const installResp = await installActions(actionsManifest)
-if(installResp[0]) {
-    console.log(chalk.bold.green('Ok'))
+if (myEnv.operations.installActions) {
+    await safeOperation('GitHub Actions Management', async () => {
+        if (myEnv.operations.actionsOperation === 'update') {
+            process.stdout.write(chalk.blue(`Updating GitHub Actions to latest version ... `))
+            const updateResult = await gitHubCtl.actionsManager.updateActions(true)
+            if (updateResult[0]) {
+                console.log(chalk.green('SUCCESS: GitHub Actions updated successfully'))
+                if (updateResult[2]?.version) {
+                    console.log(`   📋 Version: ${updateResult[2].version}`)
+                }
+                return updateResult
+            } else {
+                throw new Error(`Actions update failed: ${updateResult[1]}`)
+            }
+        } else if (myEnv.operations.actionsOperation === 'reinstall') {
+            process.stdout.write(chalk.blue(`Reinstalling GitHub Actions from scratch ... `))
+            // Delete existing actions first
+            await gitHubCtl.actionsManager.deleteActions()
+            const installResult = await gitHubCtl.actionsManager.installActions(true)
+            if (installResult[0]) {
+                console.log(chalk.green('SUCCESS: GitHub Actions reinstalled successfully'))
+                if (installResult[2]?.version) {
+                    console.log(`   📋 Version: ${installResult[2].version}`)
+                }
+                if (installResult[2]?.workflows) {
+                    console.log(`   📄 Workflows: ${installResult[2].workflows.length} installed`)
+                }
+                return installResult
+            } else {
+                throw new Error(`Actions installation failed: ${installResult[1]}`)
+            }
+        } else {
+            // Default installation - try new API first, fallback to legacy
+            process.stdout.write(chalk.blue(`Installing actions and workflows ... `))
+            
+            // Try using the new actions manager API
+            try {
+                const installResult = await gitHubCtl.actionsManager.installActions(true)
+                if (installResult[0]) {
+                    console.log(chalk.green('SUCCESS: GitHub Actions installed successfully'))
+                    if (installResult[2]?.version) {
+                        console.log(`   📋 Version: ${installResult[2].version}`)
+                    }
+                    if (installResult[2]?.workflows) {
+                        console.log(`   📄 Workflows: ${installResult[2].workflows.length} installed`)
+                    }
+                    return installResult
+                } else {
+                    throw new Error(`Actions installation failed: ${installResult[1]}`)
+                }
+            } catch (error) {
+                console.log(chalk.yellow(`\n⚠️  New actions API failed, falling back to legacy installation...`))
+                console.log(`   Error: ${error.message}`)
+                
+                // Fallback to legacy installation method
+                const actionsManifest = generateActionsManifest()
+                const installResp = await installActions(actionsManifest)
+                if(installResp[0]) {
+                    console.log(chalk.green('SUCCESS: Actions and workflows installed successfully (legacy method)'))
+                    return installResp
+                } else {
+                    throw new Error(`Legacy actions installation failed: ${installResp[1]}`)
+                }
+            }
+        }
+    })
 } else {
-    console.log(chalk.bold.red(`Failed, exiting with error: [${installResp[1]}]`))
-    process.exit(-1)
+    console.log(chalk.yellow('⏭️  Skipping GitHub Actions installation (user choice)'))
 }
 cliOutput.printLine()
 /* ---------- End Install actions ---------- */
@@ -543,39 +802,39 @@ cliOutput.printLine()
 
 // Create the owning company
 console.log(chalk.blue.bold('Creating your owning company'))
-myConfig.DEFAULT.companyDNS = myConfig.DEFAULT.company_dns
-myConfig.DEFAULT.companyLogos = myConfig.DEFAULT.company_logos
-myConfig.DEFAULT.echartServer = myConfig.DEFAULT.echarts
-myConfig.company = myConfig.GitHub.org
+myEnv.DEFAULT.companyDNS = myEnv.DEFAULT.company_dns
+myEnv.DEFAULT.companyLogos = myEnv.DEFAULT.company_logos
+myEnv.DEFAULT.echartServer = myEnv.DEFAULT.echarts
+myEnv.company = myEnv.GitHub.org
 myEnv.splash = false
 const cWizard = new AddCompany(
-    myConfig,
+    myEnv,
     {github: gitHubCtl, interaction: null, company: companyCtl, user: userCtl},
-    myConfig.DEFAULT.company_dns
+    myEnv.DEFAULT.company_dns
 )
 const owningCompanyResp = await cWizard.wizard(true, false)
 let owningCompany = owningCompanyResp[2]
 
 // Create the first company
 // Reset company user name to user name set in the company wizard
-myConfig.company = 'Unknown'
+myEnv.company = 'Unknown'
 const firstComp = new AddCompany(
-    myConfig,
+    myEnv,
     {github: gitHubCtl, interaction: null, company: companyCtl, user: userCtl}, 
-    myConfig.DEFAULT.company_dns
+    myEnv.DEFAULT.company_dns
 )
 console.log(chalk.blue.bold('Creating the first company ...'))
 let firstCompanyResp = await firstComp.wizard(false, false)
 const firstCompany = firstCompanyResp[2]
 
 // Save the companies to GitHub
-let spinner = ora(chalk.bold.blue('Saving companies to GitHub ... '))
+let spinner = ora(chalk.blue('Saving companies to GitHub ... '))
 spinner.start() // Start the spinner
     const companyResp = await companyCtl.createObj([owningCompany, firstCompany])
 spinner.stop() // Stop the spinner
 // If the company creation failed then exit
 if(!companyResp[0]) {
-    console.log(chalk.red.bold(`FAILED: ${companyResp[1].status_msg}, you may need to clean up the repository.`))
+    console.log(chalk.red(`ERROR: ${companyResp[1].status_msg}, you may need to clean up the repository.`))
     process.exit(-1)
 } 
 cliOutput.printLine()
@@ -588,10 +847,21 @@ console.log(chalk.blue.bold(`Fetching and listing Owning and first companies:`))
 const results = await companyCtl.getAll()
 cliOutput.outputCLI(results[2].mrJson)
 cliOutput.printLine()
+
+// Print comprehensive setup summary
+console.log(chalk.green.bold('🎉 Mediumroast Setup Completed Successfully!'))
+cliOutput.printLine()
+
+console.log(chalk.blue.bold('📋 Setup Summary:'))
+console.log(`   Organization: ${myEnv.GitHub.org}`)
+console.log(`   Repository: ${myEnv.operations.createRepository ? '✅ Created' : '⏭️  Skipped'}`)
+console.log(`   Containers: ${myEnv.operations.setupContainers ? '✅ Created' : '⏭️  Skipped'}`)
+console.log(`   GitHub Actions: ${myEnv.operations.installActions ? `✅ ${myEnv.operations.actionsOperation || 'Installed'}` : '⏭️  Skipped'}`)
+console.log(`   Companies Created: ${results[2].mrJson.length}`)
+console.log(`   Configuration File: ${defaultConfigFile}`)
+console.log(`   Theme: ${myEnv.DEFAULT.theme}`)
+
 cliOutput.printLine()
 
 // Print out the next steps
 printNextSteps()
-
-
-

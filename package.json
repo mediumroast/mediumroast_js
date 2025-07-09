@@ -48,7 +48,7 @@
     "exceljs": "^4.4.0",
     "ink-docstrap": "^1.3.2",
     "jsdocs": "^1.0.0",
-    "mediumroast_api": "^1.2.11",
+    "mediumroast_api": "^1.3.3",
     "node-geocoder": "^4.4.1",
     "rollup": "^2.66.1",
     "rollup-plugin-babel": "^4.4.0",

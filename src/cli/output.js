@@ -73,9 +73,10 @@ class CLIOutput {
                 head: ['Id', 'Name', 'GitHub Url', 'Description'],
             })
             for (const myObj in objects) {
+                const orgName = objects[myObj].name || objects[myObj].login || 'Unknown'
                 table.push([
                     objects[myObj].id !== null ? objects[myObj].id : 'No Id', 
-                    objects[myObj].name !== null ? objects[myObj].name : 'No Name',
+                    orgName,
                     objects[myObj].html_url !== null ? objects[myObj].html_url : 'No GitHub Url',
                     objects[myObj].description !== null ? objects[myObj].description : 'No Description'
                 ])
