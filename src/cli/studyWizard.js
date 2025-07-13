@@ -128,7 +128,7 @@ class AddStudy {
         }
 
         // Capture the current user
-        const myUserResp = await this.userCtl.getMyself()
+        const myUserResp = await this.userCtl.getAuthenticatedUser()
         const myUser = myUserResp[2]
 
         // Capture the owning company

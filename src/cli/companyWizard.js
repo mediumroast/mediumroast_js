@@ -2,9 +2,11 @@
  * A class used to build CLIs for constructing Company objects
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file companyCLIwizard.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
- * @version 1.1.0
+ * 
+ * @debug To enable debug logging for company DNS API responses, set environment variable:
+ *        DEBUG_COMPANY_DNS=true node cli/mrcli-company.js --add_wizard
  */
 
 
@@ -90,7 +92,7 @@ class AddCompany {
                 const response = await axios.get(myURL)
                 myIndustries = response.data
                 if (myIndustries.code === 404) {
-                    rconsole.log(chalk.blue.bold('No matching industry found, trying again.'))
+                    console.log(chalk.blue.bold('No matching industry found, trying again.'))
                     sicResult = await this.getIndustries()
                 }
                 sics = myIndustries.data.sics
@@ -123,15 +125,53 @@ class AddCompany {
         try {
             const response = await axios.get(myURL)
             myCompany = response.data
-            if (myCompany.status_code === 404) {
+            
+            // Debug logging to understand the actual response structure
+            if (process.env.DEBUG_COMPANY_DNS) {
+                console.log('\n--- Debug: Company DNS Response ---')
+                console.log('Status:', response.status)
+                console.log('Response Data:', JSON.stringify(myCompany, null, 2))
+                console.log('--- End Debug ---\n')
+            }
+            
+            // Check for various failure indicators - API uses 'code' field, not 'status_code'
+            if (myCompany.code === 404) {
+                mySpinner.stop()
                 return [false, {status_code: 404, status_msg: `No company matching [${companyName}] found.`}, null]
             }
+            
+            // Additional checks for empty or error responses
+            if (!myCompany.data || Object.keys(myCompany.data || {}).length === 0) {
+                mySpinner.stop()
+                return [false, {status_code: 404, status_msg: `No company data found for [${companyName}].`}, null]
+            }
+            
+            // Check if the response indicates an error
+            if (myCompany.error || myCompany.status === 'error') {
+                mySpinner.stop()
+                return [false, {status_code: 404, status_msg: `Error retrieving company data for [${companyName}]: ${myCompany.error || 'Unknown error'}.`}, null]
+            }
+            
+            // Check for successful responses (code 200 means success)
+            if (myCompany.code === 200) {
+                mySpinner.stop()
+                console.log(chalk.green(`Successfully found company data for [${companyName}]`))
+                return [true, {status_code: 200, status_msg: `Found [${companyName}]`}, myCompany]
+            }
+            
         } catch (err) {
             mySpinner.stop()
-            return [false, {status_code: 404, status_msg: `No company matching [${companyName}] found.`}, null]
+            // Enhanced error logging
+            console.log(chalk.red(`Error fetching company data: ${err.message}`))
+            if (process.env.DEBUG_COMPANY_DNS) {
+                console.log('Full error:', err)
+            }
+            return [false, {status_code: 404, status_msg: `No company matching [${companyName}] found. Error: ${err.message}`}, null]
         }
+        
+        // If we get here, it means we have an unexpected response format
         mySpinner.stop()
-        return [true,{status_code: 200, status_msg: `Found [${companyName}]`}, myCompany]
+        return [false, {status_code: 404, status_msg: `Unexpected response format for [${companyName}].`}, null]
     }
 
     async getLogo (companyWebsite) {
@@ -237,10 +277,10 @@ class AddCompany {
         // Company role
         'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
-        // Company website
+        // Company website - handle cases where website might be undefined, empty, or not an array
         if ('website' in myCompany && myCompany.website === 'Unknown') {
             prototype.url.value = prototype.url.value
-        } else if ('website' in myCompany && myCompany.website !== 'Unknown' && myCompany.website.length > 0) {
+        } else if ('website' in myCompany && myCompany.website && Array.isArray(myCompany.website) && myCompany.website.length > 0) {
             prototype.url.value = myCompany.website[0]
         } else {
             prototype.url.value = prototype.url.value
@@ -273,14 +313,20 @@ class AddCompany {
         // Company CIK
         'cik' in myCompany ? prototype.cik.value = myCompany.cik : prototype.cik.value = prototype.cik.value
 
-        // Company stock symbol/ticker
-        const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[1] 
-        'tickers' in myCompany ? prototype.stock_symbol.value = myTicker : 
+        // Company stock symbol/ticker - handle cases where tickers might be undefined or empty
+        if ('tickers' in myCompany && myCompany.tickers && Array.isArray(myCompany.tickers) && myCompany.tickers.length >= 2) {
+            const myTicker = myCompany.tickers[0] + ':' + myCompany.tickers[1] 
+            prototype.stock_symbol.value = myTicker
+        } else {
             prototype.stock_symbol.value = prototype.stock_symbol.value
+        }
 
-        // Company stock exchange
-        'exchanges' in myCompany ? prototype.stock_exchange.value = myCompany.exchanges[0] : 
+        // Company stock exchange - handle cases where exchanges might be undefined or empty
+        if ('exchanges' in myCompany && myCompany.exchanges && Array.isArray(myCompany.exchanges) && myCompany.exchanges.length > 0) {
+            prototype.stock_exchange.value = myCompany.exchanges[0]
+        } else {
             prototype.stock_exchange.value = prototype.stock_exchange.value
+        }
         
         // Company zip/postal code
         'zipPostal' in myCompany ? prototype.zip_postal.value = myCompany.zipPostal : 
@@ -376,8 +422,14 @@ class AddCompany {
         // Company name
         'name' in myCompany ? prototype.name.value = myCompany.name : prototype.name.value = prototype.name.value
 
-        // Company website
-        'url' in myCompany ? prototype.url.value = myCompany.url : prototype.url.value = prototype.url.value
+        // Company website - handle both 'url' and 'website' fields, and array vs string
+        if ('website' in myCompany && myCompany.website && Array.isArray(myCompany.website) && myCompany.website.length > 0) {
+            prototype.url.value = myCompany.website[0]
+        } else if ('url' in myCompany && myCompany.url) {
+            prototype.url.value = myCompany.url
+        } else {
+            prototype.url.value = prototype.url.value
+        }
 
         // Company type
         'company_type' in myCompany ? prototype.company_type.value = myCompany.company_type : prototype.company_type.value = prototype.company_type.value
@@ -385,20 +437,35 @@ class AddCompany {
         // Company role
         'role' in myCompany ? prototype.role.value = myCompany.role : prototype.role.value = prototype.role.value
 
-        // Company address
-        'address' in myCompany ? prototype.street_address.value = myCompany.address : prototype.street_address.value = prototype.street_address.value
-        'street_address' in myCompany ? prototype.street_address.value = myCompany.street_address : prototype.street_address.value = prototype.street_address.value
+        // Company address - handle both 'address' and 'street_address' fields
+        if ('address' in myCompany && myCompany.address) {
+            prototype.street_address.value = myCompany.address
+        } else if ('street_address' in myCompany && myCompany.street_address) {
+            prototype.street_address.value = myCompany.street_address
+        } else {
+            prototype.street_address.value = prototype.street_address.value
+        }
 
         // Company city
         'city' in myCompany ? prototype.city.value = myCompany.city : prototype.city.value = prototype.city.value
 
-        // Company state/province
-        'state_province' in myCompany ? prototype.state_province.value = myCompany.state_province : 
+        // Company state/province - handle both camelCase and snake_case
+        if ('stateProvince' in myCompany && myCompany.stateProvince) {
+            prototype.state_province.value = myCompany.stateProvince
+        } else if ('state_province' in myCompany && myCompany.state_province) {
+            prototype.state_province.value = myCompany.state_province
+        } else {
             prototype.state_province.value = prototype.state_province.value
+        }
 
-        // Company state/province
-        'zip_postal' in myCompany ? prototype.zip_postal.value = myCompany.zip_postal : 
+        // Company zip/postal code - handle both camelCase and snake_case
+        if ('zipPostal' in myCompany && myCompany.zipPostal) {
+            prototype.zip_postal.value = myCompany.zipPostal
+        } else if ('zip_postal' in myCompany && myCompany.zip_postal) {
+            prototype.zip_postal.value = myCompany.zip_postal
+        } else {
             prototype.zip_postal.value = prototype.zip_postal.value
+        }
 
         // Company country
         'country' in myCompany ? prototype.country.value = myCompany.country : prototype.country.value = prototype.country.value
@@ -500,12 +567,17 @@ class AddCompany {
         return prototype
     }
 
-    async redoAutomatic (company) {
+    async redoAutomatic (company, retryCount = 0, maxRetries = 3) {
         typeof company === 'object' ? company = company.name : null
         let myCompanyObj = await this.getCompany(company)
 
         if (!myCompanyObj[0]){
-            const answer = await this.wutils.operationOrNot(`No company matching [${company}] found, try again?`)
+            if (retryCount >= maxRetries) {
+                console.log(chalk.yellow.bold('Maximum retries reached, switching to manual entry...'))
+                return [false, {status_code: 404, status_msg: 'Manual entry required - company not found after maximum retries'}, null]
+            }
+            
+            const answer = await this.wutils.operationOrNot(`No company matching [${company}] found, try again? (Attempt ${retryCount + 1}/${maxRetries + 1})`)
             
             if(answer) {
                 let tmpCompany = await this.wutils.doManual(
@@ -518,7 +590,10 @@ class AddCompany {
                     false,
                     true
                 )
-                myCompanyObj = await this.redoAutomatic(tmpCompany)
+                myCompanyObj = await this.redoAutomatic(tmpCompany, retryCount + 1, maxRetries)
+            } else {
+                console.log(chalk.yellow.bold('User chose not to retry, switching to manual entry...'))
+                return [false, {status_code: 404, status_msg: 'Manual entry required - user declined retry'}, null]
             }
         } 
         return myCompanyObj
@@ -564,7 +639,7 @@ class AddCompany {
         
         // If we don't get a response from the company_dns we need to do a manual entry
         if (!myCompanyObj[0]){
-            console.log(chalk.blue.bold('No matching company found, starting manual company definition...'))
+            console.log(chalk.blue.bold('No matching company found or maximum retries reached, starting manual company definition...'))
             usedCompanyDNS = false
             if (company.company_type === 'Public') {
                 myCompanyObj = await this.wutils.doManual(
@@ -658,7 +733,9 @@ class AddCompany {
                 prototype.region.value = company.region
         } else {
             // This is for all non-public companies
-            prototype = this._setGeneralCompany(myCompanyObj, prototype)
+            // If we used company DNS, we need to extract the data from the response structure
+            const companyData = usedCompanyDNS ? myCompanyObj[2].data : myCompanyObj
+            prototype = this._setGeneralCompany(companyData, prototype)
         }
         
             
@@ -692,7 +769,7 @@ class AddCompany {
         }
 
         // Capture the current user
-        const myUserResp = await this.userCtl.getMyself()
+        const myUserResp = await this.userCtl.getAuthenticatedUser()
         const myUser = myUserResp[2]
 
         // Set the prototype object which can be used for creating a real object.
@@ -719,7 +796,6 @@ class AddCompany {
             major_group_code: {consoleString: "major group code", value:this.defaultValue},
             major_group_description: {consoleString: "major group description", value:this.defaultValue},
             url: {consoleString: "website", value:this.defaultValue},
-            // logo_url: {consoleString: "logo url", value:this.defaultValue},
             street_address: {consoleString: "street address", value:this.defaultValue},
             city: {consoleString: "city", value:this.defaultValue},
             state_province: {consoleString: "state or province", value:this.defaultValue},
@@ -776,11 +852,18 @@ class AddCompany {
         companyPrototype.name.value = myCompany.name
 
         // Check to see if the company name is already in the system using findByName 
-        const companyExists = await this.apiController.findByName(myCompany.name)
-        if (companyExists[0]) {
-            // Return the companyExists object with an error message
-            return [false,{status_code: 400, status_msg: `company [${myCompany.name}] already exists, duplicates not allowed, exiting.`}, companyExists[2]]
+        console.log(chalk.blue.bold(`Checking if company [${myCompany.name}] already exists...`))
+        try {
+            const companyExists = await this.apiController.findByName(myCompany.name)
+            if (companyExists[0]) {
+                // Return the companyExists object with an error message
+                return [false,{status_code: 400, status_msg: `company [${myCompany.name}] already exists, duplicates not allowed, exiting.`}, companyExists[2]]
+            }
+        } catch (error) {
+            // Expected behavior when company doesn't exist - API may throw but that's normal for new companies
+            // We can continue with company creation
         }
+        console.log(chalk.green.bold(`Company [${myCompany.name}] is available for creation.`))
 
 
         // Define the company type

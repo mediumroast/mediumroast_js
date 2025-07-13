@@ -175,7 +175,7 @@ class CLIOutput {
         } else {
             table = new Table({
                 head: ['Name', 'Description'],
-                colWidths: [35, 70]
+                colWidths: [25, 50]
             })
             for (const myObj in objects) {
                 table.push([

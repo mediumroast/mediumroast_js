@@ -193,7 +193,7 @@ if (myArgs.check) {
    }
    
    // Perform the installation
-   let spinner = ora(chalk.bold.blue('Installing actions and workflows from Mediumroast for GitHub... '))
+   let spinner = ora(chalk.bold.blue('Installing actions and workflows for Mediumroast for GitHub'))
    spinner.start()
    const installation = await actionsCtl.installActions(debugMode)
    spinner.stop()

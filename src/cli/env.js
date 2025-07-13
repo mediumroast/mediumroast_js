@@ -306,6 +306,16 @@ class Environmentals {
         env.authType = config.get('GitHub', 'authType')
         env.deviceCode = config.get('GitHub', 'deviceCode')
 
+        // Read logging configuration if available
+        try {
+            env.logLevel = config.get('Logging', 'level') || 'warn'
+            env.consoleOutput = config.get('Logging', 'console_output') || 'true'
+        } catch (error) {
+            // If Logging section doesn't exist, use defaults
+            env.logLevel = 'warn'
+            env.consoleOutput = 'true'
+        }
+
         // Setup options with cli settings only
         env.splash = cliArgs.splash
         env.persona = cliArgs.persona || 'product'
