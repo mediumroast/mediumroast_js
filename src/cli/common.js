@@ -5,11 +5,16 @@
  * @copyright 2024 Mediumroast, Inc. All rights reserved.
  * @license Apache-2.0
  * @version 1.2.0
+ * 
+ * @note Signal handling has been implemented for mrcli-setup.js using SignalHandler class.
+ *       Other CLI utilities can integrate similar graceful shutdown handling by importing
+ *       and initializing the SignalHandler from '../cli/signalHandler.js'
  */
 
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import chalk from 'chalk'
 
 class CLIUtilities {
 
@@ -124,6 +129,159 @@ class CLIUtilities {
                 null
             ]
         }
+    }
+
+    /**
+     * @function formatSuccess
+     * @description Format a SUCCESS message with bold green text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatSuccess('Operation completed successfully'))
+     */
+    formatSuccess(message) {
+        return chalk.green.bold(`SUCCESS: ${message}`)
+    }
+
+    /**
+     * @function formatWarning
+     * @description Format a WARNING message with bold yellow text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.warn(utilities.formatWarning('This is a warning message'))
+     */
+    formatWarning(message) {
+        return chalk.yellow.bold(`WARNING: ${message}`)
+    }
+
+    /**
+     * @function formatError
+     * @description Format an ERROR message with bold red text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.error(utilities.formatError('Operation failed'))
+     */
+    formatError(message) {
+        return chalk.red.bold(`ERROR: ${message}`)
+    }
+
+    /**
+     * @function formatBlue
+     * @description Format a message with bold blue text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatBlue('This is a blue message'))
+     */
+    formatBlue(message) {
+        return chalk.blue.bold(`${message}`)
+    }
+
+    /**
+     * @function formatGreen
+     * @description Format a message with bold green text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatGreen('This is a green message'))
+     */
+    formatGreen(message) {
+        return chalk.green.bold(`${message}`)
+    }
+
+    /**
+     * @function formatYellow
+     * @description Format a message with bold yellow text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatYellow('This is a yellow message'))
+     */
+    formatYellow(message) {
+        return chalk.yellow.bold(`${message}`)
+    }
+
+    /**
+     * @function formatRed
+     * @description Format a message with bold red text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatRed('This is a red message'))
+     */
+    formatRed(message) {
+        return chalk.red.bold(`${message}`)
+    }
+
+    /**
+     * @function formatOrange
+     * @description Format a message with bold orange text
+     * @param {String} message - the message to format
+     * @returns {String} the formatted message
+     * 
+     * @example
+     * console.log(utilities.formatOrange('This is an orange message'))
+     */
+    formatOrange(message) {
+        return chalk.ansi256(208).bold(`${message}`)
+    }
+    
+
+    /**
+     * @function logSuccess
+     * @description Log a SUCCESS message with bold green text
+     * @param {String} message - the message to log
+     * 
+     * @example
+     * utilities.logSuccess('Operation completed successfully')
+     */
+    logSuccess(message) {
+        console.log(this.formatSuccess(message))
+    }
+
+    /**
+     * @function logWarning
+     * @description Log a WARNING message with bold yellow text
+     * @param {String} message - the message to log
+     * 
+     * @example
+     * utilities.logWarning('This is a warning message')
+     */
+    logWarning(message) {
+        console.warn(this.formatWarning(message))
+    }
+
+    /**
+     * @function logError
+     * @description Log an ERROR message with bold red text
+     * @param {String} message - the message to log
+     * 
+     * @example
+     * utilities.logError('Operation failed')
+     */
+    logError(message) {
+        console.error(this.formatError(message))
+    }
+
+    /**
+     * @function printStep
+     * @description Log an ERROR message with bold red text
+     * @param {String} message - the message to log
+     * 
+     * @example
+     * utilities.logError('Operation failed')
+     */
+    printStep(message) {
+        console.log(`\n${this.formatBlue(message)}`)
     }
 }
 

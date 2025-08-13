@@ -3,23 +3,22 @@
 /**
  * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Company objects
  * @license Apache-2.0
- * @version 3.2.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-company.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
 // Import required modules
 import { CompanyStandalone } from '../src/report/companies.js'
-import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+// import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import { Interactions, Companies, Studies, Users, GitHubAuth } from 'mediumroast_api'
 import DOCXUtilities from '../src/report/helpers.js'
 import CLIUtilities from '../src/cli/common.js'
 import GitHubFunctions from '../src/api/github.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import Environmentals from '../src/cli/env.js'
-import { GitHubAuth } from '../src/api/authorize.js'
 import CLIOutput from '../src/cli/output.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import ArchivePackage from '../src/cli/archive.js'
@@ -30,9 +29,13 @@ import WizardUtils from '../src/cli/commonWizard.js'
 // Related object type
 const objectType = 'Companies'
 
+// Version of the CLI
+const cliUtils = new CLIUtilities()
+const myVersion = cliUtils.getVersionFromPackageJson()
+
 // Environmentals object
 const environment = new Environmentals(
-   '3.2.0',
+   myVersion,
    `${objectType}`,
    `A CLI utility to manage and report on Mediumroast for GitHub Company objects`,
    objectType
@@ -59,7 +62,7 @@ const myAuth = new GitHubAuth(myEnv, environment, myArgs.conf_file, true)
 const verifiedToken = await myAuth.verifyAccessToken()
 let accessToken = null
 if (!verifiedToken[0]) {
-   console.error(`ERROR: ${verifiedToken[1].status_msg}`)
+   console.error(cliUtils.formatError(verifiedToken[1].status_msg))
    process.exit(-1)
 } else {
    accessToken = verifiedToken[2].token
@@ -68,9 +71,6 @@ const processName = 'mrcli-company'
 
 // Construct the DOCXUtilities object
 const docxUtils = new DOCXUtilities(myEnv)
-
-// Construct the CLIUtilities object
-const cliUtils = new CLIUtilities()
 
 // Output object
 const output = new CLIOutput(myEnv, objectType)
@@ -94,7 +94,7 @@ if (myArgs.report) {
    // Use CLIUtils to get all objects
    const allObjects = await cliUtils.getAllObjects({interactions: interactionCtl, companies: companyCtl})
    if(!allObjects[0]) {
-      console.error(`ERROR: ${allObjects[1].status_msg}`)
+      console.error(cliUtils.formatError(allObjects[1].status_msg))
       process.exit(-1)
    }
    const allInteractions = allObjects[2].interactions
@@ -142,7 +142,7 @@ if (myArgs.report) {
             if(downloadResults[0]) {
                fileSystem.saveTextOrBlobFile(`${baseDir}/interactions/${interactionFileName}`, downloadResults[2])
             } else {
-               console.error(`ERROR: ${downloadResults[1]}`)
+               console.error(cliUtils.formatError(downloadResults[1]))
                process.exit(-1)
             }
          }
@@ -152,7 +152,7 @@ if (myArgs.report) {
 
          // Else error out and exit
       } else {
-         console.error('ERROR (%d): ' + dir_msg, -1)
+         console.error(cliUtils.formatError(`Directory creation failed: ${dir_msg}`))
          process.exit(-1)
       }
 
@@ -169,12 +169,12 @@ if (myArgs.report) {
       if (package_success) {
          fileSystem.rmDir(baseDir)
          mySpinner.stop()
-         console.log(package_stat)
+         console.log(cliUtils.formatSuccess(package_stat))
          process.exit(0)
       } else {
          fileSystem.rmDir(baseDir)
          mySpinner.stop()
-         console.error(package_stat, -1)
+         console.error(cliUtils.formatError(package_stat))
          process.exit(-1)
       }
 
@@ -182,10 +182,10 @@ if (myArgs.report) {
 
    // This is the fallback case if we were just creating the report
    if (report_success) {
-      console.log(report_stat)
+      console.log(cliUtils.formatSuccess(report_stat))
       process.exit(0)
    } else {
-      console.error(report_stat, -1)
+      console.error(cliUtils.formatError(report_stat))
       process.exit(-1)
    }
 } else if (myArgs.find_by_name) {
@@ -199,8 +199,8 @@ if (myArgs.report) {
    results = foundObjects[2]
 } else if (myArgs.update) {
    const lockResp = await companyCtl.checkForLock()
-   if (lockResp[0]) {
-      console.log(`ERROR: ${lockResp[1].status_msg}`)
+   if (!lockResp[0]) {  // If lock check failed (meaning there should be a lock but isn't)
+      console.log(cliUtils.formatError(lockResp[1].status_msg))
       process.exit(-1)
    }
    const myCLIObj = JSON.parse(myArgs.update)
@@ -209,28 +209,27 @@ if (myArgs.report) {
    const [success, stat, resp] = await companyCtl.updateObj(myCLIObj)
    mySpinner.stop()
    if (success) {
-      console.log(`SUCCESS: ${stat.status_msg}`)
+      console.log(cliUtils.formatSuccess(stat.status_msg))
       process.exit(0)
    } else {
-      console.log(`ERROR: ${stat.status_msg}`)
+      console.log(cliUtils.formatError(stat.status_msg))
       process.exit(-1)
    }
-   // TODO: Need to reimplement the below to account for GitHub
 } else if (myArgs.delete) {
    const lockResp = await companyCtl.checkForLock()
-   if (lockResp[0]) {
-      console.log(`ERROR: ${lockResp[1].status_msg}`)
+   if (!lockResp[0]) {  // If lock check failed (meaning there should be a lock but isn't)
+      console.log(cliUtils.formatError(lockResp[1].status_msg))
       process.exit(-1)
    }
    // Use operationOrNot to confirm the delete
    const deleteOrNot = await wutils.operationOrNot(`Preparing to delete the company [${myArgs.delete}], are you sure?`)
    if (!deleteOrNot) {
-      console.log(`INFO: Delete of [${myArgs.delete}] cancelled.`)
+      console.log(cliUtils.formatBlue(`Delete of [${myArgs.delete}] cancelled.`))
       process.exit(0)
    }
    // If allow_orphans is set log a warning to the user that they are allowing orphaned interactions
    if (myArgs.allow_orphans) {
-      console.log(chalk.bold.yellow(`WARNING: Allowing orphaned interactions to remain in the system.`))
+      console.log(cliUtils.formatWarning(`Allowing orphaned interactions to remain in the system.`))
    }
    // Delete the object
    const mySpinner = new ora(`Deleting company [${myArgs.delete}] ...`)
@@ -238,41 +237,39 @@ if (myArgs.report) {
    const [success, stat, resp] = await companyCtl.deleteObj(myArgs.delete, myArgs.allow_orphans)
    mySpinner.stop()
    if (success) {
-      console.log(`SUCCESS: ${stat.status_msg}`)
+      console.log(cliUtils.formatSuccess(stat.status_msg))
       process.exit(0)
    } else {
-      console.log(`ERROR: ${stat.status_msg}`)
+      console.log(cliUtils.formatError(stat.status_msg))
       process.exit(-1)
    }
 } else if (myArgs.add_wizard) {
    const lockResp = await companyCtl.checkForLock()
-   if (lockResp[0]) {
-      console.log(`ERROR: ${lockResp[1].status_msg}`)
+   if (!lockResp[0]) {  // If lock check failed (meaning there should be a lock but isn't)
+      console.log(cliUtils.formatError(lockResp[1].status_msg))
       process.exit(-1)
    }
    myEnv.DEFAULT = { company: 'Unknown' }
    const newCompany = new AddCompany(myEnv, { github: gitHubCtl, interaction: interactionCtl, company: companyCtl, user: userCtl })
    const result = await newCompany.wizard()
    if (result[0]) {
-      console.log(`SUCCESS: ${result[1].status_msg}`)
+      console.log(cliUtils.formatSuccess(result[1].status_msg))
       process.exit(0)
    } else {
-      console.log(`ERROR: ${result[1].status_msg}`)
+      console.log(cliUtils.formatError(result[1].status_msg))
       process.exit(-1)
    }
 } else if (myArgs.reset_by_type) {
-   console.error(`WARNING: CLI function not yet implemented for companies: %d`, -1)
+   console.error(cliUtils.formatWarning(`CLI function not yet implemented for companies`))
    process.exit(-1)
    const lockResp = companyCtl.checkForLock()
    if (lockResp[0]) {
-      console.log(`ERROR: ${lockResp[1].status_msg}`)
+      console.log(cliUtils.formatError(lockResp[1].status_msg))
       process.exit(-1)
    }
-   // TODO: Need to reimplement the below to account for GitHub, and this is where we will start to use the new CLIOutput
 } else {
    [success, stat, results] = await companyCtl.getAll()
    results = results.mrJson
-   // console.log(JSON.stringify(obj, null, 2))
 }
 
 // Emit the output

@@ -3,17 +3,17 @@
 /**
  * @fileoverview A CLI utility to manage and report on Mediumroast for GitHub Study objects
  * @license Apache-2.0
- * @version 3.0.0
  * 
  * @author Michael Hay <michael.hay@mediumroast.io>
  * @file mrcli-study.js
- * @copyright 2024 Mediumroast, Inc. All rights reserved.
+ * @copyright 2025 Mediumroast, Inc. All rights reserved.
  * 
  */
 
 
 // Import required modules
-import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+// import { Interactions, Companies, Studies, Users } from '../src/api/gitHubServer.js'
+import { Studies, Companies, Users, Interactions, GitHubAuth } from 'mediumroast_api'
 import AddStudy from '../src/cli/studyWizard.js'
 import GitHubFunctions from '../src/api/github.js'
 import Environmentals from '../src/cli/env.js'
@@ -21,7 +21,6 @@ import CLIOutput from '../src/cli/output.js'
 import CLIUtilities from '../src/cli/common.js'
 import StudyReport from '../src/report/study/report.js'
 import ora from 'ora'
-import { GitHubAuth } from '../src/api/authorize.js'
 
 // Globals
 const objectType = 'Studies'

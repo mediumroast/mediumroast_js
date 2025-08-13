@@ -79,11 +79,14 @@ class WizardUtils {
                 myMessage = `${prototype[setting].altMessage} ${prototype[setting].consoleString}?`:
                 myMessage = `What\'s the ${prototype[setting].consoleString}?`
 
+            // Use editor for description fields to handle long text better
+            const inputType = setting === 'description' ? 'editor' : 'input'
+
             await inquirer
                 .prompt([
                     {
                         name: setting,
-                        type: 'input',
+                        type: inputType,
                         message: myMessage,
                         default() {
                             return prototype[setting].value 
