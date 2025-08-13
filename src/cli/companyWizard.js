@@ -852,7 +852,7 @@ class AddCompany {
         companyPrototype.name.value = myCompany.name
 
         // Check to see if the company name is already in the system using findByName 
-        console.log(chalk.blue.bold(`Checking if company [${myCompany.name}] already exists...`))
+        process.stdout.write(chalk.blue.bold(`Checking if company [${myCompany.name}] already exists ... `))
         try {
             const companyExists = await this.apiController.findByName(myCompany.name)
             if (companyExists[0]) {
@@ -863,7 +863,7 @@ class AddCompany {
             // Expected behavior when company doesn't exist - API may throw but that's normal for new companies
             // We can continue with company creation
         }
-        console.log(chalk.green.bold(`Company [${myCompany.name}] is available for creation.`))
+        console.log(chalk.green.bold(`company unique, creation proceeding`))
 
 
         // Define the company type

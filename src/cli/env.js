@@ -72,14 +72,14 @@ class Environmentals {
             )
             .option(
                 '-o --output <choose the output type to emit>',
-                'Select output type: table, json, or csv, csv output saves to a file. Note, xlsx output is presently disabled it will be reenabled in the future.',
+                'Select output type: table, json, or csv, csv saves to a file.',
                 'table',
                 'json',
                 'csv'
             )
             .option(
                 '-s --splash <yes | no>',
-                'Whether or not to include the splash screen at startup.',
+                'Include the splash screen, used for wizards and setup only.',
                 'yes',
                 'no'
             )
@@ -91,35 +91,35 @@ class Environmentals {
             )
             .option(
                 '--find_by_x <JSON>',
-                `Find ${this.objectType} by an arbitrary attribute as specified by JSON (ex \'{\"zip_postal\":\"92131\"}\')`
+                `Find ${this.objectType} by arbitrary key and value (ex \'{\"<key>\":\"<value>\"}\')`
             )
             .option(
                 '--update <JSON>',
-                `Update ${this.objectType} from the backend by specifying the object\'s name plus attribute and value to update in JSON`
+                `Update ${this.objectType} with an object\'s name a key and value (ex \'{\"name\":\"<name>\", \"key\":\"<key>\"}\, \"value\":\"<value>\"}\')`
             )
             .option(
                 '--delete <name>',
-                `Delete ${this.objectType} from the backend by specifying the object\'s id`
+                `Delete ${this.objectType} using the object\'s name`
             )
             .option(
                 '--report <name>',
-                `Create an MS word document for ${this.objectType} by specifying the object\'s id`
+                `Create an MS word document for ${this.objectType} using an object\'s name`
             )
             .option(
                 '--package',
-                'An additional switch used with --report to generate a ZIP package that includes the Interaction artifact(s)'
+                'Used with --report to generate a ZIP package with related Interaction files'
             )
             .option(
                 '--add_wizard',
-                `Run the CLI wizard to add ${this.objectType} to the mediumroast.io backend.`
+                `Run the CLI wizard to add ${this.objectType}.`
             )
             .option(
                 '--reset_by_name <name>',
-                'Reset the status of an individual object by name to 0.'
+                'Reset the status of an individual object for reprocessing by Caffeine.'
             )
             .option(
                 '--persona [type]',
-                'Select the persona type: product or analyst.',
+                'Used with --report to select the persona type, product or analyst.',
                 'product',
                 'analyst'
             )

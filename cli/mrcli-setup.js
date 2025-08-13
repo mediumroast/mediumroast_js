@@ -19,7 +19,6 @@ import SetupWizard from '../src/cli/setupWizard.js'
 import AddCompany from '../src/cli/companyWizard.js'
 import FilesystemOperators from '../src/cli/filesystem.js'
 import SignalHandler from '../src/cli/signalHandler.js'
-import Table from 'cli-table3'
 import chalk from 'chalk'
 import ConfigParser from 'configparser'
 import Environmentals from '../src/cli/env.js'
@@ -67,7 +66,7 @@ function getEnv () {
 
 function printNextSteps() {
     // Print out the next steps
-    console.log(`Now that you\'ve performed the initial registration here\'s what\'s next.`)
+    console.log(`Now that you\'ve finished the initial setup here\'s what\'s next.`)
     console.log(cliUtils.formatBlue(`\t1. Create and register additional companies with \'mrcli company --add_wizard\'.`))
     console.log(cliUtils.formatBlue(`\t2. Register and add interactions with \'mrcli interaction --add_wizard\'.`))
     cliOutput.printLine()
@@ -1030,7 +1029,7 @@ cliUtils.printStep('Step 6 -> Creating initial companies')
 
 const companyCreationResult = await safeOperation('Initial Company Creation', async () => {
     // Create the owning company
-    console.log(cliUtils.formatBlue('\tCreating your owning company'))
+    cliUtils.printStep('Step 6.1 -> Creating your owning company')
     myEnv.DEFAULT.companyDNS = myEnv.DEFAULT.company_dns
     myEnv.DEFAULT.companyLogos = myEnv.DEFAULT.company_logos
     myEnv.DEFAULT.echartServer = myEnv.DEFAULT.echarts
@@ -1050,7 +1049,7 @@ const companyCreationResult = await safeOperation('Initial Company Creation', as
     let owningCompany = owningCompanyResp[2]
 
     // Create the first company
-    console.log(cliUtils.formatBlue('\tCreating the first company'))
+    cliUtils.printStep('Step 6.2 -> Creating the first company')
     // Reset company user name to user name set in the company wizard
     myEnv.company = 'Unknown'
     const firstComp = new AddCompany(
@@ -1085,7 +1084,7 @@ const companyCreationResult = await safeOperation('Initial Company Creation', as
     }
 
     // Save the companies to GitHub using enhanced method
-    console.log(cliUtils.formatBlue('Saving companies to GitHub with transaction safety ...'))
+    console.log(cliUtils.formatBlue('Saving companies to GitHub with transaction safety'))
     const success = await createCompaniesWithSafety(companyCtl, validCompanies, 'initial companies')
     
     if (!success) {
@@ -1105,7 +1104,7 @@ let results = null
 let companiesCreated = false
 
 if (companyCreationResult && !companyCreationResult.cancelled) {
-    console.log(cliUtils.formatBlue(`Fetching and listing created companies:`))
+    cliUtils.printStep(`Step 7 -> Listing created companies for verification`)
     results = await companyCtl.getAll()
     if (results[0]) {
         cliOutput.outputCLI(results[2].mrJson)
@@ -1145,13 +1144,8 @@ logger.debug('Mediumroast setup completed successfully', setupSummary)
 
 console.log(cliUtils.formatBlue('Setup Summary:'))
 
-// Create a formatted table for the setup summary - consistent with output.js styling
-const setupTable = new Table({
-    head: ['Component', 'Status'],
-    colWidths: [30, 40]
-})
-
-setupTable.push(
+// Create the setup summary data for table output
+const setupSummaryData = [
     ['Organization', myEnv.GitHub.org],
     ['Repository', myEnv.operations.createRepository ? chalk.green('Created') : chalk.yellow('Skipped')],
     ['Containers', myEnv.operations.setupContainers ? chalk.green('Created') : chalk.yellow('Skipped')],
@@ -1160,9 +1154,11 @@ setupTable.push(
     ['Configuration File', defaultConfigFile],
     ['Theme', myEnv.DEFAULT.theme],
     ['Setup Duration', `${Math.round(totalDuration / 1000)}s`]
-)
+]
 
-console.log(setupTable.toString())
+// Create output instance for setup summary table
+const setupOutput = new CLIOutput(myEnv, 'SetupSummary')
+setupOutput.outputCLI(setupSummaryData, 'table')
 
 cliOutput.printLine()
 
@@ -1187,8 +1183,7 @@ async function createCompaniesWithSafety(companiesCtl, companiesToCreate, operat
     const tracker = logger.trackOperation('createCompaniesWithSafety', 'mrcli-setup')
     
     try {
-        process.stdout.write(`\tCreating ${companiesToCreate.length} companies with transaction safety ... `)
-        
+
         // Use the createObj method which handles the full catch/write/release workflow
         const createResult = await companiesCtl.createObj(companiesToCreate)
         
@@ -1204,7 +1199,7 @@ async function createCompaniesWithSafety(companiesCtl, companiesToCreate, operat
                 )
                 
                 if (verified) {
-                    cliUtils.formatGreen(`All ${companiesToCreate.length} companies created successfully and verified.`)
+                    console.log(cliUtils.formatGreen(`${companiesToCreate.length} companies created and verified.`))
                 } else {
                     logger.warn('Company creation verification failed', {
                         operation: operationDescription,

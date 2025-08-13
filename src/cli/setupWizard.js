@@ -28,7 +28,7 @@ class SetupWizard {
      * @returns {Promise<boolean>} - True if user confirms, false otherwise
      */
     async confirmCompanyCreation(companies, operationType) {
-        console.log(`\n📋 ${operationType} Company Creation Summary:`)
+        console.log(`\n${operationType} Company Creation Summary:`)
         
         // Create a formatted table for the company creation summary
         const companyTable = new Table({
@@ -53,7 +53,6 @@ class SetupWizard {
         })
 
         console.log(companyTable.toString())
-        console.log(`\nTotal companies to create: ${chalk.green(companies.length)}`)
         
         const confirmed = await inquirer.prompt([{
             type: 'confirm',
